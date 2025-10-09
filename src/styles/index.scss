@@ -1,156 +1,53 @@
-@import './variables.scss';
-@import './animations.scss';
-
-/**
- * Weni Webchat Template - Base Styles
- * TODO: Implement complete styling system
- * TODO: Add responsive styles
- * TODO: Add animations
- * TODO: Add theme support
- */
-
 /* Reset and base styles */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
-/* Chat container */
-.weni-chat-container {
-  /* TODO: Add chat container styles */
-  position: fixed;
-  bottom: 100px;
-  right: 20px;
-  width: 400px;
-  height: 600px;
-  max-height: 90vh;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
 }
 
-/* Header */
-.weni-chat-header {
-  /* TODO: Add header styles */
-  height: 60px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #e9ecef;
-}
-
-/* Messages list */
-.weni-messages-list {
-  /* TODO: Add messages list styles */
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-}
-
-/* Message */
-.weni-message {
-  /* TODO: Add message styles */
-  margin-bottom: 12px;
-  display: flex;
-}
-
-.weni-message-client {
-  /* TODO: Add client message styles */
-  justify-content: flex-end;
-}
-
-.weni-message-agent,
-.weni-message-bot {
-  /* TODO: Add agent/bot message styles */
-  justify-content: flex-start;
-}
-
-.weni-message-content {
-  /* TODO: Add message content styles */
-  max-width: 70%;
-  padding: 12px;
-  border-radius: 8px;
-  word-wrap: break-word;
-}
-
-/* Input box */
-.weni-input-box {
-  /* TODO: Add input box styles */
-  height: 60px;
-  padding: 12px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.weni-input-textarea {
-  /* TODO: Add textarea styles */
-  flex: 1;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: inherit;
-  font-size: 14px;
-}
-
-/* Badge */
-.weni-badge {
-  /* TODO: Add badge styles */
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #dc3545;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* Button */
-.weni-button {
-  /* TODO: Add button styles */
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.weni-button:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.weni-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Typing indicator */
-.weni-typing-indicator {
-  /* TODO: Add typing indicator styles and animation */
-  padding: 12px;
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .weni-chat-container {
-    /* TODO: Add mobile responsive styles */
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    max-height: 100vh;
-    border-radius: 0;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
   }
 }
 
-/* TODO: Add more component styles */
+body {
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
 
+ol, ul {
+	list-style: none;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  font: 400 14px / 21px Lato, sans-serif;
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
