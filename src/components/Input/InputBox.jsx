@@ -1,12 +1,12 @@
-import React, { useState, useRef } from 'react'
-import PropTypes from 'prop-types'
+import { useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 
-import { useWeniChat } from '@/hooks/useWeniChat'
-import { useChatContext } from '@/contexts/ChatContext'
+import { useWeniChat } from '@/hooks/useWeniChat';
+import { useChatContext } from '@/contexts/ChatContext';
 
-import Button from '@/components/common/Button'
+import Button from '@/components/common/Button';
 
-import './InputBox.scss'
+import './InputBox.scss';
 
 /**
  * InputBox - Message input component
@@ -16,30 +16,30 @@ import './InputBox.scss'
  */
 export function InputBox({ maxLength = 5000 }) {
   const { sendMessage, sendAttachment, isConnected } = useWeniChat()
-  const { config } = useChatContext()
-  const [text, setText] = useState('')
-  const fileInputRef = useRef(null)
+  const { config } = useChatContext();
+  const [text, setText] = useState('');
+  const fileInputRef = useRef(null);
 
   const handleSend = () => {
     if (text.trim()) {
-      sendMessage(text)
-      setText('')
+      sendMessage(text);
+      setText('');
     }
-  }
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+      e.preventDefault();
+      handleSend();
     }
-  }
+  };
 
   const handleFileSelect = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
-      sendAttachment(file)
+      sendAttachment(file);
     }
-  }
+  };
 
   return (
     <section className="weni-input-box">
@@ -105,12 +105,12 @@ export function InputBox({ maxLength = 5000 }) {
         />
       )}
     </section>
-  )
+  );
 }
 
 InputBox.propTypes = {
   maxLength: PropTypes.number
-}
+};
 
-export default InputBox
+export default InputBox;
 

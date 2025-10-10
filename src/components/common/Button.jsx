@@ -1,7 +1,6 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { Icon } from './Icon'
-import './Button.scss'
+import PropTypes from 'prop-types';
+import { Icon } from './Icon';
+import './Button.scss';
 
 /**
  * Button - Reusable button component
@@ -50,7 +49,7 @@ export function Button({
 
       {children}
     </button>
-  )
+  );
 }
 
 Button.propTypes = {
@@ -61,7 +60,7 @@ Button.propTypes = {
   isLoading: PropTypes.bool,
   icon: PropTypes.string,
   iconColor: PropTypes.string
-}
+};
 
-export default Button
+export default Button;
 

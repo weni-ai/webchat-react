@@ -1,21 +1,18 @@
-import React from 'react'
+import Button from '@/components/common/Button';
+import Avatar from '@/components/common/Avatar';
+import { useWeniChat } from '@/hooks/useWeniChat';
+import { useChatContext } from '@/contexts/ChatContext';
 
-import { useWeniChat } from '@/hooks/useWeniChat'
-import { useChatContext } from '@/contexts/ChatContext'
-
-import Button from '@/components/common/Button'
-import Avatar from '@/components/common/Avatar'
-
-import './Header.scss'
+import './Header.scss';
 
 /**
  * Header - Chat header component
  * TODO: Add fullscreen toggle button
  */
 export function Header() {
-  const { toggleChat } = useWeniChat()
+  const { toggleChat } = useWeniChat();
 
-  const { config } = useChatContext()
+  const { config } = useChatContext();
   // TODO: Implement header layout
   // TODO: Add connection status indicator
   
@@ -35,8 +32,8 @@ export function Header() {
         {config.showCloseButton && <Button onClick={toggleChat} aria-label="Close chat" variant="tertiary" icon="close" iconColor="white"/>}
       </section>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;
 

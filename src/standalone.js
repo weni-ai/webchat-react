@@ -4,12 +4,13 @@
  * with the old weni-webchannel usage pattern
  */
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import Widget from './components/Widget/Widget'
-import './styles/index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 
-let widgetInstance = null
+import Widget from './components/Widget/Widget';
+import './styles/index.css';
+
+let widgetInstance = null;
 
 /**
  * Extract theme properties from params
@@ -18,10 +19,10 @@ let widgetInstance = null
  */
 function extractThemeFromParams(params) {
   // Get customizeWidget object (legacy format)
-  const customize = params.customizeWidget || {}
+  const customize = params.customizeWidget || {};
   
   // Helper to get value from customizeWidget first, then params (for flexibility)
-  const getValue = (key) => customize[key] ?? params[key]
+  const getValue = (key) => customize[key] ?? params[key];
   
   const themeProps = {
     // Colors - Header
@@ -65,12 +66,12 @@ function extractThemeFromParams(params) {
     widgetWidth: getValue('widgetWidth'),
     launcherHeight: getValue('launcherHeight'),
     launcherWidth: getValue('launcherWidth')
-  }
+  };
   
   // Remove undefined values
   return Object.fromEntries(
     Object.entries(themeProps).filter(([_, value]) => value !== undefined)
-  )
+  );
 }
 
 /**
@@ -136,12 +137,12 @@ function mapConfig(params) {
     
     // Legacy support
     selector: params.selector
-  }
+  };
   
   // Remove undefined values to keep config clean
   return Object.fromEntries(
     Object.entries(config).filter(([_, value]) => value !== undefined)
-  )
+  );
 }
 
 /**
@@ -150,40 +151,40 @@ function mapConfig(params) {
  */
 function init(params) {
   if (!params.selector) {
-    console.error('WebChat: selector is required')
-    return
+    console.error('WebChat: selector is required');
+    return;
   }
   
-  const container = document.querySelector(params.selector)
+  const container = document.querySelector(params.selector);
   if (!container) {
-    console.error(`WebChat: element not found for selector "${params.selector}"`)
-    return
+    console.error(`WebChat: element not found for selector "${params.selector}"`);
+    return;
   }
   
   // Map config (functional properties)
-  const config = mapConfig(params)
+  const config = mapConfig(params);
   
   // Extract theme (visual properties)
-  const theme = extractThemeFromParams(params)
+  const theme = extractThemeFromParams(params);
   
   // Widget props - config and theme separated
   const widgetProps = {
     config,
     theme: Object.keys(theme).length > 0 ? theme : null
-  }
+  };
   
   // Render widget
   try {
-    widgetInstance = ReactDOM.createRoot(container)
+    widgetInstance = ReactDOM.createRoot(container);
     widgetInstance.render(
       <React.StrictMode>
         <Widget {...widgetProps} />
       </React.StrictMode>
-    )
+    );
     
-    console.log('WebChat initialized successfully')
+    console.log('WebChat initialized successfully');
   } catch (error) {
-    console.error('WebChat: Failed to initialize', error)
+    console.error('WebChat: Failed to initialize', error);
   }
 }
 
@@ -192,8 +193,8 @@ function init(params) {
  */
 function destroy() {
   if (widgetInstance) {
-    widgetInstance.unmount()
-    widgetInstance = null
+    widgetInstance.unmount();
+    widgetInstance = null;
   }
 }
 
@@ -202,7 +203,7 @@ function destroy() {
  * TODO: Implement via service events or refs
  */
 function open() {
-  console.warn('WebChat.open() - Not implemented yet')
+  console.warn('WebChat.open() - Not implemented yet');
   // TODO: Dispatch event to Widget component
 }
 
@@ -211,7 +212,7 @@ function open() {
  * TODO: Implement via service events or refs
  */
 function close() {
-  console.warn('WebChat.close() - Not implemented yet')
+  console.warn('WebChat.close() - Not implemented yet');
   // TODO: Dispatch event to Widget component
 }
 
@@ -220,7 +221,7 @@ function close() {
  * TODO: Implement via service events or refs
  */
 function toggle() {
-  console.warn('WebChat.toggle() - Not implemented yet')
+  console.warn('WebChat.toggle() - Not implemented yet');
   // TODO: Dispatch event to Widget component
 }
 
@@ -229,7 +230,7 @@ function toggle() {
  * TODO: Implement via service
  */
 function send(message) {
-  console.warn('WebChat.send() - Not implemented yet', message)
+  console.warn('WebChat.send() - Not implemented yet', message);
   // TODO: Access service instance and send message
 }
 
@@ -238,7 +239,7 @@ function send(message) {
  * TODO: Implement via service
  */
 function clear() {
-  console.warn('WebChat.clear() - Not implemented yet')
+  console.warn('WebChat.clear() - Not implemented yet');
   // TODO: Access service instance and clear session
 }
 
@@ -247,7 +248,7 @@ function clear() {
  * TODO: Implement via service
  */
 function setSessionId(sessionId) {
-  console.warn('WebChat.setSessionId() - Not implemented yet', sessionId)
+  console.warn('WebChat.setSessionId() - Not implemented yet', sessionId);
   // TODO: Access service instance and set session
 }
 
@@ -256,7 +257,7 @@ function setSessionId(sessionId) {
  * TODO: Implement via service
  */
 function setContext(context) {
-  console.warn('WebChat.setContext() - Not implemented yet', context)
+  console.warn('WebChat.setContext() - Not implemented yet', context);
   // TODO: Access service instance and set context
 }
 
@@ -265,9 +266,9 @@ function setContext(context) {
  * TODO: Implement via service
  */
 function getContext() {
-  console.warn('WebChat.getContext() - Not implemented yet')
+  console.warn('WebChat.getContext() - Not implemented yet');
   // TODO: Access service instance and get context
-  return ''
+  return '';
 }
 
 /**
@@ -275,9 +276,9 @@ function getContext() {
  * TODO: Implement via service state
  */
 function isOpen() {
-  console.warn('WebChat.isOpen() - Not implemented yet')
+  console.warn('WebChat.isOpen() - Not implemented yet');
   // TODO: Check widget state
-  return false
+  return false;
 }
 
 /**
@@ -285,16 +286,16 @@ function isOpen() {
  * TODO: Implement via service state
  */
 function isVisible() {
-  console.warn('WebChat.isVisible() - Not implemented yet')
+  console.warn('WebChat.isVisible() - Not implemented yet');
   // TODO: Check widget state
-  return false
+  return false;
 }
 
 /**
  * Reload widget
  */
 function reload() {
-  console.warn('WebChat.reload() - Not implemented yet')
+  console.warn('WebChat.reload() - Not implemented yet');
   // TODO: Implement reload logic
 }
 
@@ -313,11 +314,11 @@ const WebChat = {
   isOpen,
   isVisible,
   reload
-}
+};
 
 // Expose to window for script tag usage
 if (typeof window !== 'undefined') {
-  window.WebChat = { default: WebChat }
+  window.WebChat = { default: WebChat };
 }
 
-export default WebChat
+export default WebChat;

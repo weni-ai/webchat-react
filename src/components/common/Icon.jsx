@@ -1,8 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import 'material-symbols'
+import PropTypes from 'prop-types';
+import 'material-symbols';
 
-import './Icon.scss'
+import './Icon.scss';
 
 /**
  * Icon - Icon component using Material Symbols
@@ -27,13 +26,12 @@ export function Icon({
   className = '', 
   ...props 
 }) {
-  const variantClass = outlined ? 'material-symbols-outlined' : 'material-symbols-rounded'
-
+  const variantClass = outlined ? 'material-symbols-outlined' : 'material-symbols-rounded';
   
   const style = {
     color: color ? `var(--${color})` : 'currentColor',
     fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`
-  }
+  };
   
   return (
     <span 
@@ -44,7 +42,7 @@ export function Icon({
     >
       {name}
     </span>
-  )
+  );
 }
 
 Icon.propTypes = {
@@ -61,7 +59,7 @@ Icon.propTypes = {
   /** Optical size for different display sizes */
   opticalSize: PropTypes.number,
   className: PropTypes.string
-}
+};
 
-export default Icon
+export default Icon;
 

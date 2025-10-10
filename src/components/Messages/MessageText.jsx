@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * MessageText - Text message component
@@ -22,7 +21,7 @@ export function MessageText({ message }) {
         {/* TODO: Add quick replies if present */}
       </div>
     </div>
-  )
+  );
 }
 
 MessageText.propTypes = {
@@ -32,7 +31,7 @@ MessageText.propTypes = {
     timestamp: PropTypes.number,
     quickReplies: PropTypes.array
   }).isRequired
-}
+};
 
-export default MessageText
+export default MessageText;
 

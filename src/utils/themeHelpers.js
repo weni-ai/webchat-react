@@ -47,7 +47,7 @@ const configToCssVarMap = {
   suggestionsSeparatorColor: '--weni-suggestions-separator-color',
   suggestionsFontColor: '--weni-suggestions-font-color',
   suggestionsHoverFontColor: '--weni-suggestions-hover-font-color'
-}
+};
 
 /**
  * Apply theme properties to CSS custom properties
@@ -55,20 +55,20 @@ const configToCssVarMap = {
  * @param {HTMLElement} element - Target element (defaults to document.documentElement)
  */
 export function applyThemeFromConfig(themeOrConfig, element = document.documentElement) {
-  if (!themeOrConfig) return
+  if (!themeOrConfig) return;
   
   Object.entries(configToCssVarMap).forEach(([configKey, cssVar]) => {
-    const value = themeOrConfig[configKey]
+    const value = themeOrConfig[configKey];
     if (value !== undefined && value !== null) {
-      element.style.setProperty(cssVar, value)
+      element.style.setProperty(cssVar, value);
       // Also set legacy variable for backward compatibility
-      const legacyVar = `--${configKey}`
-      element.style.setProperty(legacyVar, value)
+      const legacyVar = `--${configKey}`;
+      element.style.setProperty(legacyVar, value);
     }
-  })
+  });
 }
 export default {
   applyThemeFromConfig,
-}
+};
 
 

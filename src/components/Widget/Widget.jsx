@@ -1,10 +1,10 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { ChatProvider } from '../../contexts/ChatContext.jsx'
-import { ThemeProvider } from '../../theme/ThemeProvider'
-import Launcher from '../Launcher/Launcher'
-import Chat from '../Chat/Chat'
-import './Widget.scss'
+import PropTypes from 'prop-types';
+
+import Chat from '@/components/Chat/Chat';
+import Launcher from '@/components/Launcher/Launcher';
+import { ChatProvider } from '@/contexts/ChatContext.jsx';
+import { ThemeProvider } from '@/theme/ThemeProvider';
+import './Widget.scss';
 
 /**
  * Widget - Main container component
@@ -23,7 +23,7 @@ export function Widget({ config, theme = null }) {
         </aside>
       </ChatProvider>
     </ThemeProvider>
-  )
+  );
 }
 
 Widget.propTypes = {
@@ -34,7 +34,7 @@ Widget.propTypes = {
     // TODO: Add all config properties
   }).isRequired,
   theme: PropTypes.object
-}
+};
 
-export default Widget
+export default Widget;
 

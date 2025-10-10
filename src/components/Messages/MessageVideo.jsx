@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * MessageVideo - Video message component
@@ -30,7 +29,7 @@ export function MessageVideo({ message }) {
         {/* TODO: Add timestamp */}
       </div>
     </div>
-  )
+  );
 }
 
 MessageVideo.propTypes = {
@@ -41,7 +40,7 @@ MessageVideo.propTypes = {
     caption: PropTypes.string,
     timestamp: PropTypes.number
   }).isRequired
-}
+};
 
-export default MessageVideo
+export default MessageVideo;
 

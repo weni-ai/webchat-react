@@ -1,11 +1,15 @@
-import React, { useRef, useEffect } from 'react'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import MessageText from './MessageText'
-import MessageImage from './MessageImage'
-import MessageVideo from './MessageVideo'
-import MessageAudio from './MessageAudio'
-import MessageDocument from './MessageDocument'
-import './MessagesList.scss'
+import { useRef, useEffect } from 'react';
+
+
+import MessageAudio from './MessageAudio';
+import MessageDocument from './MessageDocument';
+import MessageImage from './MessageImage';
+import MessageText from './MessageText';
+import MessageVideo from './MessageVideo';
+
+import { useWeniChat } from '@/hooks/useWeniChat';
+
+import './MessagesList.scss';
 
 /**
  * MessagesList - Scrollable list of messages
@@ -16,13 +20,13 @@ import './MessagesList.scss'
  * TODO: Show typing indicator
  */
 export function MessagesList() {
-  const { messages, isTyping } = useWeniChat()
-  const messagesEndRef = useRef(null)
+  const { messages, isTyping } = useWeniChat();
+  const messagesEndRef = useRef(null);
   
   // TODO: Auto-scroll to bottom on new messages
   useEffect(() => {
     // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages]);
   
   // TODO: Handle scroll to load history
   
@@ -30,20 +34,20 @@ export function MessagesList() {
     // TODO: Implement proper message type routing
     switch (message.type) {
       case 'text':
-        return <MessageText key={index} message={message} />
+        return <MessageText key={index} message={message} />;
       case 'image':
-        return <MessageImage key={index} message={message} />
+        return <MessageImage key={index} message={message} />;
       case 'video':
-        return <MessageVideo key={index} message={message} />
+        return <MessageVideo key={index} message={message} />;
       case 'audio':
-        return <MessageAudio key={index} message={message} />
+        return <MessageAudio key={index} message={message} />;
       case 'document':
       case 'file':
-        return <MessageDocument key={index} message={message} />
+        return <MessageDocument key={index} message={message} />;
       default:
-        return <MessageText key={index} message={message} />
+        return <MessageText key={index} message={message} />;
     }
-  }
+  };
   
   return (
     <div className="weni-messages-list">
@@ -57,8 +61,8 @@ export function MessagesList() {
       )}
       <div ref={messagesEndRef} />
     </div>
-  )
+  );
 }
 
-export default MessagesList
+export default MessagesList;
 
