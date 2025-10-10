@@ -1,46 +1,80 @@
-// TODO: Variables copied from old webchat, need to be refactored
+/**
+ * CSS Custom Properties - Weni Webchat
+ * All properties can be overridden via config or inline styles
+ * Naming convention follows push-webchat for backward compatibility
+ */
 
 :root {
-  --titleColor: #fff;
-  --subtitleColor: #fff;
-  --headerBackgroundColor: #00A49F;
-  --chatBackgroundColor: #fff;
-  --inputBackgroundColor: #f4f7f9;
-  --inputFontColor: #000;
-  --inputPlaceholderColor: #b5b5b5;
-  --userMessageBubbleColor: #003a9b;
-  --userMessageTextColor: #fff;
-  --botMessageBubbleColor: #f4f7f9;
-  --botMessageTextColor: #000;
-  --widgetHeight: 65vh;
-  --widgetWidth: 360px;
+  /* Main Color */
+  --weni-main-color: #00A49F;
 
-  --launcherHeight: 60px;
-  --launcherWidth: 60px;
-  --launcherColor: #00A49F;
-
-  --quickRepliesFontColor: #0084ff;
-  --quickRepliesBackgroundColor: none;
-  --quickRepliesBorderColor: #0084ff;
-  --quickRepliesBorderWidth: 1px;
-  --fullScreenBotMessageBubbleColor: rgba(0, 0, 0 ,0);
-  --suggestionsBackgroundColor: #edf1f3;
-  --suggestionsSeparatorColor: #e6e6e6;
-  --suggestionsFontColor: grey;
-  --suggestionsHoverFontColor: #03348A;
-
-  --green-1: #35e65d;
-  --grey-1: #cdd8ec;
-  --grey-2: #f4f7f9;
-  --grey-3: #b5b5b5;
-  --grey-4: #e6e6e6;
-  --turqois-1: #35cce6;
-  --turqois-2: #a3eaf7;
-  --white: #fff;
-  --red-1: #ff0000;
-  --red-2: #ff7070;
-  --blue-1: #003a9b;
-  --blue-2: #0084ff;
+  /* Header Colors */
+  --weni-title-color: #ffffff;
+  --weni-subtitle-color: #ffffff;
+  --weni-header-bg-color: var(--weni-main-color);
+  
+  /* Chat Container */
+  --weni-chat-bg-color: #ffffff;
+  --weni-widget-height: 65vh;
+  --weni-widget-width: 360px;
+  
+  /* Launcher */
+  --weni-launcher-color: var(--weni-main-color);
+  --weni-launcher-height: 60px;
+  --weni-launcher-width: 60px;
+  
+  /* Input Field */
+  --weni-input-bg-color: #ffffff;
+  --weni-input-font-color: #353945;
+  --weni-input-placeholder-color: #B2B9C7;
+  
+  /* User Messages */
+  --weni-user-message-bubble-color: var(--weni-main-color);
+  --weni-user-message-text-color: #ffffff;
+  
+  /* Bot Messages */
+  --weni-bot-message-bubble-color: #F6F7F9;
+  --weni-bot-message-text-color: #000000;
+  --weni-fullscreen-bot-message-bubble-color: rgba(0, 0, 0, 0);
+  
+  /* Quick Replies */
+  --weni-quick-replies-font-color: var(--weni-main-color);
+  --weni-quick-replies-bg-color: transparent;
+  --weni-quick-replies-border-color: var(--weni-main-color);
+  --weni-quick-replies-border-width: 1px;
+  
+  /* Suggestions */
+  --weni-suggestions-bg-color: #ECEEF2;
+  --weni-suggestions-separator-color: #D6D9E1;
+  --weni-suggestions-font-color: #8893A8;
+  --weni-suggestions-hover-font-color: #1B4F89;
+  
+  /* Legacy support - kept for backward compatibility */
+  --titleColor: var(--weni-title-color);
+  --subtitleColor: var(--weni-subtitle-color);
+  --headerBackgroundColor: var(--weni-header-bg-color);
+  --chatBackgroundColor: var(--weni-chat-bg-color);
+  --inputBackgroundColor: var(--weni-input-bg-color);
+  --inputFontColor: var(--weni-input-font-color);
+  --inputPlaceholderColor: var(--weni-input-placeholder-color);
+  --userMessageBubbleColor: var(--weni-user-message-bubble-color);
+  --userMessageTextColor: var(--weni-user-message-text-color);
+  --botMessageBubbleColor: var(--weni-bot-message-bubble-color);
+  --botMessageTextColor: var(--weni-bot-message-text-color);
+  --widgetHeight: var(--weni-widget-height);
+  --widgetWidth: var(--weni-widget-width);
+  --launcherHeight: var(--weni-launcher-height);
+  --launcherWidth: var(--weni-launcher-width);
+  --launcherColor: var(--weni-launcher-color);
+  --quickRepliesFontColor: var(--weni-quick-replies-font-color);
+  --quickRepliesBackgroundColor: var(--weni-quick-replies-bg-color);
+  --quickRepliesBorderColor: var(--weni-quick-replies-border-color);
+  --quickRepliesBorderWidth: var(--weni-quick-replies-border-width);
+  --fullScreenBotMessageBubbleColor: var(--weni-fullscreen-bot-message-bubble-color);
+  --suggestionsBackgroundColor: var(--weni-suggestions-bg-color);
+  --suggestionsSeparatorColor: var(--weni-suggestions-separator-color);
+  --suggestionsFontColor: var(--weni-suggestions-font-color);
+  --suggestionsHoverFontColor: var(--weni-suggestions-hover-font-color);
 }
 
 /* Colors */
@@ -58,6 +92,117 @@ $gray-700: #454D5F;
 $gray-800: #3B4151;
 $gray-900: #353945;
 $gray-950: #23262E;
+
+$teal-50: #EFFEFC;
+$teal-100: #C7FFF7;
+$teal-200: #90FFEF;
+$teal-300: #51F7E7;
+$teal-400: #1DE4D7;
+$teal-500: #04C8BD;
+$teal-600: #00A49F;
+$teal-700: #05807D;
+$teal-800: #0A6564;
+$teal-900: #0D5453;
+$teal-950: #003133;
+ 
+$green-50: #F0F9F3;
+$green-100: #DAF1E0;
+$green-200: #B7E3C6;
+$green-300: #88CDA4;
+$green-400: #56B17E;
+$green-500: #38A169;
+$green-600: #24774C;
+$green-700: #1D5F3F;
+$green-800: #194C34;
+$green-900: #153F2C;
+$green-950: #0B2318;
+
+$blue-50: #F2F7FD;
+$blue-100: #E5EEF9;
+$blue-200: #C4DBF3;
+$blue-300: #90BDE9;
+$blue-400: #559BDB;
+$blue-500: #3182CE;
+$blue-600: #2062A9;
+$blue-700: #1B4F89;
+$blue-800: #1A4472;
+$blue-900: #1B3A5F;
+$blue-950: #12253F;
+
+$purple-50: #F6F5FD;
+$purple-100: #EEECFB;
+$purple-200: #DFDCF8;
+$purple-300: #C7BFF3;
+$purple-400: #AA9BEA;
+$purple-500: #8D72E0;
+$purple-600: #805AD5;
+$purple-700: #6B41C0;
+$purple-800: #5A36A1;
+$purple-900: #4B2E84;
+$purple-950: #2E1C59;
+
+$red-50: #FDF3F3;
+$red-100: #FDE3E3;
+$red-200: #FCCCCC;
+$red-300: #F8A9A9;
+$red-400: #F27777;
+$red-500: #E53E3E;
+$red-600: #D32F2F;
+$red-700: #B22323;
+$red-800: #932121;
+$red-900: #7A2222;
+$red-950: #420D0D;
+
+$orange-50: #FDF8EF;
+$orange-100: #FBEED9;
+$orange-200: #F7DAB1;
+$orange-300: #F1C080;
+$orange-400: #EB9D4C;
+$orange-500: #E5812A;
+$orange-600: #DD6B20;
+$orange-700: #B2501C;
+$orange-800: #8E401E;
+$orange-900: #73361B;
+$orange-950: #3E1A0C;
+
+$yellow-50: #FBF7EB;
+$yellow-100: #F5EDCC;
+$yellow-200: #EDD89B;
+$yellow-300: #E2BC62;
+$yellow-400: #D69E2E;
+$yellow-500: #C88D2A;
+$yellow-600: #AC6E22;
+$yellow-700: #8A501E;
+$yellow-800: #734120;
+$yellow-900: #633720;
+$yellow-950: #391B0F;
+
+$bg-base: $white;
+$bg-soft: $gray-50;
+$bg-muted: $gray-100;
+$bg-active: $teal-600;
+$bg-info: $blue-50;
+$bg-success: $green-50;
+$bg-warning: $yellow-50;
+$bg-critical: $red-50;
+$fg-base: $gray-500;
+$fg-muted: $gray-300;
+$fg-emphasized: $gray-900;
+$fg-inverted: $white;
+$fg-active: $teal-600;
+$fg-info: $blue-500;
+$fg-success: $green-500;
+$fg-warning: $yellow-500;
+$fg-critical: $red-500;
+$border-base: $gray-200;
+$border-soft: $gray-100;
+$border-muted: $gray-200;
+$border-emphasized: $gray-400;
+$border-active: $teal-600;
+$border-info: $blue-300;
+$border-success: $green-300;
+$border-warning: $yellow-300;
+$border-critical: $red-300;
 
 /* Shadows */
 $shadow-1: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
@@ -84,3 +229,27 @@ $spacing-8: 32px;
 $spacing-10: 40px;
 $spacing-16: 64px;
 $spacing-20: 80px;
+
+/* Icon Sizes */
+$icon-size-3: 12px;
+$icon-size-4: 16px;
+$icon-size-5: 20px;
+$icon-size-6: 24px;
+$icon-size-7: 32px;
+$icon-size-10: 40px;
+
+/* Font */
+$font-size: 16px;
+$font-family: Lato, sans-serif;
+$font-weight-bold: 700;
+$font-weight-medium: 500;
+$font-weight-regular: 400;
+$font-display-1: 700 calc(1.5 * $font-size) /* 24px */ / calc(2 * $font-size) /* 32px */ $font-family;
+$font-display-2: 700 calc(1.25 * $font-size) /* 20px */ / calc(1.6875 * $font-size) /* 27px */ $font-family;
+$font-display-3: 700 calc(1 * $font-size) /* 16px */ / calc(1.375 * $font-size) /* 22px */ $font-family;
+$font-display-4: 400 calc(1 * $font-size) /* 16px */ / calc(1.375 * $font-size) /* 22px */ $font-family;
+$font-body: 400 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-size) /* 21px */ $font-family;
+$font-emphasis: 500 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-size) /* 21px */ $font-family;
+$font-action: 700 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-size) /* 21px */ $font-family;
+$font-caption-1: 500 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;
+$font-caption-2: 400 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;

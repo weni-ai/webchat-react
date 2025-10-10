@@ -8,14 +8,11 @@ import './Widget.scss'
 
 /**
  * Widget - Main container component
- * TODO: Implement widget positioning logic
  * TODO: Add fullscreen support
  * TODO: Add mobile responsiveness
  * TODO: Handle widget visibility and animations
  */
 export function Widget({ config, theme = null }) {
-  // TODO: Implement widget state and positioning
-
   return (
     <ThemeProvider theme={theme}>
       <ChatProvider config={config}>

@@ -12,44 +12,136 @@ import './styles/index.css'
 let widgetInstance = null
 
 /**
- * Map old customizeWidget options to theme format
+ * Extract theme properties from params
+ * Separates visual customization from functional config
+ * Handles both direct properties and customizeWidget (push-webchat legacy)
  */
-function mapCustomizeToTheme(customize) {
-  if (!customize) return null
+function extractThemeFromParams(params) {
+  // Get customizeWidget object (legacy format)
+  const customize = params.customizeWidget || {}
   
-  return {
-    colors: {
-      primary: customize.launcherColor || customize.mainColor,
-      messageClient: customize.userMessageBubbleColor,
-      headerBackground: customize.headerBackgroundColor,
-      quickReplyText: customize.quickRepliesFontColor,
-      quickReplyBackground: customize.quickRepliesBackgroundColor,
-      quickReplyBorder: customize.quickRepliesBorderColor
-    }
+  // Helper to get value from customizeWidget first, then params (for flexibility)
+  const getValue = (key) => customize[key] ?? params[key]
+  
+  const themeProps = {
+    // Colors - Header
+    titleColor: getValue('titleColor'),
+    subtitleColor: getValue('subtitleColor'),
+    headerBackgroundColor: getValue('headerBackgroundColor'),
+    
+    // Colors - Chat
+    chatBackgroundColor: getValue('chatBackgroundColor'),
+    
+    // Colors - Launcher
+    launcherColor: getValue('launcherColor') || getValue('mainColor'),
+    mainColor: getValue('mainColor'),
+    
+    // Colors - Input
+    inputBackgroundColor: getValue('inputBackgroundColor'),
+    inputFontColor: getValue('inputFontColor'),
+    inputPlaceholderColor: getValue('inputPlaceholderColor'),
+    
+    // Colors - Messages
+    userMessageBubbleColor: getValue('userMessageBubbleColor'),
+    userMessageTextColor: getValue('userMessageTextColor'),
+    botMessageBubbleColor: getValue('botMessageBubbleColor'),
+    botMessageTextColor: getValue('botMessageTextColor'),
+    fullScreenBotMessageBubbleColor: getValue('fullScreenBotMessageBubbleColor'),
+    
+    // Colors - Quick Replies
+    quickRepliesFontColor: getValue('quickRepliesFontColor'),
+    quickRepliesBackgroundColor: getValue('quickRepliesBackgroundColor'),
+    quickRepliesBorderColor: getValue('quickRepliesBorderColor'),
+    quickRepliesBorderWidth: getValue('quickRepliesBorderWidth'),
+    
+    // Colors - Suggestions
+    suggestionsBackgroundColor: getValue('suggestionsBackgroundColor'),
+    suggestionsSeparatorColor: getValue('suggestionsSeparatorColor'),
+    suggestionsFontColor: getValue('suggestionsFontColor'),
+    suggestionsHoverFontColor: getValue('suggestionsHoverFontColor'),
+    
+    // Dimensions
+    widgetHeight: getValue('widgetHeight'),
+    widgetWidth: getValue('widgetWidth'),
+    launcherHeight: getValue('launcherHeight'),
+    launcherWidth: getValue('launcherWidth')
   }
+  
+  // Remove undefined values
+  return Object.fromEntries(
+    Object.entries(themeProps).filter(([_, value]) => value !== undefined)
+  )
 }
 
 /**
  * Map old params to new config format
+ * Ensures backward compatibility with push-webchat
  */
 function mapConfig(params) {
   const config = {
+    // Required properties
     socketUrl: params.socketUrl,
     channelUuid: params.channelUuid,
     host: params.host,
+    
+    // Connection settings
     connectOn: params.connectOn || 'mount',
-    storage: params.params?.storage || 'local'
+    storage: params.params?.storage || 'local',
+    initPayload: params.initPayload,
+    sessionId: params.sessionId,
+    sessionToken: params.sessionToken,
+    customData: params.customData,
+    hideWhenNotConnected: params.hideWhenNotConnected,
+    autoClearCache: params.autoClearCache,
+    contactTimeout: params.contactTimeout,
+    
+    // UI settings
+    title: params.title || 'Welcome',
+    subtitle: params.subtitle,
+    inputTextFieldHint: params.inputTextFieldHint || 'Type a message',
+    embedded: params.embedded || false,
+    showCloseButton: params.showCloseButton !== false,
+    showFullScreenButton: params.showFullScreenButton || false,
+    startFullScreen: params.startFullScreen || false,
+    displayUnreadCount: params.displayUnreadCount || false,
+    showMessageDate: params.showMessageDate || false,
+    showHeaderAvatar: params.showHeaderAvatar !== false,
+    connectingText: params.connectingText || 'Waiting for server...',
+    
+    // Media settings
+    docViewer: params.docViewer || false,
+    params: params.params,
+    
+    // Images/Icons
+    profileAvatar: params.profileAvatar,
+    openLauncherImage: params.openLauncherImage,
+    closeImage: params.closeImage,
+    headerImage: params.headerImage,
+    
+    // Tooltips
+    tooltipMessage: params.tooltipMessage,
+    tooltipDelay: params.tooltipDelay || 500,
+    disableTooltips: params.disableTooltips || false,
+    
+    // Callbacks
+    onSocketEvent: params.onSocketEvent,
+    onWidgetEvent: params.onWidgetEvent,
+    handleNewUserMessage: params.handleNewUserMessage,
+    customMessageDelay: params.customMessageDelay,
+    customComponent: params.customComponent,
+    customAutoComplete: params.customAutoComplete,
+    
+    // Suggestions
+    suggestionsConfig: params.suggestionsConfig,
+    
+    // Legacy support
+    selector: params.selector
   }
   
-  // Map other options
-  if (params.initPayload) config.initPayload = params.initPayload
-  if (params.customData) config.customData = params.customData
-  if (params.sessionId) config.sessionId = params.sessionId
-  if (params.sessionToken) config.sessionToken = params.sessionToken
-  if (params.autoClearCache !== undefined) config.autoClearCache = params.autoClearCache
-  if (params.contactTimeout !== undefined) config.contactTimeout = params.contactTimeout
-  
-  return config
+  // Remove undefined values to keep config clean
+  return Object.fromEntries(
+    Object.entries(config).filter(([_, value]) => value !== undefined)
+  )
 }
 
 /**
@@ -68,24 +160,16 @@ function init(params) {
     return
   }
   
-  // Map old config to new format
+  // Map config (functional properties)
   const config = mapConfig(params)
-  const theme = mapCustomizeToTheme(params.customizeWidget)
   
-  // Widget props
+  // Extract theme (visual properties)
+  const theme = extractThemeFromParams(params)
+  
+  // Widget props - config and theme separated
   const widgetProps = {
     config,
-    theme,
-    // UI options
-    title: params.title,
-    subtitle: params.subtitle,
-    inputPlaceholder: params.inputTextFieldHint,
-    showCloseButton: params.showCloseButton !== false,
-    showFullScreenButton: params.showFullScreenButton || false,
-    displayUnreadCount: params.displayUnreadCount || false,
-    embedded: params.embedded || false,
-    startFullScreen: params.startFullScreen || false,
-    // TODO: Map more options as needed
+    theme: Object.keys(theme).length > 0 ? theme : null
   }
   
   // Render widget

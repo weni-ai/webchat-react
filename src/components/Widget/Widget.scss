@@ -16,5 +16,5 @@
   justify-content: flex-end;  
   gap: $spacing-3;
 
-  @include push-animation(0, 0.25s, push-slide-in);
+  @include weni-animation(0, 0.25s, push-slide-in);
 }
