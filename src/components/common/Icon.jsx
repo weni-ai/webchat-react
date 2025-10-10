@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import ChatIcon from '@/assets/icons/chat.svg'
 import CloseIcon from '@/assets/icons/close.svg'
+import SendIcon from '@/assets/icons/send.svg'
 import './Icon.scss'
 
 /**
@@ -16,7 +17,8 @@ export function Icon({ name = '', size = 'medium', color = 'currentColor', class
 
   const icons = {
     chat: ChatIcon,
-    close: CloseIcon
+    close: CloseIcon,
+    send: SendIcon
   }
 
   const icon = icons[name]
