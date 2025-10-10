@@ -1,34 +1,20 @@
-@import './variables.scss';
-@import './animations.scss';
-
-/**
- * Weni Webchat Template - Base Styles
- * TODO: Implement complete styling system
- * TODO: Add responsive styles
- * TODO: Add animations
- * TODO: Add theme support
- */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap');
 
 /* Reset and base styles */
 * {
   box-sizing: border-box;
 }
 
-/* Chat container */
-.weni-chat-container {
-  /* TODO: Add chat container styles */
-  position: fixed;
-  bottom: 100px;
-  right: 20px;
-  width: 400px;
-  height: 600px;
-  max-height: 90vh;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+  transition: outline 0.1s ease;
+}
+
+*:focus-visible {
+  outline: 1px solid var(--weni-launcher-color);
 }
 
 /* Header */
@@ -154,3 +140,33 @@
 
 /* TODO: Add more component styles */
 
+ol, ul {
+	list-style: none;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  font: $font-body;
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
