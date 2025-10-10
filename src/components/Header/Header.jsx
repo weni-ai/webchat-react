@@ -1,8 +1,11 @@
 import React from 'react'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import Button from '../common/Button'
-import { Icon } from '../common/Icon'
+
+import { useWeniChat } from '@/hooks/useWeniChat'
 import { useChatContext } from '@/contexts/ChatContext'
+
+import Button from '@/components/common/Button'
+import Avatar from '@/components/common/Avatar'
+
 import './Header.scss'
 
 /**
@@ -11,12 +14,15 @@ import './Header.scss'
  */
 export function Header() {
   const { toggleChat } = useWeniChat()
-  const { config } = useChatContext()
 
+  const { config } = useChatContext()
+  // TODO: Implement header layout
+  // TODO: Add connection status indicator
+  
   return (
     <header className="weni-chat-header">
       <section className="weni-chat-header__info">
-        {config.profileAvatar && <Icon className="weni-chat-header__avatar" name={config.profileAvatar} size="x-large" />}
+        {config.profileAvatar && <Avatar className="weni-chat-header__avatar" src={config.profileAvatar} size="x-large" />}
 
         <hgroup className="weni-chat-header__title-group">
           <h1 className="weni-chat-header__title">{config.title}</h1>
@@ -26,7 +32,7 @@ export function Header() {
 
       <section className="weni-chat-header__actions">
         {/* TODO: Add fullscreen button */}
-        {config.showCloseButton && <Button onClick={toggleChat} aria-label="Close chat" variant="tertiary" icon="close"/>}
+        {config.showCloseButton && <Button onClick={toggleChat} aria-label="Close chat" variant="tertiary" icon="close" iconColor="white"/>}
       </section>
     </header>
   )
