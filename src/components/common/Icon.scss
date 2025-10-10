@@ -1,21 +1,24 @@
-.icon {
+.weni-icon {
   aspect-ratio: 1/1;
-
-  width: 20px;
-  height: 20px;
+  pointer-events: none;
 
   &--small {
-    width: 16px;
-    height: 16px;
+    width: $icon-size-4;
+    height: $icon-size-4;
+  }
+
+  &--medium {
+    width: $icon-size-5;
+    height: $icon-size-5;
   }
 
   &--large {
-    width: 24px;
-    height: 24px;
+    width: $icon-size-6;
+    height: $icon-size-6;
   }
 
   &--x-large {
-    width: 32px;
-    height: 32px;
+    width: $icon-size-7;
+    height: $icon-size-7;
   }
 }

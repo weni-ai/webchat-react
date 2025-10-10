@@ -1,4 +1,3 @@
-@import '@/styles/variables.scss';
 @import '@/styles/animations.scss';
 
 .weni-widget {
@@ -16,5 +15,5 @@
   justify-content: flex-end;  
   gap: $spacing-3;
 
-  @include weni-animation(0, 0.25s, push-slide-in);
+  @include weni-animation(0, 0.25s, weni-slide-in);
 }

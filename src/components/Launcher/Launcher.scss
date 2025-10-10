@@ -1,4 +1,4 @@
-@import '@/styles/variables.scss';
+
 @import '@/styles/animations.scss';
 
 .weni-launcher {
@@ -17,6 +17,8 @@
   border: 0;
   border-radius: $border-radius-full;
   background-color: var(--launcherColor);
+  
+  overflow: hidden;
 
   overflow: hidden;
   cursor: pointer;
@@ -36,4 +38,11 @@
 
 .weni-launcher-icon--click-close {
   @include weni-animation(0, 0.25s, weni-rotation-lr);
+
+  &.weni-launcher-icon--profile {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+  }
 }
