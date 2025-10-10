@@ -1,6 +1,6 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import './Avatar.scss'
+import PropTypes from 'prop-types';
+import { useState } from 'react';
+import './Avatar.scss';
 
 /**
  * Avatar - User avatar component
@@ -22,7 +22,7 @@ export function Avatar({
   onError = null,
   ...props 
 }) {
-  const [imageError, setImageError] = React.useState(false)
+  const [imageError, setImageError] = useState(false);
 
   const getInitials = () => {
     if (name) {
@@ -31,20 +31,20 @@ export function Avatar({
         .map(word => word[0])
         .join('')
         .toUpperCase()
-        .slice(0, 2)
+        .slice(0, 2);
     }
-    return ''
-  }
+    return '';
+  };
   
   const handleImageError = (e) => {
-    setImageError(true)
+    setImageError(true);
     if (onError) {
-      onError(e)
+      onError(e);
     }
-  }
+  };
   
-  const displayInitials = getInitials()
-  const showImage = src && !imageError
+  const displayInitials = getInitials();
+  const showImage = src && !imageError;
   
   return (
     <section 
@@ -66,7 +66,7 @@ export function Avatar({
         </p>
       )}
     </section>
-  )
+  );
 }
 
 Avatar.propTypes = {
@@ -80,7 +80,7 @@ Avatar.propTypes = {
   className: PropTypes.string,
   /** Callback when image fails to load */
   onError: PropTypes.func
-}
+};
 
-export default Avatar
+export default Avatar;
 

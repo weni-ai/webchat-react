@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * Badge - Notification badge component
@@ -10,24 +9,24 @@ import PropTypes from 'prop-types'
  */
 export function Badge({ count, max = 99, variant = 'primary' }) {
   // TODO: Format count (show "99+" for large numbers)
-  const displayCount = count > max ? `${max}+` : count
+  const displayCount = count > max ? `${max}+` : count;
   
   if (count === 0) {
-    return null
+    return null;
   }
   
   return (
     <span className={`weni-badge weni-badge-${variant}`}>
       {displayCount}
     </span>
-  )
+  );
 }
 
 Badge.propTypes = {
   count: PropTypes.number.isRequired,
   max: PropTypes.number,
   variant: PropTypes.oneOf(['primary', 'secondary', 'success', 'warning', 'error'])
-}
+};
 
-export default Badge
+export default Badge;
 

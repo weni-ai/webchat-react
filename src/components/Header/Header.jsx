@@ -1,7 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import Button from '../common/Button'
+import PropTypes from 'prop-types';
+
+import Button from '@/components/common/Button';
+import { useWeniChat } from '@/hooks/useWeniChat';
 
 /**
  * Header - Chat header component
@@ -11,7 +11,7 @@ import Button from '../common/Button'
  * TODO: Show connection status indicator
  */
 export function Header({ title = 'Chat', subtitle = '' }) {
-  const { toggleChat } = useWeniChat()
+  const { toggleChat } = useWeniChat();
   
   // TODO: Implement header layout
   // TODO: Add connection status indicator
@@ -30,13 +30,13 @@ export function Header({ title = 'Chat', subtitle = '' }) {
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 Header.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string
-}
+};
 
-export default Header
+export default Header;
 

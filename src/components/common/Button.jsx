@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * Button - Reusable button component
@@ -30,7 +29,7 @@ export function Button({
       {/* TODO: Add loading spinner */}
       {children}
     </button>
-  )
+  );
 }
 
 Button.propTypes = {
@@ -40,7 +39,7 @@ Button.propTypes = {
   variant: PropTypes.oneOf(['primary', 'secondary', 'ghost', 'danger']),
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool
-}
+};
 
-export default Button
+export default Button;
 

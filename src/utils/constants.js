@@ -28,7 +28,7 @@ export const EVENTS = {
   
   // Error events
   ERROR: 'error'
-}
+};
 
 export const MESSAGE_TYPES = {
   TEXT: 'text',
@@ -39,43 +39,43 @@ export const MESSAGE_TYPES = {
   FILE: 'file',
   LOCATION: 'location',
   QUICK_REPLY: 'quick_reply'
-}
+};
 
 export const MESSAGE_SENDER = {
   CLIENT: 'client',
   AGENT: 'agent',
   BOT: 'bot'
-}
+};
 
 export const STORAGE_KEYS = {
   SESSION_ID: 'weni_webchat_session_id',
   MESSAGES: 'weni_webchat_messages',
   CONTEXT: 'weni_webchat_context',
   USER_DATA: 'weni_webchat_user_data'
-}
+};
 
 export const CONNECTION_STATUS = {
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   DISCONNECTED: 'disconnected',
   ERROR: 'error'
-}
+};
 
 export const WIDGET_POSITIONS = {
   BOTTOM_RIGHT: 'bottom-right',
   BOTTOM_LEFT: 'bottom-left',
   TOP_RIGHT: 'top-right',
   TOP_LEFT: 'top-left'
-}
+};
 
 export const FILE_TYPES = {
   IMAGE: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
   VIDEO: ['video/mp4', 'video/webm', 'video/ogg'],
   AUDIO: ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
   DOCUMENT: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-}
+};
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default {
   EVENTS,
@@ -86,6 +86,6 @@ export default {
   WIDGET_POSITIONS,
   FILE_TYPES,
   MAX_FILE_SIZE
-}
+};
 
 

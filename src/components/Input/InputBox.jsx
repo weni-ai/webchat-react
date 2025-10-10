@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react'
-import PropTypes from 'prop-types'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import Button from '../common/Button'
+import PropTypes from 'prop-types';
+import { useState, useRef } from 'react';
+
+import Button from '@/components/common/Button';
+import { useWeniChat } from '@/hooks/useWeniChat';
 
 /**
  * InputBox - Message input component
@@ -14,33 +15,33 @@ import Button from '../common/Button'
  * TODO: Show typing indicator to server
  */
 export function InputBox({ placeholder = 'Type a message...', maxLength = 5000 }) {
-  const { sendMessage, sendAttachment, isConnected } = useWeniChat()
-  const [text, setText] = useState('')
-  const fileInputRef = useRef(null)
+  const { sendMessage, sendAttachment, isConnected } = useWeniChat();
+  const [text, setText] = useState('');
+  const fileInputRef = useRef(null);
   
   // TODO: Implement send message logic
   const handleSend = () => {
     if (text.trim()) {
-      sendMessage(text)
-      setText('')
+      sendMessage(text);
+      setText('');
     }
-  }
+  };
   
   // TODO: Handle Enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+      e.preventDefault();
+      handleSend();
     }
-  }
+  };
   
   // TODO: Handle file attachment
   const handleFileSelect = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
-      sendAttachment(file)
+      sendAttachment(file);
     }
-  }
+  };
   
   return (
     <div className="weni-input-box">
@@ -83,13 +84,13 @@ export function InputBox({ placeholder = 'Type a message...', maxLength = 5000 }
         {/* TODO: Add send icon */}
       </Button>
     </div>
-  )
+  );
 }
 
 InputBox.propTypes = {
   placeholder: PropTypes.string,
   maxLength: PropTypes.number
-}
+};
 
-export default InputBox
+export default InputBox;
 

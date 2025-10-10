@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * MessageImage - Image message component
@@ -27,7 +26,7 @@ export function MessageImage({ message }) {
         {/* TODO: Add timestamp */}
       </div>
     </div>
-  )
+  );
 }
 
 MessageImage.propTypes = {
@@ -37,7 +36,7 @@ MessageImage.propTypes = {
     caption: PropTypes.string,
     timestamp: PropTypes.number
   }).isRequired
-}
+};
 
-export default MessageImage
+export default MessageImage;
 
