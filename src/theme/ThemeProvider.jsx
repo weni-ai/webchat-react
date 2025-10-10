@@ -1,25 +1,22 @@
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import defaultTheme from './defaultTheme'
+import { applyThemeFromConfig } from '@/utils/themeHelpers'
 
-const ThemeContext = createContext(defaultTheme)
+const ThemeContext = createContext()
 
 /**
  * ThemeProvider - Theme context provider
- * TODO: Merge custom theme with default theme
- * TODO: Support CSS custom properties injection
- * TODO: Add theme switching support
- * TODO: Validate theme structure
+ * Applies theme configuration to CSS custom properties
  */
-export function ThemeProvider({ children, theme = null }) {
-  // TODO: Merge custom theme with default theme
-  const mergedTheme = { ...defaultTheme, ...theme }
-  
-  // TODO: Inject CSS custom properties for theme values
-  // TODO: Add theme validation
+export function ThemeProvider({ children, theme = null }) { 
+  useEffect(() => {
+    if (theme && Object.keys(theme).length > 0) {
+      applyThemeFromConfig(theme)
+    }
+  }, [theme])
   
   return (
-    <ThemeContext.Provider value={mergedTheme}>
+    <ThemeContext.Provider value={theme}>
       {children}
     </ThemeContext.Provider>
   )
@@ -27,7 +24,51 @@ export function ThemeProvider({ children, theme = null }) {
 
 ThemeProvider.propTypes = {
   children: PropTypes.node.isRequired,
-  theme: PropTypes.object
+  theme: PropTypes.shape({
+    // Colors - Header
+    titleColor: PropTypes.string,
+    subtitleColor: PropTypes.string,
+    headerBackgroundColor: PropTypes.string,
+    
+    // Colors - Chat
+    chatBackgroundColor: PropTypes.string,
+    
+    // Colors - Launcher
+    launcherColor: PropTypes.string,
+    mainColor: PropTypes.string,
+    
+    // Colors - Input
+    inputBackgroundColor: PropTypes.string,
+    inputFontColor: PropTypes.string,
+    inputPlaceholderColor: PropTypes.string,
+    
+    // Colors - User Messages
+    userMessageBubbleColor: PropTypes.string,
+    userMessageTextColor: PropTypes.string,
+    
+    // Colors - Bot Messages
+    botMessageBubbleColor: PropTypes.string,
+    botMessageTextColor: PropTypes.string,
+    fullScreenBotMessageBubbleColor: PropTypes.string,
+    
+    // Colors - Quick Replies
+    quickRepliesFontColor: PropTypes.string,
+    quickRepliesBackgroundColor: PropTypes.string,
+    quickRepliesBorderColor: PropTypes.string,
+    quickRepliesBorderWidth: PropTypes.string,
+    
+    // Colors - Suggestions
+    suggestionsBackgroundColor: PropTypes.string,
+    suggestionsSeparatorColor: PropTypes.string,
+    suggestionsFontColor: PropTypes.string,
+    suggestionsHoverFontColor: PropTypes.string,
+    
+    // Dimensions
+    widgetHeight: PropTypes.string,
+    widgetWidth: PropTypes.string,
+    launcherHeight: PropTypes.string,
+    launcherWidth: PropTypes.string
+  }),
 }
 
 export const useTheme = () => {
