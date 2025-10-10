@@ -1,0 +1,24 @@
+.weni-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  pointer-events: none;
+  vertical-align: middle;
+
+  &--small {
+    font-size: $icon-size-4;
+  }
+
+  &--medium {
+    font-size: $icon-size-5;
+  }
+
+  &--large {
+    font-size: $icon-size-6;
+  }
+
+  &--x-large {
+    font-size: $icon-size-7;
+  }
+}
