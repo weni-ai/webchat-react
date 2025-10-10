@@ -18,21 +18,22 @@
   border-radius: $border-radius-full;
   background-color: var(--launcherColor);
 
+  overflow: hidden;
   cursor: pointer;
 
   &--hovering {
-    @include push-animation(0, 0.25s, push-scale-hover-in);
+    @include weni-animation(0, 0.25s, weni-scale-hover-in);
   }
 
   &--out-hovering, &:active {
-    @include push-animation(0, 0.25s, push-scale-hover-out);
+    @include weni-animation(0, 0.25s, weni-scale-hover-out);
   }
 }
 
 .weni-launcher-icon--click-open {
-  @include push-animation(0, 0.25s, push-rotation-rl);
+  @include weni-animation(0, 0.25s, weni-rotation-rl);
 }
 
 .weni-launcher-icon--click-close {
-  @include push-animation(0, 0.25s, push-rotation-lr);
+  @include weni-animation(0, 0.25s, weni-rotation-lr);
 }

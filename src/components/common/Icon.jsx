@@ -10,7 +10,7 @@ import './Icon.scss'
  * TODO: Add color customization
  * TODO: Implement common icons (send, attach, close, etc.)
  */
-export function Icon({ name, size = 'medium', color = 'currentColor', className = '', ...props }) {
+export function Icon({ name = '', size = 'medium', color = 'currentColor', className = '', ...props }) {
   // TODO: Implement icon rendering based on icon library
   // TODO: Support custom SVG icons
 
@@ -20,17 +20,13 @@ export function Icon({ name, size = 'medium', color = 'currentColor', className 
   }
 
   const icon = icons[name]
-
-  if (!icon) {
-    return null
-  }
   
   return (
     <img 
-      className={`icon icon--${name} icon--${size} ${className}`}
+      className={`weni-icon weni-icon--${name} weni-icon--${size} ${className}`}
       style={{ color }}
-      alt={name}
-      src={icon}
+      alt={icon ? name : ''}
+      src={icon || name}
       {...props}
     />
   )

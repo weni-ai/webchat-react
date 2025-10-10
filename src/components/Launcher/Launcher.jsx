@@ -6,6 +6,8 @@ import { useWeniChat } from '@/hooks/useWeniChat'
 import Badge from '@/components/common/Badge'
 import { Icon } from '@/components/common/Icon'
 
+import { useChatContext } from '@/contexts/ChatContext'
+
 import './Launcher.scss'
 
 /**
@@ -15,6 +17,7 @@ import './Launcher.scss'
  */
 export function Launcher() {
   const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
+  const { config } = useChatContext()
   const [isHovering, setIsHovering] = useState(false);
   const [isOutHovering, setIsOutHovering] = useState(false);
   
@@ -36,7 +39,11 @@ export function Launcher() {
       {!isChatOpen && unreadCount > 0 && (
         <Badge count={unreadCount} />
       )}
-      <Icon className={isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"} name={isChatOpen ? "close" : "chat"} size="x-large" />
+      <Icon
+        className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"} ${config.profileAvatar ? "weni-launcher-icon--profile" : ''}`} 
+        name={isChatOpen ? "close" : config.profileAvatar || "chat"} 
+        size="x-large" 
+      />
     </button>
   )
 }
