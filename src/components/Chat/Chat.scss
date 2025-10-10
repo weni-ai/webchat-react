@@ -1,8 +1,7 @@
-@import '@/styles/variables.scss';
 @import '@/styles/animations.scss';
 
-.weni-chat-container {
-  @include push-animation(0, 0.25s, push-expand-in);
+.weni-chat {
+  @include weni-animation(0, 0.25s, weni-expand-in);
 
   width: var(--widgetWidth);
   height: var(--widgetHeight);
@@ -17,6 +16,12 @@
   overflow: hidden;
 
   &--closing {
-    @include push-animation(0, 0.25s, push-expand-out);
+    @include weni-animation(0, 0.25s, weni-expand-out);
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
   }
 }

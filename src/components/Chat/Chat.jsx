@@ -38,11 +38,13 @@ export function Chat() {
   }
   
   return (
-    <section className={`weni-chat-container ${isClosing ? 'weni-chat-container--closing' : ''}`}>
+    <section className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''}`}>
       <Header />
       <MessagesList />
-      <InputBox />
-      <PoweredBy />
+      <footer className="weni-chat__footer">
+        <InputBox />
+        <PoweredBy />
+      </footer>
     </section>
   )
 }
