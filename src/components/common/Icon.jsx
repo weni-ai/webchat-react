@@ -13,11 +13,12 @@ import './Icon.scss'
  * @example
  * <Icon name="send" size="medium" />
  * <Icon name="close" size="large" filled />
+ * <Icon name="error" color="red-500" />
  */
 export function Icon({ 
   name = '', 
   size = 'medium', 
-  color = 'currentColor',
+  color = '',
   filled = false,
   outlined = false,
   weight = 400,
@@ -27,9 +28,10 @@ export function Icon({
   ...props 
 }) {
   const variantClass = outlined ? 'material-symbols-outlined' : 'material-symbols-rounded'
+
   
   const style = {
-    color,
+    color: color ? `var(--${color})` : 'currentColor',
     fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`
   }
   

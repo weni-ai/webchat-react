@@ -4,80 +4,7 @@
  * Naming convention follows push-webchat for backward compatibility
  */
 
-:root {
-  /* Main Color */
-  --weni-main-color: #00A49F;
-
-  /* Header Colors */
-  --weni-title-color: #ffffff;
-  --weni-subtitle-color: #ffffff;
-  --weni-header-bg-color: var(--weni-main-color);
-  
-  /* Chat Container */
-  --weni-chat-bg-color: #ffffff;
-  --weni-widget-height: 65vh;
-  --weni-widget-width: 360px;
-  
-  /* Launcher */
-  --weni-launcher-color: var(--weni-main-color);
-  --weni-launcher-height: 60px;
-  --weni-launcher-width: 60px;
-  
-  /* Input Field */
-  --weni-input-bg-color: #ffffff;
-  --weni-input-font-color: #353945;
-  --weni-input-placeholder-color: #B2B9C7;
-  
-  /* User Messages */
-  --weni-user-message-bubble-color: var(--weni-main-color);
-  --weni-user-message-text-color: #ffffff;
-  
-  /* Bot Messages */
-  --weni-bot-message-bubble-color: #F6F7F9;
-  --weni-bot-message-text-color: #000000;
-  --weni-fullscreen-bot-message-bubble-color: rgba(0, 0, 0, 0);
-  
-  /* Quick Replies */
-  --weni-quick-replies-font-color: var(--weni-main-color);
-  --weni-quick-replies-bg-color: transparent;
-  --weni-quick-replies-border-color: var(--weni-main-color);
-  --weni-quick-replies-border-width: 1px;
-  
-  /* Suggestions */
-  --weni-suggestions-bg-color: #ECEEF2;
-  --weni-suggestions-separator-color: #D6D9E1;
-  --weni-suggestions-font-color: #8893A8;
-  --weni-suggestions-hover-font-color: #1B4F89;
-  
-  /* Legacy support - kept for backward compatibility */
-  --titleColor: var(--weni-title-color);
-  --subtitleColor: var(--weni-subtitle-color);
-  --headerBackgroundColor: var(--weni-header-bg-color);
-  --chatBackgroundColor: var(--weni-chat-bg-color);
-  --inputBackgroundColor: var(--weni-input-bg-color);
-  --inputFontColor: var(--weni-input-font-color);
-  --inputPlaceholderColor: var(--weni-input-placeholder-color);
-  --userMessageBubbleColor: var(--weni-user-message-bubble-color);
-  --userMessageTextColor: var(--weni-user-message-text-color);
-  --botMessageBubbleColor: var(--weni-bot-message-bubble-color);
-  --botMessageTextColor: var(--weni-bot-message-text-color);
-  --widgetHeight: var(--weni-widget-height);
-  --widgetWidth: var(--weni-widget-width);
-  --launcherHeight: var(--weni-launcher-height);
-  --launcherWidth: var(--weni-launcher-width);
-  --launcherColor: var(--weni-launcher-color);
-  --quickRepliesFontColor: var(--weni-quick-replies-font-color);
-  --quickRepliesBackgroundColor: var(--weni-quick-replies-bg-color);
-  --quickRepliesBorderColor: var(--weni-quick-replies-border-color);
-  --quickRepliesBorderWidth: var(--weni-quick-replies-border-width);
-  --fullScreenBotMessageBubbleColor: var(--weni-fullscreen-bot-message-bubble-color);
-  --suggestionsBackgroundColor: var(--weni-suggestions-bg-color);
-  --suggestionsSeparatorColor: var(--weni-suggestions-separator-color);
-  --suggestionsFontColor: var(--weni-suggestions-font-color);
-  --suggestionsHoverFontColor: var(--weni-suggestions-hover-font-color);
-}
-
-/* Colors */
+ /* Colors */
 $black: #000;
 $white: #fff;
 
@@ -253,3 +180,202 @@ $font-emphasis: 500 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-si
 $font-action: 700 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-size) /* 21px */ $font-family;
 $font-caption-1: 500 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;
 $font-caption-2: 400 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;
+
+ :root {
+  /* Main Color */
+  --weni-main-color: #00A49F;
+
+  /* Header Colors */
+  --weni-title-color: #ffffff;
+  --weni-subtitle-color: #ffffff;
+  --weni-header-bg-color: var(--weni-main-color);
+  
+  /* Chat Container */
+  --weni-chat-bg-color: #ffffff;
+  --weni-widget-height: 65vh;
+  --weni-widget-width: 360px;
+  
+  /* Launcher */
+  --weni-launcher-color: var(--weni-main-color);
+  --weni-launcher-height: 60px;
+  --weni-launcher-width: 60px;
+  
+  /* Input Field */
+  --weni-input-bg-color: #ffffff;
+  --weni-input-font-color: #353945;
+  --weni-input-placeholder-color: #B2B9C7;
+  
+  /* User Messages */
+  --weni-user-message-bubble-color: var(--weni-main-color);
+  --weni-user-message-text-color: #ffffff;
+  
+  /* Bot Messages */
+  --weni-bot-message-bubble-color: #F6F7F9;
+  --weni-bot-message-text-color: #000000;
+  --weni-fullscreen-bot-message-bubble-color: rgba(0, 0, 0, 0);
+  
+  /* Quick Replies */
+  --weni-quick-replies-font-color: var(--weni-main-color);
+  --weni-quick-replies-bg-color: transparent;
+  --weni-quick-replies-border-color: var(--weni-main-color);
+  --weni-quick-replies-border-width: 1px;
+  
+  /* Suggestions */
+  --weni-suggestions-bg-color: #ECEEF2;
+  --weni-suggestions-separator-color: #D6D9E1;
+  --weni-suggestions-font-color: #8893A8;
+  --weni-suggestions-hover-font-color: #1B4F89;
+  
+  /* Legacy support - kept for backward compatibility */
+  --titleColor: var(--weni-title-color);
+  --subtitleColor: var(--weni-subtitle-color);
+  --headerBackgroundColor: var(--weni-header-bg-color);
+  --chatBackgroundColor: var(--weni-chat-bg-color);
+  --inputBackgroundColor: var(--weni-input-bg-color);
+  --inputFontColor: var(--weni-input-font-color);
+  --inputPlaceholderColor: var(--weni-input-placeholder-color);
+  --userMessageBubbleColor: var(--weni-user-message-bubble-color);
+  --userMessageTextColor: var(--weni-user-message-text-color);
+  --botMessageBubbleColor: var(--weni-bot-message-bubble-color);
+  --botMessageTextColor: var(--weni-bot-message-text-color);
+  --widgetHeight: var(--weni-widget-height);
+  --widgetWidth: var(--weni-widget-width);
+  --launcherHeight: var(--weni-launcher-height);
+  --launcherWidth: var(--weni-launcher-width);
+  --launcherColor: var(--weni-launcher-color);
+  --quickRepliesFontColor: var(--weni-quick-replies-font-color);
+  --quickRepliesBackgroundColor: var(--weni-quick-replies-bg-color);
+  --quickRepliesBorderColor: var(--weni-quick-replies-border-color);
+  --quickRepliesBorderWidth: var(--weni-quick-replies-border-width);
+  --fullScreenBotMessageBubbleColor: var(--weni-fullscreen-bot-message-bubble-color);
+  --suggestionsBackgroundColor: var(--weni-suggestions-bg-color);
+  --suggestionsSeparatorColor: var(--weni-suggestions-separator-color);
+  --suggestionsFontColor: var(--weni-suggestions-font-color);
+  --suggestionsHoverFontColor: var(--weni-suggestions-hover-font-color);
+
+  /* Base Colors */
+  --black: #{$black};
+  --white: #{$white};
+  --gray-50: #{$gray-50};
+  --gray-100: #{$gray-100};
+  --gray-200: #{$gray-200};
+  --gray-300: #{$gray-300};
+  --gray-400: #{$gray-400};
+  --gray-500: #{$gray-500};
+  --gray-600: #{$gray-600};
+  --gray-700: #{$gray-700};
+  --gray-800: #{$gray-800};
+  --gray-900: #{$gray-900};
+  --gray-950: #{$gray-950};
+
+  --teal-50: #{$teal-50};
+  --teal-100: #{$teal-100};
+  --teal-200: #{$teal-200};
+  --teal-300: #{$teal-300};
+  --teal-400: #{$teal-400};
+  --teal-500: #{$teal-500};
+  --teal-600: #{$teal-600};
+  --teal-700: #{$teal-700};
+  --teal-800: #{$teal-800};
+  --teal-900: #{$teal-900};
+  --teal-950: #{$teal-950};
+
+  --green-50: #{$green-50};
+  --green-100: #{$green-100};
+  --green-200: #{$green-200};
+  --green-300: #{$green-300};
+  --green-400: #{$green-400};
+  --green-500: #{$green-500};
+  --green-600: #{$green-600};
+  --green-700: #{$green-700};
+  --green-800: #{$green-800};
+  --green-900: #{$green-900};
+  --green-950: #{$green-950};
+
+  --blue-50: #{$blue-50};
+  --blue-100: #{$blue-100};
+  --blue-200: #{$blue-200};
+  --blue-300: #{$blue-300};
+  --blue-400: #{$blue-400};
+  --blue-500: #{$blue-500};
+  --blue-600: #{$blue-600};
+  --blue-700: #{$blue-700};
+  --blue-800: #{$blue-800};
+  --blue-900: #{$blue-900};
+  --blue-950: #{$blue-950};
+
+  --purple-50: #{$purple-50};
+  --purple-100: #{$purple-100};
+  --purple-200: #{$purple-200};
+  --purple-300: #{$purple-300};
+  --purple-400: #{$purple-400};
+  --purple-500: #{$purple-500};
+  --purple-600: #{$purple-600};
+  --purple-700: #{$purple-700};
+  --purple-800: #{$purple-800};
+  --purple-900: #{$purple-900};
+  --purple-950: #{$purple-950};
+
+  --red-50: #{$red-50};
+  --red-100: #{$red-100};
+  --red-200: #{$red-200};
+  --red-300: #{$red-300};
+  --red-400: #{$red-400};
+  --red-500: #{$red-500};
+  --red-600: #{$red-600};
+  --red-700: #{$red-700};
+  --red-800: #{$red-800};
+  --red-900: #{$red-900};
+  --red-950: #{$red-950};
+
+  --orange-50: #{$orange-50};
+  --orange-100: #{$orange-100};
+  --orange-200: #{$orange-200};
+  --orange-300: #{$orange-300};
+  --orange-400: #{$orange-400};
+  --orange-500: #{$orange-500};
+  --orange-600: #{$orange-600};
+  --orange-700: #{$orange-700};
+  --orange-800: #{$orange-800};
+  --orange-900: #{$orange-900};
+  --orange-950: #{$orange-950};
+
+  --yellow-50: #{$yellow-50};
+  --yellow-100: #{$yellow-100};
+  --yellow-200: #{$yellow-200};
+  --yellow-300: #{$yellow-300};
+  --yellow-400: #{$yellow-400};
+  --yellow-500: #{$yellow-500};
+  --yellow-600: #{$yellow-600};
+  --yellow-700: #{$yellow-700};
+  --yellow-800: #{$yellow-800};
+  --yellow-900: #{$yellow-900};
+  --yellow-950: #{$yellow-950};
+
+  --bg-base: #{$bg-base};
+  --bg-soft: #{$bg-soft};
+  --bg-muted: #{$bg-muted};
+  --bg-active: #{$bg-active};
+  --bg-info: #{$bg-info};
+  --bg-success: #{$bg-success};
+  --bg-warning: #{$bg-warning};
+  --bg-critical: #{$bg-critical};
+  --fg-base: #{$fg-base};
+  --fg-muted: #{$fg-muted};
+  --fg-emphasized: #{$fg-emphasized};
+  --fg-inverted: #{$fg-inverted};
+  --fg-active: #{$fg-active};
+  --fg-info: #{$fg-info};
+  --fg-success: #{$fg-success};
+  --fg-warning: #{$fg-warning};
+  --fg-critical: #{$fg-critical};
+  --border-base: #{$border-base};
+  --border-soft: #{$border-soft};
+  --border-muted: #{$border-muted};
+  --border-emphasized: #{$border-emphasized};
+  --border-active: #{$border-active};
+  --border-info: #{$border-info};
+  --border-success: #{$border-success};
+  --border-warning: #{$border-warning};
+  --border-critical: #{$border-critical};
+}
