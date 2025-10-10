@@ -18,10 +18,24 @@ export function Button({
   size = 'medium',
   isLoading = false,
   icon = '',
+  iconColor = '',
   ...props 
 }) {
   // TODO: Implement button variants and sizes
   // TODO: Add loading spinner when isLoading is true
+
+  function getIconColor() {
+    if (disabled) return 'fg-muted'
+    
+    const mapColorToVariant = {
+      primary: 'white',
+      secondary: 'fg-emphasized',
+      tertiary: 'fg-emphasized',
+      warning: 'white',
+      attention: 'white'
+    }
+    return iconColor || mapColorToVariant[variant]
+  }
   
   return (
     <button
@@ -31,7 +45,7 @@ export function Button({
       {...props}
     >
       {/* TODO: Add loading spinner */}
-      {icon && <Icon name={icon} />}
+      {icon && <Icon name={icon} color={getIconColor()} />}
 
       {children}
     </button>
@@ -44,7 +58,8 @@ Button.propTypes = {
   variant: PropTypes.oneOf(['primary', 'secondary', 'tertiary', 'warning', 'attention']),
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool,
-  icon: PropTypes.string
+  icon: PropTypes.string,
+  iconColor: PropTypes.string
 }
 
 export default Button
