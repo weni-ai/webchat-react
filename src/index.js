@@ -19,6 +19,7 @@ export { default as MessageDocument } from './components/Messages/MessageDocumen
 export { default as InputBox } from './components/Input/InputBox'
 
 // Common Components
+export { default as Avatar } from './components/common/Avatar'
 export { default as Badge } from './components/common/Badge'
 export { default as Button } from './components/common/Button'
 export { default as Icon } from './components/common/Icon'
