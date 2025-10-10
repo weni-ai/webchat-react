@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * MessageDocument - Document/File message component
@@ -33,7 +32,7 @@ export function MessageDocument({ message }) {
         {/* TODO: Add timestamp */}
       </div>
     </div>
-  )
+  );
 }
 
 MessageDocument.propTypes = {
@@ -44,7 +43,7 @@ MessageDocument.propTypes = {
     sender: PropTypes.oneOf(['client', 'agent', 'bot']).isRequired,
     timestamp: PropTypes.number
   }).isRequired
-}
+};
 
-export default MessageDocument
+export default MessageDocument;
 

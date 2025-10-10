@@ -1,7 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import Badge from '../common/Badge'
+import PropTypes from 'prop-types';
+
+import Badge from '@/components/common/Badge';
+import { useWeniChat } from '@/hooks/useWeniChat';
 
 /**
  * Launcher - Chat launcher button
@@ -11,7 +11,7 @@ import Badge from '../common/Badge'
  * TODO: Handle click to toggle chat
  */
 export function Launcher({ position = 'bottom-right' }) {
-  const { isChatOpen, unreadCount, toggleChat } = useWeniChat()
+  const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
   
   // TODO: Implement launcher visibility logic
   // TODO: Add animations for open/close states
@@ -29,12 +29,12 @@ export function Launcher({ position = 'bottom-right' }) {
         )}
       </button>
     </div>
-  )
+  );
 }
 
 Launcher.propTypes = {
   position: PropTypes.oneOf(['bottom-right', 'bottom-left', 'top-right', 'top-left'])
-}
+};
 
-export default Launcher
+export default Launcher;
 

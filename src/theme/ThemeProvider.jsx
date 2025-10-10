@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect } from 'react'
-import PropTypes from 'prop-types'
-import { applyThemeFromConfig } from '@/utils/themeHelpers'
+import PropTypes from 'prop-types';
+import { createContext, useContext, useEffect } from 'react';
 
-const ThemeContext = createContext()
+import { applyThemeFromConfig } from '@/utils/themeHelpers';
+
+const ThemeContext = createContext();
 
 /**
  * ThemeProvider - Theme context provider
@@ -11,15 +12,15 @@ const ThemeContext = createContext()
 export function ThemeProvider({ children, theme = null }) { 
   useEffect(() => {
     if (theme && Object.keys(theme).length > 0) {
-      applyThemeFromConfig(theme)
+      applyThemeFromConfig(theme);
     }
-  }, [theme])
+  }, [theme]);
   
   return (
     <ThemeContext.Provider value={theme}>
       {children}
     </ThemeContext.Provider>
-  )
+  );
 }
 
 ThemeProvider.propTypes = {
@@ -69,15 +70,15 @@ ThemeProvider.propTypes = {
     launcherHeight: PropTypes.string,
     launcherWidth: PropTypes.string
   }),
-}
+};
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext)
+  const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider')
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
-  return context
-}
+  return context;
+};
 
-export default ThemeProvider
+export default ThemeProvider;
 

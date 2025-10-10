@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import PropTypes from 'prop-types'
-import WeniWebchatService from '@weni/webchat-service'
+import WeniWebchatService from '@weni/webchat-service';
+import PropTypes from 'prop-types';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-const ChatContext = createContext()
+const ChatContext = createContext();
 
 /**
  * Default configuration values
@@ -33,7 +33,7 @@ const defaultConfig = {
   // Tooltips
   tooltipDelay: 500,
   disableTooltips: false
-}
+};
 
 /**
  * ChatProvider - Context provider that integrates WeniWebchatService
@@ -43,37 +43,37 @@ const defaultConfig = {
  */
 export function ChatProvider({ children, config }) {
   // Merge config with defaults
-  const mergedConfig = { ...defaultConfig, ...config }
+  const mergedConfig = { ...defaultConfig, ...config };
   
-  const [service] = useState(() => new WeniWebchatService(mergedConfig))
-  const [messages, setMessages] = useState([])
-  const [isConnected, setIsConnected] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-  const [isChatOpen, setIsChatOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [configState] = useState(mergedConfig)
+  const [service] = useState(() => new WeniWebchatService(mergedConfig));
+  const [messages, setMessages] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [configState] = useState(mergedConfig);
   
   useEffect(() => {
     // TODO: Initialize service with proper error handling
-    service.init()
+    service.init();
     
     // TODO: Setup all event listeners
-    service.on('connected', () => setIsConnected(true))
-    service.on('disconnected', () => setIsConnected(false))
+    service.on('connected', () => setIsConnected(true));
+    service.on('disconnected', () => setIsConnected(false));
     service.on('message:received', (msg) => {
-      setMessages(prev => [...prev, msg])
+      setMessages(prev => [...prev, msg]);
       // TODO: Update unread count when chat is closed
-    })
-    service.on('typing:start', () => setIsTyping(true))
-    service.on('typing:stop', () => setIsTyping(false))
+    });
+    service.on('typing:start', () => setIsTyping(true));
+    service.on('typing:stop', () => setIsTyping(false));
     
     // TODO: Add more event listeners (error, state:changed, etc.)
     
     return () => {
       // TODO: Cleanup all event listeners
-      service.disconnect()
-    }
-  }, [service])
+      service.disconnect();
+    };
+  }, [service]);
   
   const value = {
     service,
@@ -88,9 +88,9 @@ export function ChatProvider({ children, config }) {
     sendMessage: (text) => service.sendMessage(text),
     sendAttachment: (file) => service.sendAttachment(file),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
-  }
+  };
   
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 ChatProvider.propTypes = {
@@ -171,14 +171,14 @@ ChatProvider.propTypes = {
     // Legacy support
     selector: PropTypes.string
   }).isRequired
-}
+};
 
 export const useChatContext = () => {
-  const context = useContext(ChatContext)
+  const context = useContext(ChatContext);
   if (!context) {
-    throw new Error('useChatContext must be used within a ChatProvider')
+    throw new Error('useChatContext must be used within a ChatProvider');
   }
-  return context
-}
+  return context;
+};
 
-export default ChatContext
+export default ChatContext;

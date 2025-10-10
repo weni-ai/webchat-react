@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 /**
  * MessageAudio - Audio message component
@@ -29,7 +28,7 @@ export function MessageAudio({ message }) {
         {/* TODO: Add timestamp */}
       </div>
     </div>
-  )
+  );
 }
 
 MessageAudio.propTypes = {
@@ -39,7 +38,7 @@ MessageAudio.propTypes = {
     duration: PropTypes.number,
     timestamp: PropTypes.number
   }).isRequired
-}
+};
 
-export default MessageAudio
+export default MessageAudio;
 
