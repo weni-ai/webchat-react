@@ -23,14 +23,23 @@ import './MessagesList.scss';
  * TODO: Show typing indicator
  */
 export function MessagesList() {
-  const { isTyping, messageGroups } = useWeniChat();
+  const { isTyping, messageGroups, isChatOpen } = useWeniChat();
   const { config } = useChatContext();
   const messagesEndRef = useRef(null);
 
-  // TODO: Auto-scroll to bottom on new messages
+  function scrollToBottom(behavior = 'smooth') {
+    messagesEndRef.current?.scrollIntoView({ behavior })
+  }
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom()
   }, [messageGroups]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollToBottom('instant')
+    }, 50);
+  }, [isChatOpen]);
 
   // TODO: Handle scroll to load history
 

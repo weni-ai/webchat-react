@@ -1,9 +1,5 @@
 .weni-message-text {
   font: $font-caption-2;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-
   &--incoming {
     color: $fg-emphasized;
   }
@@ -13,9 +9,11 @@
   }
 
   & > * {
+    max-width: 100%;
+
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
     text-wrap: auto;
-    margin: 0;
-    padding: 0;
   }
 
   // Markdown elements styling
