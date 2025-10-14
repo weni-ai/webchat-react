@@ -30,6 +30,8 @@
     "@weni/webchat-service": "^1.0.0"
   },
   "dependencies": {
+    "dompurify": "^3.3.0",
+    "marked": "^16.4.0",
     "material-symbols": "^0.36.3",
     "prop-types": "^15.8.1"
   },
