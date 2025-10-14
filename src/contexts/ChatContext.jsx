@@ -54,7 +54,6 @@ const defaultConfig = {
  * - Visual preferences
  */
 export function ChatProvider({ children, config }) {
-  // Merge config with defaults
   const mergedConfig = { ...defaultConfig, ...config };
   
   const [service] = useState(() => new WeniWebchatService(mergedConfig));
