@@ -15,9 +15,8 @@
   &__message {
     width: fit-content;
 
-    grid-column: 2 / 3;
-
     &--incoming {
+      grid-column: 2 / 3;
       justify-self: flex-start;
     }
 
@@ -30,10 +29,10 @@
     max-width: 75%;
 
     display: grid;
-    grid-template-columns: minmax($icon-size-5, auto) 1fr;
     gap: $spacing-1;
 
     &--incoming {
+      grid-template-columns: minmax($icon-size-5, auto) 1fr;
       align-self: flex-start;
     }
 

@@ -34,6 +34,10 @@
   animation-timing-function: ease-out;
   animation-fill-mode: both;
 
+  &--image {
+    padding: $spacing-2;
+  }
+
   &--incoming {
     background-color: $bg-soft;
     border-radius: $border-radius-0 $border-radius $border-radius $border-radius;

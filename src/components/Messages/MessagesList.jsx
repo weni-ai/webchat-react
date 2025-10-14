@@ -52,6 +52,7 @@ export function MessagesList() {
     // TODO: Implement proper message type routing
     switch (message.type) {
       case 'text':
+      case 'message':
         return <MessageText message={message} componentsEnabled={enableComponents(message)}/>;
       case 'image':
         return <MessageImage message={message} />;
@@ -82,6 +83,7 @@ export function MessagesList() {
             <MessageContainer 
               className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
               direction={group.direction}
+              type={message.type}
               key={message.id || messageIndex}
             >
               {renderMessage(message)}
