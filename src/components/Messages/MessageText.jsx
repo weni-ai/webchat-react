@@ -3,9 +3,7 @@ import PropTypes from 'prop-types';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
-import { useChatContext } from '@/contexts/ChatContext';
-
-import Button from '@/components/common/Button';
+import { QuickReplies } from './TextComponents/QuickReplies';
 
 import './MessageText.scss';
 
@@ -16,9 +14,7 @@ import './MessageText.scss';
  * TODO: Show message status (sent, delivered, read)
  * TODO: Handle quick replies
  */
-export function MessageText({ message, enableComponents }) {
-  const { sendMessage } = useChatContext();
-
+export function MessageText({ message, componentsEnabled }) {
   const html = useMemo(() => {
     if (!message.text) return '';
 
@@ -55,11 +51,7 @@ export function MessageText({ message, enableComponents }) {
       />
 
       {message.quick_replies && (
-        <section className="weni-message-text__quick-replies">
-          {message.quick_replies.map((reply) => (
-            <Button key={reply} variant="secondary" disabled={!enableComponents} onClick={() => sendMessage(reply)}>{reply}</Button>
-          ))}
-        </section>
+        <QuickReplies quickReplies={message.quick_replies} disabled={!componentsEnabled} />
       )}
     </>
   );
@@ -76,7 +68,7 @@ MessageText.propTypes = {
     metadata: PropTypes.object,
     quick_replies: PropTypes.array
   }).isRequired,
-  enableComponents: PropTypes.bool
+  componentsEnabled: PropTypes.bool
 };
 
 export default MessageText;

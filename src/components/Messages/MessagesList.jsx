@@ -52,7 +52,7 @@ export function MessagesList() {
     // TODO: Implement proper message type routing
     switch (message.type) {
       case 'text':
-        return <MessageText message={message} enableComponents={enableComponents(message)}/>;
+        return <MessageText message={message} componentsEnabled={enableComponents(message)}/>;
       case 'image':
         return <MessageImage message={message} />;
       case 'video':
@@ -63,7 +63,7 @@ export function MessagesList() {
       case 'file':
         return <MessageDocument message={message} />;
       default:
-        return <MessageText message={message} enableComponents={enableComponents(message)}/>;
+        return <MessageText message={message} componentsEnabled={enableComponents(message)}/>;
     }
   };
 

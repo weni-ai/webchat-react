@@ -8,13 +8,6 @@
     color: $white;
   }
 
-  &__quick-replies {
-    margin-top: $spacing-2;
-
-    display: grid;
-    gap: $spacing-1;
-  }
-
   & > * {
     max-width: 100%;
 
