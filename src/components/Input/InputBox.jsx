@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -6,6 +6,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 
 import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
+import AudioRecorder from './AudioRecorder';
 
 import './InputBox.scss';
 
@@ -15,15 +16,25 @@ import './InputBox.scss';
  * TODO: Add character limit indicator
  */
 export function InputBox({ maxLength = 5000 }) {
-  const { sendMessage, isConnected } = useWeniChat()
+  const { isConnected } = useWeniChat()
+  const { isRecording, sendMessage, stopAndSendAudio, requestAudioPermission, hasAudioPermission, startRecording } = useChatContext();
   const { config } = useChatContext();
+
   const [text, setText] = useState('');
+  const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
+
   const fileInputRef = useRef(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    if (isRecording) {
+      await stopAndSendAudio();
+      return;
+    } 
+    
     if (text.trim()) {
       sendMessage(text);
       setText('');
+      return;
     }
   };
 
@@ -33,6 +44,42 @@ export function InputBox({ maxLength = 5000 }) {
       handleSend();
     }
   };
+
+  const getHasAudioPermission = async () => {
+    setHasAudioPermissionState(await hasAudioPermission());
+  }
+
+  useEffect(() => {
+    getHasAudioPermission();
+  }, []);
+
+  const handleRecordAudio = async () => {
+    if (hasAudioPermissionState === undefined) {
+      const audioPermission = await requestAudioPermission();
+      setHasAudioPermissionState(audioPermission);
+
+      if (audioPermission) startRecording();
+      return;
+    };
+
+    if (hasAudioPermissionState) startRecording();
+  };
+
+  if (isRecording) {
+    return (
+      <section className="weni-input-box">
+        <AudioRecorder />
+        
+        <Button
+          onClick={handleSend}
+          variant="primary"
+          icon="send"
+          disabled={!isConnected}
+          aria-label="Send audio"
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="weni-input-box">
@@ -73,11 +120,11 @@ export function InputBox({ maxLength = 5000 }) {
           />
 
           <Button
-            onClick={handleSend}
+            onClick={handleRecordAudio}
             variant="tertiary"
             icon="mic"
             iconColor="gray-900"
-            disabled={!isConnected}
+            disabled={!isConnected || hasAudioPermissionState === false}
             aria-label="Record audio"
           />
         </>

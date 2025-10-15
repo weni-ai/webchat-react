@@ -55,11 +55,22 @@ const defaultConfig = {
  */
 export function ChatProvider({ children, config }) {
   const mergedConfig = { ...defaultConfig, ...config };
-  
+
+  // Service instance
   const [service] = useState(() => new WeniWebchatService(mergedConfig));
-  const [messages, setMessages] = useState([]);
+
+  // Websocket state
   const [isConnected, setIsConnected] = useState(false);
+
+  // Messages state
+  const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  
+  // Audio recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+
+  // UI-specific state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
@@ -68,7 +79,7 @@ export function ChatProvider({ children, config }) {
     service.init().catch((error) => {
       console.error('Failed to initialize service:', error);
     });
-    
+
     service.on('state:changed', (newState) => {
       if (newState.messages) {
         setMessages(newState.messages);
@@ -76,18 +87,24 @@ export function ChatProvider({ children, config }) {
       if (newState.isTyping !== undefined) {
         setIsTyping(newState.isTyping);
       }
-      if (newState.connection?.status) {
-        setIsConnected(newState.connection.status === 'connected');
-      }
     });
 
     service.on('connected', () => setIsConnected(true));
     service.on('disconnected', () => setIsConnected(false));
+
+    service.on('recording:started', () => setIsRecording(true));
+    service.on('recording:stopped', () => setIsRecording(false));
+    service.on('recording:tick', (duration) => setRecordingDuration(duration));
+    service.on('recording:cancelled', () => setIsRecording(false));
     
     return () => {
       service.off('state:changed');
       service.off('connected');
       service.off('disconnected');
+      service.off('recording:started');
+      service.off('recording:stopped');
+      service.off('recording:tick');
+      service.off('recording:cancelled');
       service.disconnect();
     };
   }, []);
@@ -106,10 +123,11 @@ export function ChatProvider({ children, config }) {
     };
   }, [isChatOpen]);
 
-  const sendMessage = (text) => {
-    service.sendMessage(text);
+  const stopAndSendAudio = async () => {
+    // Stop recording method is also sends the audio to the server
+    await service.stopRecording();
   };
-  
+
   const value = {
     // Service instance (for advanced use cases)
     service,
@@ -118,6 +136,9 @@ export function ChatProvider({ children, config }) {
     messages,
     isConnected,
     isTyping,
+    isRecording,
+    recordingDuration,
+    isAudioRecordingSupported: service.isAudioRecordingSupported,
     
     // UI-specific state
     isChatOpen,
@@ -128,8 +149,14 @@ export function ChatProvider({ children, config }) {
     fileConfig: service.getFileConfig(),
 
     // Service methods (proxied for convenience)
-    sendMessage,
+    sendMessage: (text) => service.sendMessage(text),
     sendAttachment: (file) => service.sendAttachment(file),
+    stopAndSendAudio,
+    startRecording: () => service.startRecording(),
+    stopRecording: () => service.stopRecording(),
+    cancelRecording: () => service.cancelRecording(),
+    hasAudioPermission: () => service.hasAudioPermission(),
+    requestAudioPermission: () => service.requestAudioPermission(),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
 
   };
