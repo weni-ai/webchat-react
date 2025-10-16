@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { useWeniChat } from '@/hooks/useWeniChat'
 import Header from '@/components/Header/Header'
 import MessagesList from '@/components/Messages/MessagesList'
+import CameraRecording from '@/components/CameraRecording/CameraRecording'
 import InputBox from '@/components/Input/InputBox'
 import PoweredBy from '@/components/common/PoweredBy'
+import { useChatContext } from '@/contexts/ChatContext';
 import './Chat.scss'
 
 /**
@@ -15,6 +17,7 @@ export function Chat() {
   const { isChatOpen } = useWeniChat()
   const [shouldRender, setShouldRender] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const { isCameraRecording } = useChatContext();
 
   useEffect(() => {
     if (isChatOpen) {
@@ -42,7 +45,7 @@ export function Chat() {
       <Header />
       <MessagesList />
       <footer className="weni-chat__footer">
-        <InputBox />
+        {isCameraRecording ? <CameraRecording /> : <InputBox />}
         <PoweredBy />
       </footer>
     </section>
