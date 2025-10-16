@@ -7,6 +7,7 @@ import MessageDocument from './MessageDocument';
 import MessageImage from './MessageImage';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
+import TypingIndicator from './TypingIndicator';
 import Avatar from '@/components/common/Avatar'
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -91,12 +92,20 @@ export function MessagesList() {
           ))}
         </section>
       ))}
-      {/* TODO: Add typing indicator component */}
+
       {isTyping && (
-        <div className="weni-typing-indicator">
-          {/* TODO: Implement typing animation */}
-        </div>
+        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">
+          <Avatar src={config.profileAvatar} name={config.title} />
+          <MessageContainer 
+            className="weni-messages-list__message weni-messages-list__message--incoming" 
+            direction="incoming"
+            type="typing"
+          >
+            <TypingIndicator />
+          </MessageContainer>
+        </section>
       )}
+      
       <div ref={messagesEndRef} />
     </section>
   );

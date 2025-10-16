@@ -14,7 +14,7 @@ export function MessageContainer({ direction, children, type, className }) {
 MessageContainer.propTypes = {
   direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
   children: PropTypes.node.isRequired,
-  type: PropTypes.oneOf(['message', 'text', 'image', 'video', 'audio', 'document', 'file']).isRequired,
+  type: PropTypes.oneOf(['message', 'text', 'image', 'video', 'audio', 'document', 'file', 'typing']).isRequired,
   className: PropTypes.string,
 };
 
