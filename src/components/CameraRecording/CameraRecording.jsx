@@ -40,7 +40,7 @@ export function CameraRecording() {
     };
   }, [stream]);
 
-  function calculateDevices() {
+  function enumerateDevices() {
     navigator.mediaDevices.enumerateDevices().then((enumeratedDevices) => {
       const devices = enumeratedDevices
         .filter((device) => device.kind === 'videoinput')
@@ -79,7 +79,7 @@ export function CameraRecording() {
     setStream(stream);
     setCurrentDeviceId(stream.getTracks().at(0).getSettings().deviceId);
     videoRef.current.srcObject = stream;
-    calculateDevices();
+    enumerateDevices();
   }
 
   function pauseCamera() {
