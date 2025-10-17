@@ -1,32 +1,51 @@
-import React from 'react'
-import { useWeniChat } from '../../hooks/useWeniChat'
-import Header from '../Header/Header'
-import MessagesList from '../Messages/MessagesList'
-import InputBox from '../Input/InputBox'
+import React, { useState, useEffect } from 'react'
+import { useWeniChat } from '@/hooks/useWeniChat'
+import Header from '@/components/Header/Header'
+import MessagesList from '@/components/Messages/MessagesList'
+import InputBox from '@/components/Input/InputBox'
+import PoweredBy from '@/components/common/PoweredBy'
+import './Chat.scss'
 
 /**
  * Chat - Main chat container
- * TODO: Implement chat window with header, messages, and input
- * TODO: Add show/hide animations
  * TODO: Handle fullscreen mode
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
   const { isChatOpen } = useWeniChat()
-  
-  // TODO: Implement open/close animations
-  // TODO: Add proper layout and styling
-  
-  if (!isChatOpen) {
+  const [shouldRender, setShouldRender] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
+  useEffect(() => {
+    if (isChatOpen) {
+      setShouldRender(true)
+      setIsClosing(false)
+    } else if (shouldRender) {
+      setIsClosing(true)
+      
+      // Wait for animation to complete (0.25s from CSS)
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+        setIsClosing(false)
+      }, 250)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isChatOpen, shouldRender])
+
+  if (!shouldRender) {
     return null
   }
   
   return (
-    <div className="weni-chat-container">
+    <section className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''}`}>
       <Header />
       <MessagesList />
-      <InputBox />
-    </div>
+      <footer className="weni-chat__footer">
+        <InputBox />
+        <PoweredBy />
+      </footer>
+    </section>
   )
 }
 

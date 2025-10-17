@@ -1,0 +1,36 @@
+@import '@/styles/variables.scss';
+
+.weni-poweredby {
+  padding: $spacing-2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+  
+  background-color: $gray-50;
+
+  &__text {
+    position: relative;
+
+    font-size: 10px;
+    font-weight: 400;
+    color: $gray-300;
+    text-align: center;
+    line-height: 12px;
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+
+      width: 100%;
+      height: 1px;
+      background-color: $gray-300;
+    }
+  }
+
+}
+
