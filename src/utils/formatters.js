@@ -95,6 +95,35 @@ export function formatPhoneNumber(phone) {
 }
 
 /**
+ * Format time duration to MM:SS or M:SS format
+ * @param {number} time - Time value
+ * @param {string} unit - Unit of the input time ('seconds' or 'milliseconds')
+ * @param {boolean} padMinutes - Whether to pad minutes with leading zero (default: false)
+ * @returns {string} Formatted time string (e.g., "1:30" or "01:30")
+ */
+export function formatTime(time, unit = 'seconds', padMinutes = false) {
+  if (!isFinite(time) || isNaN(time)) {
+    return padMinutes ? '00:00' : '0:00';
+  }
+  
+  let seconds;
+  if (unit === 'milliseconds') {
+    seconds = Math.floor(time / 1000);
+  } else {
+    seconds = Math.floor(time);
+  }
+  
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  const minutesStr = padMinutes 
+    ? minutes.toString().padStart(2, '0')
+    : minutes.toString();
+  
+  return `${minutesStr}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+/**
  * Sanitize HTML to prevent XSS
  * TODO: Implement proper HTML sanitization
  */
@@ -109,6 +138,7 @@ export default {
   truncateText,
   parseLinks,
   formatPhoneNumber,
-  sanitizeHTML
+  sanitizeHTML,
+  formatTime
 };
 

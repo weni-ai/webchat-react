@@ -18,6 +18,7 @@ export function Button({
   isLoading = false,
   icon = '',
   iconColor = '',
+  iconFilled = false,
   className = '',
   ...props 
 }) {
@@ -45,7 +46,7 @@ export function Button({
       {...props}
     >
       {/* TODO: Add loading spinner */}
-      {icon && <Icon name={icon} color={getIconColor()} />}
+      {icon && <Icon name={icon} color={getIconColor()} filled={iconFilled} />}
 
       {children}
     </button>
@@ -59,7 +60,8 @@ Button.propTypes = {
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool,
   icon: PropTypes.string,
-  iconColor: PropTypes.string
+  iconColor: PropTypes.string,
+  iconFilled: PropTypes.bool
 };
 
 export default Button;
