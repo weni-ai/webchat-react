@@ -1,0 +1,108 @@
+.weni-button {
+  background-color: transparent;
+  border: none;
+
+  border-radius: $border-radius-2;
+
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  
+  padding: $spacing-2;
+  
+  font: $font-action;
+
+  transition: background-color 0.1s ease;
+  cursor: pointer;
+
+  &--primary,
+  &--warning,
+  &--attention {
+    color: $fg-inverted;
+  }
+
+  &--secondary,
+  &--tertiary {
+    color: $fg-emphasized;
+  }
+
+  &--primary {
+    background-color: var(--weni-user-message-bubble-color);
+
+    &:hover:enabled {
+      box-shadow: inset 0 46px rgba(0, 0, 0, .1);
+    }
+
+    &:active:enabled {
+      box-shadow: inset 0 46px rgba(0, 0, 0, .2);
+    }
+  }
+
+  &--secondary {
+    background-color: $bg-base;
+    border: 1px solid $border-base;
+
+    &:hover:enabled {
+      background-color: $gray-50;
+    }
+
+    &:active:enabled {
+      background-color: $gray-100;
+    }
+  }
+
+  &--tertiary {
+    background-color: transparent;
+
+    &:hover:enabled {
+      background-color: rgba($gray-950, 0.1);
+    }
+
+    &:active:enabled {
+      background-color: rgba($gray-950, 0.2);
+    }
+  }
+
+  &--warning {
+    background-color: $red-500;
+    color: $white;
+
+    &:hover:enabled {
+      background-color: $red-600;
+    }
+
+    &:active:enabled {
+      background-color: $red-700;
+    }
+  }
+
+  &--attention {
+    background-color: $yellow-500;
+
+    &:hover:enabled {
+      background-color: $yellow-600;
+    }
+
+    &:active:enabled {
+      background-color: $yellow-700;
+    }
+  }
+
+  &--primary:disabled,
+  &--secondary:disabled,
+  &--tertiary:disabled,
+  &--warning:disabled,
+  &--attention:disabled {
+    background-color: $bg-muted;
+    color: $fg-muted;
+    cursor: not-allowed;
+  }
+
+  &--size-large {
+    padding: $spacing-3 $spacing-4;
+  }
+
+  &--size-small {
+    padding: $spacing-2 $spacing-4;
+  }
+}

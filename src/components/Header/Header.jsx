@@ -1,42 +1,39 @@
-import PropTypes from 'prop-types';
-
 import Button from '@/components/common/Button';
+import Avatar from '@/components/common/Avatar';
 import { useWeniChat } from '@/hooks/useWeniChat';
+import { useChatContext } from '@/contexts/ChatContext';
+
+import './Header.scss';
 
 /**
  * Header - Chat header component
- * TODO: Display chat title and status
- * TODO: Add close button
  * TODO: Add fullscreen toggle button
- * TODO: Show connection status indicator
  */
-export function Header({ title = 'Chat', subtitle = '' }) {
+export function Header() {
   const { toggleChat } = useWeniChat();
-  
+
+  const { config } = useChatContext();
   // TODO: Implement header layout
   // TODO: Add connection status indicator
   
   return (
-    <div className="weni-chat-header">
-      <div className="weni-chat-header-info">
-        <h3 className="weni-chat-header-title">{title}</h3>
-        {subtitle && <span className="weni-chat-header-subtitle">{subtitle}</span>}
-        {/* TODO: Add connection status indicator */}
-      </div>
-      <div className="weni-chat-header-actions">
+    <header className="weni-chat-header">
+      <section className="weni-chat-header__info">
+        {config.profileAvatar && <Avatar className="weni-chat-header__avatar" src={config.profileAvatar} size="x-large" />}
+
+        <hgroup className="weni-chat-header__title-group">
+          <h1 className="weni-chat-header__title">{config.title}</h1>
+          {config.subtitle && <h2 className="weni-chat-header__subtitle">{config.subtitle}</h2>}
+        </hgroup>
+      </section>
+
+      <section className="weni-chat-header__actions">
         {/* TODO: Add fullscreen button */}
-        <Button onClick={toggleChat} aria-label="Close chat">
-          {/* TODO: Add close icon */}
-        </Button>
-      </div>
-    </div>
+        {config.showCloseButton && <Button onClick={toggleChat} aria-label="Close chat" variant="tertiary" icon="close" iconColor="white"/>}
+      </section>
+    </header>
   );
 }
-
-Header.propTypes = {
-  title: PropTypes.string,
-  subtitle: PropTypes.string
-};
 
 export default Header;
 

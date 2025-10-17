@@ -1,0 +1,36 @@
+.weni-chat-header {
+  padding: $spacing-3 $spacing-4;
+  
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  background-color: var(--weni-header-bg-color);
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+
+    .weni-chat-header__avatar {
+      border-radius: $border-radius-full;
+      object-fit: cover;
+    }
+
+    .weni-chat-header__title {
+      font: $font-action;
+      color: var(--weni-title-color);
+    }
+
+    .weni-chat-header__subtitle {
+      font: $font-caption-2 ;
+      color: var(--weni-subtitle-color);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+  }
+}
