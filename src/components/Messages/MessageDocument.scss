@@ -1,0 +1,29 @@
+.weni-message-document {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+
+  &__view {
+    background-color: transparent;
+    border: none;
+
+    display: flex;
+
+    font: $font-action;
+    line-height: calc(1.25 * $font-size);
+
+    cursor: pointer;
+
+    &--outgoing {
+      color: $white;
+    }
+
+    &--incoming {
+      color: $fg-emphasized;
+    }
+  }
+
+  &__view:hover {
+    text-decoration: underline;
+  }
+}

@@ -5,17 +5,17 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 
 import Button from '@/components/common/Button';
+import { InputFile } from './InputFile';
 
 import './InputBox.scss';
 
 /**
  * InputBox - Message input component
  * TODO: Handle emoji picker
- * TODO: Implement send on Enter (Shift+Enter for new line)
  * TODO: Add character limit indicator
  */
 export function InputBox({ maxLength = 5000 }) {
-  const { sendMessage, sendAttachment, isConnected } = useWeniChat()
+  const { sendMessage, isConnected } = useWeniChat()
   const { config } = useChatContext();
   const [text, setText] = useState('');
   const fileInputRef = useRef(null);
@@ -31,13 +31,6 @@ export function InputBox({ maxLength = 5000 }) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      sendAttachment(file);
     }
   };
 
@@ -69,12 +62,7 @@ export function InputBox({ maxLength = 5000 }) {
 
       {(!text.trim()) && (
         <>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-          />
+          <InputFile ref={fileInputRef} />
           <Button
             onClick={() => fileInputRef.current?.click()}
             variant="tertiary"

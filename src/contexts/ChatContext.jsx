@@ -125,11 +125,13 @@ export function ChatProvider({ children, config }) {
     unreadCount,
     setUnreadCount,
     config: configState,
-    
+    fileConfig: service.getFileConfig(),
+
     // Service methods (proxied for convenience)
     sendMessage,
     sendAttachment: (file) => service.sendAttachment(file),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
+
   };
   
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

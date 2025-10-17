@@ -1,47 +1,70 @@
 import PropTypes from 'prop-types';
 
+import { ALLOWED_DOCUMENT_TYPES } from '@/utils/constants';
+
+import { Icon } from '@/components/common/Icon';
+
+import './MessageDocument.scss';
+
 /**
  * MessageDocument - Document/File message component
- * TODO: Display file icon based on type
- * TODO: Show file name and size
- * TODO: Add download button
- * TODO: Handle file preview for supported types
- * TODO: Show upload progress for outgoing files
  */
 export function MessageDocument({ message }) {
-  // TODO: Implement document message rendering
-  // TODO: Add file type icons
-  // TODO: Handle download action
-  
+  const {filename, mimeType} = message.metadata;
+
+  const canViewDocument = () => {
+    const fileType = mimeType;
+    return ALLOWED_DOCUMENT_TYPES.includes(fileType);
+  };
+
+  const handleViewDocument = () => {
+    if (canViewDocument()) {
+      // For base64 data URLs, create a blob and open it
+      if (message.media.startsWith('data:')) {
+        const byteCharacters = atob(message.media.split(',')[1]);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+        const blobUrl = URL.createObjectURL(blob);
+
+        window.open(blobUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      } else {
+        window.open(message.media, '_blank');
+      }
+    }
+  };
+
   return (
-    <div className={`weni-message weni-message-${message.sender}`}>
-      <div className="weni-message-content weni-message-document">
-        {/* TODO: Add file icon based on type */}
-        <div className="weni-message-document-info">
-          <span className="weni-message-document-name">{message.fileName}</span>
-          {/* TODO: Display file size */}
-        </div>
-        {/* TODO: Add download button */}
-        <a 
-          href={message.url} 
-          download={message.fileName}
-          className="weni-message-document-download"
-        >
-          Download
-        </a>
-        {/* TODO: Add timestamp */}
-      </div>
-    </div>
+    <section className="weni-message-document">
+      <Icon name="article" size="large" color={message.direction === 'outgoing' ? 'white' : 'fg-emphasized'} />
+
+      <button
+        onClick={handleViewDocument}
+        className={`weni-message-document__view weni-message-document__view--${message.direction}`}
+      >
+        {filename}
+      </button>
+    </section>
   );
 }
 
 MessageDocument.propTypes = {
   message: PropTypes.shape({
-    url: PropTypes.string.isRequired,
-    fileName: PropTypes.string.isRequired,
-    fileSize: PropTypes.number,
-    sender: PropTypes.oneOf(['client', 'agent', 'bot']).isRequired,
-    timestamp: PropTypes.number
+    id: PropTypes.string.isRequired,
+    direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
+    media: PropTypes.string.isRequired,
+    timestamp: PropTypes.number.isRequired,
+    status: PropTypes.string,
+    metadata: {
+      mimeType: PropTypes.string.isRequired,
+      size: PropTypes.number.isRequired,
+      filename: PropTypes.string.isRequired
+    }
   }).isRequired
 };
 
