@@ -1,0 +1,50 @@
+@keyframes bubble-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-2px) scale(0.8);
+  }
+  60% {
+    transform: translateX(2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes bubble-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(2px) scale(0.8);
+  }
+  60% {
+    transform: translateX(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.weni-message {
+  $border-radius: $border-radius-2;
+
+  padding: $spacing-3;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+
+  &--incoming {
+    background-color: $bg-soft;
+    border-radius: $border-radius-0 $border-radius $border-radius $border-radius;
+    animation-name: bubble-in-left;
+    transform-origin: top left;
+  }
+
+  &--outgoing {
+    background-color: var(--weni-main-color);
+    border-radius: $border-radius $border-radius-0 $border-radius $border-radius;
+    animation-name: bubble-in-right;
+    transform-origin: top right;
+  }
+}

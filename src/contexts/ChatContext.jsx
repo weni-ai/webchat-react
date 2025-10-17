@@ -37,12 +37,23 @@ const defaultConfig = {
 
 /**
  * ChatProvider - Context provider that integrates WeniWebchatService
- * TODO: Handle all service events and state management
- * TODO: Implement error handling and reconnection logic
- * TODO: Add support for custom event handlers
+ * 
+ * This component follows the Service/Template architecture:
+ * - Service (WeniWebchatService): Manages all business logic, WebSocket, and state
+ * - Template (React components): Only renders UI and handles user interactions
+ * 
+ * The service is the single source of truth for:
+ * - Messages (including sender, timestamp, processing)
+ * - Connection state
+ * - Typing indicators
+ * - Session management
+ * 
+ * The template only manages UI-specific state:
+ * - Chat open/closed
+ * - Unread count
+ * - Visual preferences
  */
 export function ChatProvider({ children, config }) {
-  // Merge config with defaults
   const mergedConfig = { ...defaultConfig, ...config };
   
   const [service] = useState(() => new WeniWebchatService(mergedConfig));
@@ -52,40 +63,71 @@ export function ChatProvider({ children, config }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
-  
+
   useEffect(() => {
-    // TODO: Initialize service with proper error handling
-    service.init();
+    service.init().catch((error) => {
+      console.error('Failed to initialize service:', error);
+    });
     
-    // TODO: Setup all event listeners
+    service.on('state:changed', (newState) => {
+      if (newState.messages) {
+        setMessages(newState.messages);
+      }
+      if (newState.isTyping !== undefined) {
+        setIsTyping(newState.isTyping);
+      }
+      if (newState.connection?.status) {
+        setIsConnected(newState.connection.status === 'connected');
+      }
+    });
+
     service.on('connected', () => setIsConnected(true));
     service.on('disconnected', () => setIsConnected(false));
-    service.on('message:received', (msg) => {
-      setMessages(prev => [...prev, msg]);
-      // TODO: Update unread count when chat is closed
-    });
-    service.on('typing:start', () => setIsTyping(true));
-    service.on('typing:stop', () => setIsTyping(false));
-    
-    // TODO: Add more event listeners (error, state:changed, etc.)
     
     return () => {
-      // TODO: Cleanup all event listeners
+      service.off('state:changed');
+      service.off('connected');
+      service.off('disconnected');
       service.disconnect();
     };
-  }, [service]);
+  }, []);
+
+  useEffect(() => {
+    const handleMessageReceived = () => {
+      if (!isChatOpen) {
+        setUnreadCount(prev => prev + 1);
+      }
+    };
+    
+    service.on('message:received', handleMessageReceived);
+    
+    return () => {
+      service.off('message:received', handleMessageReceived);
+    };
+  }, [isChatOpen]);
+
+  const sendMessage = (text) => {
+    service.sendMessage(text);
+  };
   
   const value = {
+    // Service instance (for advanced use cases)
     service,
+    
+    // State synchronized from service
     messages,
     isConnected,
     isTyping,
+    
+    // UI-specific state
     isChatOpen,
     setIsChatOpen,
     unreadCount,
     setUnreadCount,
     config: configState,
-    sendMessage: (text) => service.sendMessage(text),
+    
+    // Service methods (proxied for convenience)
+    sendMessage,
     sendAttachment: (file) => service.sendAttachment(file),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
   };

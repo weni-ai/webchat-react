@@ -1,7 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import Widget from './components/Widget/Widget'
-import './styles/index.scss'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+
+import Widget from './components/Widget/Widget';
+import './styles/index.scss';
 
 const config = {
   // socketUrl: 'wss://websocket.weni.ai',
@@ -50,13 +51,11 @@ function App() {
       {/* The Widget component */}
       <Widget config={config} theme={customTheme} />
     </div>
-  )
+  );
 }
 
 // Mount the app
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+  <App />
+);
 

@@ -1,4 +1,44 @@
 .weni-messages-list {
+  padding: $spacing-4 $spacing-2;
+  
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+ 
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden auto;
+
+  &__avatar {
+    grid-column: 1 / 2;
+  }
+
+  &__message {
+    width: fit-content;
+
+    grid-column: 2 / 3;
+
+    &--incoming {
+      justify-self: flex-start;
+    }
+
+    &--outgoing {
+      justify-self: flex-end;
+    }
+  }
+
+  &__direction-group {
+    max-width: 75%;
+
+    display: grid;
+    grid-template-columns: minmax($icon-size-5, auto) 1fr;
+    gap: $spacing-1;
+
+    &--incoming {
+      align-self: flex-start;
+    }
+
+    &--outgoing {
+      align-self: flex-end;
+    }
+  }
 }

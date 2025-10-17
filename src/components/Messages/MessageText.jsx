@@ -1,34 +1,63 @@
+import { useMemo } from 'react';
 import PropTypes from 'prop-types';
+import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+
+import './MessageText.scss';
 
 /**
- * MessageText - Text message component
- * TODO: Render text with proper formatting
- * TODO: Support markdown/links
+ * MessageText - Text message component with markdown support
+ * Renders text with proper formatting, links, and markdown syntax
  * TODO: Add timestamp display
  * TODO: Show message status (sent, delivered, read)
  * TODO: Handle quick replies
  */
 export function MessageText({ message }) {
-  // TODO: Implement text message rendering
-  // TODO: Parse and render links
-  // TODO: Support markdown if needed
+  const html = useMemo(() => {
+    if (!message.text) return '';
+
+    const purifiedContent = DOMPurify.sanitize(message.text);
+
+    marked.use({
+      breaks: true,
+      useNewRenderer: true,
+      renderer: {
+        link(token) {
+          if (typeof token === 'string' && token.includes('mailto:')) {
+            return token.replace('mailto:', '');
+          }
+          return `<a target="_blank" href="${token.href || token}">${token.text || token}</a>`;
+        },
+      },
+    });
+
+    // Convert bullet points to proper Markdown list syntax
+    const processedContent = purifiedContent
+      // Convert • bullet points to proper Markdown list syntax
+      .replace(/\n•\s*/g, '\n* ')
+      // Handle cases where • appears at the start of content
+      .replace(/^•\s*/g, '* ');
+
+    return marked.parse(processedContent);
+  }, [message.text]);
   
   return (
-    <div className={`weni-message weni-message-${message.sender}`}>
-      <div className="weni-message-content">
-        <p className="weni-message-text">{message.text}</p>
-        {/* TODO: Add timestamp */}
-        {/* TODO: Add quick replies if present */}
-      </div>
-    </div>
+    <section 
+      className={`weni-message-text weni-message-text--${message.direction}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }
 
 MessageText.propTypes = {
   message: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
-    sender: PropTypes.oneOf(['client', 'agent', 'bot']).isRequired,
-    timestamp: PropTypes.number,
+    timestamp: PropTypes.number.isRequired,
+    direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
+    status: PropTypes.string,
+    metadata: PropTypes.object,
     quickReplies: PropTypes.array
   }).isRequired
 };

@@ -1,13 +1,16 @@
 import { useRef, useEffect } from 'react';
 
 
+import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
 import MessageDocument from './MessageDocument';
 import MessageImage from './MessageImage';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
+import Avatar from '@/components/common/Avatar'
 
 import { useWeniChat } from '@/hooks/useWeniChat';
+import { useChatContext } from '@/contexts/ChatContext';
 
 import './MessagesList.scss';
 
@@ -20,39 +23,67 @@ import './MessagesList.scss';
  * TODO: Show typing indicator
  */
 export function MessagesList() {
-  const { messages, isTyping } = useWeniChat();
+  const { isTyping, messageGroups, isChatOpen } = useWeniChat();
+  const { config } = useChatContext();
   const messagesEndRef = useRef(null);
-  
-  // TODO: Auto-scroll to bottom on new messages
+
+  function scrollToBottom(behavior = 'smooth') {
+    messagesEndRef.current?.scrollIntoView({ behavior })
+  }
+
   useEffect(() => {
-    // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages]);
-  
+    scrollToBottom()
+  }, [messageGroups]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollToBottom('instant')
+    }, 50);
+  }, [isChatOpen]);
+
   // TODO: Handle scroll to load history
-  
-  const renderMessage = (message, index) => {
+
+  const renderMessage = (message) => {
     // TODO: Implement proper message type routing
     switch (message.type) {
       case 'text':
-        return <MessageText key={index} message={message} />;
+        return <MessageText message={message} />;
       case 'image':
-        return <MessageImage key={index} message={message} />;
+        return <MessageImage message={message} />;
       case 'video':
-        return <MessageVideo key={index} message={message} />;
+        return <MessageVideo message={message} />;
       case 'audio':
-        return <MessageAudio key={index} message={message} />;
+        return <MessageAudio message={message} />;
       case 'document':
       case 'file':
-        return <MessageDocument key={index} message={message} />;
+        return <MessageDocument message={message} />;
       default:
-        return <MessageText key={index} message={message} />;
+        return <MessageText message={message} />;
     }
   };
-  
+
   return (
-    <div className="weni-messages-list">
+    <section className="weni-messages-list">
       {/* TODO: Add empty state when no messages */}
-      {messages.map(renderMessage)}
+      {messageGroups.map((group, index) => (
+        <section 
+          className={`weni-messages-list__direction-group weni-messages-list__direction-group--${group.direction}`} 
+          key={index}
+        >
+          {group.direction === 'incoming' && (
+            <Avatar src={config.profileAvatar} name={config.title} />
+          )}
+          {group.messages.map((message, messageIndex) => (
+            <MessageContainer 
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
+              direction={group.direction}
+              key={message.id || messageIndex}
+            >
+              {renderMessage(message)}
+            </MessageContainer>
+          ))}
+        </section>
+      ))}
       {/* TODO: Add typing indicator component */}
       {isTyping && (
         <div className="weni-typing-indicator">
@@ -60,7 +91,7 @@ export function MessagesList() {
         </div>
       )}
       <div ref={messagesEndRef} />
-    </div>
+    </section>
   );
 }
 
