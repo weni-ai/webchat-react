@@ -29,10 +29,20 @@
 .weni-message {
   $border-radius: $border-radius-2;
 
+  position: relative;
+
   padding: $spacing-3;
   animation-duration: 0.3s;
   animation-timing-function: ease-out;
   animation-fill-mode: both;
+
+  &__thinking-indicator {
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    margin-top: $spacing-1;
+  }
 
   &--image {
     padding: $spacing-2;

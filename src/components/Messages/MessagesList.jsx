@@ -24,7 +24,7 @@ import './MessagesList.scss';
  * TODO: Show typing indicator
  */
 export function MessagesList() {
-  const { isTyping, messageGroups, isChatOpen } = useWeniChat();
+  const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
   const { config } = useChatContext();
   const messagesEndRef = useRef(null);
 
@@ -34,7 +34,7 @@ export function MessagesList() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [messageGroups]);
+  }, [messageGroups, isThinking]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -93,7 +93,7 @@ export function MessagesList() {
         </section>
       ))}
 
-      {isTyping && (
+      {(isTyping || isThinking) && (
         <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">
           <Avatar src={config.profileAvatar} name={config.title} />
           <MessageContainer 
