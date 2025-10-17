@@ -18,10 +18,8 @@ import './MessagesList.scss';
 /**
  * MessagesList - Scrollable list of messages
  * TODO: Render all messages with proper message components
- * TODO: Implement auto-scroll to bottom on new messages
  * TODO: Add virtualization for large message lists
  * TODO: Handle loading history on scroll
- * TODO: Show typing indicator
  */
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
@@ -50,7 +48,6 @@ export function MessagesList() {
   };
 
   const renderMessage = (message) => {
-    // TODO: Implement proper message type routing
     switch (message.type) {
       case 'text':
       case 'message':
