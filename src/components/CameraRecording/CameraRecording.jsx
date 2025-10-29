@@ -9,78 +9,22 @@ import { useChatContext } from '@/contexts/ChatContext';
  */
 
 export function CameraRecording() {
-  const { stopCameraRecording, sendAttachment } = useChatContext();
-  const [stream, setStream] = useState(null);
+  const {
+    cameraDevices,
+    cameraRecordingStream,
+    switchToNextCameraDevice,
+    stopCameraRecording,
+    sendAttachment,
+  } = useChatContext();
+
   const videoRef = useRef(null);
-  const [devices, setDevices] = useState([]);
-  const [currentDeviceId, setCurrentDeviceId] = useState(null);
   const [isCameraPaused, setIsCameraPaused] = useState(false);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(setObjectStream)
-      .catch((error) => {
-        if (error.name === 'NotAllowedError') {
-          console.log('User has not granted permission to use the camera');
-        } else {
-          console.log("Something went wrong!", error);
-        }
-
-        stopCameraRecording();
-
-        throw error;
-      });
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
-
-  function enumerateDevices() {
-    navigator.mediaDevices.enumerateDevices().then((enumeratedDevices) => {
-      const devices = enumeratedDevices
-        .filter((device) => device.kind === 'videoinput')
-        .map((device) => ({
-          id: device.deviceId,
-          label: device.label,
-        }));
-
-      setDevices(devices);
-    });
-  }
-
-  function loadNextDevice() {
-    if (devices.length === 0) {
-      return;
+    if (cameraRecordingStream) {
+      videoRef.current.srcObject = cameraRecordingStream;
     }
-    
-    const currentDeviceIndex = devices.findIndex((device) => device.id === currentDeviceId);
-
-    if (currentDeviceIndex === -1) {
-      loadDeviceId(devices.at(0).id);
-      return;
-    }
-
-    const nextDevice = devices[(currentDeviceIndex + 1) % devices.length];
-
-    loadDeviceId(nextDevice.id);
-  }
-
-  function loadDeviceId(deviceId) {
-    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } })
-      .then(setObjectStream);
-  }
-
-  function setObjectStream(stream) {
-    setStream(stream);
-    setCurrentDeviceId(stream.getTracks().at(0).getSettings().deviceId);
-    videoRef.current.srcObject = stream;
-    enumerateDevices();
-  }
+  }, [cameraRecordingStream]);
 
   function pauseCamera() {
     videoRef.current.pause();
@@ -122,12 +66,12 @@ export function CameraRecording() {
           onClick={stopCameraRecording}
           variant="warning"
           icon="close"
-          aria-label="Switch camera"
+          aria-label="Stop camera recording"
         />
 
-        {(devices.length > 1) && (
+        {(cameraDevices.length > 1) && (
           <Button
-            onClick={loadNextDevice}
+            onClick={switchToNextCameraDevice}
             variant="tertiary"
             icon="cameraswitch"
             aria-label="Switch camera"

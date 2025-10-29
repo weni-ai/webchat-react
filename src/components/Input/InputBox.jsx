@@ -7,6 +7,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
+import CameraRecording from '@/components/CameraRecording/CameraRecording'
 
 import './InputBox.scss';
 
@@ -17,11 +18,12 @@ import './InputBox.scss';
  */
 export function InputBox({ maxLength = 5000 }) {
   const { isConnected } = useWeniChat()
-  const { isRecording, sendMessage, stopAndSendAudio, requestAudioPermission, hasAudioPermission, startRecording, startCameraRecording } = useChatContext();
+  const { isRecording, sendMessage, stopAndSendAudio, requestAudioPermission, hasAudioPermission, startRecording, isCameraRecording, hasCameraPermission, requestCameraPermission, startCameraRecording } = useChatContext();
   const { config } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
+  const [hasCameraPermissionState, setHasCameraPermissionState] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -49,8 +51,13 @@ export function InputBox({ maxLength = 5000 }) {
     setHasAudioPermissionState(await hasAudioPermission());
   }
 
+  const getHasCameraPermission = async () => {
+    setHasCameraPermissionState(await hasCameraPermission());
+  }
+
   useEffect(() => {
     getHasAudioPermission();
+    getHasCameraPermission();
   }, []);
 
   const handleRecordAudio = async () => {
@@ -65,6 +72,17 @@ export function InputBox({ maxLength = 5000 }) {
     if (hasAudioPermissionState) startRecording();
   };
 
+  const handleRecordCamera = async () => {
+    let cameraPermission = hasCameraPermissionState;
+
+    if (cameraPermission === undefined) {
+      cameraPermission = await requestCameraPermission();
+      setHasCameraPermissionState(cameraPermission);
+    };
+
+    if (cameraPermission) startCameraRecording();
+  };
+
   if (isRecording) {
     return (
       <section className="weni-input-box">
@@ -77,6 +95,14 @@ export function InputBox({ maxLength = 5000 }) {
           disabled={!isConnected}
           aria-label="Send audio"
         />
+      </section>
+    );
+  }
+
+  if (isCameraRecording) {
+    return (
+      <section className="weni-input-box">
+        <CameraRecording />
       </section>
     );
   }
@@ -97,8 +123,8 @@ export function InputBox({ maxLength = 5000 }) {
 
         {!text.trim() &&
           <Button
-            onClick={startCameraRecording}
-            disabled={!isConnected}
+            onClick={handleRecordCamera}
+            disabled={!isConnected || hasCameraPermissionState === false}
             aria-label="Take photo"
             variant="tertiary"
             icon="add_a_photo"
