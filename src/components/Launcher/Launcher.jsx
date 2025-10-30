@@ -18,26 +18,32 @@ import './Launcher.scss';
  */
 export function Launcher() {
   const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
+
   const { config } = useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
   return (
-    <button
-      className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''}`}
-      onClick={toggleChat}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      aria-label="Toggle chat"
-    >
-      {!isChatOpen && unreadCount > 0 && (
-        <Badge count={unreadCount} />
-      )}
+    <section className="weni-launcher__container">
+      <button
+        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''}`}
+        onClick={toggleChat}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        aria-label="Toggle chat"
+      >
 
-      {config.profileAvatar && !isChatOpen
-        ? <Avatar className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} src={config.profileAvatar} size="full" />
-        : <Icon className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} name={isChatOpen ? "close" : "chat_bubble"} filled color="white" size="x-large" />
-      }
-    </button>
+        {config.profileAvatar && !isChatOpen
+          ? <Avatar className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} src={config.profileAvatar} size="full" />
+          : <Icon className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} name={isChatOpen ? "close" : "chat_bubble"} filled color="white" size="x-large" />
+        }
+      </button>
+
+      <Badge
+        isVisible={config.displayUnreadCount && !isChatOpen && unreadCount > 0}
+        count={unreadCount}
+        className="weni-launcher__badge"
+      />
+    </section>
   )
 }
 

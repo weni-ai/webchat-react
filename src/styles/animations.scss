@@ -82,6 +82,49 @@
   }
 }
 
+@include weni-keyframes(weni-expand-in-center) {
+  from {
+    opacity: 0;
+    transform: scale(0);
+    transform-origin: center;
+  }  
+  to {
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: center;
+  }
+}
+
+@include weni-keyframes(weni-expand-out-center) {
+  from {
+    opacity: 0;
+    transform: scale(1);
+    transform-origin: center;
+  }  
+  to {
+    opacity: 1;
+    transform: scale(0);
+    transform-origin: center;
+  }
+}
+
+@include weni-keyframes(weni-pulse) {
+  0% {
+    transform: scale(1);
+    transform-origin: center;
+  }
+
+  70% {
+    transform: scale(1.1);
+    transform-origin: center;
+  }
+
+  100% {
+    transform: scale(1);
+    transform-origin: center;
+  }
+}
+
 @include weni-keyframes(weni-expand-out) {
   from {
     opacity: 1;

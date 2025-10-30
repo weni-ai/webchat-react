@@ -1,6 +1,17 @@
 @import '@/styles/animations.scss';
+@import '@/styles/variables.scss';
 
 .weni-launcher {
+  &__container {
+    position: relative;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+  }
+  
   min-height: var(--launcherHeight);
   min-width: var(--launcherWidth);
   height: var(--launcherHeight);
