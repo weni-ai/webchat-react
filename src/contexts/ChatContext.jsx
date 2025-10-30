@@ -26,6 +26,7 @@ const defaultConfig = {
   showMessageDate: false,
   showHeaderAvatar: true,
   connectingText: 'Waiting for server...',
+  displayUnreadCount: true,
   
   // Media settings
   docViewer: false,

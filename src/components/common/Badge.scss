@@ -1,0 +1,29 @@
+@import '@/styles/variables.scss';
+@import '@/styles/animations.scss';
+
+.weni-badge {
+  &--variant-primary {
+    font: $font-caption-2;
+    background-color: $red-500;
+    color: $white;
+    border-radius: $border-radius-full;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  &--entering {
+    @include weni-animation(0, 0.25s, weni-expand-in-center);
+  }
+
+  &--leaving {
+    @include weni-animation(0, 0.25s, weni-expand-out-center);
+  }
+
+  &--pulse {
+    @include weni-animation(0, 0.25s, weni-pulse);
+  }
+}
