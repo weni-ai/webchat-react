@@ -2,6 +2,7 @@ import Button from '@/components/common/Button';
 
 import './Tooltip.scss';
 import { Message } from '../Messages/MessagesList';
+import PropTypes from 'prop-types';
 
 export function Tooltip({ name, message, onClose }) {
   return (
@@ -28,3 +29,9 @@ export function Tooltip({ name, message, onClose }) {
     </section>
   )
 }
+
+Tooltip.propTypes = {
+  name: PropTypes.string.isRequired,
+  message: PropTypes.object.isRequired,
+  onClose: PropTypes.func.isRequired
+};
