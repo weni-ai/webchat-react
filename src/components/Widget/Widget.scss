@@ -17,3 +17,9 @@
 
   @include weni-animation(0, 0.25s, weni-slide-in);
 }
+
+.weni-widget--fullscreen {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
