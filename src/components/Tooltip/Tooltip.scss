@@ -27,13 +27,14 @@
     bottom: 0;
   }
 
-  &__arrow {
+  &::after {
     $arrow-size: 12px;
 
     width: $arrow-size;
     height: $arrow-size;
     background-color: $bg-base;
-    
+
+    content: '';
     position: absolute;
     right: 0;
     bottom: 0;
