@@ -1,6 +1,6 @@
 import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 const ChatContext = createContext();
 
@@ -86,7 +86,35 @@ export function ChatProvider({ children, config }) {
   const [title, setTitle] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
 
+  const isChatOpenRef = useRef(isChatOpen);
+
   useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
+  let initialTooltipMessageTimeout = null;
+
+  function simulateTooltipMessage(message) {
+    if (isChatOpenRef.current) {
+      return;
+    }
+
+    service.simulateMessageReceived({
+      type: 'message',
+      message: {
+        text: message,
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (mergedConfig.tooltipMessage) {
+      initialTooltipMessageTimeout = setTimeout(
+        () => simulateTooltipMessage(mergedConfig.tooltipMessage),
+        mergedConfig.tooltipDelay,
+      );
+    }
+
     service.init().catch((error) => {
       console.error('Failed to initialize service:', error);
     });
@@ -107,6 +135,7 @@ export function ChatProvider({ children, config }) {
     service.on('camera:devices:changed', (devices) => setCameraDevices(devices));
     
     return () => {
+      clearTimeout(initialTooltipMessageTimeout);
       service.removeAllListeners();
       service.disconnect();
     };
