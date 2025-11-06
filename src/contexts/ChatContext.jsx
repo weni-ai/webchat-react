@@ -116,7 +116,10 @@ export function ChatProvider({ children, config }) {
     const handleMessageReceived = (message) => {
       if (!isChatOpen) {
         setUnreadCount(prev => prev + 1);
-        setTooltipMessage(message);
+
+        if (!mergedConfig.disableTooltips) {
+          setTooltipMessage(message);
+        }
       }
     };
     
