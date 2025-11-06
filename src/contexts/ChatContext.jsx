@@ -26,7 +26,6 @@ const defaultConfig = {
   showMessageDate: false,
   showHeaderAvatar: true,
   connectingText: 'Waiting for server...',
-  displayUnreadCount: true,
   
   // Media settings
   docViewer: false,
@@ -79,12 +78,10 @@ export function ChatProvider({ children, config }) {
   const [cameraDevices, setCameraDevices] = useState([]);
 
   // UI-specific state
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(mergedConfig.startFullScreen);
+  const [isChatFullscreen, setIsChatFullscreen] = useState(mergedConfig.startFullScreen);
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [isCameraRecording, setIsCameraRecording] = useState(false);
 
   useEffect(() => {
     service.init().catch((error) => {
@@ -156,6 +153,8 @@ export function ChatProvider({ children, config }) {
     // UI-specific state
     isChatOpen,
     setIsChatOpen,
+    isChatFullscreen,
+    toggleChatFullscreen: () => setIsChatFullscreen(!isChatFullscreen),
     unreadCount,
     setUnreadCount,
     config: configState,

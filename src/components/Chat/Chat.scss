@@ -1,4 +1,5 @@
 @import '@/styles/animations.scss';
+@import '@/styles/variables.scss';
 
 .weni-chat {
   @include weni-animation(0, 0.25s, weni-expand-in);
@@ -24,4 +25,12 @@
     flex-direction: column;
     gap: $spacing-2;
   }
+}
+
+.weni-widget--fullscreen .weni-chat {
+  border-radius: 0;
+
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }

@@ -7,10 +7,10 @@ import './Header.scss';
 
 /**
  * Header - Chat header component
- * TODO: Add fullscreen toggle button
  */
 export function Header() {
   const { toggleChat } = useWeniChat();
+  const { isChatFullscreen, toggleChatFullscreen } = useWeniChat();
 
   const { config } = useChatContext();
   // TODO: Implement header layout
@@ -28,7 +28,7 @@ export function Header() {
       </section>
 
       <section className="weni-chat-header__actions">
-        {/* TODO: Add fullscreen button */}
+        {config.showFullScreenButton && <Button onClick={toggleChatFullscreen} aria-label="Fullscreen chat" variant="tertiary" icon={isChatFullscreen ? "fullscreen_exit" : "fullscreen"} iconColor="white"/>}
         {config.showCloseButton && <Button onClick={toggleChat} aria-label="Close chat" variant="tertiary" icon="close" iconColor="white"/>}
       </section>
     </header>

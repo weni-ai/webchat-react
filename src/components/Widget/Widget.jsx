@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 
 import Chat from '@/components/Chat/Chat';
 import Launcher from '@/components/Launcher/Launcher';
-import { ChatProvider } from '@/contexts/ChatContext.jsx';
+import { ChatProvider, useChatContext } from '@/contexts/ChatContext.jsx';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
 
@@ -12,15 +12,25 @@ import './Widget.scss';
  * TODO: Add mobile responsiveness
  * TODO: Handle widget visibility and animations
  */
+
+function WidgetContent() {
+  const { isChatFullscreen, isChatOpen } = useChatContext();
+
+  const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
+
+  return (
+    <aside className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}`}>
+      <Chat />
+      {!isChatFullscreenAndOpen && <Launcher />}
+    </aside>
+  );
+}
+
 export function Widget({ config, theme = null }) {
   return (
     <ThemeProvider theme={theme}>
       <ChatProvider config={config}>
-        <aside className="weni-widget">
-          {/* TODO: Implement conditional rendering based on chat state */}
-          <Chat />
-          <Launcher />
-        </aside>
+        <WidgetContent />
       </ChatProvider>
     </ThemeProvider>
   );

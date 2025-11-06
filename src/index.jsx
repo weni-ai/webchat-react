@@ -15,8 +15,10 @@ const config = {
   // Optional configurations
   connectOn: 'mount', // or 'manual'
   storage: 'session', // 'local' or 'session'
-  
+
   // TODO: Add more config options as they become available
+  startFullScreen: false,
+  showFullScreenButton: true,
 }
 
 // Custom theme (optional)
