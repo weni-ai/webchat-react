@@ -13,9 +13,19 @@ export default defineConfig({
       '@': resolve(__dirname, './src')
     }
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use 'sass:math';@import "@/styles/variables.scss";`
+      }
+    }
+  },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/standalone.js'),
+      entry: resolve(__dirname, 'src/standalone.jsx'),
       name: 'WebChat',
       formats: ['umd'],
       fileName: () => 'webchat.umd.js'
