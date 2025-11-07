@@ -8,7 +8,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import Widget from './components/Widget/Widget';
-import { getCurrentService } from '@/lib/serviceBridge';
+import { service } from './contexts/ChatContext';
 import './styles/index.scss';
 import './i18n';
 
@@ -258,14 +258,14 @@ function setSessionId(sessionId) {
  * Set context
  */
 function setContext(context) {
-  getCurrentService().setContext(context);
+  service.setContext(context);
 }
 
 /**
  * Get context
  */
 function getContext() {
-  return getCurrentService().getContext();
+  return service.getContext();
 }
 
 /**

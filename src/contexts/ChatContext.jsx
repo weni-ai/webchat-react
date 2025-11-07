@@ -1,7 +1,8 @@
 import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { setCurrentService } from '@/lib/serviceBridge.js';
+
+let serviceInstance = null;
 
 const ChatContext = createContext();
 
@@ -60,7 +61,10 @@ export function ChatProvider({ children, config }) {
   const mergedConfig = { ...defaultConfig, ...config };
 
   // Service instance
-  const [service] = useState(() => new WeniWebchatService(mergedConfig));
+  const [service] = useState(() => {
+    serviceInstance = new WeniWebchatService(mergedConfig);
+    return serviceInstance;
+  });
 
   // State comes from service
   const [state, setState] = useState(() => service.getState());
@@ -110,8 +114,6 @@ export function ChatProvider({ children, config }) {
   }
 
   useEffect(() => {
-    setCurrentService(service);
-
     if (mergedConfig.tooltipMessage) {
       initialTooltipMessageTimeout = setTimeout(
         () => displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage),
@@ -144,7 +146,6 @@ export function ChatProvider({ children, config }) {
       clearTimeout(initialTooltipMessageTimeout);
       service.removeAllListeners();
       service.disconnect();
-      setCurrentService(null);
     };
   }, []);
 
@@ -316,3 +317,4 @@ export const useChatContext = () => {
 };
 
 export default ChatContext;
+export { serviceInstance as service };
