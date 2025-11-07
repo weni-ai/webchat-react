@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@import "@/styles/variables.scss";`
+          additionalData: `@use 'sass:math';@import "@/styles/variables.scss";`
         }
       }
     }

@@ -1,0 +1,53 @@
+@import '@/styles/animations.scss';
+@import '@/styles/variables.scss';
+
+.weni-tooltip {
+  $spacing-right: $spacing-3;
+
+  display: flex;
+  gap: $spacing-1;
+  flex-direction: column;
+  
+  width: max-content;
+
+  position: absolute;
+  bottom: 0;
+  right: calc(100% + $spacing-right);
+  max-width: 260px;
+  background-color: $bg-base;
+  border-radius: $border-radius-2;
+  padding: $spacing-2;
+  box-shadow: $shadow-1;
+
+  @include weni-animation(0, 0.25s, weni-expand-in);
+
+  &::after {
+    $arrow-size: 12px;
+
+    width: $arrow-size;
+    height: $arrow-size;
+    background-color: $bg-base;
+
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-right: math.div(-$arrow-size, 2);
+    margin-bottom: calc($border-radius-2 + $arrow-size / 4);
+
+    transform: rotate(45deg);
+    clip-path: polygon(100% 100%, 100% 0%, 0% 0%);
+  }
+
+  &__header {
+    display: flex;
+    gap: $spacing-2;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font: $font-action;
+    color: $fg-emphasized;
+  }
+}

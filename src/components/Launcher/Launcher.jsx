@@ -6,6 +6,7 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import Badge from '@/components/common/Badge';
 import { Icon } from '@/components/common/Icon';
 import Avatar from '@/components/common/Avatar';
+import { Tooltip } from '@/components/Tooltip/Tooltip';
 
 import { useChatContext } from '@/contexts/ChatContext';
 
@@ -19,7 +20,7 @@ import './Launcher.scss';
 export function Launcher() {
   const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
 
-  const { config } = useChatContext();
+  const { config, title, tooltipMessage, clearTooltipMessage } = useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
   return (
@@ -43,6 +44,8 @@ export function Launcher() {
         count={unreadCount}
         className="weni-launcher__badge"
       />
+
+      {tooltipMessage && <Tooltip name={title} message={tooltipMessage} onClose={clearTooltipMessage} />}
     </section>
   )
 }

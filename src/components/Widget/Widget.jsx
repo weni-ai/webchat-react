@@ -5,6 +5,7 @@ import Launcher from '@/components/Launcher/Launcher';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext.jsx';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
+import { useEffect } from 'react';
 
 /**
  * Widget - Main container component
@@ -14,9 +15,15 @@ import './Widget.scss';
  */
 
 function WidgetContent() {
-  const { isChatFullscreen, isChatOpen } = useChatContext();
+  const { isChatFullscreen, isChatOpen, clearTooltipMessage } = useChatContext();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
+
+  useEffect(() => {
+    if (isChatOpen) {
+      clearTooltipMessage();
+    }
+  }, [isChatOpen]);
 
   return (
     <aside className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}`}>

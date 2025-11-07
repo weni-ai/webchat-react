@@ -1,6 +1,6 @@
 import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { setCurrentService } from '@/lib/serviceBridge.js';
 
 const ChatContext = createContext();
@@ -85,8 +85,39 @@ export function ChatProvider({ children, config }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
 
+  const [title, setTitle] = useState(mergedConfig.title);
+  const [tooltipMessage, setTooltipMessage] = useState(null);
+
+  const isChatOpenRef = useRef(isChatOpen);
+
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
+  let initialTooltipMessageTimeout = null;
+
+  function displaysTooltipAsAReceivedMessage(message) {
+    if (isChatOpenRef.current) {
+      return;
+    }
+
+    service.simulateMessageReceived({
+      type: 'message',
+      message: {
+        text: message,
+      },
+    });
+  }
+
   useEffect(() => {
     setCurrentService(service);
+
+    if (mergedConfig.tooltipMessage) {
+      initialTooltipMessageTimeout = setTimeout(
+        () => displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage),
+        mergedConfig.tooltipDelay,
+      );
+    }
 
     service.init().catch((error) => {
       console.error('Failed to initialize service:', error);
@@ -110,6 +141,7 @@ export function ChatProvider({ children, config }) {
     service.on('context:changed', (context) => setContext(context));
     
     return () => {
+      clearTimeout(initialTooltipMessageTimeout);
       service.removeAllListeners();
       service.disconnect();
       setCurrentService(null);
@@ -117,9 +149,13 @@ export function ChatProvider({ children, config }) {
   }, []);
 
   useEffect(() => {
-    const handleMessageReceived = () => {
+    const handleMessageReceived = (message) => {
       if (!isChatOpen) {
         setUnreadCount(prev => prev + 1);
+
+        if (!mergedConfig.disableTooltips) {
+          setTooltipMessage(message);
+        }
       }
     };
     
@@ -158,6 +194,7 @@ export function ChatProvider({ children, config }) {
     cameraDevices,
     
     // UI-specific state
+    title,
     isChatOpen,
     setIsChatOpen,
     isChatFullscreen,
@@ -166,6 +203,8 @@ export function ChatProvider({ children, config }) {
     setUnreadCount,
     config: configState,
     fileConfig: service.getFileConfig(),
+    tooltipMessage,
+    clearTooltipMessage: () => setTooltipMessage(null),
 
     // Service methods (proxied for convenience)
     sendMessage: (text) => service.sendMessage(text),

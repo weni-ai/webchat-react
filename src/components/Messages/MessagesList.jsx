@@ -15,6 +15,25 @@ import { useChatContext } from '@/contexts/ChatContext';
 
 import './MessagesList.scss';
 
+export function Message({ message, componentsEnabled }) {
+  switch (message.type) {
+    case 'text':
+    case 'message':
+      return <MessageText message={message} componentsEnabled={componentsEnabled}/>;
+    case 'image':
+      return <MessageImage message={message} />;
+    case 'video':
+      return <MessageVideo message={message} />;
+    case 'audio':
+      return <MessageAudio message={message} />;
+    case 'document':
+    case 'file':
+      return <MessageDocument message={message} />;
+    default:
+      return <MessageText message={message} componentsEnabled={componentsEnabled}/>;
+  }
+};
+
 /**
  * MessagesList - Scrollable list of messages
  * TODO: Render all messages with proper message components
@@ -47,25 +66,6 @@ export function MessagesList() {
     return message.direction === 'incoming' && isMessageInLastGroup;
   };
 
-  const renderMessage = (message) => {
-    switch (message.type) {
-      case 'text':
-      case 'message':
-        return <MessageText message={message} componentsEnabled={enableComponents(message)}/>;
-      case 'image':
-        return <MessageImage message={message} />;
-      case 'video':
-        return <MessageVideo message={message} />;
-      case 'audio':
-        return <MessageAudio message={message} />;
-      case 'document':
-      case 'file':
-        return <MessageDocument message={message} />;
-      default:
-        return <MessageText message={message} componentsEnabled={enableComponents(message)}/>;
-    }
-  };
-
   return (
     <section className="weni-messages-list">
       {/* TODO: Add empty state when no messages */}
@@ -84,7 +84,7 @@ export function MessagesList() {
               type={message.type}
               key={message.id || messageIndex}
             >
-              {renderMessage(message)}
+              <Message message={message} componentsEnabled={enableComponents(message)} />
             </MessageContainer>
           ))}
         </section>
