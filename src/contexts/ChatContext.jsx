@@ -241,7 +241,7 @@ ChatProvider.propTypes = {
     sessionId: PropTypes.string,
     sessionToken: PropTypes.string,
     customData: PropTypes.object,
-    connectOn: PropTypes.oneOf(['mount', 'open']),
+    connectOn: PropTypes.oneOf(['mount', 'manual', 'demand']),
     storage: PropTypes.oneOf(['local', 'session']),
     hideWhenNotConnected: PropTypes.bool,
     autoClearCache: PropTypes.bool,
