@@ -17,7 +17,6 @@ import './InputBox.scss';
  * TODO: Add character limit indicator
  */
 export function InputBox({ maxLength = 5000 }) {
-  const { isConnected } = useWeniChat()
   const { isRecording, sendMessage, stopAndSendAudio, requestAudioPermission, hasAudioPermission, startRecording, isCameraRecording, hasCameraPermission, requestCameraPermission, startCameraRecording } = useChatContext();
   const { config } = useChatContext();
 
@@ -92,7 +91,6 @@ export function InputBox({ maxLength = 5000 }) {
           onClick={handleSend}
           variant="primary"
           icon="send"
-          disabled={!isConnected}
           aria-label="Send audio"
         />
       </section>
@@ -117,14 +115,13 @@ export function InputBox({ maxLength = 5000 }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyPress}
           maxLength={maxLength}
-          disabled={!isConnected}
           rows={1}
         />
 
         {!text.trim() &&
           <Button
             onClick={handleRecordCamera}
-            disabled={!isConnected || hasCameraPermissionState === false}
+            disabled={hasCameraPermissionState === false}
             aria-label="Take photo"
             variant="tertiary"
             icon="add_a_photo"
@@ -142,7 +139,6 @@ export function InputBox({ maxLength = 5000 }) {
             variant="tertiary"
             icon="add_photo_alternate"
             iconColor="gray-900"
-            disabled={!isConnected}
             aria-label="Attach file"
           />
 
@@ -151,7 +147,7 @@ export function InputBox({ maxLength = 5000 }) {
             variant="tertiary"
             icon="mic"
             iconColor="gray-900"
-            disabled={!isConnected || hasAudioPermissionState === false}
+            disabled={hasAudioPermissionState === false}
             aria-label="Record audio"
           />
         </>
@@ -162,7 +158,6 @@ export function InputBox({ maxLength = 5000 }) {
           onClick={handleSend}
           variant="primary"
           icon="send"
-          disabled={!isConnected}
           aria-label="Send message"
         />
       )}

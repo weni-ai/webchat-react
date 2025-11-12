@@ -9,6 +9,7 @@ import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
 import Avatar from '@/components/common/Avatar'
+import Icon from '@/components/common/Icon';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -85,6 +86,14 @@ export function MessagesList() {
               key={message.id || messageIndex}
             >
               <Message message={message} componentsEnabled={enableComponents(message)} />
+
+              {message.status === 'pending' && (
+                <Icon name="access_time" size="small" color="fg-muted" />
+              )}
+
+              {message.status === 'error' && (
+                <Icon name="error" size="small" color="fg-critical" />
+              )}
             </MessageContainer>
           ))}
         </section>
