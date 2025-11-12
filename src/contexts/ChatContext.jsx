@@ -1,6 +1,7 @@
 import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import i18n from '@/i18n';
 
 let serviceInstance = null;
 
@@ -141,6 +142,8 @@ export function ChatProvider({ children, config }) {
     service.on('camera:devices:changed', (devices) => setCameraDevices(devices));
 
     service.on('context:changed', (context) => setContext(context));
+
+    service.on('language:changed', (language) => i18n.changeLanguage(language));
     
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
