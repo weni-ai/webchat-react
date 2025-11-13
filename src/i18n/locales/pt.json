@@ -7,7 +7,13 @@
       "structuring": "Estruturando resposta",
       "almost": "Quase pronto, só mais um instante"
     }
+  },
+  "already_in_use": {
+    "title": "Você já está logado em outra sessão",
+    "description": "Clique em “Usar aqui” para usar o chat nesta sessão",
+    "actions": {
+      "close": "Fechar",
+      "use_here": "Usar aqui"
+    }
   }
 }
-
-

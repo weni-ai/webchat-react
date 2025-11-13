@@ -64,6 +64,8 @@ export function useWeniChat() {
     // Computed values
     sortedMessages,
     messageGroups,
+    isConnectionClosed: context.isConnectionClosed,
+    connect: context.connect,
   };
 }
 
