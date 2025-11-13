@@ -1,0 +1,29 @@
+.weni-already-in-use {
+  padding: $spacing-4 $spacing-2;
+  
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+
+  height: 100%;
+  overflow: hidden auto;
+
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+
+  &__title {
+    font: $font-emphasis;
+    color: $fg-emphasized;
+  }
+
+  &__description {
+    font: $font-body;
+    color: $fg-base;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-2;
+  }
+}

@@ -4,15 +4,15 @@ import Header from '@/components/Header/Header'
 import MessagesList from '@/components/Messages/MessagesList'
 import InputBox from '@/components/Input/InputBox'
 import PoweredBy from '@/components/common/PoweredBy'
+import { AlreadyInUse } from '@/components/AlreadyInUse/AlreadyInUse'
 import './Chat.scss'
-
 /**
  * Chat - Main chat container
  * TODO: Handle fullscreen mode
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
-  const { isChatOpen } = useWeniChat()
+  const { isChatOpen, isConnectionClosed } = useWeniChat()
   const [shouldRender, setShouldRender] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
@@ -40,9 +40,9 @@ export function Chat() {
   return (
     <section className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''}`}>
       <Header />
-      <MessagesList />
+      {isConnectionClosed ? <AlreadyInUse /> : <MessagesList />}
       <footer className="weni-chat__footer">
-        <InputBox />
+        {!isConnectionClosed && <InputBox />}
         <PoweredBy />
       </footer>
     </section>

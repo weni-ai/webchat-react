@@ -182,6 +182,7 @@ export function ChatProvider({ children, config }) {
     // State from service StateManager (single source of truth)
     messages: state.messages || [],
     isConnected: state.connection?.status === 'connected',
+    isConnectionClosed: state.connection?.status === 'closed',
     isTyping: state.isTyping || false,
     isThinking: state.isThinking || false,
     context,
@@ -211,6 +212,7 @@ export function ChatProvider({ children, config }) {
     clearTooltipMessage: () => setTooltipMessage(null),
 
     // Service methods (proxied for convenience)
+    connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
     sendAttachment: (file) => service.sendAttachment(file),
     stopAndSendAudio,

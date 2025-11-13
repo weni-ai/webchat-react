@@ -7,7 +7,13 @@
       "structuring": "Structuring response",
       "almost": "Almost ready, just a moment"
     }
+  },
+  "already_in_use": {
+    "title": "You are already logged into another session",
+    "description": "Click “Use here” to use chat in this session",
+    "actions": {
+      "close": "Close",
+      "use_here": "Use here"
+    }
   }
 }
-
-
