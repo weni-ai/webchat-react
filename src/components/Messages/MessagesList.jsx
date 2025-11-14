@@ -10,6 +10,7 @@ import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
 import Avatar from '@/components/common/Avatar'
 import Icon from '@/components/common/Icon';
+import { MessageButton } from '@/components/common/MessageButton';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -34,6 +35,38 @@ export function Message({ message, componentsEnabled }) {
       return <MessageText message={message} componentsEnabled={componentsEnabled}/>;
   }
 };
+
+function QuickRepliesWhatsApp({ enableComponents }) {
+  const { sendMessage, setCurrentPage } = useWeniChat();
+
+  return (
+    <>
+      <MessageButton
+        className="weni-messages-list__message--incoming"
+        disabled={!enableComponents}
+        onClick={() => sendMessage('Option 1')}
+      >
+        Option 1
+      </MessageButton>
+
+      <MessageButton
+        className="weni-messages-list__message--incoming"
+        alignContent="center"
+        onClick={() => setCurrentPage({
+          name: 'quick-replies',
+          goBack: () => setCurrentPage(null),
+          props: {
+            options: ['Option 1', 'Option 2', 'Option 3'],
+          },
+        })}
+        disabled={!enableComponents}
+      >
+        <Icon name="list" size="medium" />
+        Menu
+      </MessageButton>
+    </>
+  );
+}
 
 /**
  * MessagesList - Scrollable list of messages
@@ -79,22 +112,30 @@ export function MessagesList() {
             <Avatar src={config.profileAvatar} name={config.title} />
           )}
           {group.messages.map((message, messageIndex) => (
-            <MessageContainer 
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
-              direction={group.direction}
-              type={message.type}
-              key={message.id || messageIndex}
-            >
-              <Message message={message} componentsEnabled={enableComponents(message)} />
+            <>
+              <MessageContainer
+                className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
+                direction={group.direction}
+                type={message.type}
+                key={message.id || messageIndex}
+              >
+                <Message message={message} componentsEnabled={enableComponents(message)} />
 
-              {message.status === 'pending' && (
-                <Icon name="access_time" size="small" color="fg-muted" />
-              )}
+                {message.status === 'pending' && (
+                  <Icon name="access_time" size="small" color="fg-muted" />
+                )}
 
-              {message.status === 'error' && (
-                <Icon name="error" size="small" color="fg-critical" />
-              )}
-            </MessageContainer>
+                {message.status === 'error' && (
+                  <Icon name="error" size="small" color="fg-critical" />
+                )}
+              </MessageContainer>
+
+              <section className={`weni-messages-list__message-appendages weni-messages-list__message-appendages--${group.direction}`}>
+                <QuickRepliesWhatsApp
+                  enableComponents={enableComponents(message)}
+                />
+              </section>
+            </>
           ))}
         </section>
       ))}
