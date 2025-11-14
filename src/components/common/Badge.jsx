@@ -93,4 +93,3 @@ Badge.propTypes = {
 };
 
 export default Badge;
-

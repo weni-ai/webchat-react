@@ -9,7 +9,7 @@ import './MessageImage.scss';
 export function MessageImage({ message }) {
   return (
     <img 
-      src={message.media} 
+      src={message.media}
       alt={message.caption || 'Image'}
       className="weni-message-image"
     />
