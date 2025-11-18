@@ -27,7 +27,7 @@ function HeaderTitle({ profileAvatar, title, subtitle, goBack }) {
  */
 export function Header() {
   const { toggleChat } = useWeniChat();
-  const { isChatFullscreen, toggleChatFullscreen, currentPage } = useWeniChat();
+  const { isChatFullscreen, toggleChatFullscreen, currentPage, setCurrentPage } = useWeniChat();
 
   const { config } = useChatContext();
   // TODO: Implement header layout
@@ -38,7 +38,7 @@ export function Header() {
       <section className="weni-chat-header__info">
         {
           currentPage ?
-            <HeaderTitle title={'Menu'} goBack={currentPage.goBack} /> :
+            <HeaderTitle title={currentPage.title} goBack={() => setCurrentPage(null)} /> :
             <HeaderTitle profileAvatar={config.profileAvatar} title={config.title} subtitle={config.subtitle} />
         }
       </section>

@@ -36,35 +36,24 @@ export function Message({ message, componentsEnabled }) {
   }
 };
 
-function QuickRepliesWhatsApp({ enableComponents }) {
-  const { sendMessage, setCurrentPage } = useWeniChat();
+function ListMessage({ enableComponents, buttonText, items }) {
+  const { setCurrentPage } = useWeniChat();
 
   return (
-    <>
-      <MessageButton
-        className="weni-messages-list__message--incoming"
-        disabled={!enableComponents}
-        onClick={() => sendMessage('Option 1')}
-      >
-        Option 1
-      </MessageButton>
-
-      <MessageButton
-        className="weni-messages-list__message--incoming"
-        alignContent="center"
-        onClick={() => setCurrentPage({
-          name: 'quick-replies',
-          goBack: () => setCurrentPage(null),
-          props: {
-            options: ['Option 1', 'Option 2', 'Option 3'],
-          },
-        })}
-        disabled={!enableComponents}
-      >
-        <Icon name="list" size="medium" />
-        Menu
-      </MessageButton>
-    </>
+    <MessageButton
+      alignContent="center"
+      onClick={() => setCurrentPage({
+        view: 'list-message',
+        title: buttonText,
+        props: {
+          options: items.map(item => item.title),
+        },
+      })}
+      disabled={!enableComponents}
+    >
+      <Icon name="list" size="medium" />
+      {buttonText}
+    </MessageButton>
   );
 }
 
@@ -130,11 +119,17 @@ export function MessagesList() {
                 )}
               </MessageContainer>
 
-              <section className={`weni-messages-list__message-appendages weni-messages-list__message-appendages--${group.direction}`}>
-                <QuickRepliesWhatsApp
-                  enableComponents={enableComponents(message)}
-                />
-              </section>
+              {message.list_message && (
+                <section className={`weni-messages-list__message-appendages weni-messages-list__message-appendages--${group.direction}`}>
+                  <ListMessage
+                    enableComponents={enableComponents(message)}
+                    buttonText={message.list_message.button_text}
+                    items={message.list_message.list_items}
+                  />
+                </section>
+              )}
+
+              
             </>
           ))}
         </section>

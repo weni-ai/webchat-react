@@ -15,5 +15,12 @@
       "close": "Cerrar",
       "use_here": "Usar aquí"
     }
+  },
+  "list_message": {
+    "instruction": "Toque para selecionar un item",
+    "actions": {
+      "back": "Voltar",
+      "send": "Enviar"
+    }
   }
 }

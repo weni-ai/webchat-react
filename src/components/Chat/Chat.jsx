@@ -5,7 +5,7 @@ import MessagesList from '@/components/Messages/MessagesList'
 import InputBox from '@/components/Input/InputBox'
 import PoweredBy from '@/components/common/PoweredBy'
 import { AlreadyInUse } from '@/components/AlreadyInUse/AlreadyInUse'
-import { QuickReplies } from '@/views/QuickReplies'
+import { ListMessage } from '@/views/ListMessage'
 
 function ChatContent() {
   const { isConnectionClosed, currentPage } = useWeniChat();
@@ -14,8 +14,8 @@ function ChatContent() {
     return <AlreadyInUse />;
   }
 
-  if (currentPage?.name === 'quick-replies') {
-    return <QuickReplies {...currentPage.props} />;
+  if (currentPage?.view === 'list-message') {
+    return <ListMessage {...currentPage.props} />;
   }
 
   return <MessagesList />;

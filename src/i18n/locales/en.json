@@ -15,5 +15,12 @@
       "close": "Close",
       "use_here": "Use here"
     }
+  },
+  "list_message": {
+    "instruction": "Tap to select an item",
+    "actions": {
+      "back": "Back",
+      "send": "Send"
+    }
   }
 }
