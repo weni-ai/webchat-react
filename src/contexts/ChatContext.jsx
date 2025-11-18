@@ -117,7 +117,13 @@ export function ChatProvider({ children, config }) {
   useEffect(() => {
     if (mergedConfig.tooltipMessage) {
       initialTooltipMessageTimeout = setTimeout(
-        () => displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage),
+        () => {
+          if (service.getMessages().length !== 0) {
+            return;
+          }
+
+          displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage);
+        },
         mergedConfig.tooltipDelay,
       );
     }
