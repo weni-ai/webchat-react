@@ -1,0 +1,47 @@
+name: Create Build and Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+      - '*.*.*-staging*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    environment: ${{ contains(github.ref, '-staging') && 'staging' || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Run build:standalone
+        run: npm run build:standalone
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp \
+            dist-standalone/webchat.umd.js \
+            s3://${{ secrets.AWS_S3_BUCKET_NAME }}/webchat-latest.umd.js
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref, 'staging') }}
