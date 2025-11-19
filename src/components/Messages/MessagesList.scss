@@ -25,22 +25,6 @@
     }
   }
 
-  &__message-appendages {
-    width: -webkit-fill-available;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-1;
-
-    &--incoming {
-      grid-column: 2 / 3;
-      justify-self: flex-start;
-    }
-
-    &--outgoing {
-      justify-self: flex-end;
-    }
-  }
-
   &__direction-group {
     max-width: 75%;
 
