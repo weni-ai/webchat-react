@@ -4,7 +4,7 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import Button from '@/components/common/Button';
 
 import './QuickReplies.scss';
-export function QuickReplies({ quickReplies, disabled }) {
+export function QuickReplies({ quickReplies, disabled = false }) {
   const { sendMessage } = useWeniChat();
 
   return (
