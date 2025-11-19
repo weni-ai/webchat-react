@@ -313,6 +313,8 @@ const WebChat = {
   reload
 };
 
+WebChat.default = WebChat;
+
 // Expose to window for script tag usage
 if (typeof window !== 'undefined') {
   window.WebChat = { default: WebChat };
