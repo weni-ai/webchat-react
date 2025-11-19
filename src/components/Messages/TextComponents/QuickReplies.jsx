@@ -1,17 +1,38 @@
 import PropTypes from 'prop-types';
 
-import { useChatContext } from '@/contexts/ChatContext';
-
+import { useWeniChat } from '@/hooks/useWeniChat';
+import Icon from '@/components/common/Icon';
 import Button from '@/components/common/Button';
 
 import './QuickReplies.scss';
+export function QuickReplies({ type, buttonText = '', items, disabled }) {
+  const { setCurrentPage, sendMessage } = useWeniChat();
 
-export function QuickReplies({ quickReplies, disabled }) {
-  const { sendMessage } = useChatContext();
+  if (type === 'listMessage') {
+    return (
+      <section className="weni-quick-replies">
+        <Button
+          key={buttonText}
+          variant="secondary"
+          disabled={disabled}
+          onClick={() => setCurrentPage({
+            view: 'list-message',
+            title: buttonText,
+            props: {
+              options: items.map(item => item.title),
+            },
+          })}
+        >
+          <Icon name="list" size="medium" />
+          {buttonText}
+        </Button>
+      </section>
+    );
+  }
 
   return (
     <section className="weni-quick-replies">
-      {quickReplies.map((reply) => (
+      {items.map((reply) => (
         <Button key={reply} variant="secondary" disabled={disabled} onClick={() => sendMessage(reply)}>{reply}</Button>
       ))}
     </section>
@@ -19,6 +40,8 @@ export function QuickReplies({ quickReplies, disabled }) {
 }
 
 QuickReplies.propTypes = {
-  quickReplies: PropTypes.array.isRequired,
-  disabled: PropTypes.bool.isRequired
+  type: PropTypes.oneOf(['quickReplies', 'listMessage']),
+  buttonText: PropTypes.string,
+  items: PropTypes.array.isRequired,
+  disabled: PropTypes.bool
 };

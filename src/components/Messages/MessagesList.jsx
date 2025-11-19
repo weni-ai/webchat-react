@@ -10,7 +10,6 @@ import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
 import Avatar from '@/components/common/Avatar'
 import Icon from '@/components/common/Icon';
-import { MessageButton } from '@/components/common/MessageButton';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -35,27 +34,6 @@ export function Message({ message, componentsEnabled }) {
       return <MessageText message={message} componentsEnabled={componentsEnabled}/>;
   }
 };
-
-function ListMessage({ enableComponents, buttonText, items }) {
-  const { setCurrentPage } = useWeniChat();
-
-  return (
-    <MessageButton
-      alignContent="center"
-      onClick={() => setCurrentPage({
-        view: 'list-message',
-        title: buttonText,
-        props: {
-          options: items.map(item => item.title),
-        },
-      })}
-      disabled={!enableComponents}
-    >
-      <Icon name="list" size="medium" />
-      {buttonText}
-    </MessageButton>
-  );
-}
 
 /**
  * MessagesList - Scrollable list of messages
@@ -101,36 +79,22 @@ export function MessagesList() {
             <Avatar src={config.profileAvatar} name={config.title} />
           )}
           {group.messages.map((message, messageIndex) => (
-            <>
-              <MessageContainer
-                className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
-                direction={group.direction}
-                type={message.type}
-                key={message.id || messageIndex}
-              >
-                <Message message={message} componentsEnabled={enableComponents(message)} />
+            <MessageContainer
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`} 
+              direction={group.direction}
+              type={message.type}
+              key={message.id || messageIndex}
+            >
+              <Message message={message} componentsEnabled={enableComponents(message)} />
 
-                {message.status === 'pending' && (
-                  <Icon name="access_time" size="small" color="fg-muted" />
-                )}
-
-                {message.status === 'error' && (
-                  <Icon name="error" size="small" color="fg-critical" />
-                )}
-              </MessageContainer>
-
-              {message.list_message && (
-                <section className={`weni-messages-list__message-appendages weni-messages-list__message-appendages--${group.direction}`}>
-                  <ListMessage
-                    enableComponents={enableComponents(message)}
-                    buttonText={message.list_message.button_text}
-                    items={message.list_message.list_items}
-                  />
-                </section>
+              {message.status === 'pending' && (
+                <Icon name="access_time" size="small" color="fg-muted" />
               )}
 
-              
-            </>
+              {message.status === 'error' && (
+                <Icon name="error" size="small" color="fg-critical" />
+              )}
+            </MessageContainer>
           ))}
         </section>
       ))}

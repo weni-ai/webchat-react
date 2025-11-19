@@ -51,7 +51,11 @@ export function MessageText({ message, componentsEnabled }) {
       />
 
       {message.quick_replies && (
-        <QuickReplies quickReplies={message.quick_replies} disabled={!componentsEnabled} />
+        <QuickReplies type="quickReplies" items={message.quick_replies} disabled={!componentsEnabled} />
+      )}
+
+      {message.list_message && (
+        <QuickReplies type="listMessage" buttonText={message.list_message.button_text} items={message.list_message.list_items} disabled={!componentsEnabled} />
       )}
     </>
   );
