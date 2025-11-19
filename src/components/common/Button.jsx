@@ -19,6 +19,7 @@ export function Button({
   icon = '',
   iconColor = '',
   iconFilled = false,
+  alignContent = 'center',
   className = '',
   ...props 
 }) {
@@ -40,7 +41,7 @@ export function Button({
   
   return (
     <button
-      className={`weni-button weni-button--${variant} weni-button--${size} ${className}`}
+      className={`weni-button weni-button--${variant} weni-button--${size} weni-button--${alignContent}-aligned ${className}`}
       onClick={onClick}
       disabled={disabled || isLoading}
       {...props}
