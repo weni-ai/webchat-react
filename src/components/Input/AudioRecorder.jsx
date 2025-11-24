@@ -8,14 +8,14 @@ import './AudioRecorder.scss';
 
 /**
  * AudioRecorder - Component for recording audio messages
- * 
+ *
  * Features:
  * - Auto-starts recording when mounted
  * - Visual feedback during recording
  * - Timer display
  * - Cancel option
  * - Uses service for audio logic
- * 
+ *
  * TODO: Error handling visual feedback
  */
 export const AudioRecorder = () => {
@@ -30,20 +30,20 @@ export const AudioRecorder = () => {
   }, []);
 
   return (
-      (isRecording) && (
-        <section className="weni-audio-recorder">
-          <p className="weni-audio-recorder__timer">
-            {formatTime(recordingDuration, 'milliseconds', true)}
-          </p>
+    isRecording && (
+      <section className="weni-audio-recorder">
+        <p className="weni-audio-recorder__timer">
+          {formatTime(recordingDuration, 'milliseconds', true)}
+        </p>
 
-          <Button
-            onClick={cancelRecording}
-            variant="tertiary"
-            icon="close"
-            aria-label="Cancel recording"
-          />
-        </section>
-      )
+        <Button
+          onClick={cancelRecording}
+          variant="tertiary"
+          icon="close"
+          aria-label="Cancel recording"
+        />
+      </section>
+    )
   );
 };
 

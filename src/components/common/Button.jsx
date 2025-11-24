@@ -9,11 +9,11 @@ import './Button.scss';
  * TODO: Add icon support
  * TODO: Handle disabled state styling
  */
-export function Button({ 
-  children, 
-  onClick = () => {}, 
-  disabled = false, 
-  variant = 'primary', 
+export function Button({
+  children,
+  onClick = () => {},
+  disabled = false,
+  variant = 'primary',
   size = 'medium',
   isLoading = false,
   icon = '',
@@ -22,24 +22,24 @@ export function Button({
   alignContent = 'center',
   hoverState = false,
   className = '',
-  ...props 
+  ...props
 }) {
   // TODO: Implement button variants and sizes
   // TODO: Add loading spinner when isLoading is true
 
   function getIconColor() {
-    if (disabled) return 'fg-muted'
-    
+    if (disabled) return 'fg-muted';
+
     const mapColorToVariant = {
       primary: 'white',
       secondary: 'fg-emphasized',
       tertiary: 'fg-emphasized',
       warning: 'white',
-      attention: 'white'
-    }
-    return iconColor || mapColorToVariant[variant]
+      attention: 'white',
+    };
+    return iconColor || mapColorToVariant[variant];
   }
-  
+
   return (
     <button
       className={[
@@ -50,13 +50,21 @@ export function Button({
         hoverState && 'weni-button--hover-state',
         icon && !children && 'weni-button--only-icon',
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
       onClick={onClick}
       disabled={disabled || isLoading}
       {...props}
     >
       {/* TODO: Add loading spinner */}
-      {icon && <Icon name={icon} color={getIconColor()} filled={iconFilled} />}
+      {icon && (
+        <Icon
+          name={icon}
+          color={getIconColor()}
+          filled={iconFilled}
+        />
+      )}
 
       {children}
     </button>
@@ -66,13 +74,22 @@ export function Button({
 Button.propTypes = {
   onClick: PropTypes.func,
   disabled: PropTypes.bool,
-  variant: PropTypes.oneOf(['primary', 'secondary', 'tertiary', 'warning', 'attention']),
+  variant: PropTypes.oneOf([
+    'primary',
+    'secondary',
+    'tertiary',
+    'warning',
+    'attention',
+  ]),
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   isLoading: PropTypes.bool,
   icon: PropTypes.string,
   iconColor: PropTypes.string,
-  iconFilled: PropTypes.bool
+  iconFilled: PropTypes.bool,
+  alignContent: PropTypes.oneOf(['start', 'center', 'end']),
+  hoverState: PropTypes.bool,
+  className: PropTypes.string,
+  children: PropTypes.node,
 };
 
 export default Button;
-

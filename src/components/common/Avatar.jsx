@@ -4,15 +4,15 @@ import './Avatar.scss';
 
 /**
  * Avatar - User avatar component
- * 
+ *
  * Displays user avatar with support for images and fallback initials.
  * Sizes match Icon component sizes for consistency.
- * 
+ *
  * @example
  * <Avatar src="https://example.com/avatar.jpg" alt="John Doe" size="medium" />
  * <Avatar name="John Doe" size="large" />
  */
-export function Avatar({ 
+export function Avatar({
   src = '',
   alt = '',
   name = '',
@@ -20,7 +20,7 @@ export function Avatar({
   shape = 'circle',
   className = '',
   onError = null,
-  ...props 
+  ...props
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -28,42 +28,42 @@ export function Avatar({
     if (name) {
       return name
         .split(' ')
-        .map(word => word[0])
+        .map((word) => word[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
     }
     return '';
   };
-  
+
   const handleImageError = (e) => {
     setImageError(true);
     if (onError) {
       onError(e);
     }
   };
-  
+
   const displayInitials = getInitials();
   const showImage = src && !imageError;
-  
+
   return (
-    <section 
+    <section
       className={`weni-avatar weni-avatar--${size} weni-avatar--${shape} ${className}`}
       role="img"
       aria-label={alt || name || 'Avatar'}
       {...props}
     >
       {showImage ? (
-        <img 
+        <img
           src={src}
           alt={alt || name}
           className="weni-avatar__image"
           onError={handleImageError}
         />
-      ) : displayInitials && (
-        <p className="weni-avatar__initials">
-          {displayInitials}
-        </p>
+      ) : (
+        displayInitials && (
+          <p className="weni-avatar__initials">{displayInitials}</p>
+        )
       )}
     </section>
   );
@@ -79,8 +79,7 @@ Avatar.propTypes = {
   /** Additional CSS classes */
   className: PropTypes.string,
   /** Callback when image fails to load */
-  onError: PropTypes.func
+  onError: PropTypes.func,
 };
 
 export default Avatar;
-

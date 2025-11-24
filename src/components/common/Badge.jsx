@@ -8,7 +8,13 @@ import './Badge.scss';
  * TODO: Add animations for updates
  * TODO: Support different badge colors/variants
  */
-export function Badge({ count, max = 99, variant = 'primary', className, isVisible }) {
+export function Badge({
+  count,
+  max = 99,
+  variant = 'primary',
+  className,
+  isVisible,
+}) {
   const displayCount = count > max ? `${max}+` : count;
 
   let badgeEnteringAnimationTimeout = null;
@@ -16,7 +22,8 @@ export function Badge({ count, max = 99, variant = 'primary', className, isVisib
   let badgePulseAnimationTimeout = null;
 
   const [ignoreAnimation, setIgnoreAnimation] = useState(true);
-  const [isBadgeEnteringAnimation, setIsBadgeEnteringAnimation] = useState(false);
+  const [isBadgeEnteringAnimation, setIsBadgeEnteringAnimation] =
+    useState(false);
   const [isBadgeLeavingAnimation, setIsBadgeLeavingAnimation] = useState(false);
   const [isBadgePulseAnimation, setIsBadgePulseAnimation] = useState(false);
 
@@ -33,7 +40,7 @@ export function Badge({ count, max = 99, variant = 'primary', className, isVisib
       setIgnoreAnimation(false);
       return;
     }
-    
+
     if (isVisible) {
       setIsBadgeEnteringAnimation(true);
       badgeEnteringAnimationTimeout = setTimeout(() => {
@@ -69,7 +76,7 @@ export function Badge({ count, max = 99, variant = 'primary', className, isVisib
   if (!isVisible && !isBadgeLeavingAnimation) {
     return null;
   }
-  
+
   return (
     <span
       className={[
@@ -78,8 +85,12 @@ export function Badge({ count, max = 99, variant = 'primary', className, isVisib
         `weni-badge--variant-${variant}`,
         isBadgeEnteringAnimation && 'weni-badge--entering',
         isBadgeLeavingAnimation && 'weni-badge--leaving',
-        !(isBadgeEnteringAnimation || isBadgeLeavingAnimation) && isBadgePulseAnimation && 'weni-badge--pulse',
-      ].filter(Boolean).join(' ')}
+        !(isBadgeEnteringAnimation || isBadgeLeavingAnimation) &&
+          isBadgePulseAnimation &&
+          'weni-badge--pulse',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {displayCount}
     </span>
@@ -89,7 +100,15 @@ export function Badge({ count, max = 99, variant = 'primary', className, isVisib
 Badge.propTypes = {
   count: PropTypes.number.isRequired,
   max: PropTypes.number,
-  variant: PropTypes.oneOf(['primary', 'secondary', 'success', 'warning', 'error'])
+  variant: PropTypes.oneOf([
+    'primary',
+    'secondary',
+    'success',
+    'warning',
+    'error',
+  ]),
+  className: PropTypes.string,
+  isVisible: PropTypes.bool,
 };
 
 export default Badge;

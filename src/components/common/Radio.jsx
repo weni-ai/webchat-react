@@ -1,7 +1,14 @@
 import PropTypes from 'prop-types';
 import './Radio.scss';
 
-export function Radio({ value, onChange = () => {}, checked, name, id, label }) {
+export function Radio({
+  value,
+  onChange = () => {},
+  checked,
+  name,
+  id,
+  label,
+}) {
   return (
     <section className="weni-radio">
       <input
@@ -14,9 +21,14 @@ export function Radio({ value, onChange = () => {}, checked, name, id, label }) 
         id={id}
       />
 
-      <label className="weni-radio__label" htmlFor={id}>{label}</label>
+      <label
+        className="weni-radio__label"
+        htmlFor={id}
+      >
+        {label}
+      </label>
     </section>
-  )
+  );
 }
 
 Radio.propTypes = {
@@ -25,4 +37,5 @@ Radio.propTypes = {
   checked: PropTypes.bool.isRequired,
   name: PropTypes.string.isRequired,
   id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
 };
