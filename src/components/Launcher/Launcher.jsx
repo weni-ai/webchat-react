@@ -20,7 +20,8 @@ import './Launcher.scss';
 export function Launcher() {
   const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
 
-  const { config, title, tooltipMessage, clearTooltipMessage } = useChatContext();
+  const { config, title, tooltipMessage, clearTooltipMessage } =
+    useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
   return (
@@ -32,11 +33,21 @@ export function Launcher() {
         onMouseLeave={() => setIsHovering(false)}
         aria-label="Toggle chat"
       >
-
-        {config.profileAvatar && !isChatOpen
-          ? <Avatar className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} src={config.profileAvatar} size="full" />
-          : <Icon className={`${isChatOpen ? "weni-launcher-icon--click-open" : "weni-launcher-icon--click-close"}`} name={isChatOpen ? "close" : "chat_bubble"} filled color="white" size="x-large" />
-        }
+        {config.profileAvatar && !isChatOpen ? (
+          <Avatar
+            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+            src={config.profileAvatar}
+            size="full"
+          />
+        ) : (
+          <Icon
+            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+            name={isChatOpen ? 'close' : 'chat_bubble'}
+            filled
+            color="white"
+            size="x-large"
+          />
+        )}
       </button>
 
       <Badge
@@ -45,13 +56,24 @@ export function Launcher() {
         className="weni-launcher__badge"
       />
 
-      {tooltipMessage && <Tooltip name={title} message={tooltipMessage} onClose={clearTooltipMessage} />}
+      {tooltipMessage && (
+        <Tooltip
+          name={title}
+          message={tooltipMessage}
+          onClose={clearTooltipMessage}
+        />
+      )}
     </section>
-  )
+  );
 }
 
 Launcher.propTypes = {
-  position: PropTypes.oneOf(['bottom-right', 'bottom-left', 'top-right', 'top-left'])
+  position: PropTypes.oneOf([
+    'bottom-right',
+    'bottom-left',
+    'top-right',
+    'top-left',
+  ]),
 };
 
 export default Launcher;

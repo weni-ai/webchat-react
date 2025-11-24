@@ -43,20 +43,27 @@ export function MessageText({ message, componentsEnabled }) {
 
     return marked.parse(processedContent);
   }, [message.text]);
-  
+
   return (
     <>
-      <section 
+      <section
         className={`weni-message-text weni-message-text--${message.direction}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
       {message.quick_replies && (
-        <QuickReplies quickReplies={message.quick_replies} disabled={!componentsEnabled} />
+        <QuickReplies
+          quickReplies={message.quick_replies}
+          disabled={!componentsEnabled}
+        />
       )}
 
       {message.list_message && (
-        <ListMessage buttonText={message.list_message.button_text} items={message.list_message.list_items} disabled={!componentsEnabled} />
+        <ListMessage
+          buttonText={message.list_message.button_text}
+          items={message.list_message.list_items}
+          disabled={!componentsEnabled}
+        />
       )}
     </>
   );
@@ -71,10 +78,13 @@ MessageText.propTypes = {
     direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
     status: PropTypes.string,
     metadata: PropTypes.object,
-    quick_replies: PropTypes.array
+    quick_replies: PropTypes.array,
+    list_message: PropTypes.shape({
+      button_text: PropTypes.string.isRequired,
+      list_items: PropTypes.array.isRequired,
+    }),
   }).isRequired,
-  componentsEnabled: PropTypes.bool
+  componentsEnabled: PropTypes.bool,
 };
 
 export default MessageText;
-

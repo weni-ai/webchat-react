@@ -12,12 +12,12 @@ export function MessageVideo({ message }) {
   // TODO: Implement video message rendering
   // TODO: Add video controls
   // TODO: Handle loading and error states
-  
+
   return (
     <div className={`weni-message weni-message-${message.sender}`}>
       <div className="weni-message-content weni-message-video">
         {/* TODO: Render video with proper controls */}
-        <video 
+        <video
           src={message.url}
           controls
           className="weni-message-video-content"
@@ -38,9 +38,8 @@ MessageVideo.propTypes = {
     sender: PropTypes.oneOf(['client', 'agent', 'bot']).isRequired,
     poster: PropTypes.string,
     caption: PropTypes.string,
-    timestamp: PropTypes.number
-  }).isRequired
+    timestamp: PropTypes.number,
+  }).isRequired,
 };
 
 export default MessageVideo;
-

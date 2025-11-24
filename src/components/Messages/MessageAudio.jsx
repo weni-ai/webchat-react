@@ -9,7 +9,7 @@ import './MessageAudio.scss';
 
 /**
  * MessageAudio - Audio message component
- * 
+ *
  * Simple audio player with:
  * - Play/pause button
  * - Range input for progress
@@ -22,7 +22,6 @@ export function MessageAudio({ message }) {
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-
 
   const togglePlayPause = async () => {
     if (!audioRef.current || hasError) return;
@@ -113,14 +112,14 @@ export function MessageAudio({ message }) {
 
   return (
     <section className="weni-message-audio">
-      <audio 
+      <audio
         ref={audioRef}
         src={message.media}
         preload="metadata"
         style={{ display: 'none' }}
       />
 
-      <Button 
+      <Button
         className="weni-message-audio__play-button"
         onClick={togglePlayPause}
         disabled={hasError}
@@ -142,13 +141,12 @@ export function MessageAudio({ message }) {
         onChange={handleProgressChange}
         disabled={hasError || isLoading}
         style={{
-          '--progress': duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
+          '--progress':
+            duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
         }}
       />
 
-      <p className="weni-message-audio__time">
-        {getDisplayTime()}
-      </p>
+      <p className="weni-message-audio__time">{getDisplayTime()}</p>
     </section>
   );
 }
@@ -162,9 +160,8 @@ MessageAudio.propTypes = {
     duration: PropTypes.number,
     timestamp: PropTypes.number.isRequired,
     status: PropTypes.string,
-    metadata: PropTypes.object
-  }).isRequired
+    metadata: PropTypes.object,
+  }).isRequired,
 };
 
 export default MessageAudio;
-

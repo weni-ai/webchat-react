@@ -22,57 +22,59 @@ let widgetInstance = null;
 function extractThemeFromParams(params) {
   // Get customizeWidget object (legacy format)
   const customize = params.customizeWidget || {};
-  
+
   // Helper to get value from customizeWidget first, then params (for flexibility)
   const getValue = (key) => customize[key] ?? params[key];
-  
+
   const themeProps = {
     // Colors - Header
     titleColor: getValue('titleColor'),
     subtitleColor: getValue('subtitleColor'),
     headerBackgroundColor: getValue('headerBackgroundColor'),
-    
+
     // Colors - Chat
     chatBackgroundColor: getValue('chatBackgroundColor'),
-    
+
     // Colors - Launcher
     launcherColor: getValue('launcherColor') || getValue('mainColor'),
     mainColor: getValue('mainColor'),
-    
+
     // Colors - Input
     inputBackgroundColor: getValue('inputBackgroundColor'),
     inputFontColor: getValue('inputFontColor'),
     inputPlaceholderColor: getValue('inputPlaceholderColor'),
-    
+
     // Colors - Messages
     userMessageBubbleColor: getValue('userMessageBubbleColor'),
     userMessageTextColor: getValue('userMessageTextColor'),
     botMessageBubbleColor: getValue('botMessageBubbleColor'),
     botMessageTextColor: getValue('botMessageTextColor'),
-    fullScreenBotMessageBubbleColor: getValue('fullScreenBotMessageBubbleColor'),
-    
+    fullScreenBotMessageBubbleColor: getValue(
+      'fullScreenBotMessageBubbleColor',
+    ),
+
     // Colors - Quick Replies
     quickRepliesFontColor: getValue('quickRepliesFontColor'),
     quickRepliesBackgroundColor: getValue('quickRepliesBackgroundColor'),
     quickRepliesBorderColor: getValue('quickRepliesBorderColor'),
     quickRepliesBorderWidth: getValue('quickRepliesBorderWidth'),
-    
+
     // Colors - Suggestions
     suggestionsBackgroundColor: getValue('suggestionsBackgroundColor'),
     suggestionsSeparatorColor: getValue('suggestionsSeparatorColor'),
     suggestionsFontColor: getValue('suggestionsFontColor'),
     suggestionsHoverFontColor: getValue('suggestionsHoverFontColor'),
-    
+
     // Dimensions
     widgetHeight: getValue('widgetHeight'),
     widgetWidth: getValue('widgetWidth'),
     launcherHeight: getValue('launcherHeight'),
-    launcherWidth: getValue('launcherWidth')
+    launcherWidth: getValue('launcherWidth'),
   };
-  
+
   // Remove undefined values
   return Object.fromEntries(
-    Object.entries(themeProps).filter(([_, value]) => value !== undefined)
+    Object.entries(themeProps).filter(([_, value]) => value !== undefined),
   );
 }
 
@@ -86,7 +88,7 @@ function mapConfig(params) {
     socketUrl: params.socketUrl,
     channelUuid: params.channelUuid,
     host: params.host,
-    
+
     // Connection settings
     connectOn: params.connectOn || 'mount',
     storage: params.params?.storage || 'local',
@@ -97,7 +99,7 @@ function mapConfig(params) {
     hideWhenNotConnected: params.hideWhenNotConnected,
     autoClearCache: params.autoClearCache,
     contactTimeout: params.contactTimeout,
-    
+
     // UI settings
     title: params.title || 'Welcome',
     subtitle: params.subtitle,
@@ -110,22 +112,22 @@ function mapConfig(params) {
     showMessageDate: params.showMessageDate || false,
     showHeaderAvatar: params.showHeaderAvatar !== false,
     connectingText: params.connectingText || 'Waiting for server...',
-    
+
     // Media settings
     docViewer: params.docViewer || false,
     params: params.params,
-    
+
     // Images/Icons
     profileAvatar: params.profileAvatar,
     openLauncherImage: params.openLauncherImage,
     closeImage: params.closeImage,
     headerImage: params.headerImage,
-    
+
     // Tooltips
     tooltipMessage: params.tooltipMessage,
     tooltipDelay: params.tooltipDelay || 500,
     disableTooltips: params.disableTooltips || false,
-    
+
     // Callbacks
     onSocketEvent: params.onSocketEvent,
     onWidgetEvent: params.onWidgetEvent,
@@ -133,17 +135,17 @@ function mapConfig(params) {
     customMessageDelay: params.customMessageDelay,
     customComponent: params.customComponent,
     customAutoComplete: params.customAutoComplete,
-    
+
     // Suggestions
     suggestionsConfig: params.suggestionsConfig,
-    
+
     // Legacy support
-    selector: params.selector
+    selector: params.selector,
   };
-  
+
   // Remove undefined values to keep config clean
   return Object.fromEntries(
-    Object.entries(config).filter(([_, value]) => value !== undefined)
+    Object.entries(config).filter(([_, value]) => value !== undefined),
   );
 }
 
@@ -156,34 +158,36 @@ function init(params) {
     console.error('WebChat: selector is required');
     return;
   }
-  
+
   const container = document.querySelector(params.selector);
   if (!container) {
-    console.error(`WebChat: element not found for selector "${params.selector}"`);
+    console.error(
+      `WebChat: element not found for selector "${params.selector}"`,
+    );
     return;
   }
-  
+
   // Map config (functional properties)
   const config = mapConfig(params);
-  
+
   // Extract theme (visual properties)
   const theme = extractThemeFromParams(params);
-  
+
   // Widget props - config and theme separated
   const widgetProps = {
     config,
-    theme: Object.keys(theme).length > 0 ? theme : null
+    theme: Object.keys(theme).length > 0 ? theme : null,
   };
-  
+
   // Render widget
   try {
     widgetInstance = ReactDOM.createRoot(container);
     widgetInstance.render(
       <React.StrictMode>
         <Widget {...widgetProps} />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
-    
+
     console.log('WebChat initialized successfully');
   } catch (error) {
     console.error('WebChat: Failed to initialize', error);
@@ -310,7 +314,7 @@ const WebChat = {
   getContext,
   isOpen,
   isVisible,
-  reload
+  reload,
 };
 
 WebChat.default = WebChat;

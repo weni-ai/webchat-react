@@ -7,7 +7,7 @@ import './ThinkingIndicator.scss';
 
 /**
  * ThinkingIndicator - Animated thinking indicator with rotating messages
- * 
+ *
  * Displays rotating messages with icons to indicate AI is thinking/processing.
  * Messages change every 4-7.5 seconds with smooth fade animations.
  */
@@ -52,12 +52,12 @@ export function ThinkingIndicator({ className = '' }) {
 
     // Random delay between 4 and 7.5 seconds
     const delay = (4 + Math.random() * 3.5) * 1000;
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsAnimatingOut(true);
 
       animationTimeoutRef.current = setTimeout(() => {
-        setCurrentMessageIndex(prev => prev + 1);
+        setCurrentMessageIndex((prev) => prev + 1);
         setIsAnimatingOut(false);
       }, 500); // Match CSS animation duration
     }, delay);
@@ -84,13 +84,13 @@ export function ThinkingIndicator({ className = '' }) {
 
   return (
     <section className={`weni-thinking-indicator ${className}`}>
-      <Icon 
+      <Icon
         name={currentMessage.icon}
         size="small"
         color="fg-base"
         className={getClassWithAnimationState('weni-thinking-indicator__icon')}
       />
-      <p 
+      <p
         className={getClassWithAnimationState('weni-thinking-indicator__text')}
       >
         {currentMessage.text}
@@ -104,4 +104,3 @@ ThinkingIndicator.propTypes = {
 };
 
 export default ThinkingIndicator;
-

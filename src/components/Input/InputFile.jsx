@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 
-import { useChatContext } from "@/contexts/ChatContext";
+import { useChatContext } from '@/contexts/ChatContext';
 
 /**
  * Handles file validation and upload through the service.
@@ -28,7 +28,7 @@ export const InputFile = forwardRef((props, ref) => {
       }
     }
   };
-  
+
   return (
     <input
       type="file"

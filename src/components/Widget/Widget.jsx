@@ -15,7 +15,8 @@ import { useEffect } from 'react';
  */
 
 function WidgetContent() {
-  const { isChatFullscreen, isChatOpen, clearTooltipMessage } = useChatContext();
+  const { isChatFullscreen, isChatOpen, clearTooltipMessage } =
+    useChatContext();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
 
@@ -26,7 +27,9 @@ function WidgetContent() {
   }, [isChatOpen]);
 
   return (
-    <aside className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}`}>
+    <aside
+      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}`}
+    >
       <Chat />
       {!isChatFullscreenAndOpen && <Launcher />}
     </aside>
@@ -50,8 +53,7 @@ Widget.propTypes = {
     host: PropTypes.string.isRequired,
     // TODO: Add all config properties
   }).isRequired,
-  theme: PropTypes.object
+  theme: PropTypes.object,
 };
 
 export default Widget;
-

@@ -10,7 +10,14 @@ export function QuickReplies({ quickReplies, disabled = false }) {
   return (
     <section className="weni-quick-replies">
       {quickReplies.map((reply) => (
-        <Button key={reply} variant="secondary" disabled={disabled} onClick={() => sendMessage(reply)}>{reply}</Button>
+        <Button
+          key={reply}
+          variant="secondary"
+          disabled={disabled}
+          onClick={() => sendMessage(reply)}
+        >
+          {reply}
+        </Button>
       ))}
     </section>
   );
@@ -18,5 +25,5 @@ export function QuickReplies({ quickReplies, disabled = false }) {
 
 QuickReplies.propTypes = {
   quickReplies: PropTypes.array.isRequired,
-  disabled: PropTypes.bool
+  disabled: PropTypes.bool,
 };

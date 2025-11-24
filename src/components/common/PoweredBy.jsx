@@ -1,5 +1,5 @@
-import React from 'react'
-import './PoweredBy.scss'
+import React from 'react';
+import './PoweredBy.scss';
 
 export function PoweredBy() {
   return (
@@ -11,8 +11,7 @@ export function PoweredBy() {
     >
       <p className="weni-poweredby__text">Powered by Weni by VTEX</p>
     </a>
-  )
+  );
 }
 
-export default PoweredBy
-
+export default PoweredBy;

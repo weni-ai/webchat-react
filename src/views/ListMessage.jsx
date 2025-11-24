@@ -15,7 +15,13 @@ export function ListMessage({ options }) {
     setSelectedOption(option);
   };
 
-  const isTouchDevice = useMemo(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0, []);
+  const isTouchDevice = useMemo(
+    () =>
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      navigator.msMaxTouchPoints > 0,
+    [],
+  );
 
   return (
     <section className="weni-view-list-message">
@@ -40,7 +46,10 @@ export function ListMessage({ options }) {
       )}
 
       <footer className="weni-view-list-message__footer">
-        <Button variant="tertiary" onClick={() => setCurrentPage(null)}>
+        <Button
+          variant="tertiary"
+          onClick={() => setCurrentPage(null)}
+        >
           {t('list_message.actions.back')}
         </Button>
 
@@ -56,7 +65,7 @@ export function ListMessage({ options }) {
         </Button>
       </footer>
     </section>
-  )
+  );
 }
 
 ListMessage.propTypes = {

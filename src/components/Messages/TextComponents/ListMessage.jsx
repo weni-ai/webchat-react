@@ -14,15 +14,20 @@ export function ListMessage({ buttonText = '', items, disabled = false }) {
         key={buttonText}
         variant="secondary"
         disabled={disabled}
-        onClick={() => setCurrentPage({
-          view: 'list-message',
-          title: buttonText,
-          props: {
-            options: items.map(item => item.title),
-          },
-        })}
+        onClick={() =>
+          setCurrentPage({
+            view: 'list-message',
+            title: buttonText,
+            props: {
+              options: items.map((item) => item.title),
+            },
+          })
+        }
       >
-        <Icon name="list" size="medium" />
+        <Icon
+          name="list"
+          size="medium"
+        />
         {buttonText}
       </Button>
     </section>
@@ -31,10 +36,12 @@ export function ListMessage({ buttonText = '', items, disabled = false }) {
 
 ListMessage.propTypes = {
   buttonText: PropTypes.string,
-  items: PropTypes.arrayOf(PropTypes.shape({
-    uuid: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-  })).isRequired,
-  disabled: PropTypes.bool
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      uuid: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      description: PropTypes.string,
+    }),
+  ).isRequired,
+  disabled: PropTypes.bool,
 };

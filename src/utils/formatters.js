@@ -10,13 +10,16 @@
  */
 export function formatTimestamp(timestamp, format = 'time') {
   if (!timestamp) return '';
-  
+
   const date = new Date(timestamp);
-  
+
   // TODO: Implement different format options
   switch (format) {
     case 'time':
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     case 'date':
       return date.toLocaleDateString();
     case 'datetime':
@@ -25,7 +28,10 @@ export function formatTimestamp(timestamp, format = 'time') {
       // TODO: Implement relative time formatting
       return formatRelativeTime(timestamp);
     default:
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
   }
 }
 
@@ -36,18 +42,18 @@ export function formatTimestamp(timestamp, format = 'time') {
 function formatRelativeTime(timestamp) {
   const now = Date.now();
   const diff = now - timestamp;
-  
+
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   // TODO: Add internationalization
   if (seconds < 60) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  
+
   return formatTimestamp(timestamp, 'date');
 }
 
@@ -57,11 +63,11 @@ function formatRelativeTime(timestamp) {
  */
 export function formatFileSize(bytes) {
   if (!bytes || bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
@@ -71,7 +77,7 @@ export function formatFileSize(bytes) {
  */
 export function truncateText(text, maxLength = 100) {
   if (!text || text.length <= maxLength) return text;
-  
+
   // TODO: Break at word boundary
   return text.substring(0, maxLength) + '...';
 }
@@ -105,21 +111,21 @@ export function formatTime(time, unit = 'seconds', padMinutes = false) {
   if (!isFinite(time) || isNaN(time)) {
     return padMinutes ? '00:00' : '0:00';
   }
-  
+
   let seconds;
   if (unit === 'milliseconds') {
     seconds = Math.floor(time / 1000);
   } else {
     seconds = Math.floor(time);
   }
-  
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  
-  const minutesStr = padMinutes 
+
+  const minutesStr = padMinutes
     ? minutes.toString().padStart(2, '0')
     : minutes.toString();
-  
+
   return `${minutesStr}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
@@ -139,6 +145,5 @@ export default {
   parseLinks,
   formatPhoneNumber,
   sanitizeHTML,
-  formatTime
+  formatTime,
 };
-

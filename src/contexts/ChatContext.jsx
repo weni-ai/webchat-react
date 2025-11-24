@@ -17,7 +17,7 @@ const defaultConfig = {
   hideWhenNotConnected: true,
   autoClearCache: false,
   contactTimeout: 0,
-  
+
   // UI settings
   title: 'Welcome',
   inputTextFieldHint: 'Type a message',
@@ -29,22 +29,22 @@ const defaultConfig = {
   showMessageDate: false,
   showHeaderAvatar: true,
   connectingText: 'Waiting for server...',
-  
+
   // Media settings
   docViewer: false,
-  
+
   // Tooltips
   tooltipDelay: 500,
-  disableTooltips: false
+  disableTooltips: false,
 };
 
 /**
  * ChatProvider - Context provider that integrates WeniWebchatService
- * 
+ *
  * This component follows the Service/Template architecture:
  * - Service (WeniWebchatService): Manages all business logic, WebSocket, and state
  * - Template (React components): Only renders UI and handles user interactions
- * 
+ *
  * SINGLE SOURCE OF TRUTH:
  * The service StateManager is the only source of truth for:
  * - Messages (including sender, timestamp, processing)
@@ -52,7 +52,7 @@ const defaultConfig = {
  * - Typing indicators (isTyping, isThinking)
  * - Session management and context
  * - Error state
- * 
+ *
  * The template only manages UI-specific state:
  * - Chat open/closed
  * - Unread count
@@ -71,10 +71,8 @@ export function ChatProvider({ children, config }) {
   const [state, setState] = useState(() => service.getState());
 
   // Messages state
-  const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
   const [context, setContext] = useState(state.context);
-  
+
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -86,11 +84,13 @@ export function ChatProvider({ children, config }) {
 
   // UI-specific state
   const [isChatOpen, setIsChatOpen] = useState(mergedConfig.startFullScreen);
-  const [isChatFullscreen, setIsChatFullscreen] = useState(mergedConfig.startFullScreen);
+  const [isChatFullscreen, setIsChatFullscreen] = useState(
+    mergedConfig.startFullScreen,
+  );
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
 
-  const [title, setTitle] = useState(mergedConfig.title);
+  const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(null);
 
@@ -117,16 +117,13 @@ export function ChatProvider({ children, config }) {
 
   useEffect(() => {
     if (mergedConfig.tooltipMessage) {
-      initialTooltipMessageTimeout = setTimeout(
-        () => {
-          if (service.getMessages().length !== 0) {
-            return;
-          }
+      initialTooltipMessageTimeout = setTimeout(() => {
+        if (service.getMessages().length !== 0) {
+          return;
+        }
 
-          displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage);
-        },
-        mergedConfig.tooltipDelay,
-      );
+        displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage);
+      }, mergedConfig.tooltipDelay);
     }
 
     service.init().catch((error) => {
@@ -143,15 +140,19 @@ export function ChatProvider({ children, config }) {
     service.on('recording:tick', (duration) => setRecordingDuration(duration));
     service.on('recording:cancelled', () => setIsRecording(false));
 
-    service.on('camera:stream:received', (stream) => setCameraRecordingStream(stream));
+    service.on('camera:stream:received', (stream) =>
+      setCameraRecordingStream(stream),
+    );
     service.on('camera:recording:started', () => setIsCameraRecording(true));
     service.on('camera:recording:stopped', () => setIsCameraRecording(false));
-    service.on('camera:devices:changed', (devices) => setCameraDevices(devices));
+    service.on('camera:devices:changed', (devices) =>
+      setCameraDevices(devices),
+    );
 
     service.on('context:changed', (context) => setContext(context));
 
     service.on('language:changed', (language) => i18n.changeLanguage(language));
-    
+
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
       service.removeAllListeners();
@@ -162,14 +163,14 @@ export function ChatProvider({ children, config }) {
   useEffect(() => {
     const handleMessageReceived = (message) => {
       if (!isChatOpen) {
-        setUnreadCount(prev => prev + 1);
+        setUnreadCount((prev) => prev + 1);
 
         if (!mergedConfig.disableTooltips) {
           setTooltipMessage(message);
         }
       }
     };
-    
+
     service.on('message:received', handleMessageReceived);
 
     return () => {
@@ -185,7 +186,7 @@ export function ChatProvider({ children, config }) {
   const value = {
     // Service instance (for advanced use cases)
     service,
-    
+
     // State from service StateManager (single source of truth)
     messages: state.messages || [],
     isConnected: state.connection?.status === 'connected',
@@ -194,7 +195,7 @@ export function ChatProvider({ children, config }) {
     isThinking: state.isThinking || false,
     context,
     error: state.error || null,
-    
+
     // Audio recording state (UI-specific)
     isRecording,
     recordingDuration,
@@ -204,7 +205,7 @@ export function ChatProvider({ children, config }) {
     isCameraRecording,
     cameraRecordingStream,
     cameraDevices,
-    
+
     // UI-specific state
     title,
     isChatOpen,
@@ -236,9 +237,8 @@ export function ChatProvider({ children, config }) {
     stopCameraRecording: () => service.stopCameraRecording(),
     switchToNextCameraDevice: () => service.switchToNextCameraDevice(),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
-
   };
-  
+
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
@@ -249,7 +249,7 @@ ChatProvider.propTypes = {
     socketUrl: PropTypes.string.isRequired,
     channelUuid: PropTypes.string.isRequired,
     host: PropTypes.string.isRequired,
-    
+
     // Connection settings
     initPayload: PropTypes.string,
     sessionId: PropTypes.string,
@@ -260,7 +260,7 @@ ChatProvider.propTypes = {
     hideWhenNotConnected: PropTypes.bool,
     autoClearCache: PropTypes.bool,
     contactTimeout: PropTypes.number,
-    
+
     // UI settings
     title: PropTypes.string,
     subtitle: PropTypes.string,
@@ -273,53 +273,53 @@ ChatProvider.propTypes = {
     showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
     showHeaderAvatar: PropTypes.bool,
     connectingText: PropTypes.string,
-    
+
     // Media settings
     docViewer: PropTypes.bool,
     params: PropTypes.shape({
       images: PropTypes.shape({
         dims: PropTypes.shape({
           width: PropTypes.number,
-          height: PropTypes.number
-        })
-      })
+          height: PropTypes.number,
+        }),
+      }),
     }),
-    
+
     // Images/Icons
     profileAvatar: PropTypes.string,
     openLauncherImage: PropTypes.string,
     closeImage: PropTypes.string,
     headerImage: PropTypes.string,
-    
+
     // Tooltips
     tooltipMessage: PropTypes.string,
     tooltipDelay: PropTypes.number,
     disableTooltips: PropTypes.bool,
-    
+
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),
     onWidgetEvent: PropTypes.shape({
       onChatOpen: PropTypes.func,
       onChatClose: PropTypes.func,
-      onChatHidden: PropTypes.func
+      onChatHidden: PropTypes.func,
     }),
     handleNewUserMessage: PropTypes.func,
     customMessageDelay: PropTypes.func,
     customComponent: PropTypes.func,
     customAutoComplete: PropTypes.func,
-    
+
     // Suggestions
     suggestionsConfig: PropTypes.shape({
       url: PropTypes.string,
       datasets: PropTypes.arrayOf(PropTypes.string),
       language: PropTypes.string,
       excludeIntents: PropTypes.arrayOf(PropTypes.string),
-      automaticSend: PropTypes.bool
+      automaticSend: PropTypes.bool,
     }),
-    
+
     // Legacy support
-    selector: PropTypes.string
-  }).isRequired
+    selector: PropTypes.string,
+  }).isRequired,
 };
 
 export const useChatContext = () => {

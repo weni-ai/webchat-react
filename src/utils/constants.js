@@ -16,7 +16,7 @@ import {
   ERROR_TYPES,
   QUICK_REPLY_TYPES,
   SERVICE_EVENTS,
-  DEFAULTS
+  DEFAULTS,
 } from '@weni/webchat-service';
 
 export {
@@ -33,5 +33,5 @@ export {
   ERROR_TYPES,
   QUICK_REPLY_TYPES,
   SERVICE_EVENTS,
-  DEFAULTS
+  DEFAULTS,
 };

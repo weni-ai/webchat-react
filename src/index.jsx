@@ -19,7 +19,7 @@ const config = {
   // TODO: Add more config options as they become available
   startFullScreen: false,
   showFullScreenButton: true,
-}
+};
 
 // Custom theme (optional)
 const customTheme = {
@@ -28,22 +28,26 @@ const customTheme = {
     messageClient: '#0084FF',
   },
   // Override other theme properties as needed
-}
+};
 
 function App() {
   return (
-    <div style={{ 
-      width: '100%', 
-      height: '100vh',
-      background: '#f5f5f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div style={{ 
-        textAlign: 'center',
-        padding: '20px'
-      }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100vh',
+        background: '#f5f5f5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          textAlign: 'center',
+          padding: '20px',
+        }}
+      >
         <h1>Weni Webchat - React</h1>
         <p>Chat widget should appear in the bottom-right corner</p>
         <p style={{ color: '#666', fontSize: '14px' }}>
@@ -52,13 +56,13 @@ function App() {
       </div>
 
       {/* The Widget component */}
-      <Widget config={config} theme={customTheme} />
+      <Widget
+        config={config}
+        theme={customTheme}
+      />
     </div>
   );
 }
 
 // Mount the app
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <App />
-);
-
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);

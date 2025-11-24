@@ -10,7 +10,7 @@ import './MessageDocument.scss';
  * MessageDocument - Document/File message component
  */
 export function MessageDocument({ message }) {
-  const {filename, mimeType} = message.metadata;
+  const { filename, mimeType } = message.metadata;
 
   const canViewDocument = () => {
     const fileType = mimeType;
@@ -41,7 +41,11 @@ export function MessageDocument({ message }) {
 
   return (
     <section className="weni-message-document">
-      <Icon name="article" size="large" color={message.direction === 'outgoing' ? 'white' : 'fg-emphasized'} />
+      <Icon
+        name="article"
+        size="large"
+        color={message.direction === 'outgoing' ? 'white' : 'fg-emphasized'}
+      />
 
       <button
         onClick={handleViewDocument}
@@ -63,10 +67,9 @@ MessageDocument.propTypes = {
     metadata: {
       mimeType: PropTypes.string.isRequired,
       size: PropTypes.number.isRequired,
-      filename: PropTypes.string.isRequired
-    }
-  }).isRequired
+      filename: PropTypes.string.isRequired,
+    },
+  }).isRequired,
 };
 
 export default MessageDocument;
-

@@ -34,4 +34,3 @@ export * from './utils/formatters';
 
 // Styles
 import './styles/index.css';
-

@@ -42,14 +42,14 @@ export function CameraRecording() {
 
     canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
 
-    canvas.toBlob(blob => {
+    canvas.toBlob((blob) => {
       const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
 
       sendAttachment(file);
       stopCameraRecording();
     }, 'image/jpeg');
   }
-  
+
   return (
     <section className="weni-camera-recording">
       <video
@@ -69,7 +69,7 @@ export function CameraRecording() {
           aria-label="Stop camera recording"
         />
 
-        {(cameraDevices.length > 1) && (
+        {cameraDevices.length > 1 && (
           <Button
             onClick={switchToNextCameraDevice}
             variant="tertiary"
@@ -78,7 +78,7 @@ export function CameraRecording() {
           />
         )}
 
-        {(!isCameraPaused) && (
+        {!isCameraPaused && (
           <Button
             onClick={pauseCamera}
             variant="secondary"
@@ -87,7 +87,7 @@ export function CameraRecording() {
           />
         )}
 
-        {(isCameraPaused) && (
+        {isCameraPaused && (
           <Button
             onClick={resumeCamera}
             variant="secondary"
@@ -96,7 +96,7 @@ export function CameraRecording() {
           />
         )}
 
-        {(isCameraPaused) && (
+        {isCameraPaused && (
           <Button
             onClick={sendPhoto}
             variant="primary"
@@ -106,7 +106,7 @@ export function CameraRecording() {
         )}
       </footer>
     </section>
-  )
+  );
 }
 
 CameraRecording.propTypes = {};

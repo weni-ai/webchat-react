@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 
 import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
-import CameraRecording from '@/components/CameraRecording/CameraRecording'
+import CameraRecording from '@/components/CameraRecording/CameraRecording';
 
 import './InputBox.scss';
 
@@ -17,12 +16,24 @@ import './InputBox.scss';
  * TODO: Add character limit indicator
  */
 export function InputBox({ maxLength = 5000 }) {
-  const { isRecording, sendMessage, stopAndSendAudio, requestAudioPermission, hasAudioPermission, startRecording, isCameraRecording, hasCameraPermission, requestCameraPermission, startCameraRecording } = useChatContext();
+  const {
+    isRecording,
+    sendMessage,
+    stopAndSendAudio,
+    requestAudioPermission,
+    hasAudioPermission,
+    startRecording,
+    isCameraRecording,
+    hasCameraPermission,
+    requestCameraPermission,
+    startCameraRecording,
+  } = useChatContext();
   const { config } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
-  const [hasCameraPermissionState, setHasCameraPermissionState] = useState(false);
+  const [hasCameraPermissionState, setHasCameraPermissionState] =
+    useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -30,8 +41,8 @@ export function InputBox({ maxLength = 5000 }) {
     if (isRecording) {
       await stopAndSendAudio();
       return;
-    } 
-    
+    }
+
     if (text.trim()) {
       sendMessage(text);
       setText('');
@@ -48,11 +59,11 @@ export function InputBox({ maxLength = 5000 }) {
 
   const getHasAudioPermission = async () => {
     setHasAudioPermissionState(await hasAudioPermission());
-  }
+  };
 
   const getHasCameraPermission = async () => {
     setHasCameraPermissionState(await hasCameraPermission());
-  }
+  };
 
   useEffect(() => {
     getHasAudioPermission();
@@ -66,7 +77,7 @@ export function InputBox({ maxLength = 5000 }) {
 
       if (audioPermission) startRecording();
       return;
-    };
+    }
 
     if (hasAudioPermissionState) startRecording();
   };
@@ -77,7 +88,7 @@ export function InputBox({ maxLength = 5000 }) {
     if (cameraPermission === undefined) {
       cameraPermission = await requestCameraPermission();
       setHasCameraPermissionState(cameraPermission);
-    };
+    }
 
     if (cameraPermission) startCameraRecording();
   };
@@ -86,7 +97,7 @@ export function InputBox({ maxLength = 5000 }) {
     return (
       <section className="weni-input-box">
         <AudioRecorder />
-        
+
         <Button
           onClick={handleSend}
           variant="primary"
@@ -118,7 +129,7 @@ export function InputBox({ maxLength = 5000 }) {
           rows={1}
         />
 
-        {!text.trim() &&
+        {!text.trim() && (
           <Button
             onClick={handleRecordCamera}
             disabled={hasCameraPermissionState === false}
@@ -126,12 +137,12 @@ export function InputBox({ maxLength = 5000 }) {
             variant="tertiary"
             icon="add_a_photo"
             iconColor="gray-500"
-            className='weni-input-box__photo-icon'
+            className="weni-input-box__photo-icon"
           />
-        }
+        )}
       </section>
 
-      {(!text.trim()) && (
+      {!text.trim() && (
         <>
           <InputFile ref={fileInputRef} />
           <Button
@@ -153,7 +164,7 @@ export function InputBox({ maxLength = 5000 }) {
         </>
       )}
 
-      {(!!text.trim()) && (
+      {!!text.trim() && (
         <Button
           onClick={handleSend}
           variant="primary"
@@ -166,7 +177,7 @@ export function InputBox({ maxLength = 5000 }) {
 }
 
 InputBox.propTypes = {
-  maxLength: PropTypes.number
+  maxLength: PropTypes.number,
 };
 
 export default InputBox;

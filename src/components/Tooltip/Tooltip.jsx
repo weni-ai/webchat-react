@@ -21,13 +21,16 @@ export function Tooltip({ name, message, onClose }) {
         />
       </header>
 
-      <Message message={message} componentsEnabled={true} />
+      <Message
+        message={message}
+        componentsEnabled={true}
+      />
     </section>
-  )
+  );
 }
 
 Tooltip.propTypes = {
   name: PropTypes.string.isRequired,
   message: PropTypes.object.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
