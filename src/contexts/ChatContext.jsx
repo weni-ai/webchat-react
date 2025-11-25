@@ -168,13 +168,15 @@ export function ChatProvider({ children, config }) {
 
   useEffect(() => {
     if (isChatOpen && mergedConfig.initPayload) {
-      const relevantMessages = service.getMessages().filter(message => !message.persisted);
+      const relevantMessages = service
+        .getMessages()
+        .filter((message) => !message.persisted);
 
       if (relevantMessages.length === 0) {
         service.sendMessage(mergedConfig.initPayload, { hidden: true });
       }
     }
-    
+
     const handleMessageReceived = (message) => {
       if (!isChatOpen) {
         setUnreadCount((prev) => prev + 1);
