@@ -15,7 +15,7 @@ import { useEffect } from 'react';
  */
 
 function WidgetContent() {
-  const { isChatFullscreen, isChatOpen, clearTooltipMessage } =
+  const { isChatFullscreen, isChatOpen, clearTooltipMessage, config } =
     useChatContext();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
@@ -28,7 +28,7 @@ function WidgetContent() {
 
   return (
     <aside
-      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}`}
+      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''} ${config.embedded ? 'weni-widget--disabled-animation' : ''}`}
     >
       <Chat />
       {!isChatFullscreenAndOpen && <Launcher />}

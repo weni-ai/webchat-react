@@ -20,6 +20,10 @@
     @include weni-animation(0, 0.25s, weni-expand-out);
   }
 
+  &--disabled-animation {
+    animation: none;
+  }
+
   &__footer {
     display: flex;
     flex-direction: column;

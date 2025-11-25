@@ -16,6 +16,10 @@
   gap: $spacing-3;
 
   @include weni-animation(0, 0.25s, weni-slide-in);
+
+  &--disabled-animation {
+    animation: none;
+  }
 }
 
 .weni-widget--fullscreen {

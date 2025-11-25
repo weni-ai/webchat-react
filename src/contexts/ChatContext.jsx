@@ -61,6 +61,12 @@ const defaultConfig = {
 export function ChatProvider({ children, config }) {
   const mergedConfig = { ...defaultConfig, ...config };
 
+  if (mergedConfig.embedded) {
+    mergedConfig.startFullScreen = true;
+    mergedConfig.showFullScreenButton = false;
+    mergedConfig.showCloseButton = false;
+  }
+
   // Service instance
   const [service] = useState(() => {
     serviceInstance = new WeniWebchatService(mergedConfig);

@@ -28,7 +28,7 @@ import './Chat.scss';
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
-  const { isChatOpen, isConnectionClosed, currentPage } = useWeniChat();
+  const { isChatOpen, isConnectionClosed, currentPage, config } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -54,7 +54,9 @@ export function Chat() {
   }
 
   return (
-    <section className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''}`}>
+    <section
+      className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
+    >
       <Header />
       <ChatContent />
       <footer className="weni-chat__footer">
