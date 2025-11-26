@@ -4,18 +4,12 @@ React UI for Weni Webchat - A beautiful, customizable chat widget built on top o
 
 ## Standalone setup (script tag)
 
-Build the standalone bundle:
-
-```bash
-npm run build:standalone
-```
-
-Serve the generated file `dist-standalone/index.js` from your web server or CDN, then include and initialize it:
+Use the hosted UMD:
 
 ```html
 <div id="weni-webchat"></div>
 
-<script src="/dist-standalone/webchat.umd.js"></script>
+<script src="https://cdn.cloud.weni.ai/webchat-latest.umd.js"></script>
 <script>
   window.WebChat.init({
     selector: '#weni-webchat',
@@ -46,6 +40,30 @@ Serve the generated file `dist-standalone/index.js` from your web server or CDN,
   // window.WebChat.destroy();
   // Manage context:
   // window.WebChat.default.setContext({ userId: 'abc' });
+</script>
+```
+
+Or, self-host the bundle:
+
+Build the standalone bundle:
+
+```bash
+npm run build:standalone
+```
+
+Serve the generated file `dist-standalone/webchat.umd.js` from your server or CDN, then include and initialize it:
+
+```html
+<div id="weni-webchat"></div>
+
+<script src="/dist-standalone/webchat.umd.js"></script>
+<script>
+  window.WebChat.init({
+    selector: '#weni-webchat',
+    socketUrl: 'https://websocket.weni.ai',
+    host: 'https://flows.weni.ai',
+    channelUuid: 'YOUR-CHANNEL-UUID'
+  });
 </script>
 ```
 
