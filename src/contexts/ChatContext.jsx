@@ -61,6 +61,12 @@ const defaultConfig = {
 export function ChatProvider({ children, config }) {
   const mergedConfig = { ...defaultConfig, ...config };
 
+  if (mergedConfig.embedded) {
+    mergedConfig.startFullScreen = true;
+    mergedConfig.showFullScreenButton = false;
+    mergedConfig.showCloseButton = false;
+  }
+
   // Service instance
   const [service] = useState(() => {
     serviceInstance = new WeniWebchatService(mergedConfig);
@@ -161,6 +167,16 @@ export function ChatProvider({ children, config }) {
   }, []);
 
   useEffect(() => {
+    if (isChatOpen && mergedConfig.initPayload) {
+      const relevantMessages = service
+        .getMessages()
+        .filter((message) => !message.persisted);
+
+      if (relevantMessages.length === 0) {
+        service.sendMessage(mergedConfig.initPayload, { hidden: true });
+      }
+    }
+
     const handleMessageReceived = (message) => {
       if (!isChatOpen) {
         setUnreadCount((prev) => prev + 1);
