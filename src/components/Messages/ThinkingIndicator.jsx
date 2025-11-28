@@ -29,7 +29,7 @@ export function ThinkingIndicator({ className = '' }) {
     },
     {
       text: t('thinking.messages.refining'),
-      icon: 'auto_awesome',
+      icon: 'wand_stars',
     },
     {
       text: t('thinking.messages.structuring'),

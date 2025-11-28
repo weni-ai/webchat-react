@@ -1,5 +1,6 @@
+import React from 'react';
 import PropTypes from 'prop-types';
-import 'material-symbols';
+import { icons } from '@/utils/icons';
 
 import './Icon.scss';
 
@@ -19,47 +20,30 @@ export function Icon({
   size = 'medium',
   color = '',
   filled = false,
-  outlined = false,
-  weight = 400,
-  grade = 0,
-  opticalSize = 24,
   className = '',
   ...props
 }) {
-  const variantClass = outlined
-    ? 'material-symbols-outlined'
-    : 'material-symbols-rounded';
-
   const style = {
     color: color ? `var(--${color})` : 'currentColor',
-    fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`,
   };
 
+  const Icon = icons[name][filled ? 'filled' : 'default'];
+
   return (
-    <span
-      className={`weni-icon ${variantClass} weni-icon--${size} ${className}`}
+    <Icon
+      className={`weni-icon weni-icon--${size} ${className}`}
       style={style}
-      aria-hidden="true"
       {...props}
-    >
-      {name}
-    </span>
+    />
   );
 }
 
 Icon.propTypes = {
   /** Material Symbols icon name (e.g., 'send', 'close', 'chat') */
-  name: PropTypes.string.isRequired,
+  name: PropTypes.oneOf(Object.keys(icons)).isRequired,
   size: PropTypes.oneOf(['small', 'medium', 'large', 'x-large']),
   color: PropTypes.string,
   filled: PropTypes.bool,
-  outlined: PropTypes.bool,
-  /** Font weight (100-700) */
-  weight: PropTypes.number,
-  /** Grade adjustment (-25 to 200) */
-  grade: PropTypes.number,
-  /** Optical size for different display sizes */
-  opticalSize: PropTypes.number,
   className: PropTypes.string,
 };
 

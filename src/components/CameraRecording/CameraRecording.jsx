@@ -82,7 +82,8 @@ export function CameraRecording() {
           <Button
             onClick={pauseCamera}
             variant="secondary"
-            icon="camera_alt"
+            icon="photo_camera"
+            iconFilled
             aria-label="Take photo"
           />
         )}

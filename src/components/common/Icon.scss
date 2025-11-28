@@ -5,20 +5,25 @@
   user-select: none;
   pointer-events: none;
   vertical-align: middle;
+  fill: currentColor;
 
   &--small {
-    font-size: $icon-size-4;
+    width: $icon-size-4;
+    height: $icon-size-4;
   }
 
   &--medium {
-    font-size: $icon-size-5;
+    width: $icon-size-5;
+    height: $icon-size-5;
   }
 
   &--large {
-    font-size: $icon-size-6;
+    width: $icon-size-6;
+    height: $icon-size-6;
   }
 
   &--x-large {
-    font-size: $icon-size-7;
+    width: $icon-size-7;
+    height: $icon-size-7;
   }
 }

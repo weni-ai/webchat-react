@@ -115,7 +115,7 @@ export function MessagesList() {
 
               {message.status === 'pending' && (
                 <Icon
-                  name="access_time"
+                  name="schedule"
                   size="small"
                   color="fg-muted"
                 />
