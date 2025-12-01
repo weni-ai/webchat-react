@@ -18,12 +18,12 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html {
+  .weni-widget {
     interpolate-size: allow-keywords;
   }
 }
 
-body {
+.weni-widget {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
