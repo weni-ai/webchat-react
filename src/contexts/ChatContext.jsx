@@ -79,9 +79,6 @@ export function ChatProvider({ children, config }) {
   // Messages state
   const [context, setContext] = useState(state.context);
 
-  // Streaming buffer (UI-only): messageId -> { text, timestamp, messageId }
-  const [streamingMap, setStreamingMap] = useState({});
-
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -197,70 +194,6 @@ export function ChatProvider({ children, config }) {
     };
   }, [isChatOpen]);
 
-  // Listen to synthetic streaming events dispatched via config.onSocketEvent from the service
-  useEffect(() => {
-    function handleStreamEvent(e) {
-      const payload = e?.detail || {};
-      const { type, message } = payload;
-      const messageId = message?.messageId;
-      if (!messageId) return;
-
-      if (type === 'delta') {
-        setStreamingMap((prev) => {
-          const current = prev[messageId] || {
-            text: '',
-            timestamp: 0,
-            messageId,
-          };
-          const nextText = `${current.text || ''}${message?.text || ''}`;
-          const ts = Number(Date.parse(message?.timestamp)) || Date.now();
-          return {
-            ...prev,
-            [messageId]: { text: nextText, timestamp: ts, messageId },
-          };
-        });
-        return;
-      }
-
-      if (type === 'completed') {
-        setStreamingMap((prev) => {
-          const current = prev[messageId] || { text: '' };
-          const finalText = `${current.text || ''}${message?.text || ''}`;
-          const ts = Number(Date.parse(message?.timestamp)) || Date.now();
-
-          try {
-            service.simulateMessageReceived({
-              type: 'message',
-              message: {
-                text: finalText,
-                timestamp: ts,
-              },
-            });
-          } catch (err) {
-            // No-op
-          }
-
-          const clone = { ...prev };
-          delete clone[messageId];
-          return clone;
-        });
-      }
-    }
-
-    window.addEventListener('weni:stream', handleStreamEvent);
-    return () => window.removeEventListener('weni:stream', handleStreamEvent);
-  }, [service]);
-
-  // Derived: latest streaming preview (if any)
-  const streamingMessage = (() => {
-    const entries = Object.values(streamingMap);
-    if (!entries.length) return null;
-    return entries.reduce(
-      (acc, cur) => ((cur.timestamp || 0) >= (acc.timestamp || 0) ? cur : acc),
-      entries[0],
-    );
-  })();
-
   const stopAndSendAudio = async () => {
     // Stop recording method also sends the audio to the server
     await service.stopRecording();
@@ -320,8 +253,6 @@ export function ChatProvider({ children, config }) {
     stopCameraRecording: () => service.stopCameraRecording(),
     switchToNextCameraDevice: () => service.switchToNextCameraDevice(),
     // TODO: Add more helper methods (clearSession, getHistory, etc.)
-    // Streaming (UI-only)
-    streamingMessage,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
