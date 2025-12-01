@@ -61,7 +61,7 @@ Message.propTypes = {
  */
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config, streamingMessage } = useChatContext();
+  const { config } = useChatContext();
   const messagesEndRef = useRef(null);
 
   function scrollToBottom(behavior = 'smooth') {
@@ -133,34 +133,7 @@ export function MessagesList() {
         </section>
       ))}
 
-      {/* Streaming preview bubble (UI-only) */}
-      {streamingMessage && (
-        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">
-          <Avatar
-            src={config.profileAvatar}
-            name={config.title}
-          />
-          <MessageContainer
-            className="weni-messages-list__message weni-messages-list__message--incoming"
-            direction="incoming"
-            type="text"
-          >
-            <Message
-              message={{
-                id: streamingMessage.messageId || 'streaming',
-                type: 'text',
-                direction: 'incoming',
-                text: streamingMessage.text || '',
-                timestamp: streamingMessage.timestamp || Date.now(),
-                status: 'streaming',
-              }}
-              componentsEnabled={true}
-            />
-          </MessageContainer>
-        </section>
-      )}
-
-      {(isTyping || isThinking) && !streamingMessage && (
+      {(isTyping || isThinking) && (
         <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">
           <Avatar
             src={config.profileAvatar}
