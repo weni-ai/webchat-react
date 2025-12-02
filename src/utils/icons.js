@@ -42,6 +42,8 @@ import Pause from '@material-symbols/svg-400/rounded/pause.svg?react';
 import PauseFilled from '@material-symbols/svg-400/rounded/pause-fill.svg?react';
 import PlayArrow from '@material-symbols/svg-400/rounded/play_arrow.svg?react';
 import PlayArrowFilled from '@material-symbols/svg-400/rounded/play_arrow-fill.svg?react';
+import OpenInNew from '@material-symbols/svg-400/rounded/open_in_new.svg?react';
+import OpenInNewFilled from '@material-symbols/svg-400/rounded/open_in_new-fill.svg?react';
 
 export const icons = {
   send: {
@@ -131,5 +133,9 @@ export const icons = {
   play_arrow: {
     default: PlayArrow,
     filled: PlayArrowFilled,
+  },
+  open_in_new: {
+    default: OpenInNew,
+    filled: OpenInNewFilled,
   },
 };

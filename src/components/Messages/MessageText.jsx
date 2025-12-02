@@ -5,6 +5,7 @@ import { marked } from 'marked';
 
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { ListMessage } from './TextComponents/ListMessage';
+import { CallToAction } from './TextComponents/CallToAction';
 
 import './MessageText.scss';
 
@@ -65,6 +66,14 @@ export function MessageText({ message, componentsEnabled }) {
           disabled={!componentsEnabled}
         />
       )}
+
+      {message.cta_message && (
+        <CallToAction
+          buttonText={message.cta_message.display_text}
+          url={message.cta_message.url}
+          disabled={!componentsEnabled}
+        />
+      )}
     </>
   );
 }
@@ -82,6 +91,10 @@ MessageText.propTypes = {
     list_message: PropTypes.shape({
       button_text: PropTypes.string.isRequired,
       list_items: PropTypes.array.isRequired,
+    }),
+    cta_message: PropTypes.shape({
+      url: PropTypes.string.isRequired,
+      display_text: PropTypes.string.isRequired,
     }),
   }).isRequired,
   componentsEnabled: PropTypes.bool,
