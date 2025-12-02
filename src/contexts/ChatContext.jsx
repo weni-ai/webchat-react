@@ -2,6 +2,7 @@ import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
+import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 
 let serviceInstance = null;
 
@@ -89,7 +90,7 @@ export function ChatProvider({ children, config }) {
   const [cameraDevices, setCameraDevices] = useState([]);
 
   // UI-specific state
-  const [isChatOpen, setIsChatOpen] = useState(mergedConfig.startFullScreen);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(
     mergedConfig.startFullScreen,
   );
@@ -159,6 +160,14 @@ export function ChatProvider({ children, config }) {
 
     service.on('language:changed', (language) => i18n.changeLanguage(language));
 
+    service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
+
+    if (mergedConfig.startFullScreen) {
+      service.setIsChatOpen(true);
+    } else {
+      setIsChatOpen(service.getSession()?.isChatOpen || false);
+    }
+
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
       service.removeAllListeners();
@@ -185,6 +194,8 @@ export function ChatProvider({ children, config }) {
           setTooltipMessage(message);
         }
       }
+
+      navigateIfSameDomain(message);
     };
 
     service.on('message:received', handleMessageReceived);
@@ -225,7 +236,7 @@ export function ChatProvider({ children, config }) {
     // UI-specific state
     title,
     isChatOpen,
-    setIsChatOpen,
+    setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
     isChatFullscreen,
     toggleChatFullscreen: () => setIsChatFullscreen(!isChatFullscreen),
     unreadCount,
