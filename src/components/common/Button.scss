@@ -9,6 +9,7 @@
   gap: $spacing-2;
 
   font: $font-action;
+  text-decoration: none;
 
   transition: background-color 0.1s ease;
   cursor: pointer;
@@ -53,12 +54,14 @@
   &--primary {
     background-color: var(--weni-user-message-bubble-color);
 
-    &:hover:enabled, &.weni-button--hover-state:enabled {
-      box-shadow: inset 0 46px rgba(0, 0, 0, .1);
-    }
+    &.weni-button--enabled {
+      &:hover, &.weni-button--hover-state {
+        box-shadow: inset 0 46px rgba(0, 0, 0, .1);
+      }
 
-    &:active:enabled {
-      box-shadow: inset 0 46px rgba(0, 0, 0, .2);
+      &:active {
+        box-shadow: inset 0 46px rgba(0, 0, 0, .2);
+      }
     }
   }
 
@@ -66,24 +69,28 @@
     background-color: $bg-base;
     box-shadow: inset 0 0 0 1px $border-base;
 
-    &:hover:enabled, &.weni-button--hover-state:enabled {
-      background-color: $gray-50;
-    }
+    &.weni-button--enabled {
+      &:hover, &.weni-button--hover-state {
+        background-color: $gray-50;
+      }
 
-    &:active:enabled {
-      background-color: $gray-100;
+      &:active {
+        background-color: $gray-100;
+      }
     }
   }
 
   &--tertiary {
     background-color: transparent;
 
-    &:hover:enabled, &.weni-button--hover-state:enabled {
-      background-color: rgba($gray-950, 0.1);
-    }
+    &.weni-button--enabled {
+      &:hover, &.weni-button--hover-state {
+        background-color: rgba($gray-950, 0.1);
+      }
 
-    &:active:enabled {
-      background-color: rgba($gray-950, 0.2);
+      &:active {
+        background-color: rgba($gray-950, 0.2);
+      }
     }
   }
 
@@ -91,34 +98,40 @@
     background-color: $red-500;
     color: $white;
 
-    &:hover:enabled, &.weni-button--hover-state:enabled {
-      background-color: $red-600;
-    }
+    &.weni-button--enabled {
+      &:hover, &.weni-button--hover-state {
+        background-color: $red-600;
+      }
 
-    &:active:enabled {
-      background-color: $red-700;
+      &:active {
+        background-color: $red-700;
+      }
     }
   }
 
   &--attention {
     background-color: $yellow-500;
 
-    &:hover:enabled, &.weni-button--hover-state:enabled {
-      background-color: $yellow-600;
-    }
+    &.weni-button--enabled {
+      &:hover, &.weni-button--hover-state {
+        background-color: $yellow-600;
+      }
 
-    &:active:enabled {
-      background-color: $yellow-700;
+      &:active {
+        background-color: $yellow-700;
+      }
     }
   }
 
-  &--primary:disabled,
-  &--secondary:disabled,
-  &--tertiary:disabled,
-  &--warning:disabled,
-  &--attention:disabled {
-    background-color: $bg-muted;
-    color: $fg-muted;
-    cursor: not-allowed;
+  &--disabled {
+    &.weni-button--primary,
+    &.weni-button--secondary,
+    &.weni-button--tertiary,
+    &.weni-button--warning,
+    &.weni-button--attention {
+      background-color: $bg-muted;
+      color: $fg-muted;
+      cursor: not-allowed;
+    }
   }
 }

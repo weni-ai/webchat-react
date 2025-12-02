@@ -4,11 +4,46 @@ import './Button.scss';
 
 /**
  * Button - Reusable button component
- * TODO: Support different button variants (primary, secondary, etc.)
  * TODO: Add loading state
- * TODO: Add icon support
- * TODO: Handle disabled state styling
  */
+
+function NativeAnchor({
+  href,
+  children,
+  disabled = false,
+  onClick = () => {},
+  ...props
+}) {
+  const hrefValue = disabled ? undefined : href;
+  const onClickValue = disabled ? undefined : onClick;
+
+  return (
+    <a
+      href={hrefValue}
+      onClick={onClickValue}
+      aria-disabled={disabled}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}
+
+NativeAnchor.propTypes = {
+  href: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+
+function NativeButton({ children, ...props }) {
+  return <button {...props}>{children}</button>;
+}
+
+NativeButton.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 export function Button({
   children,
   onClick = () => {},
@@ -22,6 +57,7 @@ export function Button({
   alignContent = 'center',
   hoverState = false,
   className = '',
+  href = '',
   ...props
 }) {
   // TODO: Implement button variants and sizes
@@ -40,8 +76,11 @@ export function Button({
     return iconColor || mapColorToVariant[variant];
   }
 
+  const ButtonComponent = href ? NativeAnchor : NativeButton;
+  const isDisabled = disabled || isLoading;
+
   return (
-    <button
+    <ButtonComponent
       className={[
         'weni-button',
         `weni-button--${variant}`,
@@ -50,11 +89,13 @@ export function Button({
         hoverState && 'weni-button--hover-state',
         icon && !children && 'weni-button--only-icon',
         className,
+        isDisabled ? 'weni-button--disabled' : 'weni-button--enabled',
       ]
         .filter(Boolean)
         .join(' ')}
       onClick={onClick}
-      disabled={disabled || isLoading}
+      disabled={isDisabled}
+      href={href}
       {...props}
     >
       {/* TODO: Add loading spinner */}
@@ -67,7 +108,7 @@ export function Button({
       )}
 
       {children}
-    </button>
+    </ButtonComponent>
   );
 }
 
@@ -89,6 +130,7 @@ Button.propTypes = {
   alignContent: PropTypes.oneOf(['start', 'center', 'end']),
   hoverState: PropTypes.bool,
   className: PropTypes.string,
+  href: PropTypes.string,
   children: PropTypes.node,
 };
 

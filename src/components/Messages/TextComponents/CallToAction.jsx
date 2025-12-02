@@ -12,7 +12,8 @@ export function CallToAction({ buttonText, url, disabled = false }) {
         variant="secondary"
         disabled={disabled}
         href={url}
-        target="_blank" rel="noopener noreferrer"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <Icon
           name="open_in_new"
