@@ -36,14 +36,18 @@ export function MessageText({ message, componentsEnabled }) {
     });
 
     // Convert bullet points to proper Markdown list syntax
-    const processedContent = purifiedContent
-      // Convert • bullet points to proper Markdown list syntax
-      .replace(/\n•\s*/g, '\n* ')
-      // Handle cases where • appears at the start of content
-      .replace(/^•\s*/g, '* ');
+    const processedContent =
+      purifiedContent
+        // Convert • bullet points to proper Markdown list syntax
+        .replace(/\n•\s*/g, '\n* ')
+        // Handle cases where • appears at the start of content
+        .replace(/^•\s*/g, '* ') +
+      (message.status === 'streaming'
+        ? '<span class="weni-message-text__caret" />'
+        : '');
 
     return marked.parse(processedContent);
-  }, [message.text]);
+  }, [message.text, message.status]);
 
   return (
     <>
