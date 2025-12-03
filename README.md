@@ -117,8 +117,9 @@ The following methods are available via `window.WebChat`:
 
 - `init(params)` – Mounts the widget into `params.selector`. Accepts all parameters listed above, plus visual customization keys (see Customization).
 - `destroy()` – Unmounts and cleans up the widget instance.
-- `setContext(context)` – Sets contextual data in the underlying service.
-- `getContext()` – Returns the current context from the underlying service.
+- `async setContext(context)` – Sets contextual data in the underlying service.
+- `async getContext()` – Returns the current context from the underlying service.
+- `async setCustomField(field, value)` – Sets a custom contact/session field in the underlying service.
 
 Experimental / not yet implemented (no-ops for now):
 - `open()`, `close()`, `toggle()`
