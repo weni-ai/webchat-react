@@ -4,8 +4,6 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 
-
-
 let serviceInstance = {
   fns: [],
   onReady: () => {
