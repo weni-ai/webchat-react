@@ -283,6 +283,14 @@ async function getContext() {
 }
 
 /**
+ * Set custom field
+ */
+async function setCustomField(field, value) {
+  const service = await serviceWhenReady();
+  service.setCustomField(field, value);
+}
+
+/**
  * Check if chat is open
  * TODO: Implement via service state
  */
@@ -322,6 +330,7 @@ const WebChat = {
   setSessionId,
   setContext,
   getContext,
+  setCustomField,
   isOpen,
   isVisible,
   reload,
