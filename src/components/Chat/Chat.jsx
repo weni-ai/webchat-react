@@ -6,6 +6,8 @@ import InputBox from '@/components/Input/InputBox';
 import PoweredBy from '@/components/common/PoweredBy';
 import { AlreadyInUse } from '@/components/AlreadyInUse/AlreadyInUse';
 import { ListMessage } from '@/views/ListMessage';
+import { ProductCatalog } from '@/views/ProductCatalog';
+import { ProductDetails } from '@/views/ProductDetails';
 
 function ChatContent() {
   const { isConnectionClosed, currentPage } = useWeniChat();
@@ -16,6 +18,14 @@ function ChatContent() {
 
   if (currentPage?.view === 'list-message') {
     return <ListMessage {...currentPage.props} />;
+  }
+
+  if (currentPage?.view === 'product-catalog') {
+    return <ProductCatalog {...currentPage.props} />;
+  }
+
+  if (currentPage?.view === 'product-details') {
+    return <ProductDetails {...currentPage.props} />;
   }
 
   return <MessagesList />;
