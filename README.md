@@ -106,6 +106,9 @@ The standalone initializer accepts:
 | `tooltipMessage` | string | — | First message displayed as a tooltip in a new session. |
 | `tooltipDelay` | number (ms) | 500 | Delay before showing the tooltip message. |
 | `disableTooltips` | boolean | false | Disable automatic tooltips on new messages. |
+| `showAudioRecorder` | boolean | true | Show audio recorder button in the input bar. |
+| `showCameraRecorder` | boolean | true | Show camera recorder button in the input bar. |
+| `showFileUploader` | boolean | true | Show file upload button in the input bar. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |
 | `handleNewUserMessage` | function | — | Custom handler for new user messages. |

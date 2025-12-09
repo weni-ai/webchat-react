@@ -44,6 +44,11 @@ const defaultConfig = {
   // Tooltips
   tooltipDelay: 500,
   disableTooltips: false,
+
+  // Components settings
+  showAudioRecorder: true,
+  showCameraRecorder: true,
+  showFileUploader: true,
 };
 
 /**
