@@ -57,7 +57,10 @@ export function Header() {
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
-    return Object.values(cart).reduce((acc, product) => acc + product.quantity, 0);
+    return Object.values(cart).reduce(
+      (acc, product) => acc + product.quantity,
+      0,
+    );
   }, [cart]);
 
   const { config } = useChatContext();
@@ -88,7 +91,7 @@ export function Header() {
             variant="primary"
             icon="shopping_cart"
             iconColor="white"
-            onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho', })}
+            onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
           >
             {cartTotalItems}
           </Button>

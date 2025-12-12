@@ -10,12 +10,19 @@ function EmptyCart() {
   return (
     <section className="weni-view-cart weni-view-cart--empty">
       <section className="weni-view-cart__icon">
-        <Icon name="shopping_cart" size="large" color="bg-active" />
+        <Icon
+          name="shopping_cart"
+          size="large"
+          color="bg-active"
+        />
       </section>
 
       <section className="weni-view-cart__content">
         <h2>Seu carrinho está vazio</h2>
-        <p>Adicione itens ao seu carrinho acessando a lista de produtos disponíveis</p>
+        <p>
+          Adicione itens ao seu carrinho acessando a lista de produtos
+          disponíveis
+        </p>
       </section>
     </section>
   );
@@ -37,11 +44,18 @@ export function Cart() {
   }
 
   const totalPrice = useMemo(() => {
-    return items.reduce((acc, product) => acc + getPriceWithDecimals(product.price) * product.quantity, 0);
+    return items.reduce(
+      (acc, product) =>
+        acc + getPriceWithDecimals(product.price) * product.quantity,
+      0,
+    );
   }, [items]);
 
   function setCounter(productKey, product, counter) {
-    setCart((prevCart) => ({ ...prevCart, [productKey]: { ...product, quantity: counter } }));
+    setCart((prevCart) => ({
+      ...prevCart,
+      [productKey]: { ...product, quantity: counter },
+    }));
   }
 
   if (totalItems === 0) {
@@ -70,7 +84,12 @@ export function Cart() {
       <footer className="weni-view-cart__footer">
         <section className="weni-view-cart__footer-subtotal">
           <p>Subtotal</p>
-          <p>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPrice)}</p>
+          <p>
+            {new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+            }).format(totalPrice)}
+          </p>
         </section>
 
         <Button variant="secondary">Continuar a compra</Button>

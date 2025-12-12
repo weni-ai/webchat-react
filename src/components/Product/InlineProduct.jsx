@@ -3,7 +3,13 @@ import { useState, useEffect } from 'react';
 
 import Button from '@/components/common/Button';
 
-export function CounterControls({ counter, setCounter, hideWhenNotInteracted = false, size = 'small', className = '' }) {
+export function CounterControls({
+  counter,
+  setCounter,
+  hideWhenNotInteracted = false,
+  size = 'small',
+  className = '',
+}) {
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
 
@@ -12,9 +18,11 @@ export function CounterControls({ counter, setCounter, hideWhenNotInteracted = f
       clearTimeout(timeoutId);
     }
 
-    setTimeoutId(setTimeout(() => {
-      setWasCounterInteracted(false);
-    }, 2000));
+    setTimeoutId(
+      setTimeout(() => {
+        setWasCounterInteracted(false);
+      }, 2000),
+    );
 
     setWasCounterInteracted(true);
 
@@ -33,20 +41,57 @@ export function CounterControls({ counter, setCounter, hideWhenNotInteracted = f
     };
   }, []);
 
-  const shouldShowMinusButton = (hideWhenNotInteracted && wasCounterInteracted && counter > 0) || !hideWhenNotInteracted;
-  const shouldShowAddButton = (hideWhenNotInteracted && wasCounterInteracted) || counter === 0 || !hideWhenNotInteracted;
-  const isCounterValueInteracted = wasCounterInteracted || !hideWhenNotInteracted;
+  const shouldShowMinusButton =
+    (hideWhenNotInteracted && wasCounterInteracted && counter > 0) ||
+    !hideWhenNotInteracted;
+  const shouldShowAddButton =
+    (hideWhenNotInteracted && wasCounterInteracted) ||
+    counter === 0 ||
+    !hideWhenNotInteracted;
+  const isCounterValueInteracted =
+    wasCounterInteracted || !hideWhenNotInteracted;
 
   return (
-    <section className={`weni-product-quantity-controls weni-product-quantity-controls--${size} ${className}`}>
-      {shouldShowMinusButton && <Button variant="secondary" icon="minus" size={size} onClick={(e) => { e.stopPropagation(); handleCounterChange('decrement'); }} />}
+    <section
+      className={`weni-product-quantity-controls weni-product-quantity-controls--${size} ${className}`}
+    >
+      {shouldShowMinusButton && (
+        <Button
+          variant="secondary"
+          icon="minus"
+          size={size}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCounterChange('decrement');
+          }}
+        />
+      )}
 
-      {counter > 0 && <p
-        className={`weni-product-quantity-controls__value ${!isCounterValueInteracted ? 'weni-product-quantity-controls__value--not-interacted' : ''}`}
-        onClick={(e) => { e.stopPropagation(); !isCounterValueInteracted && handleCounterChange('none'); }}
-      >{String(counter)}</p>}
+      {counter > 0 && (
+        <p
+          className={`weni-product-quantity-controls__value ${!isCounterValueInteracted ? 'weni-product-quantity-controls__value--not-interacted' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isCounterValueInteracted) {
+              handleCounterChange('none');
+            }
+          }}
+        >
+          {String(counter)}
+        </p>
+      )}
 
-      {shouldShowAddButton && <Button variant="secondary" icon="add" size={size} onClick={(e) => { e.stopPropagation(); handleCounterChange('increment'); }} />}
+      {shouldShowAddButton && (
+        <Button
+          variant="secondary"
+          icon="add"
+          size={size}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCounterChange('increment');
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -61,24 +106,56 @@ CounterControls.propTypes = {
 
 import './InlineProduct.scss';
 
-export function InlineProduct({ variant = 'catalog', image, title, lines = [], price = '', showCounterControls = false, counter, setCounter, onClick }) {
+export function InlineProduct({
+  variant = 'catalog',
+  image,
+  title,
+  lines = [],
+  price = '',
+  showCounterControls = false,
+  counter,
+  setCounter,
+  onClick,
+}) {
   return (
-    <section className={`weni-inline-product weni-inline-product--${variant}`} onClick={onClick}>
-      <img className="weni-inline-product__image" src={image} alt={title} />
+    <section
+      className={`weni-inline-product weni-inline-product--${variant}`}
+      onClick={onClick}
+    >
+      <img
+        className="weni-inline-product__image"
+        src={image}
+        alt={title}
+      />
 
       <section className="weni-inline-product__content">
         <h3 className="weni-inline-product__title">{title}</h3>
         {lines.map((line, index) => (
-          <p key={index} className="weni-inline-product__line">{line}</p>
+          <p
+            key={index}
+            className="weni-inline-product__line"
+          >
+            {line}
+          </p>
         ))}
 
-        {variant === 'cart' && <CounterControls counter={counter} setCounter={setCounter} className="weni-inline-product__counter-controls" />}
+        {variant === 'cart' && (
+          <CounterControls
+            counter={counter}
+            setCounter={setCounter}
+            className="weni-inline-product__counter-controls"
+          />
+        )}
       </section>
 
       {price && <p className="weni-inline-product__price">{price}</p>}
 
       {showCounterControls && variant === 'catalog' && (
-        <CounterControls counter={counter} setCounter={setCounter} hideWhenNotInteracted />
+        <CounterControls
+          counter={counter}
+          setCounter={setCounter}
+          hideWhenNotInteracted
+        />
       )}
     </section>
   );
@@ -91,4 +168,7 @@ InlineProduct.propTypes = {
   lines: PropTypes.array,
   price: PropTypes.string,
   showCounterControls: PropTypes.bool,
+  counter: PropTypes.number,
+  setCounter: PropTypes.func,
+  onClick: PropTypes.func,
 };
