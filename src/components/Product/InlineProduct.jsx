@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 import Button from '@/components/common/Button';
 
-export function CounterControls({ counter, setCounter, hideWhenNotInteracted = false, size = 'small' }) {
+export function CounterControls({ counter, setCounter, hideWhenNotInteracted = false, size = 'small', className = '' }) {
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
 
@@ -38,13 +38,13 @@ export function CounterControls({ counter, setCounter, hideWhenNotInteracted = f
   const isCounterValueInteracted = wasCounterInteracted || !hideWhenNotInteracted;
 
   return (
-    <section className={`weni-product-quantity-controls weni-product-quantity-controls--${size}`}>
+    <section className={`weni-product-quantity-controls weni-product-quantity-controls--${size} ${className}`}>
       {shouldShowMinusButton && <Button variant="secondary" icon="minus" size={size} onClick={(e) => { e.stopPropagation(); handleCounterChange('decrement'); }} />}
 
       {counter > 0 && <p
         className={`weni-product-quantity-controls__value ${!isCounterValueInteracted ? 'weni-product-quantity-controls__value--not-interacted' : ''}`}
         onClick={(e) => { e.stopPropagation(); !isCounterValueInteracted && handleCounterChange('none'); }}
-      >{counter}</p>}
+      >{String(counter)}</p>}
 
       {shouldShowAddButton && <Button variant="secondary" icon="add" size={size} onClick={(e) => { e.stopPropagation(); handleCounterChange('increment'); }} />}
     </section>
@@ -56,42 +56,14 @@ CounterControls.propTypes = {
   setCounter: PropTypes.func.isRequired,
   hideWhenNotInteracted: PropTypes.bool,
   size: PropTypes.oneOf(['small', 'medium']),
+  className: PropTypes.string,
 };
 
 import './InlineProduct.scss';
 
-export function InlineProduct({ image, title, lines, showCounterControls = false, counter, setCounter, onClick }) {
-  const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
-  const [timeoutId, setTimeoutId] = useState(null);
-
-  function handleCounterChange(type) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    setTimeoutId(setTimeout(() => {
-      setWasCounterInteracted(false);
-    }, 2000));
-
-    setWasCounterInteracted(true);
-
-    if (type === 'increment') {
-      setCounter(counter + 1);
-    } else if (type === 'decrement') {
-      setCounter(counter - 1);
-    }
-  }
-
-  useEffect(() => {
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, []);
-
+export function InlineProduct({ variant = 'catalog', image, title, lines = [], price = '', showCounterControls = false, counter, setCounter, onClick }) {
   return (
-    <section className="weni-inline-product" onClick={onClick}>
+    <section className={`weni-inline-product weni-inline-product--${variant}`} onClick={onClick}>
       <img className="weni-inline-product__image" src={image} alt={title} />
 
       <section className="weni-inline-product__content">
@@ -99,9 +71,13 @@ export function InlineProduct({ image, title, lines, showCounterControls = false
         {lines.map((line, index) => (
           <p key={index} className="weni-inline-product__line">{line}</p>
         ))}
+
+        {variant === 'cart' && <CounterControls counter={counter} setCounter={setCounter} className="weni-inline-product__counter-controls" />}
       </section>
 
-      {showCounterControls && (
+      {price && <p className="weni-inline-product__price">{price}</p>}
+
+      {showCounterControls && variant === 'catalog' && (
         <CounterControls counter={counter} setCounter={setCounter} hideWhenNotInteracted />
       )}
     </section>
@@ -109,8 +85,10 @@ export function InlineProduct({ image, title, lines, showCounterControls = false
 }
 
 InlineProduct.propTypes = {
+  variant: PropTypes.oneOf(['catalog', 'cart']),
   image: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
-  lines: PropTypes.array.isRequired,
+  lines: PropTypes.array,
+  price: PropTypes.string,
   showCounterControls: PropTypes.bool,
 };

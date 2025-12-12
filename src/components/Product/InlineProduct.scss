@@ -19,6 +19,10 @@
     flex-direction: column;
     flex: 1;
     width: 0;
+
+    .weni-inline-product__counter-controls {
+      margin-top: $spacing-1;
+    }
   }
 
   &__title {
@@ -36,6 +40,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__price {
+    font: $font-caption-1;
+    color: $fg-emphasized;
+  }
+
+  &--cart {
+    border: 1px solid $border-soft;
   }
 }
 
