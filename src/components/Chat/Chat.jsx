@@ -8,6 +8,7 @@ import { AlreadyInUse } from '@/components/AlreadyInUse/AlreadyInUse';
 import { ListMessage } from '@/views/ListMessage';
 import { ProductCatalog } from '@/views/ProductCatalog';
 import { ProductDetails } from '@/views/ProductDetails';
+import { Cart } from '@/views/Cart';
 
 function ChatContent() {
   const { isConnectionClosed, currentPage } = useWeniChat();
@@ -26,6 +27,10 @@ function ChatContent() {
 
   if (currentPage?.view === 'product-details') {
     return <ProductDetails {...currentPage.props} />;
+  }
+
+  if (currentPage?.view === 'cart') {
+    return <Cart {...currentPage.props} />;
   }
 
   return <MessagesList />;

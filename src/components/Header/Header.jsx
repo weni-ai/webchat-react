@@ -88,6 +88,7 @@ export function Header() {
             variant="primary"
             icon="shopping_cart"
             iconColor="white"
+            onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho', })}
           >
             {cartTotalItems}
           </Button>
