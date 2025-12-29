@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
+import { ShowItems } from './TextComponents/ShowItems';
 
 import './MessageText.scss';
 
@@ -74,6 +75,11 @@ export function MessageText({ message, componentsEnabled }) {
           disabled={!componentsEnabled}
         />
       )}
+
+      <ShowItems
+        buttonText={'Mostrar itens'}
+        disabled={!componentsEnabled}
+      />
     </>
   );
 }
