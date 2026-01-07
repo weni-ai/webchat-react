@@ -114,6 +114,7 @@ export function ChatProvider({ children, config }) {
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(null);
+  const [cart, setCart] = useState({});
 
   const isChatOpenRef = useRef(isChatOpen);
 
@@ -261,6 +262,8 @@ export function ChatProvider({ children, config }) {
     clearTooltipMessage: () => setTooltipMessage(null),
     currentPage,
     setCurrentPage,
+    cart,
+    setCart,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
