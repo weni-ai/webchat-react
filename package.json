@@ -28,7 +28,7 @@
     "postversion": "git push --follow-tags"
   },
   "peerDependencies": {
-    "@weni/webchat-service": "1.4.5-staging.0",
+    "@weni/webchat-service": "1.5.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
