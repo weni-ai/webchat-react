@@ -147,7 +147,13 @@ export function ChatProvider({ children, config }) {
       }, mergedConfig.tooltipDelay);
     }
 
-    service.init().catch((error) => {
+    service.init().then(() => {
+      if (mergedConfig.startFullScreen) {
+        service.setIsChatOpen(true);
+      } else {
+        setIsChatOpen(service.getSession()?.isChatOpen || false);
+      }
+    }).catch((error) => {
       console.error('Failed to initialize service:', error);
     });
 
@@ -175,12 +181,6 @@ export function ChatProvider({ children, config }) {
     service.on('language:changed', (language) => i18n.changeLanguage(language));
 
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
-
-    if (mergedConfig.startFullScreen) {
-      service.setIsChatOpen(true);
-    } else {
-      setIsChatOpen(service.getSession()?.isChatOpen || false);
-    }
 
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
