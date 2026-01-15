@@ -129,7 +129,7 @@ export function InputBox({ maxLength = 5000 }) {
           rows={1}
         />
 
-        {!text.trim() && (
+        {!text.trim() && config.showCameraRecorder && (
           <Button
             onClick={handleRecordCamera}
             disabled={hasCameraPermissionState === false}
@@ -145,22 +145,26 @@ export function InputBox({ maxLength = 5000 }) {
       {!text.trim() && (
         <>
           <InputFile ref={fileInputRef} />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="tertiary"
-            icon="add_photo_alternate"
-            iconColor="gray-900"
-            aria-label="Attach file"
-          />
+          {config.showFileUploader && (
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="tertiary"
+              icon="add_photo_alternate"
+              iconColor="gray-900"
+              aria-label="Attach file"
+            />
+          )}
 
-          <Button
-            onClick={handleRecordAudio}
-            variant="tertiary"
-            icon="mic"
-            iconColor="gray-900"
-            disabled={hasAudioPermissionState === false}
-            aria-label="Record audio"
-          />
+          {config.showAudioRecorder && (
+            <Button
+              onClick={handleRecordAudio}
+              variant="tertiary"
+              icon="mic"
+              iconColor="gray-900"
+              disabled={hasAudioPermissionState === false}
+              aria-label="Record audio"
+            />
+          )}
         </>
       )}
 

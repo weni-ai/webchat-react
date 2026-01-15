@@ -47,3 +47,17 @@
     margin: 0.25em 0;
   }
 }
+
+.weni-message-text__caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.2em;
+  margin-left: -1px;
+  background: currentColor;
+  animation: caret-blink 1s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
