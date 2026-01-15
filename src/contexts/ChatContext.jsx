@@ -147,15 +147,18 @@ export function ChatProvider({ children, config }) {
       }, mergedConfig.tooltipDelay);
     }
 
-    service.init().then(() => {
-      if (mergedConfig.startFullScreen) {
-        service.setIsChatOpen(true);
-      } else {
-        setIsChatOpen(service.getSession()?.isChatOpen || false);
-      }
-    }).catch((error) => {
-      console.error('Failed to initialize service:', error);
-    });
+    service
+      .init()
+      .then(() => {
+        if (mergedConfig.startFullScreen) {
+          service.setIsChatOpen(true);
+        } else {
+          setIsChatOpen(service.getSession()?.isChatOpen || false);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to initialize service:', error);
+      });
 
     service.on('state:changed', (newState) => {
       setState(newState);
