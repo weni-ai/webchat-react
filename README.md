@@ -109,10 +109,40 @@ The standalone initializer accepts:
 | `showAudioRecorder` | boolean | true | Show audio recorder button in the input bar. |
 | `showCameraRecorder` | boolean | true | Show camera recorder button in the input bar. |
 | `showFileUploader` | boolean | true | Show file upload button in the input bar. |
+| `navigateIfSameDomain` | boolean | false | Experimental flag: auto-navigate when an incoming message contains a link to the same domain. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |
 | `handleNewUserMessage` | function | — | Custom handler for new user messages. |
 | `customMessageDelay` | function | — | Compute delay before rendering bot messages. |
+
+### Experimental flags
+
+Experimental features can be enabled either via the `init` params or via LocalStorage. The following feature is currently available:
+
+- `navigateIfSameDomain` (default: `false`): when enabled, if an incoming message contains a link to the same domain, the page will automatically navigate to that link.
+
+Enable via init params:
+
+```html
+<script>
+  window.WebChat.init({
+    selector: '#weni-webchat',
+    socketUrl: 'https://websocket.weni.ai',
+    host: 'https://flows.weni.ai',
+    channelUuid: 'YOUR-CHANNEL-UUID',
+    navigateIfSameDomain: true
+  });
+</script>
+```
+
+Enable via LocalStorage (takes precedence when set):
+
+```js
+localStorage.setItem(
+  'WeniWebChatExperimental',
+  JSON.stringify({ navigateIfSameDomain: true })
+);
+```
 
 ## Standalone API
 

@@ -1,8 +1,8 @@
 import { marked } from 'marked';
 import { isExperimentalEnabled } from './index';
 
-export function navigateIfSameDomain(message) {
-  if (!isExperimentalEnabled('navigateIfSameDomain')) {
+export function navigateIfSameDomain(message, enabledByConfig = false) {
+  if (!isExperimentalEnabled('navigateIfSameDomain', enabledByConfig)) {
     return;
   }
 

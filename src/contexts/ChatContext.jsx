@@ -49,6 +49,9 @@ const defaultConfig = {
   showAudioRecorder: true,
   showCameraRecorder: true,
   showFileUploader: true,
+
+  // Experimental flags
+  navigateIfSameDomain: false,
 };
 
 /**
@@ -212,7 +215,7 @@ export function ChatProvider({ children, config }) {
         }
       }
 
-      navigateIfSameDomain(message);
+      navigateIfSameDomain(message, mergedConfig.navigateIfSameDomain);
     };
 
     service.on('message:received', handleMessageReceived);
@@ -339,6 +342,9 @@ ChatProvider.propTypes = {
     tooltipMessage: PropTypes.string,
     tooltipDelay: PropTypes.number,
     disableTooltips: PropTypes.bool,
+
+    // Experimental flags
+    navigateIfSameDomain: PropTypes.bool,
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),
