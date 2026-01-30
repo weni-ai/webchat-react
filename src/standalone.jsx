@@ -136,6 +136,9 @@ function mapConfig(params) {
     tooltipDelay: params.tooltipDelay || 500,
     disableTooltips: params.disableTooltips || false,
 
+    // Experimental flags
+    navigateIfSameDomain: params.navigateIfSameDomain,
+
     // Callbacks
     onSocketEvent: params.onSocketEvent,
     onWidgetEvent: params.onWidgetEvent,
