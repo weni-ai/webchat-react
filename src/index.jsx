@@ -5,6 +5,10 @@ import Widget from './components/Widget/Widget';
 import './styles/index.scss';
 import './i18n';
 
+// Import WebChat API and expose to window for testing
+import WebChat from './standalone.jsx';
+window.WebChat = WebChat;
+
 const config = {
   // socketUrl: 'wss://websocket.weni.ai',
   // channelUuid: 'your-channel-uuid-here', // Replace with your actual channel UUID
