@@ -63,43 +63,87 @@ function App() {
           Note: Make sure to configure your channel UUID in src/index.jsx
         </p>
 
-        <section id="actions" style={{
-          // max of 4 items per row
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '8px',
-        }}>
-          <button id="open-chat" style={buttonStyle} onClick={async () => {
-            await window.WebChat.open();
-          }}>Open Chat</button>
-          <button id="close-chat" style={buttonStyle} onClick={async () => {
-            await window.WebChat.close();
-            window.WebChat.close();
-          }}>Close Chat</button>
-          <button id="toggle-chat" style={buttonStyle} onClick={async () => {
-            await window.WebChat.toggle();
-          }}>Toggle Chat</button>
-          <button id="clear-chat" style={buttonStyle} onClick={async () => {
-            await window.WebChat.clear();
-          }}>Clear Chat</button>
-          <button id="send-message" style={buttonStyle} onClick={async () => {
-            await window.WebChat.send('Hello, how are you?');
-          }}>Send Message</button>
-          <button id="send-message-options" style={buttonStyle} onClick={async () => {
-            await window.WebChat.send('Hello, how are you?', {
-              id: '123',
-              timestamp: Date.now(),
-              status: 'pending',
-              metadata: {
-                custom: 'data'
-              },
-              hidden: true
-            })
+        <section
+          id="actions"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '8px',
           }}
-          >Send Hidden Message</button>
-          <button id="set-session-id" style={buttonStyle} onClick={async () => {
-            await window.WebChat.setSessionId('new-session-id@likeanemail.com');
-          }}>Set New Session ID</button>
+        >
+          <button
+            id="open-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+            }}
+          >
+            Open Chat
+          </button>
+          <button
+            id="close-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.close();
+            }}
+          >
+            Close Chat
+          </button>
+          <button
+            id="toggle-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.toggle();
+            }}
+          >
+            Toggle Chat
+          </button>
+          <button
+            id="clear-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.clear();
+            }}
+          >
+            Clear Chat
+          </button>
+          <button
+            id="send-message"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.send('Hello, how are you?');
+            }}
+          >
+            Send Message
+          </button>
+          <button
+            id="send-message-options"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.send('Hello, how are you?', {
+                id: '123',
+                timestamp: Date.now(),
+                status: 'pending',
+                metadata: {
+                  custom: 'data',
+                },
+                hidden: true,
+              });
+            }}
+          >
+            Send Hidden Message
+          </button>
+          <button
+            id="set-session-id"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.setSessionId(
+                'new-session-id@likeanemail.com',
+              );
+            }}
+          >
+            Set New Session ID
+          </button>
         </section>
       </div>
 
