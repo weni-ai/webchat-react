@@ -26,7 +26,7 @@ export function CounterControls({
 
     if (type === 'increment') {
       setCounter(counter + 1);
-    } else if (type === 'decrement') {
+    } else if (type === 'decrement' && counter > 0) {
       setCounter(counter - 1);
     }
   }

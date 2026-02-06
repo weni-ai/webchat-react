@@ -15,6 +15,8 @@ export function InlineProduct({
   setCounter,
   onClick,
 }) {
+  const hasCounter = counter !== undefined && setCounter !== undefined;
+
   return (
     <section
       className={`weni-inline-product weni-inline-product--${variant}`}
@@ -39,7 +41,7 @@ export function InlineProduct({
           </p>
         ))}
 
-        {variant === 'cart' && (
+        {variant === 'cart' && hasCounter && (
           <CounterControls
             counter={counter}
             setCounter={setCounter}
