@@ -2,31 +2,10 @@ import { useChatContext } from '@/contexts/ChatContext';
 import Button from '@/components/common/Button';
 import { InlineProduct } from '@/components/Product/InlineProduct';
 import { useMemo } from 'react';
-import { Icon } from '@/components/common/Icon';
+import { EmptyCart } from './EmptyCart';
 
 import './Cart.scss';
-
-function EmptyCart() {
-  return (
-    <section className="weni-view-cart weni-view-cart--empty">
-      <section className="weni-view-cart__icon">
-        <Icon
-          name="shopping_cart"
-          size="large"
-          color="bg-active"
-        />
-      </section>
-
-      <section className="weni-view-cart__content">
-        <h2>Seu carrinho está vazio</h2>
-        <p>
-          Adicione itens ao seu carrinho acessando a lista de produtos
-          disponíveis
-        </p>
-      </section>
-    </section>
-  );
-}
+import { t } from 'i18next';
 
 export function Cart() {
   const { cart, setCart, clearPageHistory, sendOrder } = useChatContext();
@@ -40,6 +19,7 @@ export function Cart() {
   }, [items]);
 
   function getPriceWithDecimals(price) {
+    // TODO: check how to handle different currencies
     return Number(price.replace('R$', '').replace(',', '.'));
   }
 
@@ -82,7 +62,7 @@ export function Cart() {
   return (
     <section className="weni-view-cart">
       <section className="weni-view-cart__products">
-        <p className="weni-view-cart__total-items">{totalItems} itens</p>
+        <p className="weni-view-cart__total-items">{totalItems} {t('show_items.items', { count: totalItems })}</p>
 
         {items.map((product) => (
           <InlineProduct
@@ -100,7 +80,7 @@ export function Cart() {
 
       <footer className="weni-view-cart__footer">
         <section className="weni-view-cart__footer-subtotal">
-          <p>Subtotal</p>
+          <p>{t('cart.subtotal')}</p>
           <p>
             {new Intl.NumberFormat('pt-BR', {
               style: 'currency',
@@ -109,8 +89,13 @@ export function Cart() {
           </p>
         </section>
 
-        <Button variant="secondary" onClick={clearPageHistory}>Continuar a compra</Button>
-        <Button onClick={handleSendOrder}>Fazer pedido</Button>
+        <Button
+          variant="secondary"
+          onClick={clearPageHistory}
+        >
+          {t('cart.continue_shopping')}
+        </Button>
+        <Button onClick={handleSendOrder}>{t('cart.make_order')}</Button>
       </footer>
     </section>
   );
