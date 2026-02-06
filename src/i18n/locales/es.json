@@ -22,5 +22,18 @@
       "back": "Voltar",
       "send": "Enviar"
     }
+  },
+  "show_items": {
+    "catalog_title": "Productos disponibles",
+    "items_one": "producto",
+    "items_other": "productos"
+  },
+  "product_details": {
+    "title": "Detalles",
+    "add_to_cart": "Agregar al carrito"
+  },
+  "cart": {
+    "title": "Carrito",
+    "see_cart": "Ver carrito"
   }
 }

@@ -1,0 +1,53 @@
+.weni-view-product-details {
+  padding: $spacing-2;
+  display: flex;
+  gap: $spacing-3;
+  flex-direction: column;
+
+  height: 100%;
+  overflow: hidden auto;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    overflow: auto;
+  }
+
+  &__footer {
+    margin-top: auto;
+    display: flex;
+    gap: $spacing-3;
+  }
+
+  &__footer-button {
+    flex: 1;
+  }
+
+  &__image {
+    width: 100%;
+    height: 226px;
+    object-fit: contain;
+  }
+
+  &__product-title {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    h1 {
+      font: $font-caption-1;
+      color: $fg-emphasized;
+    }
+
+    p {
+      font: $font-caption-2;
+      color: $fg-base;
+    }
+  }
+
+  &__product-description {
+    font: $font-caption-2;
+    color: $fg-base;
+  }
+}

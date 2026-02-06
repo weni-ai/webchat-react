@@ -1,0 +1,32 @@
+.weni-view-product-catalog {
+  padding: $spacing-2;
+  display: flex;
+  gap: $spacing-3;
+  flex-direction: column;
+
+  height: 100%;
+  overflow: hidden auto;
+
+  &__products {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    overflow: auto;
+  }
+
+  .weni-product-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    &__title {
+      font: $font-caption-2;
+      color: $fg-base;
+    }
+  }
+
+  &__footer {
+    margin-top: auto;
+    display: grid;
+  }
+}
