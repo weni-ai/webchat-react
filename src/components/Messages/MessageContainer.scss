@@ -61,4 +61,8 @@
     animation-name: bubble-in-right;
     transform-origin: top right;
   }
+
+  &--order {
+    padding: $spacing-2;
+  }
 }
