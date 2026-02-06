@@ -68,7 +68,15 @@ export function ProductDetails({ product }) {
               }
               size="medium"
             />
-            <Button className="weni-view-product-details__footer-button" onClick={() => setCurrentPage({ view: 'cart', title: t('cart.title') })}>
+            <Button
+              className="weni-view-product-details__footer-button"
+              onClick={() =>
+                setCurrentPage({
+                  view: 'cart',
+                  title: t('cart.title'),
+                })
+              }
+            >
               {t('cart.see_cart')} ({totalItems})
             </Button>
           </>

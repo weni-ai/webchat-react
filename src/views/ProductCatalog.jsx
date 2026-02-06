@@ -67,7 +67,16 @@ export function ProductCatalog({ productGroups }) {
 
       {totalItems > 0 && (
         <footer className="weni-view-product-catalog__footer">
-          <Button onClick={() => setCurrentPage({ view: 'cart', title: t('cart.title') })}>{t('cart.see_cart')} ({totalItems})</Button>
+          <Button
+            onClick={() =>
+              setCurrentPage({
+                view: 'cart',
+                title: t('cart.title'),
+              })
+            }
+          >
+            {t('cart.see_cart')} ({totalItems})
+          </Button>
         </footer>
       )}
     </section>
