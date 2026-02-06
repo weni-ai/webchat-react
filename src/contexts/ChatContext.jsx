@@ -117,6 +117,7 @@ export function ChatProvider({ children, config }) {
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [pageHistory, setPageHistory] = useState([]);
+  const [cart, setCart] = useState({});
 
   // Navigation helper functions
   const currentPage = pageHistory.length > 0 ? pageHistory[pageHistory.length - 1] : null;
@@ -300,10 +301,13 @@ export function ChatProvider({ children, config }) {
     goBack,
     clearPageHistory,
     pageHistory,
+    cart,
+    setCart,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
+    sendOrder: (productItems) => service.sendOrder(productItems),
     sendAttachment: (file) => service.sendAttachment(file),
     stopAndSendAudio,
     startRecording: () => service.startRecording(),
