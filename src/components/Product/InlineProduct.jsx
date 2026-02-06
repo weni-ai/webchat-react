@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import Button from '@/components/common/Button';
 
@@ -11,18 +11,16 @@ export function CounterControls({
   className = '',
 }) {
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
-  const [timeoutId, setTimeoutId] = useState(null);
+  const timeoutRef = useRef(null);
 
   function handleCounterChange(type) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
 
-    setTimeoutId(
-      setTimeout(() => {
-        setWasCounterInteracted(false);
-      }, 2000),
-    );
+    timeoutRef.current = setTimeout(() => {
+      setWasCounterInteracted(false);
+    }, 2000);
 
     setWasCounterInteracted(true);
 
@@ -35,8 +33,8 @@ export function CounterControls({
 
   useEffect(() => {
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
   }, []);
