@@ -12,7 +12,7 @@ export function ProductDetails({ product }) {
 
   const quantity = useMemo(() => {
     return cart[product.uuid]?.quantity || 0;
-  }, [cart]);
+  }, [cart, product.uuid]);
 
   function setCounter(productKey, product, counter) {
     setCart((prevCart) => ({
