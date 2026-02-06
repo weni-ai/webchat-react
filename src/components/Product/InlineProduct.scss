@@ -1,0 +1,109 @@
+.weni-inline-product {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $bg-base;
+  border-radius: $border-radius-2;
+  gap: $spacing-2;
+  padding-right: $spacing-2;
+  border: 1px solid $border-soft;
+
+  &__image-container {
+    width: 63px;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__image {
+    width: 45px;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: $border-radius-2 0 0 $border-radius-2;
+
+    &--catalog {
+      width: 63px;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    width: 0;
+
+    .weni-inline-product__counter-controls {
+      margin-top: $spacing-1;
+    }
+
+    &--order {
+      width: unset;
+    }
+  }
+
+  &__title {
+    font: $font-caption-1;
+    color: $fg-emphasized;
+  }
+
+  &__line {
+    font: $font-caption-2;
+    color: $fg-base;
+  }
+
+  &__title, &__line {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__price {
+    font: $font-caption-1;
+    color: $fg-emphasized;
+  }
+
+  &--cart {
+    border: 1px solid $border-soft;
+  }
+}
+
+.weni-product-quantity-controls {
+  display: flex;
+  align-items: center;
+
+  $button-small-size: 28px;
+  $button-medium-size: 36px;
+
+  &__value {
+    aspect-ratio: 1/1;
+
+    color: $fg-emphasized;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $border-radius-1;
+
+    &--not-interacted {
+      background-color: $bg-active;
+      color: $fg-inverted;
+      cursor: pointer;
+      user-select: none;
+    }
+  }
+
+  &.weni-product-quantity-controls--small {
+    .weni-product-quantity-controls__value {
+      height: $button-small-size;
+      font: $font-caption-2;
+    }
+  }
+
+  &.weni-product-quantity-controls--medium {
+    .weni-product-quantity-controls__value {
+      height: $button-medium-size;
+      font: $font-body;
+    }
+  }
+}

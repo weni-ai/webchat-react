@@ -44,6 +44,12 @@ import PlayArrow from '@material-symbols/svg-400/rounded/play_arrow.svg?react';
 import PlayArrowFilled from '@material-symbols/svg-400/rounded/play_arrow-fill.svg?react';
 import OpenInNew from '@material-symbols/svg-400/rounded/open_in_new.svg?react';
 import OpenInNewFilled from '@material-symbols/svg-400/rounded/open_in_new-fill.svg?react';
+import Add from '@material-symbols/svg-400/rounded/add.svg?react';
+import AddFilled from '@material-symbols/svg-400/rounded/add-fill.svg?react';
+import Minus from '@material-symbols/svg-400/rounded/remove.svg?react';
+import MinusFilled from '@material-symbols/svg-400/rounded/remove-fill.svg?react';
+import ShoppingCart from '@material-symbols/svg-400/rounded/shopping_cart.svg?react';
+import ShoppingCartFilled from '@material-symbols/svg-400/rounded/shopping_cart-fill.svg?react';
 
 export const icons = {
   send: {
@@ -137,5 +143,17 @@ export const icons = {
   open_in_new: {
     default: OpenInNew,
     filled: OpenInNewFilled,
+  },
+  add: {
+    default: Add,
+    filled: AddFilled,
+  },
+  minus: {
+    default: Minus,
+    filled: MinusFilled,
+  },
+  shopping_cart: {
+    default: ShoppingCart,
+    filled: ShoppingCartFilled,
   },
 };
