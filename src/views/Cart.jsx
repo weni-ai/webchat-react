@@ -62,7 +62,9 @@ export function Cart() {
   return (
     <section className="weni-view-cart">
       <section className="weni-view-cart__products">
-        <p className="weni-view-cart__total-items">{totalItems} {t('show_items.items', { count: totalItems })}</p>
+        <p className="weni-view-cart__total-items">
+          {totalItems} {t('show_items.items', { count: totalItems })}
+        </p>
 
         {items.map((product) => (
           <InlineProduct

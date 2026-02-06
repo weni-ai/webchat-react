@@ -52,7 +52,9 @@ export function ShowItems({
       <InlineProduct
         image={firstImage}
         title={catalogTitle}
-        lines={[`${totalItems} ${t('show_items.items', { count: totalItems })}`]}
+        lines={[
+          `${totalItems} ${t('show_items.items', { count: totalItems })}`,
+        ]}
       />
 
       <Button

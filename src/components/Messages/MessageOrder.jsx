@@ -24,7 +24,9 @@ export function MessageOrder({ message }) {
         variant="order"
         image={firstImage}
         title={t('cart.title')}
-        lines={[`${totalItems} ${t('show_items.items', { count: totalItems })}`]}
+        lines={[
+          `${totalItems} ${t('show_items.items', { count: totalItems })}`,
+        ]}
       />
     </section>
   );
