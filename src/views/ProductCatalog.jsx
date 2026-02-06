@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/common/Button';
 import { InlineProduct } from '@/components/Product/InlineProduct';
@@ -9,6 +10,7 @@ import './ProductCatalog.scss';
 
 export function ProductCatalog({ productGroups }) {
   const { cart, setCart, setCurrentPage } = useChatContext();
+  const { t } = useTranslation();
 
   function getCounter(productKey) {
     return cart[productKey]?.quantity || 0;
@@ -53,7 +55,7 @@ export function ProductCatalog({ productGroups }) {
                 onClick={() =>
                   setCurrentPage({
                     view: 'product-details',
-                    title: 'Detalhes',
+                    title: t('product_details.title'),
                     props: { product },
                   })
                 }
@@ -65,7 +67,7 @@ export function ProductCatalog({ productGroups }) {
 
       {totalItems > 0 && (
         <footer className="weni-view-product-catalog__footer">
-          <Button onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}>Ver carrinho ({totalItems})</Button>
+          <Button onClick={() => setCurrentPage({ view: 'cart', title: t('cart.title') })}>{t('cart.see_cart')} ({totalItems})</Button>
         </footer>
       )}
     </section>

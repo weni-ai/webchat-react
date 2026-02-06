@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/common/Button';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -9,6 +10,7 @@ import { CounterControls } from '@/components/Product/InlineProduct';
 
 export function ProductDetails({ product }) {
   const { cart, setCart, setCurrentPage } = useChatContext();
+  const { t } = useTranslation();
 
   const quantity = useMemo(() => {
     return cart[product.uuid]?.quantity || 0;
@@ -54,7 +56,7 @@ export function ProductDetails({ product }) {
             onClick={() => setCounter(product.uuid, product, 1)}
             className="weni-view-product-details__footer-button"
           >
-            Adicionar ao carrinho
+            {t('product_details.add_to_cart')}
           </Button>
         )}
         {quantity > 0 && (
@@ -66,8 +68,8 @@ export function ProductDetails({ product }) {
               }
               size="medium"
             />
-            <Button className="weni-view-product-details__footer-button" onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}>
-              Ver carrinho ({totalItems})
+            <Button className="weni-view-product-details__footer-button" onClick={() => setCurrentPage({ view: 'cart', title: t('cart.title') })}>
+              {t('cart.see_cart')} ({totalItems})
             </Button>
           </>
         )}

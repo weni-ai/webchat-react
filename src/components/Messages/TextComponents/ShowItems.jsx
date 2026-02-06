@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 
@@ -10,6 +11,7 @@ import './ShowItems.scss';
 
 export function ShowItems({ buttonText, header, productList, disabled = false }) {
   const { setCurrentPage } = useWeniChat();
+  const { t } = useTranslation();
 
   // Transform sections to productGroups format expected by ProductCatalog
   const productGroups = useMemo(() => {
@@ -41,14 +43,14 @@ export function ShowItems({ buttonText, header, productList, disabled = false })
     return productGroups?.[0]?.products?.[0]?.image;
   }, [productGroups]);
 
-  const catalogTitle = header || 'Produtos disponíveis';
+  const catalogTitle = header || t('show_items.catalog_title');
 
   return (
     <section className="weni-show-items">
       <InlineProduct
         image={firstImage}
         title={catalogTitle}
-        lines={[`${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`]}
+        lines={[`${totalItems} ${t('show_items.items', { count: totalItems })}`]}
       />
 
       <Button
