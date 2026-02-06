@@ -30,7 +30,9 @@ export function InlineProduct({
         />
       </section>
 
-      <section className={`weni-inline-product__content weni-inline-product__content--${variant}`}>
+      <section
+        className={`weni-inline-product__content weni-inline-product__content--${variant}`}
+      >
         <h3 className="weni-inline-product__title">{title}</h3>
         {lines.map((line, index) => (
           <p

@@ -9,7 +9,12 @@ import { InlineProduct } from '@/components/Product/InlineProduct';
 
 import './ShowItems.scss';
 
-export function ShowItems({ buttonText, header, productList, disabled = false }) {
+export function ShowItems({
+  buttonText,
+  header,
+  productList,
+  disabled = false,
+}) {
   const { setCurrentPage } = useWeniChat();
   const { t } = useTranslation();
 
@@ -33,10 +38,7 @@ export function ShowItems({ buttonText, header, productList, disabled = false })
 
   // Calculate total items across all sections
   const totalItems = useMemo(() => {
-    return productGroups.reduce(
-      (acc, group) => acc + group.products.length,
-      0,
-    );
+    return productGroups.reduce((acc, group) => acc + group.products.length, 0);
   }, [productGroups]);
 
   const firstImage = useMemo(() => {
@@ -50,7 +52,9 @@ export function ShowItems({ buttonText, header, productList, disabled = false })
       <InlineProduct
         image={firstImage}
         title={catalogTitle}
-        lines={[`${totalItems} ${t('show_items.items', { count: totalItems })}`]}
+        lines={[
+          `${totalItems} ${t('show_items.items', { count: totalItems })}`,
+        ]}
       />
 
       <Button

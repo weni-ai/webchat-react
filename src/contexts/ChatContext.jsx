@@ -120,7 +120,8 @@ export function ChatProvider({ children, config }) {
   const [cart, setCart] = useState({});
 
   // Navigation helper functions
-  const currentPage = pageHistory.length > 0 ? pageHistory[pageHistory.length - 1] : null;
+  const currentPage =
+    pageHistory.length > 0 ? pageHistory[pageHistory.length - 1] : null;
 
   const clearPageHistory = () => {
     setPageHistory([]);

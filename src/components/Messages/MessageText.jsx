@@ -101,6 +101,7 @@ MessageText.propTypes = {
     direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
     status: PropTypes.string,
     metadata: PropTypes.object,
+    header: PropTypes.string,
     quick_replies: PropTypes.array,
     list_message: PropTypes.shape({
       button_text: PropTypes.string.isRequired,

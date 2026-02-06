@@ -18,9 +18,7 @@ export function EmptyCart() {
 
       <section className="weni-view-cart__content">
         <h2>{t('cart.empty')}</h2>
-        <p>
-          {t('cart.empty_description')}
-        </p>
+        <p>{t('cart.empty_description')}</p>
       </section>
     </section>
   );
