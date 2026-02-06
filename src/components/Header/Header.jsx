@@ -5,6 +5,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import PropTypes from 'prop-types';
 
 import './Header.scss';
+import { useMemo } from 'react';
 
 function HeaderTitle({ profileAvatar, title, subtitle, goBack }) {
   return (
@@ -46,14 +47,22 @@ HeaderTitle.propTypes = {
  * Header - Chat header component
  */
 export function Header() {
-  const { toggleChat } = useWeniChat();
   const {
+    toggleChat,
     isChatFullscreen,
     toggleChatFullscreen,
     currentPage,
     setCurrentPage,
     goBack,
+    cart,
   } = useWeniChat();
+
+  const cartTotalItems = useMemo(() => {
+    return Object.values(cart).reduce(
+      (acc, product) => acc + product.quantity,
+      0,
+    );
+  }, [cart]);
 
   const { config } = useChatContext();
   // TODO: Implement header layout
@@ -77,6 +86,18 @@ export function Header() {
       </section>
 
       <section className="weni-chat-header__actions">
+        {cartTotalItems > 0 && (
+          <Button
+            aria-label="Cart"
+            variant="primary"
+            icon="shopping_cart"
+            iconColor="white"
+            onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
+          >
+            {cartTotalItems}
+          </Button>
+        )}
+
         {config.showFullScreenButton && (
           <Button
             onClick={toggleChatFullscreen}
