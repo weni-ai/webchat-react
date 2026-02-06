@@ -6,7 +6,7 @@ import Button from '@/components/common/Button';
 import { useChatContext } from '@/contexts/ChatContext';
 
 import './ProductDetails.scss';
-import { CounterControls } from '@/components/Product/InlineProduct';
+import { CounterControls } from '@/components/Product/CounterControls';
 
 export function ProductDetails({ product }) {
   const { cart, setCart, setCurrentPage } = useChatContext();
