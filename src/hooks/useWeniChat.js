@@ -73,6 +73,8 @@ export function useWeniChat() {
     connect: context.connect,
     currentPage,
     setCurrentPage: context.setCurrentPage,
+    goBack: context.goBack,
+    clearPageHistory: context.clearPageHistory,
   };
 }
 
