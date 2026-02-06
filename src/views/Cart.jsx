@@ -8,8 +8,7 @@ import './Cart.scss';
 import { t } from 'i18next';
 
 export function Cart() {
-  const { cart, setCart, clearPageHistory, sendOrder, setCurrentPage } =
-    useChatContext();
+  const { cart, setCart, clearPageHistory, sendOrder } = useChatContext();
 
   const items = useMemo(() => {
     return Object.values(cart).filter((product) => product.quantity > 0);
