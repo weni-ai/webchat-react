@@ -4,6 +4,7 @@ import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
 import MessageDocument from './MessageDocument';
 import MessageImage from './MessageImage';
+import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
@@ -35,6 +36,8 @@ export function Message({ message, componentsEnabled }) {
     case 'document':
     case 'file':
       return <MessageDocument message={message} />;
+    case 'order':
+      return <MessageOrder message={message} />;
     default:
       return (
         <MessageText
