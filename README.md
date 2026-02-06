@@ -159,9 +159,9 @@ The following methods are available via `window.WebChat`:
 - `async isOpen()` – Checks if the chat window is open.
 - `async clear()` – Clears the chat history.
 - `async send(message, options)` – Sends a message to the chat.
+- `setSessionId(id)` - Updates the contact's session id, reloading the session if already started.
 
 Experimental / not yet implemented (no-ops for now):
-- `setSessionId(id)`
 - `isVisible()`
 
 ## Customization
