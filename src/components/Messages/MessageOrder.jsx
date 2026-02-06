@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 import { InlineProduct } from '@/components/Product/InlineProduct';
@@ -7,6 +8,7 @@ import './MessageOrder.scss';
 
 export function MessageOrder({ message }) {
   const productItems = message.order?.product_items || [];
+  const { t } = useTranslation();
 
   const firstImage = useMemo(() => {
     return productItems[0]?.image;
@@ -21,8 +23,8 @@ export function MessageOrder({ message }) {
       <InlineProduct
         variant="order"
         image={firstImage}
-        title="Carrinho"
-        lines={[`${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`]}
+        title={t('cart.title')}
+        lines={[`${totalItems} ${t('show_items.items', { count: totalItems })}`]}
       />
     </section>
   );
