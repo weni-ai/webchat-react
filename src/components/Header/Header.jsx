@@ -52,6 +52,7 @@ export function Header() {
     toggleChatFullscreen,
     currentPage,
     setCurrentPage,
+    goBack,
   } = useWeniChat();
 
   const { config } = useChatContext();
@@ -64,7 +65,7 @@ export function Header() {
         {currentPage ? (
           <HeaderTitle
             title={currentPage.title}
-            goBack={() => setCurrentPage(null)}
+            goBack={goBack}
           />
         ) : (
           <HeaderTitle

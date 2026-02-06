@@ -116,7 +116,37 @@ export function ChatProvider({ children, config }) {
 
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
-  const [currentPage, setCurrentPage] = useState(null);
+  const [pageHistory, setPageHistory] = useState([]);
+
+  // Navigation helper functions
+  const currentPage = pageHistory.length > 0 ? pageHistory[pageHistory.length - 1] : null;
+
+  const clearPageHistory = () => {
+    setPageHistory([]);
+  };
+
+  const pushPage = (page) => {
+    if (page === null) {
+      // If null is passed, clear the history (go to chat)
+      clearPageHistory();
+    } else {
+      // prevent pushing the same page twice
+      if (pageHistory[pageHistory.length - 1]?.view === page.view) {
+        return;
+      }
+
+      setPageHistory((prev) => [...prev, page]);
+    }
+  };
+
+  const goBack = () => {
+    setPageHistory((prev) => {
+      if (prev.length <= 1) {
+        return [];
+      }
+      return prev.slice(0, -1);
+    });
+  };
 
   const isChatOpenRef = useRef(isChatOpen);
 
@@ -266,7 +296,10 @@ export function ChatProvider({ children, config }) {
     tooltipMessage,
     clearTooltipMessage: () => setTooltipMessage(null),
     currentPage,
-    setCurrentPage,
+    setCurrentPage: pushPage,
+    goBack,
+    clearPageHistory,
+    pageHistory,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),

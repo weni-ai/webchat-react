@@ -8,7 +8,7 @@ import './ListMessage.scss';
 
 export function ListMessage({ options }) {
   const { t } = useTranslation();
-  const { setCurrentPage, sendMessage } = useWeniChat();
+  const { goBack, sendMessage } = useWeniChat();
   const [selectedOption, setSelectedOption] = useState(null);
 
   const handleOptionChange = (option) => {
@@ -48,7 +48,7 @@ export function ListMessage({ options }) {
       <footer className="weni-view-list-message__footer">
         <Button
           variant="tertiary"
-          onClick={() => setCurrentPage(null)}
+          onClick={goBack}
         >
           {t('list_message.actions.back')}
         </Button>
@@ -58,7 +58,7 @@ export function ListMessage({ options }) {
           disabled={!selectedOption}
           onClick={() => {
             sendMessage(selectedOption);
-            setCurrentPage(null);
+            goBack();
           }}
         >
           {t('list_message.actions.send')}
