@@ -153,13 +153,16 @@ The following methods are available via `window.WebChat`:
 - `async setContext(context)` – Sets contextual data in the underlying service.
 - `async getContext()` – Returns the current context from the underlying service.
 - `async setCustomField(field, value)` – Sets a custom contact/session field in the underlying service.
+- `async open()` – Opens the chat window.
+- `async close()` – Closes the chat window.
+- `async toggle()` – Toggles the chat window.
+- `async isOpen()` – Checks if the chat window is open.
+- `async clear()` – Clears the chat history.
+- `async send(message, options)` – Sends a message to the chat.
 
 Experimental / not yet implemented (no-ops for now):
-- `open()`, `close()`, `toggle()`
-- `send(message)`, `clear()`
 - `setSessionId(id)`
-- `isOpen()`, `isVisible()`
-- `reload()`
+- `isVisible()`
 
 ## Customization
 
@@ -220,6 +223,32 @@ Core variables consumed by the widget (defaults in `src/styles/variables.scss`):
 - Suggestions: `--weni-suggestions-bg-color`, `--weni-suggestions-separator-color`, `--weni-suggestions-font-color`, `--weni-suggestions-hover-font-color`
 
 For backward compatibility, legacy variables like `--titleColor`, `--widgetHeight`, `--launcherColor`, etc. are also kept in sync.
+
+3) Send messages programmatically
+
+You can send messages programmatically using the `send` method, the `options` object is optional and can contain the following properties:
+- `id`: message ID
+- `timestamp`: message timestamp
+- `status`: message status (pending, sent, delivered, read, error)
+- `metadata`: message metadata
+- `hidden`: hide the message from the UI
+
+The `id` property is optional and will be generated automatically if not provided.
+The `timestamp` property is optional and will be generated automatically if not provided.
+The `status` property is optional and will be set to `pending` if not provided.
+The `metadata` property is optional and will be set to an empty object if not provided.
+The `hidden` property is optional and will be set to `false` if not provided.
+
+Example:
+```js
+await window.WebChat.send('Hello!', {
+  id: '123', // Optional: message ID
+  timestamp: Date.now(), // Optional: message timestamp
+  status: 'pending', // Optional: message status (pending, sent, delivered, read, error)
+  metadata: { custom: 'data' }, // Optional: message metadata
+  hidden: true // Optional: hide the message from the UI
+});
+```
 
 ## Development
 

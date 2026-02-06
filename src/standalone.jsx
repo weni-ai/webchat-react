@@ -217,56 +217,61 @@ function destroy() {
 
 /**
  * Open chat window
- * TODO: Implement via service events or refs
+ * @returns {Promise<void>}
  */
-function open() {
-  console.warn('WebChat.open() - Not implemented yet');
-  // TODO: Dispatch event to Widget component
+async function open() {
+  const service = await serviceWhenReady();
+  await service.setIsChatOpen(true);
 }
 
 /**
  * Close chat window
- * TODO: Implement via service events or refs
+ * @returns {Promise<void>}
  */
-function close() {
-  console.warn('WebChat.close() - Not implemented yet');
-  // TODO: Dispatch event to Widget component
+async function close() {
+  const service = await serviceWhenReady();
+  await service.setIsChatOpen(false);
 }
 
 /**
  * Toggle chat window
- * TODO: Implement via service events or refs
+ * @returns {Promise<void>}
  */
-function toggle() {
-  console.warn('WebChat.toggle() - Not implemented yet');
-  // TODO: Dispatch event to Widget component
+async function toggle() {
+  const service = await serviceWhenReady();
+  const isOpen = await service.getIsChatOpen();
+  await service.setIsChatOpen(!isOpen);
 }
 
 /**
  * Send message programmatically
- * TODO: Implement via service
+ * @param {string} message
+ * @param {Object} options
+ * @returns {Promise<void>}
  */
-function send(message) {
-  console.warn('WebChat.send() - Not implemented yet', message);
-  // TODO: Access service instance and send message
+async function send(message, options = {}) {
+  const service = await serviceWhenReady();
+  await service.sendMessage(message, options);
 }
 
 /**
- * Clear chat history
- * TODO: Implement via service
+ * Clear chat messages while keeping session and connection
+ * @returns {Promise<void>}
  */
-function clear() {
-  console.warn('WebChat.clear() - Not implemented yet');
-  // TODO: Access service instance and clear session
+async function clear() {
+  const service = await serviceWhenReady();
+  service.clearMessages();
 }
 
 /**
  * Set session ID
- * TODO: Implement via service
+ * If there's an active session, restarts it with the new ID
+ * @param {string} sessionId
+ * @returns {Promise<void>}
  */
-function setSessionId(sessionId) {
-  console.warn('WebChat.setSessionId() - Not implemented yet', sessionId);
-  // TODO: Access service instance and set session
+async function setSessionId(sessionId) {
+  const service = await serviceWhenReady();
+  await service.setSessionId(sessionId);
 }
 
 /**
@@ -295,12 +300,11 @@ async function setCustomField(field, value) {
 
 /**
  * Check if chat is open
- * TODO: Implement via service state
+ * @returns {Promise<boolean>}
  */
-function isOpen() {
-  console.warn('WebChat.isOpen() - Not implemented yet');
-  // TODO: Check widget state
-  return false;
+async function isOpen() {
+  const service = await serviceWhenReady();
+  return service.getIsChatOpen();
 }
 
 /**

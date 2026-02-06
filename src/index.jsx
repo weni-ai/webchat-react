@@ -5,6 +5,10 @@ import Widget from './components/Widget/Widget';
 import './styles/index.scss';
 import './i18n';
 
+// Import WebChat API and expose to window for testing
+import WebChat from './standalone.jsx';
+window.WebChat = WebChat;
+
 const config = {
   // socketUrl: 'wss://websocket.weni.ai',
   // channelUuid: 'your-channel-uuid-here', // Replace with your actual channel UUID
@@ -30,6 +34,15 @@ const customTheme = {
   // Override other theme properties as needed
 };
 
+const buttonStyle = {
+  padding: '8px 14px',
+  background: '#0084FF',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+};
+
 function App() {
   return (
     <div
@@ -53,6 +66,89 @@ function App() {
         <p style={{ color: '#666', fontSize: '14px' }}>
           Note: Make sure to configure your channel UUID in src/index.jsx
         </p>
+
+        <section
+          id="actions"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '8px',
+          }}
+        >
+          <button
+            id="open-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+            }}
+          >
+            Open Chat
+          </button>
+          <button
+            id="close-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.close();
+            }}
+          >
+            Close Chat
+          </button>
+          <button
+            id="toggle-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.toggle();
+            }}
+          >
+            Toggle Chat
+          </button>
+          <button
+            id="clear-chat"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.clear();
+            }}
+          >
+            Clear Chat
+          </button>
+          <button
+            id="send-message"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.send('Hello, how are you?');
+            }}
+          >
+            Send Message
+          </button>
+          <button
+            id="send-message-options"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.send('Hello, how are you?', {
+                id: '123',
+                timestamp: Date.now(),
+                status: 'pending',
+                metadata: {
+                  custom: 'data',
+                },
+                hidden: true,
+              });
+            }}
+          >
+            Send Hidden Message
+          </button>
+          <button
+            id="set-session-id"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.setSessionId(
+                'new-session-id@likeanemail.com',
+              );
+            }}
+          >
+            Set New Session ID
+          </button>
+        </section>
       </div>
 
       {/* The Widget component */}
