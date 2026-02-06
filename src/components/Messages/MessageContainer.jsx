@@ -31,6 +31,7 @@ MessageContainer.propTypes = {
     'audio',
     'document',
     'file',
+    'order',
     'typing',
   ]).isRequired,
   className: PropTypes.string,

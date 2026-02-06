@@ -34,6 +34,11 @@
   },
   "cart": {
     "title": "Carrinho",
-    "see_cart": "Ver carrinho"
+    "see_cart": "Ver carrinho",
+    "empty": "Seu carrinho está vazio",
+    "empty_description": "Adicione itens ao seu carrinho acessando a lista de produtos disponíveis",
+    "subtotal": "Subtotal",
+    "continue_shopping": "Continuar a compra",
+    "make_order": "Fazer pedido"
   }
 }

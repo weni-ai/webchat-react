@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
+import { ShowItems } from './TextComponents/ShowItems';
 
 import './MessageText.scss';
 
@@ -78,6 +79,15 @@ export function MessageText({ message, componentsEnabled }) {
           disabled={!componentsEnabled}
         />
       )}
+
+      {message.product_list && (
+        <ShowItems
+          buttonText={message.product_list.buttonText}
+          header={message.header}
+          productList={message.product_list}
+          disabled={!componentsEnabled}
+        />
+      )}
     </>
   );
 }
@@ -99,6 +109,26 @@ MessageText.propTypes = {
     cta_message: PropTypes.shape({
       url: PropTypes.string.isRequired,
       display_text: PropTypes.string.isRequired,
+    }),
+    product_list: PropTypes.shape({
+      text: PropTypes.string,
+      buttonText: PropTypes.string.isRequired,
+      sections: PropTypes.arrayOf(
+        PropTypes.shape({
+          title: PropTypes.string.isRequired,
+          product_items: PropTypes.arrayOf(
+            PropTypes.shape({
+              product_retailer_id: PropTypes.string.isRequired,
+              name: PropTypes.string.isRequired,
+              price: PropTypes.string.isRequired,
+              sale_price: PropTypes.string,
+              image: PropTypes.string.isRequired,
+              description: PropTypes.string,
+              seller_id: PropTypes.string,
+            }),
+          ).isRequired,
+        }),
+      ).isRequired,
     }),
   }).isRequired,
   componentsEnabled: PropTypes.bool,
