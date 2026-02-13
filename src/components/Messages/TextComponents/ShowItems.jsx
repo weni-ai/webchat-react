@@ -31,6 +31,7 @@ export function ShowItems({
         description: item.description,
         price: item.price,
         salePrice: item.sale_price,
+        currency: item.currency,
         sellerId: item.seller_id,
       })),
     }));
@@ -92,6 +93,7 @@ ShowItems.propTypes = {
             name: PropTypes.string.isRequired,
             price: PropTypes.string.isRequired,
             sale_price: PropTypes.string,
+            currency: PropTypes.string,
             image: PropTypes.string.isRequired,
             description: PropTypes.string,
             seller_id: PropTypes.string,

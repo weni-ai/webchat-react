@@ -7,6 +7,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 
 import './ProductDetails.scss';
 import { CounterControls } from '@/components/Product/CounterControls';
+import { formatPriceWithCurrency } from '@/utils/currency';
 
 export function ProductDetails({ product }) {
   const { cart, setCart, setCurrentPage } = useChatContext();
@@ -41,7 +42,7 @@ export function ProductDetails({ product }) {
 
         <section className="weni-view-product-details__product-title">
           <h1>{product.title}</h1>
-          <p>{product.price}</p>
+          <p>{formatPriceWithCurrency(product.price, product.currency)}</p>
         </section>
 
         <p className="weni-view-product-details__product-description">

@@ -33,6 +33,7 @@ MessageContainer.propTypes = {
     'file',
     'order',
     'typing',
+    'interactive',
   ]).isRequired,
   className: PropTypes.string,
 };

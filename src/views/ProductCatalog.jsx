@@ -46,8 +46,10 @@ export function ProductCatalog({ productGroups }) {
                 key={productIndex}
                 image={product.image}
                 title={product.title}
-                lines={[product.description, product.price]}
-                showCounterControls={true}
+                lines={[product.description]}
+                price={product.price}
+                salePrice={product.salePrice}
+                currency={product.currency}
                 counter={getCounter(product.uuid)}
                 setCounter={(counter) =>
                   setCounter(product.uuid, product, counter)

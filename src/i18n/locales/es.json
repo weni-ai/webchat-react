@@ -38,6 +38,8 @@
     "empty": "Tu carrito está vacío",
     "empty_description": "Agrega productos a tu carrito accediendo a la lista de productos disponibles",
     "subtotal": "Subtotal",
+    "discount": "Descuento",
+    "total": "Total",
     "continue_shopping": "Continuar la compra",
     "make_order": "Hacer pedido"
   }

@@ -3,6 +3,7 @@ import Button from '@/components/common/Button';
 import { InlineProduct } from '@/components/Product/InlineProduct';
 import { useMemo } from 'react';
 import { EmptyCart } from './EmptyCart';
+import { formatPriceWithCurrency } from '@/utils/currency';
 
 import './Cart.scss';
 import { t } from 'i18next';
@@ -18,17 +19,35 @@ export function Cart() {
     return items.reduce((acc, product) => acc + product.quantity, 0);
   }, [items]);
 
-  function getPriceWithDecimals(price) {
-    // TODO: check how to handle different currencies
-    return Number(price.replace('R$', '').replace(',', '.'));
-  }
-
   const totalPrice = useMemo(() => {
     return items.reduce(
       (acc, product) =>
-        acc + getPriceWithDecimals(product.price) * product.quantity,
+        acc + parseFloat(product.price) * product.quantity,
       0,
     );
+  }, [items]);
+
+  const totalDiscount = useMemo(() => {
+    return items.reduce(
+      (acc, product) => {
+        const price = parseFloat(product.price || 0);
+        const salePrice = parseFloat(product.salePrice || 0);
+        if (price === salePrice || !salePrice) {
+          return acc;
+        }
+        const discount = price - salePrice;
+        return acc + discount * product.quantity;
+      },
+      0,
+    );
+  }, [items]);
+
+  const hasDiscount = useMemo(() => {
+    return totalDiscount > 0;
+  }, [totalDiscount]);
+
+  const cartCurrency = useMemo(() => {
+    return getCurrencyFromProducts(items);
   }, [items]);
 
   function setCounter(productKey, product, counter) {
@@ -38,12 +57,19 @@ export function Cart() {
     }));
   }
 
+  function getCurrencyFromProducts(products) {
+    const fallbackCurrency = 'BRL';
+    const currencies = products.map((product) => product.currency);
+    return currencies.length > 0 ? currencies[0] : fallbackCurrency;
+  }
+
   function handleSendOrder() {
     const productItems = items.map((item) => ({
       product_retailer_id: item.uuid,
       name: item.title,
       price: item.price,
-      sale_price: item.salePrice || item.price,
+      sale_price: item.salePrice,
+      currency: item.currency,
       image: item.image,
       description: item.description,
       seller_id: item.sellerId,
@@ -73,7 +99,8 @@ export function Cart() {
             image={product.image}
             title={product.title}
             price={product.price}
-            showCounterControls={true}
+            salePrice={product.salePrice}
+            currency={product.currency}
             counter={product.quantity}
             setCounter={(counter) => setCounter(product.uuid, product, counter)}
           />
@@ -81,15 +108,24 @@ export function Cart() {
       </section>
 
       <footer className="weni-view-cart__footer">
-        <section className="weni-view-cart__footer-subtotal">
+        <section className={`weni-view-cart__footer-subtotal ${hasDiscount ? 'weni-view-cart__footer-subtotal--discounted' : ''}`}>
           <p>{t('cart.subtotal')}</p>
-          <p>
-            {new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-            }).format(totalPrice)}
-          </p>
+          <p>{formatPriceWithCurrency(totalPrice, cartCurrency)}</p>
         </section>
+
+        {hasDiscount && (
+          <section className="weni-view-cart__footer-discount">
+            <p>{t('cart.discount')}</p>
+            <p>{formatPriceWithCurrency(totalDiscount, cartCurrency)}</p>
+          </section>
+        )}
+
+        {hasDiscount && (
+          <section className="weni-view-cart__footer-total">
+            <p> {t('cart.total')}</p>
+            <p>{formatPriceWithCurrency(totalPrice - totalDiscount, cartCurrency)}</p>
+          </section>
+        )}
 
         <Button
           variant="secondary"

@@ -38,6 +38,8 @@
     "empty": "Your cart is empty",
     "empty_description": "Add items to your cart by accessing the available products list",
     "subtotal": "Subtotal",
+    "discount": "Discount",
+    "total": "Total",
     "continue_shopping": "Continue shopping",
     "make_order": "Make order"
   }
