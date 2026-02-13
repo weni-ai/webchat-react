@@ -21,25 +21,21 @@ export function Cart() {
 
   const totalPrice = useMemo(() => {
     return items.reduce(
-      (acc, product) =>
-        acc + parseFloat(product.price) * product.quantity,
+      (acc, product) => acc + parseFloat(product.price) * product.quantity,
       0,
     );
   }, [items]);
 
   const totalDiscount = useMemo(() => {
-    return items.reduce(
-      (acc, product) => {
-        const price = parseFloat(product.price || 0);
-        const salePrice = parseFloat(product.salePrice || 0);
-        if (price === salePrice || !salePrice) {
-          return acc;
-        }
-        const discount = price - salePrice;
-        return acc + discount * product.quantity;
-      },
-      0,
-    );
+    return items.reduce((acc, product) => {
+      const price = parseFloat(product.price || 0);
+      const salePrice = parseFloat(product.salePrice || 0);
+      if (price === salePrice || !salePrice) {
+        return acc;
+      }
+      const discount = price - salePrice;
+      return acc + discount * product.quantity;
+    }, 0);
   }, [items]);
 
   const hasDiscount = useMemo(() => {
@@ -108,7 +104,9 @@ export function Cart() {
       </section>
 
       <footer className="weni-view-cart__footer">
-        <section className={`weni-view-cart__footer-subtotal ${hasDiscount ? 'weni-view-cart__footer-subtotal--discounted' : ''}`}>
+        <section
+          className={`weni-view-cart__footer-subtotal ${hasDiscount ? 'weni-view-cart__footer-subtotal--discounted' : ''}`}
+        >
           <p>{t('cart.subtotal')}</p>
           <p>{formatPriceWithCurrency(totalPrice, cartCurrency)}</p>
         </section>
@@ -123,7 +121,12 @@ export function Cart() {
         {hasDiscount && (
           <section className="weni-view-cart__footer-total">
             <p> {t('cart.total')}</p>
-            <p>{formatPriceWithCurrency(totalPrice - totalDiscount, cartCurrency)}</p>
+            <p>
+              {formatPriceWithCurrency(
+                totalPrice - totalDiscount,
+                cartCurrency,
+              )}
+            </p>
           </section>
         )}
 
