@@ -59,9 +59,29 @@
     white-space: nowrap;
   }
 
+  &__price-container {
+    display: flex;
+    flex-direction: row;
+    gap: $spacing-1;
+  }
+
   &__price {
     font: $font-caption-1;
     color: $fg-emphasized;
+
+    &--product {
+      color: $fg-base;
+    }
+
+    &--muted {
+      font: $font-caption-2;
+      color: $fg-muted;
+      text-decoration: line-through;
+    }
+
+    &--sale {
+      color: $fg-success;
+    }
   }
 
   &--cart {

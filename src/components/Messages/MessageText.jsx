@@ -123,6 +123,7 @@ MessageText.propTypes = {
               name: PropTypes.string.isRequired,
               price: PropTypes.string.isRequired,
               sale_price: PropTypes.string,
+              currency: PropTypes.string,
               image: PropTypes.string.isRequired,
               description: PropTypes.string,
               seller_id: PropTypes.string,

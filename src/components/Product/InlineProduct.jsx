@@ -1,8 +1,29 @@
 import PropTypes from 'prop-types';
 
 import { CounterControls } from '@/components/Product/CounterControls';
+import { PriceDisplay } from '@/components/Product/PriceDisplay';
 
 import './InlineProduct.scss';
+
+const CONTENT_SLOT = 'content';
+const TRAILING_SLOT = 'trailing';
+
+// Strategy pattern to handle layouts for different variants
+const VARIANT_LAYOUT = {
+  catalog: {},
+  order: {},
+  product: {
+    priceSlot: CONTENT_SLOT,
+    counterSlot: TRAILING_SLOT,
+    priceModifier: 'product',
+    counterProps: { hideWhenNotInteracted: true },
+  },
+  cart: {
+    priceSlot: TRAILING_SLOT,
+    counterSlot: CONTENT_SLOT,
+    counterProps: { className: 'weni-inline-product__counter-controls' },
+  },
+};
 
 export function InlineProduct({
   variant = 'catalog',
@@ -10,12 +31,46 @@ export function InlineProduct({
   title,
   lines = [],
   price = '',
-  showCounterControls = false,
+  salePrice = '',
+  currency = 'BRL',
   counter,
   setCounter,
   onClick,
 }) {
+  const layout = VARIANT_LAYOUT[variant] ?? VARIANT_LAYOUT.catalog;
   const hasCounter = counter !== undefined && setCounter !== undefined;
+
+  const priceElement = layout.priceSlot ? (
+    <PriceDisplay
+      price={price}
+      salePrice={salePrice}
+      currency={currency}
+      priceModifier={layout.priceModifier}
+    />
+  ) : null;
+
+  const counterElement =
+    hasCounter && layout.counterSlot ? (
+      <CounterControls
+        counter={counter}
+        setCounter={setCounter}
+        {...layout.counterProps}
+      />
+    ) : null;
+
+  const contentSlot =
+    layout.priceSlot === CONTENT_SLOT
+      ? priceElement
+      : layout.counterSlot === CONTENT_SLOT
+        ? counterElement
+        : null;
+
+  const trailingSlot =
+    layout.priceSlot === TRAILING_SLOT
+      ? priceElement
+      : layout.counterSlot === TRAILING_SLOT
+        ? counterElement
+        : null;
 
   return (
     <section
@@ -42,25 +97,10 @@ export function InlineProduct({
             {line}
           </p>
         ))}
-
-        {variant === 'cart' && hasCounter && (
-          <CounterControls
-            counter={counter}
-            setCounter={setCounter}
-            className="weni-inline-product__counter-controls"
-          />
-        )}
+        {contentSlot}
       </section>
 
-      {price && <p className="weni-inline-product__price">{price}</p>}
-
-      {showCounterControls && variant === 'product' && (
-        <CounterControls
-          counter={counter}
-          setCounter={setCounter}
-          hideWhenNotInteracted
-        />
-      )}
+      {trailingSlot}
     </section>
   );
 }
@@ -71,7 +111,8 @@ InlineProduct.propTypes = {
   title: PropTypes.string.isRequired,
   lines: PropTypes.array,
   price: PropTypes.string,
-  showCounterControls: PropTypes.bool,
+  salePrice: PropTypes.string,
+  currency: PropTypes.string,
   counter: PropTypes.number,
   setCounter: PropTypes.func,
   onClick: PropTypes.func,

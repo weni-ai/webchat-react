@@ -36,28 +36,66 @@
     border-top: 1px solid $border-soft;
     margin-top: auto;
     display: grid;
-    row-gap: $spacing-3;
+    row-gap: $spacing-1;
     column-gap: $spacing-2;
-    grid-template-areas: "subtotal subtotal" ". .";
+    grid-template-areas: "subtotal subtotal" "discount discount" "total total" ". .";
     grid-template-columns: repeat(2, 1fr);
+
+    // apply margin-top to the last grid row
+    & > *:nth-last-child(2),
+    & > *:nth-last-child(1) {
+      margin-top: $spacing-2;
+    }
   }
 
-  &__footer-subtotal {
-    grid-area: subtotal;
+  &__footer-subtotal,
+  &__footer-discount,
+  &__footer-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: $spacing-2;
 
     p:first-child {
-      font: $font-caption-1;
-      color: $fg-emphasized;
+      font: var(--label-font);
+      color: var(--label-color);
     }
 
     p:last-child {
-      font: $font-action;
-      color: $fg-emphasized;
+      font: var(--value-font);
+      color: var(--value-color);
     }
+  }
+
+  &__footer-subtotal {
+    grid-area: subtotal;
+    --label-font: #{$font-caption-1};
+    --label-color: #{$fg-emphasized};
+    --value-font: #{$font-action};
+    --value-color: #{$fg-emphasized};
+
+    &--discounted {
+      --label-font: #{$font-caption-1};
+      --label-color: #{$fg-base};
+      --value-font: #{$font-caption-1};
+      --value-color: #{$fg-base};
+    }
+  }
+
+  &__footer-discount {
+    grid-area: discount;
+    --label-font: #{$font-caption-2};
+    --label-color: #{$fg-base};
+    --value-font: #{$font-caption-2};
+    --value-color: #{$fg-success};
+  }
+
+  &__footer-total {
+    grid-area: total;
+    --label-font: #{$font-caption-2};
+    --label-color: #{$fg-emphasized};
+    --value-font: #{$font-action};
+    --value-color: #{$fg-emphasized};
   }
 
   &--empty {
