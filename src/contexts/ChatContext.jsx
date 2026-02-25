@@ -1,6 +1,15 @@
 import WeniWebchatService from '@weni/webchat-service';
 import PropTypes from 'prop-types';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { VoiceService } from '@/services/voice';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 
@@ -119,6 +128,20 @@ export function ChatProvider({ children, config }) {
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
 
+  // Voice mode state
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
+  const [voiceModeState, setVoiceModeState] = useState(null);
+  const [voicePartialTranscript, setVoicePartialTranscript] = useState('');
+  const [voiceCommittedTranscript, setVoiceCommittedTranscript] = useState('');
+  const [voiceAgentText, setVoiceAgentText] = useState('');
+  const [voiceError, setVoiceError] = useState(null);
+  const [voiceLanguage, setVoiceLanguage] = useState('en');
+  const isVoiceModeSupported = useMemo(() => VoiceService.isSupported(), []);
+  const voiceServiceRef = useRef(null);
+  const processedTextRef = useRef('');
+  const lastProcessedVoiceMsgIdRef = useRef(null);
+  const voiceStartMessageCountRef = useRef(0);
+
   // Navigation helper functions
   const currentPage =
     pageHistory.length > 0 ? pageHistory[pageHistory.length - 1] : null;
@@ -197,6 +220,33 @@ export function ChatProvider({ children, config }) {
 
     service.on('state:changed', (newState) => {
       setState(newState);
+
+      // Use ref instead of state to avoid stale closure — voiceServiceRef is
+      // always up-to-date even though this listener is registered once at mount.
+      if (!voiceServiceRef.current) return;
+
+      const messages = newState.messages || [];
+      const lastMsgIndex = messages.length - 1;
+      const lastMsg = messages[lastMsgIndex];
+
+      if (!lastMsg || lastMsg.direction !== 'incoming') return;
+
+      // Skip messages that existed before voice mode was activated.
+      if (lastMsgIndex < voiceStartMessageCountRef.current) return;
+
+      if (lastMsg.id !== lastProcessedVoiceMsgIdRef.current) {
+        lastProcessedVoiceMsgIdRef.current = lastMsg.id;
+        processedTextRef.current = '';
+      }
+
+      const currentText = lastMsg.text || '';
+      const isStreaming = lastMsg.status === 'streaming';
+      const newText = currentText.substring(processedTextRef.current.length);
+
+      if (newText) {
+        voiceServiceRef.current.processTextChunk(newText, !isStreaming);
+        processedTextRef.current = isStreaming ? currentText : '';
+      }
     });
 
     // Audio recording events (UI-specific feedback)
@@ -216,12 +266,26 @@ export function ChatProvider({ children, config }) {
 
     service.on('context:changed', (context) => setContext(context));
 
-    service.on('language:changed', (language) => i18n.changeLanguage(language));
+    service.on('language:changed', (language) => {
+      i18n.changeLanguage(language);
+      // ElevenLabs requires ISO 639-1 codes (e.g. "en", "pt").
+      // The webchat service emits BCP-47 locale codes (e.g. "en-us", "pt-BR"),
+      // so we strip the region suffix before forwarding to the voice service.
+      const isoLang = language ? language.split('-')[0].toLowerCase() : 'en';
+      setVoiceLanguage(isoLang);
+      if (voiceServiceRef.current) {
+        voiceServiceRef.current.setLanguage(isoLang);
+      }
+    });
 
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
+      if (voiceServiceRef.current) {
+        voiceServiceRef.current.destroy();
+        voiceServiceRef.current = null;
+      }
       service.removeAllListeners();
       service.disconnect();
     };
@@ -261,6 +325,57 @@ export function ChatProvider({ children, config }) {
     // Stop recording method also sends the audio to the server
     await service.stopRecording();
   };
+
+  const enterVoiceMode = useCallback(async () => {
+    if (!mergedConfig.voiceMode?.enabled || !isVoiceModeSupported) return;
+
+    // Snapshot how many messages exist right now so the state:changed handler
+    // can skip historical messages and only speak brand-new agent replies.
+    voiceStartMessageCountRef.current = (state.messages || []).length;
+    lastProcessedVoiceMsgIdRef.current = null;
+    processedTextRef.current = '';
+
+    const vs = new VoiceService();
+    await vs.init({ ...mergedConfig.voiceMode, languageCode: voiceLanguage });
+    vs.on('state:changed', ({ state }) => setVoiceModeState(state));
+    vs.on('transcript:partial', ({ text }) => setVoicePartialTranscript(text));
+    vs.on('transcript:committed', ({ text }) => {
+      setVoiceCommittedTranscript(text);
+      setVoicePartialTranscript('');
+    });
+    vs.on('speaking:started', ({ text }) => setVoiceAgentText((prev) => prev + text));
+    vs.on('speaking:ended', () => {});
+    vs.on('barge-in', () => setVoiceAgentText(''));
+    vs.on('session:started', () => setIsVoiceModeActive(true));
+    vs.on('session:ended', () => {
+      setIsVoiceModeActive(false);
+      setVoiceModeState(null);
+      setVoicePartialTranscript('');
+      setVoiceCommittedTranscript('');
+      setVoiceAgentText('');
+      setVoiceError(null);
+      processedTextRef.current = '';
+      lastProcessedVoiceMsgIdRef.current = null;
+    });
+    vs.on('error', (error) => setVoiceError(error));
+    vs.setMessageCallback((text) => service.sendMessage(text));
+    voiceServiceRef.current = vs;
+    await vs.startSession();
+  }, [mergedConfig, voiceLanguage, isVoiceModeSupported, service]);
+
+  const exitVoiceMode = useCallback(() => {
+    if (voiceServiceRef.current) {
+      voiceServiceRef.current.endSession();
+      voiceServiceRef.current.destroy();
+      voiceServiceRef.current = null;
+    }
+  }, []);
+
+  const retryVoiceMode = useCallback(async () => {
+    exitVoiceMode();
+    setVoiceError(null);
+    await enterVoiceMode();
+  }, [exitVoiceMode, enterVoiceMode]);
 
   const value = {
     // Service instance (for advanced use cases)
@@ -304,6 +419,18 @@ export function ChatProvider({ children, config }) {
     pageHistory,
     cart,
     setCart,
+
+    // Voice mode state
+    isVoiceModeActive,
+    isVoiceModeSupported,
+    voiceModeState,
+    voicePartialTranscript,
+    voiceCommittedTranscript,
+    voiceAgentText,
+    voiceError,
+    enterVoiceMode,
+    exitVoiceMode,
+    retryVoiceMode,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
@@ -403,6 +530,19 @@ ChatProvider.propTypes = {
       language: PropTypes.string,
       excludeIntents: PropTypes.arrayOf(PropTypes.string),
       automaticSend: PropTypes.bool,
+    }),
+
+    // Voice mode
+    voiceMode: PropTypes.shape({
+      enabled: PropTypes.bool,
+      voiceId: PropTypes.string,
+      getToken: PropTypes.func,
+      getApiKey: PropTypes.func,
+      languageCode: PropTypes.string,
+      silenceThreshold: PropTypes.number,
+      enableBargeIn: PropTypes.bool,
+      autoListen: PropTypes.bool,
+      texts: PropTypes.object,
     }),
 
     // Legacy support

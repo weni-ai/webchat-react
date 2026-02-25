@@ -1,0 +1,142 @@
+.weni-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 48px;
+
+  &__bar {
+    width: 4px;
+    height: 16px;
+    background-color: $white;
+    border-radius: 2px;
+    transition: height 0.2s ease;
+  }
+
+  &--idle {
+    .weni-waveform__bar {
+      opacity: 0.6;
+
+      &--0 {
+        height: 12px;
+      }
+      &--1 {
+        height: 20px;
+      }
+      &--2 {
+        height: 32px;
+      }
+      &--3 {
+        height: 20px;
+      }
+      &--4 {
+        height: 12px;
+      }
+    }
+  }
+
+  &--listening {
+    .weni-waveform__bar {
+      animation: waveform-listening 0.8s ease-in-out infinite;
+
+      &--0 {
+        animation-delay: 0s;
+      }
+      &--1 {
+        animation-delay: 0.1s;
+      }
+      &--2 {
+        animation-delay: 0.2s;
+      }
+      &--3 {
+        animation-delay: 0.3s;
+      }
+      &--4 {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+
+  &--speaking {
+    .weni-waveform__bar {
+      animation: waveform-speaking 0.6s ease-in-out infinite;
+
+      &--0 {
+        animation-delay: 0s;
+      }
+      &--1 {
+        animation-delay: 0.1s;
+      }
+      &--2 {
+        animation-delay: 0.2s;
+      }
+      &--3 {
+        animation-delay: 0.3s;
+      }
+      &--4 {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+
+  &--processing {
+    .weni-waveform__bar {
+      animation: waveform-processing 1.2s ease-in-out infinite;
+      opacity: 0.5;
+
+      &--0 {
+        animation-delay: 0s;
+      }
+      &--1 {
+        animation-delay: 0.1s;
+      }
+      &--2 {
+        animation-delay: 0.2s;
+      }
+      &--3 {
+        animation-delay: 0.3s;
+      }
+      &--4 {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+}
+
+@keyframes waveform-listening {
+  0%,
+  100% {
+    height: 12px;
+  }
+  25% {
+    height: 28px;
+  }
+  50% {
+    height: 40px;
+  }
+  75% {
+    height: 24px;
+  }
+}
+
+@keyframes waveform-speaking {
+  0%,
+  100% {
+    height: 16px;
+  }
+  50% {
+    height: 44px;
+  }
+}
+
+@keyframes waveform-processing {
+  0%,
+  100% {
+    height: 16px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 24px;
+    opacity: 0.8;
+  }
+}

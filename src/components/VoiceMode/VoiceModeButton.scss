@@ -1,0 +1,9 @@
+.weni-voice-mode-btn {
+  &:hover {
+    background-color: $gray-100;
+  }
+
+  &.weni-button--disabled {
+    opacity: 0.5;
+  }
+}

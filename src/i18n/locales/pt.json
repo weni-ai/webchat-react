@@ -42,5 +42,16 @@
     "total": "Total",
     "continue_shopping": "Continuar a compra",
     "make_order": "Fazer pedido"
+  },
+  "voice_mode": {
+    "title": "Modo de voz",
+    "listening": "Estou ouvindo, como posso ajudar?",
+    "microphoneHint": "O microfone está ligado, você pode falar quando quiser.",
+    "speaking": "Falando...",
+    "processing": "Processando...",
+    "errorTitle": "Algo deu errado",
+    "you": "Você",
+    "youSaid": "Você disse",
+    "assistant": "Assistente"
   }
 }

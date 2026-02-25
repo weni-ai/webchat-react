@@ -42,5 +42,16 @@
     "total": "Total",
     "continue_shopping": "Continue shopping",
     "make_order": "Make order"
+  },
+  "voice_mode": {
+    "title": "Voice mode",
+    "listening": "I'm listening, how can I help you?",
+    "microphoneHint": "The microphone is on, you can speak whenever you're ready.",
+    "speaking": "Speaking...",
+    "processing": "Processing...",
+    "errorTitle": "Something went wrong",
+    "you": "You",
+    "youSaid": "You said",
+    "assistant": "Assistant"
   }
 }

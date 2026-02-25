@@ -1,0 +1,213 @@
+.weni-voice-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+
+  border-radius: $border-radius-3;
+  overflow: hidden;
+
+  background: linear-gradient(
+    180deg,
+    #0d5453 0%,
+    #05807d 30%,
+    #04c8bd 60%,
+    #1de4d7 100%
+  );
+  animation: voiceOverlayFadeIn 0.3s ease-out;
+
+  &--closing {
+    animation: voiceOverlayFadeOut 0.25s ease-in forwards;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-3 $spacing-4;
+  }
+
+  &__title {
+    font: $font-action;
+    color: $white;
+  }
+
+  &__close-btn {
+    background-color: rgba($white, 0.15);
+    border-radius: $border-radius-full;
+
+    &:hover {
+      background-color: rgba($white, 0.25);
+    }
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: $spacing-4;
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__center {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $spacing-8 0 $spacing-6;
+  }
+
+  &__main-text {
+    font: $font-display-1;
+    color: $white;
+    max-width: 320px;
+    margin: $spacing-4 0 $spacing-2;
+  }
+
+  &__hint-text {
+    font: $font-body;
+    color: rgba($white, 0.8);
+    max-width: 280px;
+    margin: 0;
+  }
+
+  &__conversation {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    padding: $spacing-4 0;
+  }
+
+  &__transcript {
+    padding: $spacing-3 $spacing-4;
+    background: rgba($white, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-2;
+    text-align: left;
+    animation: transcriptFadeIn 0.3s ease-out;
+
+    &--partial {
+      border-left: 3px solid rgba($white, 0.5);
+    }
+
+    &--committed {
+      border-left: 3px solid rgba(76, 201, 240, 0.8);
+    }
+
+    &--agent {
+      border-left: 3px solid rgba(156, 236, 251, 0.8);
+    }
+  }
+
+  &__transcript-label {
+    font: $font-caption-1;
+    color: rgba($white, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: $spacing-1;
+  }
+
+  &__transcript-text {
+    font: $font-body;
+    color: $white;
+    margin: 0;
+  }
+}
+
+.weni-voice-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: $spacing-6;
+
+  &__icon {
+    color: rgba($white, 0.9);
+    margin-bottom: $spacing-4;
+  }
+
+  &__title {
+    font: $font-display-2;
+    color: $white;
+    margin: 0 0 $spacing-2;
+  }
+
+  &__message {
+    font: $font-body;
+    color: rgba($white, 0.85);
+    margin: 0 0 $spacing-2;
+    max-width: 280px;
+  }
+
+  &__suggestion {
+    font: $font-caption-1;
+    color: rgba($white, 0.7);
+    margin: 0 0 $spacing-6;
+    max-width: 280px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-3;
+    align-items: center;
+  }
+
+  &__retry-btn {
+    background-color: rgba($white, 0.2);
+    color: $white;
+
+    &:hover {
+      background-color: rgba($white, 0.3);
+    }
+  }
+
+  &__dismiss-btn {
+    color: rgba($white, 0.8);
+
+    &:hover {
+      color: $white;
+    }
+  }
+}
+
+@keyframes voiceOverlayFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes voiceOverlayFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes transcriptFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

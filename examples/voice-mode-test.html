@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Mode Test - Weni Webchat</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    h2 { margin: 0 0 12px; font-size: 1.15rem; }
+    .subtitle { color: #666; margin: 0 0 20px; }
+    code {
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .config-box {
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .config-box h3 { margin: 0 0 8px; color: #ad6800; font-size: 0.95rem; }
+    .config-box p { margin: 4px 0; font-size: 0.9rem; }
+    .config-var {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .config-var:last-child { border-bottom: none; }
+    .config-var code { font-weight: 600; }
+    .config-var span { color: #555; font-size: 0.88rem; }
+    .instructions ol { padding-left: 20px; margin: 0; }
+    .instructions li { margin-bottom: 6px; font-size: 0.92rem; }
+    .checklist { list-style: none; padding: 0; margin: 0; }
+    .checklist li { padding: 4px 0; font-size: 0.92rem; }
+    .checklist li::before { content: '\2713 '; color: #52c41a; font-weight: bold; margin-right: 4px; }
+    .error-banner {
+      display: none;
+      background: #fff1f0;
+      border: 1px solid #ffa39e;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: #a8071a;
+      font-size: 0.9rem;
+    }
+    .chat-container { height: 600px; }
+    #weni-webchat { height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>Voice Mode Test Page</h1>
+      <p class="subtitle">Standalone integration test for Full Voice Mode</p>
+
+      <div class="config-box">
+        <h3>Required Configuration (edit the script below)</h3>
+        <div class="config-var">
+          <code>ELEVENLABS_API_KEY</code>
+          <span>Your ElevenLabs API key (used for STT token generation and TTS requests)</span>
+        </div>
+        <div class="config-var">
+          <code>CHANNEL_UUID</code>
+          <span>Your Weni channel UUID</span>
+        </div>
+        <div class="config-var">
+          <code>VOICE_ID</code>
+          <span>ElevenLabs voice ID for TTS (find at <a href="https://elevenlabs.io/app/voice-library" target="_blank">voice library</a>)</span>
+        </div>
+      </div>
+
+      <div id="error-banner" class="error-banner"></div>
+
+      <div class="panel" id="diagnostics-panel" style="background:#f6ffed;border:1px solid #b7eb8f;padding:16px;border-radius:8px;margin-bottom:20px;">
+        <h2 style="margin:0 0 10px;font-size:1.05rem;color:#237804;">Diagnóstico de Conexão</h2>
+        <p style="margin:0 0 10px;font-size:0.88rem;color:#555;">Clique em <strong>Verificar API Key</strong> antes de abrir o chat para confirmar que a autenticação com ElevenLabs está funcionando.</p>
+        <button onclick="runDiagnostics()" style="background:#52c41a;color:#fff;border:none;border-radius:6px;padding:8px 18px;cursor:pointer;font-size:0.9rem;">Verificar API Key</button>
+        <pre id="diag-output" style="margin-top:12px;background:#f0f0f0;padding:10px;border-radius:4px;font-size:0.8rem;white-space:pre-wrap;display:none;"></pre>
+      </div>
+
+      <div class="instructions">
+        <h2>How to test</h2>
+        <ol>
+          <li>Build the standalone bundle: <code>npm run build:standalone</code></li>
+          <li>Set the three configuration variables in the script section</li>
+          <li>Open this file in a browser (or serve via a local HTTP server)</li>
+          <li>Open the chat and click the voice mode button in the header</li>
+          <li>Allow microphone access when prompted</li>
+          <li>Speak naturally — your transcript auto-sends on silence</li>
+          <li>The agent response is spoken back via TTS</li>
+          <li>Interrupt the agent at any time by speaking (barge-in)</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Feature Checklist</h2>
+      <ul class="checklist">
+        <li>Real-time speech-to-text with partial + committed transcripts</li>
+        <li>Automatic message send on silence detection</li>
+        <li>Streaming text-to-speech for agent responses</li>
+        <li>Echo guard prevents self-transcription during TTS</li>
+        <li>Barge-in support (interrupt agent mid-speech)</li>
+        <li>Auto-return to listening after agent finishes speaking</li>
+        <li>Sentence-boundary chunking for TTS credit efficiency</li>
+        <li>Language detection from browser / manual override</li>
+        <li>Graceful error handling with retry support</li>
+        <li>Full visual overlay with waveform animation</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2>Chat Widget</h2>
+      <div class="chat-container">
+        <div id="weni-webchat"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../dist-standalone/webchat.umd.js"></script>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION — Replace these values before testing
+    // =========================================================================
+    var ELEVENLABS_API_KEY = 'sk_99a99050632ab1143d045a2c2e52a6b1a57d3c4657a7320d';
+    var CHANNEL_UUID = 'a9687ddd-849c-44e2-8f81-da9a07de21b8';
+    var VOICE_ID = 'IrjWdL4OFv83a0lTXEQg'; // "Lily" multilingual voice
+
+    // =========================================================================
+    // Validation
+    // =========================================================================
+    function showError(msg) {
+      var banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+    }
+
+    if (ELEVENLABS_API_KEY === 'YOUR_ELEVENLABS_API_KEY') {
+      showError('ElevenLabs API key not configured. Edit the ELEVENLABS_API_KEY variable in this file.');
+    }
+    if (CHANNEL_UUID === 'YOUR-CHANNEL-UUID') {
+      showError('Channel UUID not configured. Edit the CHANNEL_UUID variable in this file.');
+    }
+
+    // =========================================================================
+    // Token / API key providers
+    // =========================================================================
+
+    /**
+     * Fetch a single-use STT token from ElevenLabs.
+     * In production, proxy this through your backend.
+     */
+    async function getVoiceToken() {
+      if (ELEVENLABS_API_KEY === 'YOUR_ELEVENLABS_API_KEY') {
+        throw new Error('ElevenLabs API key not configured');
+      }
+
+      var response = await fetch(
+        'https://api.elevenlabs.io/v1/single-use-token/realtime_scribe',
+        {
+          method: 'POST',
+          headers: {
+            'xi-api-key': ELEVENLABS_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        },
+      );
+
+      if (!response.ok) {
+        var errorText = await response.text();
+        throw new Error('Failed to get voice token: ' + response.status + ' ' + errorText);
+      }
+
+      var data = await response.json();
+      return data.token;
+    }
+
+    /**
+     * Return the API key for TTS requests.
+     * In production, use a backend proxy instead.
+     */
+    function getApiKey() {
+      if (ELEVENLABS_API_KEY === 'YOUR_ELEVENLABS_API_KEY') {
+        throw new Error('ElevenLabs API key not configured');
+      }
+      return ELEVENLABS_API_KEY;
+    }
+
+    // =========================================================================
+    // Diagnostics — call this before starting voice mode
+    // =========================================================================
+    async function runDiagnostics() {
+      var out = document.getElementById('diag-output');
+      out.style.display = 'block';
+      out.textContent = 'Verificando...\n';
+
+      function log(msg) {
+        out.textContent += msg + '\n';
+        console.log('[diag]', msg);
+      }
+
+      // Step 1: Fetch token
+      log('1. Buscando token ElevenLabs...');
+      var token;
+      try {
+        var resp = await fetch(
+          'https://api.elevenlabs.io/v1/single-use-token/realtime_scribe',
+          {
+            method: 'POST',
+            headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          }
+        );
+        var body = await resp.text();
+        if (!resp.ok) {
+          log('✗ Token endpoint retornou HTTP ' + resp.status + ': ' + body);
+          return;
+        }
+        var data = JSON.parse(body);
+        token = data.token;
+        if (!token) {
+          log('✗ Resposta sem campo "token": ' + body);
+          return;
+        }
+        log('✓ Token obtido: ' + token.substring(0, 20) + '... (length=' + token.length + ')');
+      } catch (err) {
+        log('✗ Erro ao buscar token: ' + err.message);
+        return;
+      }
+
+      // Step 2: Open WebSocket
+      log('2. Conectando WebSocket STT...');
+      var params = new URLSearchParams({
+        model_id: 'scribe_v2_realtime',
+        token: token,
+        audio_format: 'pcm_16000',
+        commit_strategy: 'vad',
+      });
+      var wsUrl = 'wss://api.elevenlabs.io/v1/speech-to-text/realtime?' + params.toString();
+      log('   URL: ' + wsUrl.replace(/token=[^&]+/, 'token=***'));
+
+      try {
+        await new Promise(function(resolve, reject) {
+          var ws = new WebSocket(wsUrl);
+          var timer = setTimeout(function() {
+            ws.close();
+            reject(new Error('Timeout após 8 segundos'));
+          }, 8000);
+
+          ws.onmessage = function(e) {
+            var msg = JSON.parse(e.data);
+            if (msg.message_type === 'session_started') {
+              clearTimeout(timer);
+              log('✓ session_started recebido! Conexão OK.');
+              ws.close(1000);
+              resolve();
+            } else if (msg.message_type && msg.message_type.includes('error')) {
+              clearTimeout(timer);
+              ws.close();
+              reject(new Error(msg.message_type + ': ' + (msg.error || '')));
+            }
+          };
+          ws.onclose = function(e) {
+            clearTimeout(timer);
+            if (e.code !== 1000) {
+              reject(new Error('WebSocket fechou com código ' + e.code + (e.reason ? ' — ' + e.reason : '')));
+            }
+          };
+          ws.onerror = function() {
+            clearTimeout(timer);
+            reject(new Error('WebSocket error (verifique o console para detalhes)'));
+          };
+        });
+        log('✓ Diagnóstico completo — API key e plano OK para Scribe v2 Realtime!');
+        document.getElementById('diagnostics-panel').style.background = '#f6ffed';
+      } catch (err) {
+        log('✗ Falha na conexão WebSocket: ' + err.message);
+        log('');
+        log('Causas comuns do erro 1008:');
+        log('  • A API key não tem acesso ao Scribe v2 Realtime (verifique o plano)');
+        log('  • Termos de uso não aceitos no dashboard ElevenLabs');
+        log('  • Chave de API inválida ou revogada');
+        log('  • Limite de uso excedido para o plano atual');
+        document.getElementById('diagnostics-panel').style.background = '#fff1f0';
+        document.getElementById('diagnostics-panel').style.border = '1px solid #ffa39e';
+      }
+    }
+
+    // =========================================================================
+    // Initialize WebChat with Voice Mode
+    // =========================================================================
+    window.WebChat.init({
+      selector: '#weni-webchat',
+      socketUrl: 'https://websocket.weni.ai',
+      host: 'https://flows.weni.ai',
+      channelUuid: CHANNEL_UUID,
+
+      embedded: true,
+      title: 'Voice Mode Test',
+      subtitle: 'Speak or type',
+      showFullScreenButton: true,
+
+      voiceMode: {
+        enabled: true,
+        voiceId: VOICE_ID,
+        silenceThreshold: 1.5,
+        enableBargeIn: true,
+        autoListen: true,
+        getToken: getVoiceToken,
+        getApiKey: getApiKey,
+      },
+    });
+  </script>
+</body>
+</html>

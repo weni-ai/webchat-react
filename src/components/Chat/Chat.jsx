@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useWeniChat } from '@/hooks/useWeniChat';
+import { useVoiceMode } from '@/hooks/useVoiceMode';
 import Header from '@/components/Header/Header';
 import MessagesList from '@/components/Messages/MessagesList';
 import InputBox from '@/components/Input/InputBox';
 import PoweredBy from '@/components/common/PoweredBy';
+import { VoiceModeOverlay } from '@/components/VoiceMode';
 import { AlreadyInUse } from '@/components/AlreadyInUse/AlreadyInUse';
 import { ListMessage } from '@/views/ListMessage';
 import { ProductCatalog } from '@/views/ProductCatalog';
@@ -44,6 +46,7 @@ import './Chat.scss';
  */
 export function Chat() {
   const { isChatOpen, isConnectionClosed, currentPage, config } = useWeniChat();
+  const voice = useVoiceMode();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -78,6 +81,18 @@ export function Chat() {
         {!isConnectionClosed && !currentPage && <InputBox />}
         <PoweredBy />
       </footer>
+
+      <VoiceModeOverlay
+        isOpen={voice.isActive}
+        state={voice.state}
+        partialTranscript={voice.partialTranscript}
+        committedTranscript={voice.committedTranscript}
+        agentText={voice.agentText}
+        error={voice.error}
+        onClose={voice.exit}
+        onRetry={voice.retry}
+        texts={voice.texts}
+      />
     </section>
   );
 }
