@@ -158,6 +158,7 @@ $spacing-16: 64px;
 $spacing-20: 80px;
 
 /* Icon Sizes */
+$icon-size-2: 8px;
 $icon-size-3: 12px;
 $icon-size-4: 16px;
 $icon-size-5: 20px;
@@ -180,6 +181,17 @@ $font-emphasis: 500 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-si
 $font-action: 700 calc(0.875 * $font-size) /* 14px */ / calc(1.3125 * $font-size) /* 21px */ $font-family;
 $font-caption-1: 500 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;
 $font-caption-2: 400 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-size) /* 18px */ $font-family;
+
+$sl-color-blue-10: #0366DD;
+
+$sl-color-green-8: #08A822;
+$sl-color-green-10: #017D10;
+
+$sl-color-gray-0: #FFF;
+$sl-color-gray-6: #ADADAD;
+
+$sl-bg-base-disabled: #1d1d1d0d;
+$sl-border-base-disabled: $sl-color-gray-6;
 
  :root {
   /* Main Color */
@@ -351,6 +363,17 @@ $font-caption-2: 400 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-siz
   --yellow-800: #{$yellow-800};
   --yellow-900: #{$yellow-900};
   --yellow-950: #{$yellow-950};
+
+  --sl-color-blue-10: #{$sl-color-blue-10};
+
+  --sl-color-green-8: #{$sl-color-green-8};
+  --sl-color-green-10: #{$sl-color-green-10};
+
+  --gray-0: #{$sl-color-gray-0};
+  --gray-6: #{$sl-color-gray-6};
+
+  --bg-base-disabled: #{$sl-bg-base-disabled};
+  --border-base-disabled: #{$sl-border-base-disabled};
 
   --bg-base: #{$bg-base};
   --bg-soft: #{$bg-soft};

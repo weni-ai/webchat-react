@@ -34,6 +34,12 @@
     &:focus-visible {
       outline: 1px solid var(--weni-main-color);
     }
+
+    &:disabled {
+      cursor: not-allowed;
+      background-color: $sl-bg-base-disabled;
+      border-color: $sl-border-base-disabled;
+    }
   }
 
   .weni-input-box__photo-icon {

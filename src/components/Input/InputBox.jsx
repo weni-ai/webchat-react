@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import { useChatContext } from '@/contexts/ChatContext';
 
@@ -16,6 +17,8 @@ import './InputBox.scss';
  * TODO: Add character limit indicator
  */
 export function InputBox({ maxLength = 5000 }) {
+  const { t } = useTranslation();
+
   const {
     isRecording,
     sendMessage,
@@ -27,6 +30,7 @@ export function InputBox({ maxLength = 5000 }) {
     hasCameraPermission,
     requestCameraPermission,
     startCameraRecording,
+    mode,
   } = useChatContext();
   const { config } = useChatContext();
 
@@ -116,17 +120,26 @@ export function InputBox({ maxLength = 5000 }) {
     );
   }
 
+  const inputTextFieldHint = useMemo(() => {
+    if (mode === 'preview') {
+      return t(`mode.${mode}.input_placeholder`);
+    }
+
+    return config.inputTextFieldHint;
+  }, [t, mode, config.inputTextFieldHint]);
+
   return (
     <section className="weni-input-box">
       <section className="weni-input-box__textarea-container">
         <textarea
           className="weni-input-box__textarea"
-          placeholder={config.inputTextFieldHint}
+          placeholder={inputTextFieldHint}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyPress}
           maxLength={maxLength}
           rows={1}
+          disabled={mode === 'preview'}
         />
 
         {!text.trim() && config.showCameraRecorder && (

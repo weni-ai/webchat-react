@@ -11,6 +11,7 @@ import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
 import './styles/index.scss';
 import './i18n';
+import i18n from './i18n';
 
 let widgetInstance = null;
 
@@ -120,6 +121,13 @@ function mapConfig(params) {
     showMessageDate: params.showMessageDate || false,
     showHeaderAvatar: params.showHeaderAvatar !== false,
     connectingText: params.connectingText || 'Waiting for server...',
+    renderPercentage: params.renderPercentage || 100,
+    mode: params.mode || 'live',
+    showMode: params.showMode || false,
+    showCameraRecorder: params.showCameraRecorder || false,
+    showAudioRecorder: params.showAudioRecorder || false,
+    showFileUploader: params.showFileUploader || false,
+    showChatAvatar: params.showChatAvatar || true,
 
     // Media settings
     docViewer: params.docViewer || false,
@@ -325,6 +333,30 @@ function reload() {
   // TODO: Implement reload logic
 }
 
+/**
+ * Simulate message received
+ * @param {Object} message
+ * @returns {Promise<void>}
+ */
+async function simulateMessageReceived(message) {
+  const service = await serviceWhenReady();
+  service.simulateMessageReceived(message);
+}
+
+/**
+ * Simulate message sent
+ * @param {Object} message
+ * @returns {Promise<void>}
+ */
+async function simulateMessageSent(message) {
+  const service = await serviceWhenReady();
+  service.simulateMessageSent(message);
+}
+
+function changeLanguage(language) {
+  i18n.changeLanguage(language);
+}
+
 // Export WebChat API
 const WebChat = {
   init,
@@ -341,6 +373,9 @@ const WebChat = {
   isOpen,
   isVisible,
   reload,
+  simulateMessageReceived,
+  simulateMessageSent,
+  changeLanguage,
 };
 
 WebChat.default = WebChat;

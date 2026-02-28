@@ -50,6 +50,8 @@ import Minus from '@material-symbols/svg-400/rounded/remove.svg?react';
 import MinusFilled from '@material-symbols/svg-400/rounded/remove-fill.svg?react';
 import ShoppingCart from '@material-symbols/svg-400/rounded/shopping_cart.svg?react';
 import ShoppingCartFilled from '@material-symbols/svg-400/rounded/shopping_cart-fill.svg?react';
+import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
+import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
 
 export const icons = {
   send: {
@@ -155,5 +157,9 @@ export const icons = {
   shopping_cart: {
     default: ShoppingCart,
     filled: ShoppingCartFilled,
+  },
+  circle: {
+    default: Circle,
+    filled: CircleFilled,
   },
 };

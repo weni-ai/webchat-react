@@ -42,5 +42,14 @@
     "total": "Total",
     "continue_shopping": "Continue shopping",
     "make_order": "Make order"
+  },
+  "mode": {
+    "live": {
+      "title": "Live"
+    },
+    "preview": {
+      "title": "Preview",
+      "input_placeholder": "Preview only..."
+    }
   }
 }
