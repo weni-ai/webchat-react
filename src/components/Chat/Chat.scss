@@ -24,6 +24,11 @@
     animation: none;
   }
 
+  &--mode-preview {
+    pointer-events: none;
+    user-select: none;
+  }
+
   &__footer {
     display: flex;
     flex-direction: column;

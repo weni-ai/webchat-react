@@ -1,3 +1,4 @@
+import { Icon } from '@/components/common/Icon';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -6,8 +7,18 @@ import PropTypes from 'prop-types';
 
 import './Header.scss';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
-function HeaderTitle({ profileAvatar, title, subtitle, goBack }) {
+function HeaderTitle({
+  profileAvatar,
+  title,
+  subtitle,
+  goBack,
+  mode,
+  isModeVisible,
+}) {
+  const { t } = useTranslation();
+
   return (
     <>
       {goBack && (
@@ -28,10 +39,29 @@ function HeaderTitle({ profileAvatar, title, subtitle, goBack }) {
         />
       )}
 
+      {isModeVisible && mode === 'live' && (
+        <Icon
+          name="circle"
+          color="sl-color-green-8"
+          size="xx-small"
+          filled
+        />
+      )}
+
       <hgroup className="weni-chat-header__title-group">
         <h1 className="weni-chat-header__title">{title}</h1>
         {subtitle && <h2 className="weni-chat-header__subtitle">{subtitle}</h2>}
       </hgroup>
+
+      {isModeVisible && (
+        <hgroup>
+          <h3
+            className={`weni-chat-header__tag weni-chat-header__tag--${mode}`}
+          >
+            {t(`mode.${mode}.title`)}
+          </h3>
+        </hgroup>
+      )}
     </>
   );
 }
@@ -41,6 +71,8 @@ HeaderTitle.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
   goBack: PropTypes.func,
+  mode: PropTypes.string,
+  isModeVisible: PropTypes.bool,
 };
 
 /**
@@ -55,6 +87,8 @@ export function Header() {
     setCurrentPage,
     goBack,
     cart,
+    mode,
+    isModeVisible,
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
@@ -75,12 +109,16 @@ export function Header() {
           <HeaderTitle
             title={currentPage.title}
             goBack={goBack}
+            mode={mode}
+            isModeVisible={isModeVisible}
           />
         ) : (
           <HeaderTitle
             profileAvatar={config.profileAvatar}
             title={config.title}
             subtitle={config.subtitle}
+            mode={mode}
+            isModeVisible={isModeVisible}
           />
         )}
       </section>

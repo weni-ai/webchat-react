@@ -52,6 +52,12 @@ const defaultConfig = {
 
   // Experimental flags
   navigateIfSameDomain: false,
+
+  // showChatAvatar: false,
+
+  mode: 'live',
+  showMode: false,
+  showChatAvatar: true,
 };
 
 /**
@@ -113,6 +119,9 @@ export function ChatProvider({ children, config }) {
   );
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
+  const [shouldRender, setShouldRender] = useState(true);
+  const [mode, _setMode] = useState(mergedConfig.mode);
+  const [showMode, _setShowMode] = useState(mergedConfig.showMode);
 
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
@@ -184,7 +193,11 @@ export function ChatProvider({ children, config }) {
 
     service
       .init()
-      .then(() => {
+      .then(({ shouldRender }) => {
+        if (typeof shouldRender === 'boolean') {
+          setShouldRender(shouldRender);
+        }
+
         if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
@@ -289,6 +302,7 @@ export function ChatProvider({ children, config }) {
     title,
     isChatOpen,
     setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
+    shouldRender,
     isChatFullscreen,
     toggleChatFullscreen: () => setIsChatFullscreen(!isChatFullscreen),
     unreadCount,
@@ -304,6 +318,8 @@ export function ChatProvider({ children, config }) {
     pageHistory,
     cart,
     setCart,
+    mode,
+    isModeVisible: showMode,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),

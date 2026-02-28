@@ -28,6 +28,25 @@
     }
   }
 
+  &__tag {
+    text-transform: uppercase;
+    font: $font-caption-1;
+    color: var(--fg-inverted);
+
+    border-radius: $border-radius-4;
+    padding: $spacing-1 $spacing-3;
+
+    border: 2px solid $sl-color-gray-0;
+
+    &--preview {
+      background-color: $sl-color-blue-10;
+    }
+
+    &--live {
+      background-color: $sl-color-green-10;
+    }
+  }
+
   &__actions {
     display: flex;
     align-items: center;

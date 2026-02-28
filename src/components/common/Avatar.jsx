@@ -48,7 +48,13 @@ export function Avatar({
 
   return (
     <section
-      className={`weni-avatar weni-avatar--${size} weni-avatar--${shape} ${className}`}
+      className={`
+        weni-avatar
+        weni-avatar--${size}
+        weni-avatar--${shape}
+        ${!showImage && 'weni-avatar--with-background-color'}
+        ${className}
+      `}
       role="img"
       aria-label={alt || name || 'Avatar'}
       {...props}
