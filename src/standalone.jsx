@@ -9,6 +9,7 @@ import ReactDOM from 'react-dom/client';
 
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
+import { setStarters } from './utils/conversationStartersBridge';
 import './styles/index.scss';
 import './i18n';
 import i18n from './i18n';
@@ -157,6 +158,9 @@ function mapConfig(params) {
 
     // Suggestions
     suggestionsConfig: params.suggestionsConfig,
+
+    // Conversation Starters (auto-detection on VTEX PDP pages)
+    conversationStartersConfig: params.conversationStartersConfig,
 
     // Legacy support
     selector: params.selector,
@@ -357,6 +361,14 @@ function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
 
+/**
+ * Set conversation starters
+ * @param {string[]} starters - Up to 3 strings to display as conversation starters
+ */
+function setConversationStarters(starters) {
+  setStarters(starters);
+}
+
 // Export WebChat API
 const WebChat = {
   init,
@@ -376,6 +388,7 @@ const WebChat = {
   simulateMessageReceived,
   simulateMessageSent,
   changeLanguage,
+  setConversationStarters,
 };
 
 WebChat.default = WebChat;

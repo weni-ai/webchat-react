@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
+import { detectAndFetchStarters } from '@/utils/productDetection';
+import { registerSetter } from '@/utils/conversationStartersBridge';
 
 let serviceInstance = {
   fns: [],
@@ -127,6 +129,16 @@ export function ChatProvider({ children, config }) {
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
+  const [conversationStarters, setConversationStartersState] = useState([]);
+
+  const updateConversationStarters = (starters) => {
+    setConversationStartersState((starters || []).slice(0, 3));
+  };
+
+  useEffect(() => {
+    registerSetter(updateConversationStarters);
+    return () => registerSetter(null);
+  }, []);
 
   // Navigation helper functions
   const currentPage =
@@ -241,6 +253,20 @@ export function ChatProvider({ children, config }) {
   }, []);
 
   useEffect(() => {
+    if (mergedConfig.conversationStartersConfig) {
+      detectAndFetchStarters(mergedConfig.conversationStartersConfig)
+        .then((starters) => {
+          if (starters && starters.length > 0) {
+            updateConversationStarters(starters);
+          }
+        })
+        .catch((error) => {
+          console.warn('Failed to auto-detect conversation starters:', error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
     if (isChatOpen && mergedConfig.initPayload) {
       const relevantMessages = service
         .getMessages()
@@ -320,6 +346,8 @@ export function ChatProvider({ children, config }) {
     setCart,
     mode,
     isModeVisible: showMode,
+    conversationStarters,
+    setConversationStarters: updateConversationStarters,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
@@ -419,6 +447,12 @@ ChatProvider.propTypes = {
       language: PropTypes.string,
       excludeIntents: PropTypes.arrayOf(PropTypes.string),
       automaticSend: PropTypes.bool,
+    }),
+
+    // Conversation Starters (auto-detection on VTEX PDP pages)
+    conversationStartersConfig: PropTypes.shape({
+      endpoint: PropTypes.string.isRequired,
+      secret: PropTypes.string.isRequired,
     }),
 
     // Legacy support

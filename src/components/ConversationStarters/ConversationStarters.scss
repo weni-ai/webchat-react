@@ -1,0 +1,58 @@
+@import '@/styles/animations.scss';
+@import '@/styles/variables.scss';
+
+.weni-conversation-starters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: $spacing-2 $spacing-3;
+    border: 1px solid var(--weni-main-color);
+    border-radius: 20px;
+    background: $bg-base;
+    cursor: pointer;
+    font: $font-body;
+    color: $fg-emphasized;
+    text-align: left;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: $bg-soft;
+    }
+
+    &:active {
+      background: $bg-muted;
+    }
+  }
+
+  &--full {
+    align-items: flex-start;
+    margin-top: auto;
+    padding-bottom: $spacing-2;
+
+    .weni-conversation-starters__text {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      max-width: 280px;
+    }
+  }
+
+  &--compact {
+    align-items: flex-end;
+
+    @include weni-animation(0, 0.25s, weni-slide-in);
+
+    .weni-conversation-starters__text {
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

@@ -55,6 +55,10 @@ export function useWeniChat() {
     return groups;
   }, [sortedMessages]);
 
+  const hasConversationStarted = useMemo(() => {
+    return sortedMessages.some((m) => m.direction === 'outgoing' && !m.hidden);
+  }, [sortedMessages]);
+
   const toggleChat = () => {
     context.setIsChatOpen(!context.isChatOpen);
     if (!context.isChatOpen) {
@@ -69,6 +73,7 @@ export function useWeniChat() {
     // Computed values
     sortedMessages,
     messageGroups,
+    hasConversationStarted,
     isConnectionClosed: context.isConnectionClosed,
     connect: context.connect,
     currentPage,

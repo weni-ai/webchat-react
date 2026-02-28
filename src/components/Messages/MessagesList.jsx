@@ -14,6 +14,7 @@ import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
+import { ConversationStarters } from '@/components/ConversationStarters/ConversationStarters';
 
 import './MessagesList.scss';
 
@@ -63,8 +64,15 @@ Message.propTypes = {
  * TODO: Handle loading history on scroll
  */
 export function MessagesList() {
-  const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config } = useChatContext();
+  const {
+    isTyping,
+    isThinking,
+    messageGroups,
+    isChatOpen,
+    hasConversationStarted,
+    conversationStarters,
+  } = useWeniChat();
+  const { config, sendMessage } = useChatContext();
   const messagesEndRef = useRef(null);
 
   function scrollToBottom(behavior = 'smooth') {
@@ -90,9 +98,16 @@ export function MessagesList() {
     return message.direction === 'incoming' && isMessageInLastGroup;
   };
 
+  const showStarters =
+    !hasConversationStarted &&
+    conversationStarters.length > 0;
+
+  const handleStarterClick = (text) => {
+    sendMessage(text);
+  };
+
   return (
     <section className="weni-messages-list">
-      {/* TODO: Add empty state when no messages */}
       {messageGroups.map((group, index) => (
         <section
           className={`
@@ -162,6 +177,14 @@ export function MessagesList() {
             <TypingIndicator />
           </MessageContainer>
         </section>
+      )}
+
+      {showStarters && (
+        <ConversationStarters
+          starters={conversationStarters}
+          onStarterClick={handleStarterClick}
+          variant="full"
+        />
       )}
 
       <div ref={messagesEndRef} />
