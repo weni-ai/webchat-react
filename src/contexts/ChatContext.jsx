@@ -91,7 +91,7 @@ export function ChatProvider({ children, config }) {
 
   // Service instance
   const [service] = useState(() => {
-    const fns = serviceInstance.fns;
+    const fns = serviceInstance?.fns ?? [];
     serviceInstance = new WeniWebchatService(mergedConfig);
     fns.forEach((fn) => fn(serviceInstance));
     return serviceInstance;
