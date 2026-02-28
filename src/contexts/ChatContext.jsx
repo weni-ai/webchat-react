@@ -113,6 +113,7 @@ export function ChatProvider({ children, config }) {
   );
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
+  const [shouldRender, setShouldRender] = useState(true);
 
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
@@ -184,7 +185,11 @@ export function ChatProvider({ children, config }) {
 
     service
       .init()
-      .then(() => {
+      .then(({ shouldRender }) => {
+        if (typeof shouldRender === 'boolean') {
+          setShouldRender(shouldRender);
+        }
+
         if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
@@ -289,6 +294,7 @@ export function ChatProvider({ children, config }) {
     title,
     isChatOpen,
     setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
+    shouldRender,
     isChatFullscreen,
     toggleChatFullscreen: () => setIsChatFullscreen(!isChatFullscreen),
     unreadCount,

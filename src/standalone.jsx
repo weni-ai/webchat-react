@@ -120,6 +120,7 @@ function mapConfig(params) {
     showMessageDate: params.showMessageDate || false,
     showHeaderAvatar: params.showHeaderAvatar !== false,
     connectingText: params.connectingText || 'Waiting for server...',
+    renderPercentage: params.renderPercentage || 100,
 
     // Media settings
     docViewer: params.docViewer || false,
