@@ -25,6 +25,14 @@
     }
   }
 
+  &__direction-group--incoming-with-avatar {
+    grid-template-columns: minmax($icon-size-5, auto) 1fr;
+  }
+
+  &__direction-group--incoming-without-avatar {
+    grid-template-columns: 1fr;
+  }
+
   &__direction-group {
     max-width: 75%;
 
@@ -32,7 +40,6 @@
     gap: $spacing-1;
 
     &--incoming {
-      grid-template-columns: minmax($icon-size-5, auto) 1fr;
       align-self: flex-start;
     }
 

@@ -95,10 +95,14 @@ export function MessagesList() {
       {/* TODO: Add empty state when no messages */}
       {messageGroups.map((group, index) => (
         <section
-          className={`weni-messages-list__direction-group weni-messages-list__direction-group--${group.direction}`}
+          className={`
+            weni-messages-list__direction-group 
+            weni-messages-list__direction-group--${group.direction} 
+            weni-messages-list__direction-group--${group.direction}-${config.showChatAvatar ? 'with' : 'without'}-avatar'
+          `}
           key={index}
         >
-          {group.direction === 'incoming' && (
+          {group.direction === 'incoming' && config.showChatAvatar && (
             <Avatar
               src={config.profileAvatar}
               name={config.title}
@@ -136,12 +140,20 @@ export function MessagesList() {
         </section>
       ))}
 
-      {(isTyping || isThinking) && (
-        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">
-          <Avatar
-            src={config.profileAvatar}
-            name={config.title}
-          />
+      {(isTyping || isThinking || true) && (
+        <section
+          className={`
+            weni-messages-list__direction-group
+            weni-messages-list__direction-group--incoming
+            weni-messages-list__direction-group--incoming-${config.showChatAvatar ? 'with' : 'without'}-avatar
+          `}
+        >
+          {config.showChatAvatar && (
+            <Avatar
+              src={config.profileAvatar}
+              name={config.title}
+            />
+          )}
           <MessageContainer
             className="weni-messages-list__message weni-messages-list__message--incoming"
             direction="incoming"

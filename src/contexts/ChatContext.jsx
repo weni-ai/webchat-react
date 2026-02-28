@@ -57,6 +57,7 @@ const defaultConfig = {
 
   mode: 'live',
   showMode: false,
+  showChatAvatar: true,
 };
 
 /**
