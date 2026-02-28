@@ -9,7 +9,14 @@ import './Header.scss';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-function HeaderTitle({ profileAvatar, title, subtitle, goBack, mode, isModeVisible }) {  
+function HeaderTitle({
+  profileAvatar,
+  title,
+  subtitle,
+  goBack,
+  mode,
+  isModeVisible,
+}) {
   const { t } = useTranslation();
 
   return (
@@ -48,7 +55,9 @@ function HeaderTitle({ profileAvatar, title, subtitle, goBack, mode, isModeVisib
 
       {isModeVisible && (
         <hgroup>
-          <h3 className={`weni-chat-header__tag weni-chat-header__tag--${mode}`}>
+          <h3
+            className={`weni-chat-header__tag weni-chat-header__tag--${mode}`}
+          >
             {t(`mode.${mode}.title`)}
           </h3>
         </hgroup>

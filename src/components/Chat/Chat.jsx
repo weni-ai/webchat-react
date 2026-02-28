@@ -43,7 +43,8 @@ import './Chat.scss';
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
-  const { isChatOpen, isConnectionClosed, currentPage, config, mode } = useWeniChat();
+  const { isChatOpen, isConnectionClosed, currentPage, config, mode } =
+    useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 

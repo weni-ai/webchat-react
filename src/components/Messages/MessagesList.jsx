@@ -140,7 +140,7 @@ export function MessagesList() {
         </section>
       ))}
 
-      {(isTyping || isThinking || true) && (
+      {(isTyping || isThinking) && (
         <section
           className={`
             weni-messages-list__direction-group

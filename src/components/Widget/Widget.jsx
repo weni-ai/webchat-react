@@ -15,8 +15,13 @@ import { useEffect } from 'react';
  */
 
 function WidgetContent() {
-  const { isChatFullscreen, isChatOpen, clearTooltipMessage, config, shouldRender } =
-    useChatContext();
+  const {
+    isChatFullscreen,
+    isChatOpen,
+    clearTooltipMessage,
+    config,
+    shouldRender,
+  } = useChatContext();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
 
