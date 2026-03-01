@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { detectAndFetchStarters } from '@/utils/productDetection';
 import { registerSetter } from '@/utils/conversationStartersBridge';
 
 let serviceInstance = {
@@ -250,20 +249,6 @@ export function ChatProvider({ children, config }) {
       service.removeAllListeners();
       service.disconnect();
     };
-  }, []);
-
-  useEffect(() => {
-    if (mergedConfig.conversationStartersConfig) {
-      detectAndFetchStarters(mergedConfig.conversationStartersConfig)
-        .then((starters) => {
-          if (starters && starters.length > 0) {
-            updateConversationStarters(starters);
-          }
-        })
-        .catch((error) => {
-          console.warn('Failed to auto-detect conversation starters:', error);
-        });
-    }
   }, []);
 
   useEffect(() => {

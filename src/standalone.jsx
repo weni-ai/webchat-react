@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom/client';
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
 import { setStarters } from './utils/conversationStartersBridge';
+import { detectAndFetchStarters } from './utils/productDetection';
 import './styles/index.scss';
 import './i18n';
 import i18n from './i18n';
@@ -159,9 +160,6 @@ function mapConfig(params) {
     // Suggestions
     suggestionsConfig: params.suggestionsConfig,
 
-    // Conversation Starters (auto-detection on VTEX PDP pages)
-    conversationStartersConfig: params.conversationStartersConfig,
-
     // Legacy support
     selector: params.selector,
   };
@@ -214,6 +212,19 @@ function init(params) {
     console.log('WebChat initialized successfully');
   } catch (error) {
     console.error('WebChat: Failed to initialize', error);
+    return;
+  }
+
+  if (params.conversationStartersConfig) {
+    detectAndFetchStarters(params.conversationStartersConfig)
+      .then((starters) => {
+        if (starters && starters.length > 0) {
+          setStarters(starters);
+        }
+      })
+      .catch((error) => {
+        console.warn('WebChat: Failed to auto-detect conversation starters:', error);
+      });
   }
 }
 

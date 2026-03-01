@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fone Celestial Blue Smooth | Loja Demo</title>
+
+  <meta property="og:title" content="Fone Celestial Blue Smooth" />
+  <meta property="og:description" content="Fone de ouvido bluetooth com bateria de longa duração, cancelamento de ruído ativo e conexão multiponto para até 2 dispositivos simultaneamente." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Fone Celestial Blue Smooth",
+    "description": "Fone de ouvido bluetooth com bateria de longa duração, cancelamento de ruído ativo e conexão multiponto para até 2 dispositivos simultaneamente.",
+    "sku": "111100340",
+    "brand": {
+      "@type": "Brand",
+      "name": "SoundWave"
+    },
+    "category": "Eletrônicos > Fones de Ouvido",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
+    "offers": {
+      "@type": "Offer",
+      "price": "499.90",
+      "priceCurrency": "BRL",
+      "availability": "https://schema.org/InStock"
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-weight: 700; font-size: 18px; color: #6c4de6; letter-spacing: -0.5px; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { text-decoration: none; color: #6b7280; font-size: 14px; }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      max-width: 1100px;
+      margin: 20px auto 0;
+      padding: 0 24px;
+      font-size: 12px;
+      color: #9ca3af;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .breadcrumb a { color: #9ca3af; text-decoration: none; }
+    .breadcrumb a:hover { color: #6c4de6; }
+    .breadcrumb span { color: #6b7280; }
+
+    /* ── PDP LAYOUT ── */
+    .pdp {
+      max-width: 1100px;
+      margin: 20px auto 80px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* ── GALLERY ── */
+    .gallery { position: sticky; top: 76px; }
+    .gallery-main {
+      border-radius: 16px;
+      overflow: hidden;
+      background: #e5e7eb;
+      aspect-ratio: 1;
+    }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-thumbs {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .gallery-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .gallery-thumb.active { border-color: #6c4de6; }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── PRODUCT INFO ── */
+    .product-info { padding-top: 8px; }
+
+    .brand-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c4de6;
+      background: #f0eeff;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .stars { color: #f59e0b; font-size: 15px; letter-spacing: 1px; }
+    .rating-count { font-size: 13px; color: #9ca3af; }
+
+    .price-block { margin-bottom: 24px; }
+    .price-original { font-size: 14px; color: #9ca3af; text-decoration: line-through; }
+    .price-current {
+      font-size: 36px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1;
+      margin: 4px 0;
+    }
+    .price-installments { font-size: 13px; color: #6b7280; }
+    .price-badge {
+      display: inline-block;
+      background: #dcfce7;
+      color: #16a34a;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 20px 0; }
+
+    .product-description {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* ── SPECS ── */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .spec-item {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .spec-label { font-size: 11px; color: #9ca3af; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .spec-value { font-size: 14px; font-weight: 600; color: #111827; }
+
+    /* ── COLORS ── */
+    .option-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+    .color-options { display: flex; gap: 8px; margin-bottom: 24px; }
+    .color-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      outline: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .color-dot.active { border-color: #fff; outline-color: #6c4de6; }
+
+    /* ── ADD TO CART ── */
+    .quantity-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:hover { background: #f3f4f6; }
+    .qty-num { width: 40px; text-align: center; font-size: 14px; font-weight: 600; }
+
+    .btn-cart {
+      flex: 1;
+      background: #6c4de6;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      height: 48px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-cart:hover { background: #5b3fd0; }
+
+    .btn-wishlist {
+      width: 48px;
+      height: 48px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .trust-badges {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .trust-badge-icon { font-size: 16px; }
+
+    /* ── SPEC TABLE ── */
+    .spec-section { margin-top: 48px; }
+    .spec-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #111827; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    tr:nth-child(even) td { background: #f9fafb; }
+    td { padding: 10px 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+    td:first-child { font-weight: 500; color: #6b7280; width: 40%; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .pdp { grid-template-columns: 1fr; gap: 24px; }
+      .gallery { position: static; }
+      h1 { font-size: 22px; }
+      .price-current { font-size: 28px; }
+    }
+
+    /* ── DEBUG PANEL ── */
+    .debug-panel {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      z-index: 9000;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 12px;
+      max-width: 280px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .debug-panel h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 10px; }
+    .debug-status { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .debug-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .debug-dot.green { background: #22c55e; }
+    .debug-dot.yellow { background: #f59e0b; animation: pulse 1s infinite; }
+    .debug-dot.red { background: #ef4444; }
+    .debug-starters { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .debug-starter-item {
+      background: #334155;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11px;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">⚡ StoreLab</span>
+  <div class="nav-links">
+    <a href="#">Início</a>
+    <a href="#">Eletrônicos</a>
+    <a href="#">Fones</a>
+    <a href="#">Minha conta</a>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="#">Início</a> › <a href="#">Eletrônicos</a> › <a href="#">Fones de Ouvido</a> › <span>Celestial Blue Smooth</span>
+</div>
+
+<!-- PDP -->
+<div class="pdp">
+  <!-- Gallery -->
+  <div class="gallery">
+    <div class="gallery-main">
+      <img
+        id="main-img"
+        src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80"
+        alt="Fone Celestial Blue Smooth"
+      />
+    </div>
+    <div class="gallery-thumbs">
+      <div class="gallery-thumb active" onclick="switchImg(this, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80')">
+        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80" />
+      </div>
+      <div class="gallery-thumb" onclick="switchImg(this, 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&q=80')">
+        <img src="https://images.unsplash.com/photo-1484704849700-f032a568e944?w=200&q=80" />
+      </div>
+      <div class="gallery-thumb" onclick="switchImg(this, 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80')">
+        <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&q=80" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="product-info" data-testid="product-name-container">
+    <span class="brand-tag">SoundWave</span>
+    <h1>Fone Celestial Blue Smooth</h1>
+
+    <div class="rating">
+      <span class="stars">★★★★★</span>
+      <span class="rating-count">4.8 (312 avaliações)</span>
+    </div>
+
+    <div class="price-block">
+      <div class="price-original">R$ 649,90</div>
+      <div>
+        <span class="price-current">R$ 499,90</span>
+        <span class="price-badge">-23%</span>
+      </div>
+      <div class="price-installments">em 12x de R$ 41,66 sem juros</div>
+    </div>
+
+    <hr class="divider" />
+
+    <p class="productDescription">
+      Experimente uma qualidade de som excepcional com o Fone Celestial Blue Smooth.
+      Com cancelamento de ruído ativo de última geração, bateria de até 40 horas e
+      conexão Bluetooth 5.3 multiponto, ele foi feito para quem não abre mão de
+      conforto e performance — seja no trabalho, academia ou viagens.
+    </p>
+
+    <div class="specs-grid">
+      <div class="spec-item">
+        <span class="spec-label">Bateria</span>
+        <span class="spec-value">Até 40 horas</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-label">Conectividade</span>
+        <span class="spec-value">Bluetooth 5.3</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-label">Cancelamento de ruído</span>
+        <span class="spec-value">ANC Ativo</span>
+      </div>
+      <div class="spec-item">
+        <span class="spec-label">Peso</span>
+        <span class="spec-value">254g</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="option-label">Cor: <strong>Celestial Blue</strong></p>
+      <div class="color-options">
+        <div class="color-dot active" style="background:#4f8ef7" title="Celestial Blue"></div>
+        <div class="color-dot" style="background:#1a1a2e" title="Midnight Black"></div>
+        <div class="color-dot" style="background:#f8d7da" title="Rose Quartz"></div>
+        <div class="color-dot" style="background:#d4edda" title="Forest Green"></div>
+      </div>
+    </div>
+
+    <div class="quantity-row">
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-num" id="qty">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+      <button class="btn-cart">🛒 Adicionar ao carrinho</button>
+      <button class="btn-wishlist">♡</button>
+    </div>
+
+    <div class="trust-badges">
+      <div class="trust-badge">
+        <span class="trust-badge-icon">🚚</span>
+        <span>Frete grátis acima de R$199</span>
+      </div>
+      <div class="trust-badge">
+        <span class="trust-badge-icon">🔄</span>
+        <span>Troca em 30 dias</span>
+      </div>
+    </div>
+
+    <!-- Spec table (for getProductDetails extraction) -->
+    <div class="spec-section">
+      <h2>Especificações técnicas</h2>
+      <table>
+        <tr><td>Marca</td><td>SoundWave</td></tr>
+        <tr><td>Modelo</td><td>Celestial Blue Smooth</td></tr>
+        <tr><td>SKU</td><td>111100340</td></tr>
+        <tr><td>Tipo de fone</td><td>Over-ear</td></tr>
+        <tr><td>Conectividade</td><td>Bluetooth 5.3</td></tr>
+        <tr><td>Alcance</td><td>10 metros</td></tr>
+        <tr><td>Bateria</td><td>Até 40 horas (ANC off) / 30h (ANC on)</td></tr>
+        <tr><td>Carga rápida</td><td>10 min = 3 horas de uso</td></tr>
+        <tr><td>Cancelamento de ruído</td><td>Ativo (ANC) com 3 níveis</td></tr>
+        <tr><td>Drivers</td><td>40mm, neodímio</td></tr>
+        <tr><td>Resposta de frequência</td><td>20Hz – 20kHz</td></tr>
+        <tr><td>Microfone</td><td>6 microfones embutidos</td></tr>
+        <tr><td>Dobramento</td><td>Sim, dobrável</td></tr>
+        <tr><td>Peso</td><td>254g</td></tr>
+        <tr><td>Cor</td><td>Celestial Blue</td></tr>
+        <tr><td>Compatibilidade</td><td>iOS, Android, Windows, macOS</td></tr>
+        <tr><td>Garantia</td><td>12 meses</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DEBUG PANEL -->
+<div class="debug-panel">
+  <h3>🤖 Conversation Starters</h3>
+  <div class="debug-status">
+    <div class="debug-dot yellow" id="status-dot"></div>
+    <span id="status-text">Aguardando inicialização...</span>
+  </div>
+  <div class="debug-starters" id="debug-starters"></div>
+</div>
+
+<!-- WEBCHAT STANDALONE -->
+<div id="webchat-root"></div>
+<script>
+  // ── Gallery helpers ──
+  function switchImg(thumb, src) {
+    document.getElementById('main-img').src = src;
+    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+  }
+  let qty = 1;
+  function changeQty(delta) {
+    qty = Math.max(1, qty + delta);
+    document.getElementById('qty').textContent = qty;
+  }
+
+  // ── Debug panel helpers ──
+  function setStatus(state, text) {
+    const dot = document.getElementById('status-dot');
+    dot.className = 'debug-dot ' + state;
+    document.getElementById('status-text').textContent = text;
+  }
+  function renderStarters(starters) {
+    const el = document.getElementById('debug-starters');
+    el.innerHTML = starters.map(s =>
+      `<div class="debug-starter-item" title="${s}">${s}</div>`
+    ).join('');
+  }
+</script>
+
+<!--
+  Load the standalone webchat built by Vite.
+  During dev the build isn't available, so we load via the Vite dev module:
+-->
+<script type="module">
+  import WebChat from '/src/standalone.jsx';
+  import { getProductDetails, isVtexPdpPage } from '/src/utils/productDetection.js';
+
+  window.WebChat = WebChat;
+
+  // ── Mostra dados do produto detectado no painel de debug ──
+  const isPdp = isVtexPdpPage();
+  if (isPdp) {
+    const product = getProductDetails();
+    setStatus('yellow', 'PDP detectada — chamando API...');
+    renderStarters([
+      `Produto: ${product.productName || '—'}`,
+      `Slug: ${product.slug || '—'}`,
+      `Atributos: ${Object.keys(product.attributes || {}).length} capturados`,
+    ]);
+    console.log('[PDP Debug] Produto extraído:', product);
+  } else {
+    setStatus('red', 'URL não reconhecida como PDP VTEX (/slug/p)');
+  }
+
+  // ── Detecta quando os botões de starter aparecerem no DOM ──
+  const observer = new MutationObserver(() => {
+    const btns = document.querySelectorAll('.weni-conversation-starters__button');
+    if (btns.length > 0) {
+      observer.disconnect();
+      const texts = [...btns].map(b => b.textContent.trim());
+      setStatus('green', `${texts.length} starter(s) gerado(s) ✓`);
+      renderStarters(texts);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  setTimeout(() => {
+    const dot = document.getElementById('status-dot');
+    if (dot.classList.contains('yellow')) {
+      setStatus('red', 'Sem resposta — veja o console para detalhes');
+      observer.disconnect();
+    }
+  }, 15000);
+
+  // ── Init webchat ──
+  WebChat.init({
+    selector: '#webchat-root',
+    socketUrl: 'https://websocket.weni.ai',
+    channelUuid: 'a9687ddd-849c-44e2-8f81-da9a07de21b8',
+    host: 'https://flows.weni.ai',
+    connectOn: 'mount',
+    storage: 'session',
+    startFullScreen: false,
+    showFullScreenButton: true,
+
+    // ← Altere para o seu endpoint e secret reais
+    conversationStartersConfig: {
+      endpoint: 'https://eomds8g87dkwjnt.m.pipedream.net',
+      secret: '123456',
+    },
+  });
+</script>
+
+</body>
+</html>

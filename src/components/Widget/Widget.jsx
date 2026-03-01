@@ -7,7 +7,7 @@ import { ChatProvider, useChatContext } from '@/contexts/ChatContext.jsx';
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Widget - Main container component
@@ -31,19 +31,27 @@ function WidgetContent() {
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
 
+  const pendingStarterMessage = useRef(null);
+
   const showClosedStarters =
     !isChatOpen &&
     !hasConversationStarted &&
     conversationStarters.length > 0;
 
   const handleStarterClick = (text) => {
+    pendingStarterMessage.current = text;
     setIsChatOpen(true);
-    sendMessage(text);
   };
 
   useEffect(() => {
     if (isChatOpen) {
       clearTooltipMessage();
+
+      if (pendingStarterMessage.current) {
+        const text = pendingStarterMessage.current;
+        pendingStarterMessage.current = null;
+        sendMessage(text);
+      }
     }
   }, [isChatOpen]);
 
