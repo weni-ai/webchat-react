@@ -212,7 +212,11 @@ export function getProductDetails() {
   );
 
   return {
-    slug: window.location.pathname.replace(/\/p\/?$/, '').replace(/^\/+/, ''),
+    slug: window.location.pathname
+      .replace(/\/p\/?$/, '')
+      .split('/')
+      .filter(Boolean)
+      .pop() || '',
     productName: pickFirst(jsonLdName, visibleName, metaTitle),
     description: pickFirst(
       jsonLdDescription,
