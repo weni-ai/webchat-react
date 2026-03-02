@@ -10,7 +10,7 @@ import ReactDOM from 'react-dom/client';
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
 import { setStarters } from './utils/conversationStartersBridge';
-import { detectAndFetchStarters } from './utils/productDetection';
+import { detectAndFetchStarters, isVtexPdpPage } from './utils/productDetection';
 import './styles/index.scss';
 import './i18n';
 import i18n from './i18n';
@@ -225,7 +225,59 @@ function init(params) {
       .catch((error) => {
         console.warn('WebChat: Failed to auto-detect conversation starters:', error);
       });
+
+    setupNavigationListener(params.conversationStartersConfig);
   }
+}
+
+/**
+ * Listens for SPA page navigation and re-runs conversation starter detection.
+ * On every URL change:
+ *   - Clears current starters immediately
+ *   - If the new page is a VTEX PDP, fetches new starters
+ *
+ * Uses vtex:pageView (VTEX IO native, same as GTM/GA4 pixel apps) as primary
+ * source, with a history API patch as fallback for non-VTEX SPAs.
+ */
+function setupNavigationListener(config) {
+  function onNavigate() {
+    setStarters([]);
+
+    if (isVtexPdpPage()) {
+      detectAndFetchStarters(config)
+        .then((starters) => {
+          if (starters && starters.length > 0) {
+            setStarters(starters);
+          }
+        })
+        .catch((error) => {
+          console.warn('WebChat: Failed to auto-detect conversation starters:', error);
+        });
+    }
+  }
+
+  // VTEX IO SPA: vtex:pageView fires after each page render (used by all VTEX pixel apps)
+  window.addEventListener('message', (e) => {
+    if (e.data?.eventName === 'vtex:pageView') {
+      onNavigate();
+    }
+  });
+
+  // Fallback: patch History API for non-VTEX SPAs (React Router, Next.js, etc.)
+  const _pushState = history.pushState.bind(history);
+  const _replaceState = history.replaceState.bind(history);
+
+  history.pushState = (...args) => {
+    _pushState(...args);
+    onNavigate();
+  };
+
+  history.replaceState = (...args) => {
+    _replaceState(...args);
+    onNavigate();
+  };
+
+  window.addEventListener('popstate', onNavigate);
 }
 
 /**

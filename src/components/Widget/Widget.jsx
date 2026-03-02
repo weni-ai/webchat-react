@@ -27,7 +27,7 @@ function WidgetContent() {
     sendMessage,
   } = useChatContext();
 
-  const { hasConversationStarted, conversationStarters } = useWeniChat();
+  const { conversationStarters } = useWeniChat();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
 
@@ -35,7 +35,6 @@ function WidgetContent() {
 
   const showClosedStarters =
     !isChatOpen &&
-    !hasConversationStarted &&
     conversationStarters.length > 0;
 
   const handleStarterClick = (text) => {

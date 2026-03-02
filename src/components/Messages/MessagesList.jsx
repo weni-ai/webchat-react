@@ -69,7 +69,6 @@ export function MessagesList() {
     isThinking,
     messageGroups,
     isChatOpen,
-    hasConversationStarted,
     conversationStarters,
   } = useWeniChat();
   const { config, sendMessage } = useChatContext();
@@ -98,9 +97,7 @@ export function MessagesList() {
     return message.direction === 'incoming' && isMessageInLastGroup;
   };
 
-  const showStarters =
-    !hasConversationStarted &&
-    conversationStarters.length > 0;
+  const showStarters = conversationStarters.length > 0;
 
   const handleStarterClick = (text) => {
     sendMessage(text);

@@ -217,12 +217,9 @@ export function getProductDetails() {
       .split('/')
       .filter(Boolean)
       .pop() || '',
+    skuId: primaryProduct?.sku || null,
     productName: pickFirst(jsonLdName, visibleName, metaTitle),
-    description: pickFirst(
-      jsonLdDescription,
-      visibleDescription,
-      metaDescription,
-    ),
+    description: pickFirst(jsonLdDescription, visibleDescription, metaDescription),
     brand: jsonLdBrand,
     attributes: specs,
   };
@@ -237,6 +234,7 @@ export async function fetchConversationStarters(endpoint, secret, productData) {
     },
     body: JSON.stringify({
       slug: productData.slug,
+      skuId: productData.skuId,
       productName: productData.productName,
       description: productData.description,
       attributes: productData.attributes,
