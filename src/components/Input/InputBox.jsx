@@ -41,6 +41,14 @@ export function InputBox({ maxLength = 5000 }) {
 
   const fileInputRef = useRef(null);
 
+  const inputTextFieldHint = useMemo(() => {
+    if (mode === 'preview') {
+      return t(`mode.${mode}.input_placeholder`);
+    }
+
+    return config.inputTextFieldHint;
+  }, [t, mode, config.inputTextFieldHint]);
+
   const handleSend = async () => {
     if (isRecording) {
       await stopAndSendAudio();
@@ -119,14 +127,6 @@ export function InputBox({ maxLength = 5000 }) {
       </section>
     );
   }
-
-  const inputTextFieldHint = useMemo(() => {
-    if (mode === 'preview') {
-      return t(`mode.${mode}.input_placeholder`);
-    }
-
-    return config.inputTextFieldHint;
-  }, [t, mode, config.inputTextFieldHint]);
 
   return (
     <section className="weni-input-box">
