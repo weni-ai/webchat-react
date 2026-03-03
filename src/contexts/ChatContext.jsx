@@ -233,8 +233,11 @@ export function ChatProvider({ children, config }) {
 
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
+    service.clearPageHistory = clearPageHistory;
+
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
+      delete service.clearPageHistory;
       service.removeAllListeners();
       service.disconnect();
     };
