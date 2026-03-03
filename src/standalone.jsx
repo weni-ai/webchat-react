@@ -124,9 +124,9 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage || 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
-    showCameraRecorder: params.showCameraRecorder || true,
-    showAudioRecorder: params.showAudioRecorder || true,
-    showFileUploader: params.showFileUploader || true,
+    showCameraRecorder: params.showCameraRecorder !== false,
+    showAudioRecorder: params.showAudioRecorder !== false,
+    showFileUploader: params.showFileUploader !== false,
     showChatAvatar: params.showChatAvatar !== false,
 
     // Media settings
