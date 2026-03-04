@@ -112,7 +112,7 @@ export class VoiceService {
       this._wireSTTListeners();
 
       const ttsUrl = buildTTSWebSocketURL(
-        this.config.voiceId,
+        this.config.elevenLabs.voiceId,
         this.config,
         this.currentTokens.ttsToken,
       );
@@ -328,7 +328,7 @@ export class VoiceService {
   async _buildTTSConnectionUrl() {
     this.currentTokens = await this.config.getTokens();
     return buildTTSWebSocketURL(
-      this.config.voiceId,
+      this.config.elevenLabs.voiceId,
       this.config,
       this.currentTokens.ttsToken,
     );

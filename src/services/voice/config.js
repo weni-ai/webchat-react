@@ -8,7 +8,9 @@ const VALID_TTS_MODELS = ['eleven_flash_v2_5', 'eleven_multilingual_v2'];
 const VALID_AUDIO_FORMATS = ['mp3_44100_128', 'pcm_24000'];
 
 export const DEFAULT_VOICE_CONFIG = {
-  voiceId: '',
+  elevenLabs: {
+    voiceId: '',
+  },
   languageCode: 'en',
   ttsModel: 'eleven_flash_v2_5',
   sttModel: 'scribe_v2_realtime',
@@ -41,10 +43,6 @@ export const DEFAULT_VOICE_CONFIG = {
  */
 export function validateVoiceConfig(config) {
   const errors = [];
-
-  if (!config.voiceId || typeof config.voiceId !== 'string') {
-    errors.push('voiceId is required and must be a non-empty string');
-  }
 
   if (typeof config.getTokens !== 'function') {
     errors.push(
@@ -99,6 +97,13 @@ export function mergeVoiceConfig(userConfig) {
   const merged = {
     ...DEFAULT_VOICE_CONFIG,
     ...userConfig,
+    elevenLabs: {
+      ...DEFAULT_VOICE_CONFIG.elevenLabs,
+      ...userConfig?.elevenLabs,
+    },
+    silenceThreshold: DEFAULT_VOICE_CONFIG.silenceThreshold,
+    enableBargeIn: DEFAULT_VOICE_CONFIG.enableBargeIn,
+    autoListen: DEFAULT_VOICE_CONFIG.autoListen,
     texts: {
       ...DEFAULT_VOICE_CONFIG.texts,
       ...userConfig?.texts,

@@ -129,6 +129,7 @@ export function ChatProvider({ children, config }) {
   const [cart, setCart] = useState({});
 
   // Voice mode state
+  const [isVoiceEnabledByServer, setIsVoiceEnabledByServer] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [voiceModeState, setVoiceModeState] = useState(null);
   const [voicePartialTranscript, setVoicePartialTranscript] = useState('');
@@ -278,6 +279,8 @@ export function ChatProvider({ children, config }) {
       }
     });
 
+    service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));
+
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
     return () => {
@@ -327,7 +330,7 @@ export function ChatProvider({ children, config }) {
   };
 
   const enterVoiceMode = useCallback(async () => {
-    if (!mergedConfig.voiceMode?.enabled || !isVoiceModeSupported) return;
+    if (!isVoiceEnabledByServer || !isVoiceModeSupported) return;
 
     // Snapshot how many messages exist right now so the state:changed handler
     // can skip historical messages and only speak brand-new agent replies.
@@ -367,7 +370,7 @@ export function ChatProvider({ children, config }) {
     vs.setMessageCallback((text) => service.sendMessage(text));
     voiceServiceRef.current = vs;
     await vs.startSession();
-  }, [mergedConfig, voiceLanguage, isVoiceModeSupported, service]);
+  }, [mergedConfig, voiceLanguage, isVoiceModeSupported, isVoiceEnabledByServer, service]);
 
   const exitVoiceMode = useCallback(() => {
     if (voiceServiceRef.current) {
@@ -427,6 +430,7 @@ export function ChatProvider({ children, config }) {
     setCart,
 
     // Voice mode state
+    isVoiceEnabledByServer,
     isVoiceModeActive,
     isVoiceModeSupported,
     voiceModeState,
@@ -540,12 +544,9 @@ ChatProvider.propTypes = {
 
     // Voice mode
     voiceMode: PropTypes.shape({
-      enabled: PropTypes.bool,
-      voiceId: PropTypes.string,
-      languageCode: PropTypes.string,
-      silenceThreshold: PropTypes.number,
-      enableBargeIn: PropTypes.bool,
-      autoListen: PropTypes.bool,
+      elevenLabs: PropTypes.shape({
+        voiceId: PropTypes.string,
+      }),
       texts: PropTypes.object,
     }),
 

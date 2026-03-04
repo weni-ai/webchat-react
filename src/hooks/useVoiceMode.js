@@ -4,6 +4,7 @@ import { useMemo, useCallback } from 'react';
 export function useVoiceMode() {
   const context = useChatContext();
   const {
+    isVoiceEnabledByServer,
     isVoiceModeActive,
     isVoiceModeSupported,
     voiceModeState,
@@ -18,8 +19,8 @@ export function useVoiceMode() {
   } = context;
 
   const isEnabled = useMemo(
-    () => !!(config?.voiceMode?.enabled && config?.voiceMode?.voiceId),
-    [config],
+    () => !!isVoiceEnabledByServer,
+    [isVoiceEnabledByServer],
   );
 
   const isListening = useMemo(

@@ -65,7 +65,7 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config, isVoiceModeSupported, enterVoiceMode } = useChatContext();
+  const { config, isVoiceEnabledByServer, isVoiceModeSupported, enterVoiceMode } = useChatContext();
   // TODO: Implement header layout
   // TODO: Add connection status indicator
 
@@ -87,7 +87,7 @@ export function Header() {
       </section>
 
       <section className="weni-chat-header__actions">
-        {config.voiceMode?.enabled && isVoiceModeSupported && (
+        {isVoiceEnabledByServer && isVoiceModeSupported && (
           <VoiceModeButton onClick={enterVoiceMode} />
         )}
 
