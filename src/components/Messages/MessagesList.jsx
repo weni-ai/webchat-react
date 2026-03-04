@@ -56,15 +56,10 @@ Message.propTypes = {
   componentsEnabled: PropTypes.bool,
 };
 
-/**
- * MessagesList - Scrollable list of messages
- * TODO: Render all messages with proper message components
- * TODO: Add virtualization for large message lists
- * TODO: Handle loading history on scroll
- */
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config } = useChatContext();
+  const { config, isVoiceModeActive, voicePartialTranscript } =
+    useChatContext();
   const messagesEndRef = useRef(null);
 
   function scrollToBottom(behavior = 'smooth') {
@@ -73,15 +68,13 @@ export function MessagesList() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messageGroups, isThinking]);
+  }, [messageGroups, isThinking, voicePartialTranscript]);
 
   useEffect(() => {
     setTimeout(() => {
       scrollToBottom('instant');
     }, 50);
   }, [isChatOpen]);
-
-  // TODO: Handle scroll to load history
 
   const enableComponents = (message) => {
     const isMessageInLastGroup = messageGroups
@@ -92,7 +85,6 @@ export function MessagesList() {
 
   return (
     <section className="weni-messages-list">
-      {/* TODO: Add empty state when no messages */}
       {messageGroups.map((group, index) => (
         <section
           className={`weni-messages-list__direction-group weni-messages-list__direction-group--${group.direction}`}
@@ -135,6 +127,20 @@ export function MessagesList() {
           ))}
         </section>
       ))}
+
+      {isVoiceModeActive && voicePartialTranscript && (
+        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
+          <MessageContainer
+            className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
+            direction="outgoing"
+            type="text"
+          >
+            <section className="weni-message-text weni-message-text--outgoing">
+              {voicePartialTranscript}
+            </section>
+          </MessageContainer>
+        </section>
+      )}
 
       {(isTyping || isThinking) && (
         <section className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming">

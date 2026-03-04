@@ -18,8 +18,6 @@ function buildContext(overrides = {}) {
     isVoiceModeSupported: true,
     voiceModeState: "idle",
     voicePartialTranscript: "",
-    voiceCommittedTranscript: "",
-    voiceAgentText: "",
     voiceError: null,
     enterVoiceMode: mockEnterVoiceMode,
     exitVoiceMode: mockExitVoiceMode,
@@ -211,5 +209,11 @@ describe("useVoiceMode", () => {
     });
     const { result } = renderHook(() => useVoiceMode());
     expect(result.current.texts).toEqual({});
+  });
+
+  it("does not expose committedTranscript or agentText", () => {
+    const { result } = renderHook(() => useVoiceMode());
+    expect(result.current).not.toHaveProperty("committedTranscript");
+    expect(result.current).not.toHaveProperty("agentText");
   });
 });

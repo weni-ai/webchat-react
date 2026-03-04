@@ -1,6 +1,5 @@
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
-import { VoiceModeButton } from '@/components/VoiceMode';
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import PropTypes from 'prop-types';
@@ -65,7 +64,7 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config, isVoiceEnabledByServer, isVoiceModeSupported, enterVoiceMode } = useChatContext();
+  const { config } = useChatContext();
   // TODO: Implement header layout
   // TODO: Add connection status indicator
 
@@ -87,10 +86,6 @@ export function Header() {
       </section>
 
       <section className="weni-chat-header__actions">
-        {isVoiceEnabledByServer && isVoiceModeSupported && (
-          <VoiceModeButton onClick={enterVoiceMode} />
-        )}
-
         {cartTotalItems > 0 && (
           <Button
             aria-label="Cart"

@@ -7,14 +7,10 @@ import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
 import CameraRecording from '@/components/CameraRecording/CameraRecording';
+import { VoiceModeButton } from '@/components/VoiceMode';
 
 import './InputBox.scss';
 
-/**
- * InputBox - Message input component
- * TODO: Handle emoji picker
- * TODO: Add character limit indicator
- */
 export function InputBox({ maxLength = 5000 }) {
   const {
     isRecording,
@@ -27,6 +23,12 @@ export function InputBox({ maxLength = 5000 }) {
     hasCameraPermission,
     requestCameraPermission,
     startCameraRecording,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+    isVoiceModeActive,
+    voiceModeState,
+    enterVoiceMode,
+    exitVoiceMode,
   } = useChatContext();
   const { config } = useChatContext();
 
@@ -36,6 +38,8 @@ export function InputBox({ maxLength = 5000 }) {
     useState(false);
 
   const fileInputRef = useRef(null);
+
+  const showVoiceButton = isVoiceEnabledByServer && isVoiceModeSupported;
 
   const handleSend = async () => {
     if (isRecording) {
@@ -93,6 +97,14 @@ export function InputBox({ maxLength = 5000 }) {
     if (cameraPermission) startCameraRecording();
   };
 
+  const handleVoiceToggle = () => {
+    if (isVoiceModeActive) {
+      exitVoiceMode();
+    } else {
+      enterVoiceMode();
+    }
+  };
+
   if (isRecording) {
     return (
       <section className="weni-input-box">
@@ -129,7 +141,7 @@ export function InputBox({ maxLength = 5000 }) {
           rows={1}
         />
 
-        {!text.trim() && config.showCameraRecorder && (
+        {!text.trim() && !isVoiceModeActive && config.showCameraRecorder && (
           <Button
             onClick={handleRecordCamera}
             disabled={hasCameraPermissionState === false}
@@ -142,7 +154,7 @@ export function InputBox({ maxLength = 5000 }) {
         )}
       </section>
 
-      {!text.trim() && (
+      {!isVoiceModeActive && !text.trim() && (
         <>
           <InputFile ref={fileInputRef} />
           {config.showFileUploader && (
@@ -174,6 +186,14 @@ export function InputBox({ maxLength = 5000 }) {
           variant="primary"
           icon="send"
           aria-label="Send message"
+        />
+      )}
+
+      {showVoiceButton && (isVoiceModeActive || !text.trim()) && (
+        <VoiceModeButton
+          onClick={handleVoiceToggle}
+          isActive={isVoiceModeActive}
+          voiceState={voiceModeState}
         />
       )}
     </section>

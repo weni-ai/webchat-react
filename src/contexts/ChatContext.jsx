@@ -133,8 +133,6 @@ export function ChatProvider({ children, config }) {
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [voiceModeState, setVoiceModeState] = useState(null);
   const [voicePartialTranscript, setVoicePartialTranscript] = useState('');
-  const [voiceCommittedTranscript, setVoiceCommittedTranscript] = useState('');
-  const [voiceAgentText, setVoiceAgentText] = useState('');
   const [voiceError, setVoiceError] = useState(null);
   const [voiceLanguage, setVoiceLanguage] = useState('en');
   const isVoiceModeSupported = useMemo(() => VoiceService.isSupported(), []);
@@ -348,20 +346,14 @@ export function ChatProvider({ children, config }) {
     });
     vs.on('state:changed', ({ state }) => setVoiceModeState(state));
     vs.on('transcript:partial', ({ text }) => setVoicePartialTranscript(text));
-    vs.on('transcript:committed', ({ text }) => {
-      setVoiceCommittedTranscript(text);
+    vs.on('transcript:committed', () => {
       setVoicePartialTranscript('');
     });
-    vs.on('speaking:started', ({ text }) => setVoiceAgentText((prev) => prev + text));
-    vs.on('speaking:ended', () => {});
-    vs.on('barge-in', () => setVoiceAgentText(''));
     vs.on('session:started', () => setIsVoiceModeActive(true));
     vs.on('session:ended', () => {
       setIsVoiceModeActive(false);
       setVoiceModeState(null);
       setVoicePartialTranscript('');
-      setVoiceCommittedTranscript('');
-      setVoiceAgentText('');
       setVoiceError(null);
       processedTextRef.current = '';
       lastProcessedVoiceMsgIdRef.current = null;
@@ -435,8 +427,6 @@ export function ChatProvider({ children, config }) {
     isVoiceModeSupported,
     voiceModeState,
     voicePartialTranscript,
-    voiceCommittedTranscript,
-    voiceAgentText,
     voiceError,
     enterVoiceMode,
     exitVoiceMode,

@@ -23,6 +23,11 @@
     &--outgoing {
       justify-self: flex-end;
     }
+
+    &--voice-transcribing {
+      opacity: 0.55;
+      animation: none;
+    }
   }
 
   &__direction-group {
