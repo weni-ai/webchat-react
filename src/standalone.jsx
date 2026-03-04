@@ -97,6 +97,7 @@ function mapConfig(params) {
     socketUrl: params.socketUrl,
     channelUuid: params.channelUuid,
     host: params.host,
+    preview: params.preview || false,
 
     // Connection settings
     connectOn: params.connectOn || 'mount',
