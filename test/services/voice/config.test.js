@@ -63,7 +63,7 @@ describe("voice/config", () => {
       expect(errors).toHaveLength(0);
     });
 
-    it("passes when elevenLabs.voiceId is missing (optional)", () => {
+    it("passes when elevenLabs.voiceId is empty (optional)", () => {
       const { valid } = validateVoiceConfig({
         ...validConfig,
         elevenLabs: { voiceId: "" },
@@ -199,6 +199,29 @@ describe("voice/config", () => {
         expect(err.message).toMatch(/Invalid voice configuration/);
         expect(err.message).toMatch(/getTokens/);
       }
+    });
+
+    it("uses default voiceId when none provided", () => {
+      const merged = mergeVoiceConfig({
+        getTokens: jest.fn(),
+      });
+      expect(merged.elevenLabs.voiceId).toBe("21m00Tcm4TlvDq8ikWAM");
+    });
+
+    it("uses default voiceId when voiceId is empty string", () => {
+      const merged = mergeVoiceConfig({
+        elevenLabs: { voiceId: "" },
+        getTokens: jest.fn(),
+      });
+      expect(merged.elevenLabs.voiceId).toBe("21m00Tcm4TlvDq8ikWAM");
+    });
+
+    it("preserves user-provided voiceId", () => {
+      const merged = mergeVoiceConfig({
+        elevenLabs: { voiceId: "custom-voice" },
+        getTokens: jest.fn(),
+      });
+      expect(merged.elevenLabs.voiceId).toBe("custom-voice");
     });
 
     it("forces silenceThreshold, enableBargeIn, autoListen to defaults", () => {
@@ -340,6 +363,17 @@ describe("voice/config", () => {
       const url = buildTTSWebSocketURL("v123", config, "tok456");
       expect(url).not.toContain("xi-api-key");
       expect(url).not.toContain("api_key");
+    });
+
+    it("falls back to default voiceId when empty", () => {
+      const url = buildTTSWebSocketURL("", config, "tok456");
+      expect(url).toContain("/text-to-speech/21m00Tcm4TlvDq8ikWAM/");
+      expect(url).not.toContain("//stream-input");
+    });
+
+    it("falls back to default voiceId when null", () => {
+      const url = buildTTSWebSocketURL(null, config, "tok456");
+      expect(url).toContain("/text-to-speech/21m00Tcm4TlvDq8ikWAM/");
     });
   });
 });

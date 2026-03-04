@@ -168,12 +168,9 @@
       showFullScreenButton: true,
 
       voiceMode: {
-        enabled: true,
-        voiceId: VOICE_ID,
-        silenceThreshold: 1.5,
-        enableBargeIn: true,
-        autoListen: true,
-        // getTokens is provided automatically by the Weni service WebSocket
+        elevenLabs: {
+          voiceId: VOICE_ID,
+        },
       },
     });
   </script>

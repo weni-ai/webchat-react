@@ -4,6 +4,7 @@
 
 import { VoiceError, VoiceErrorCode } from './errors';
 
+const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 const VALID_TTS_MODELS = ['eleven_flash_v2_5', 'eleven_multilingual_v2'];
 const VALID_AUDIO_FORMATS = ['mp3_44100_128', 'pcm_24000'];
 
@@ -100,6 +101,8 @@ export function mergeVoiceConfig(userConfig) {
     elevenLabs: {
       ...DEFAULT_VOICE_CONFIG.elevenLabs,
       ...userConfig?.elevenLabs,
+      voiceId:
+        userConfig?.elevenLabs?.voiceId || DEFAULT_VOICE_ID,
     },
     silenceThreshold: DEFAULT_VOICE_CONFIG.silenceThreshold,
     enableBargeIn: DEFAULT_VOICE_CONFIG.enableBargeIn,
@@ -161,7 +164,8 @@ export function buildSTTWebSocketURL(config, token) {
  * @returns {string}
  */
 export function buildTTSWebSocketURL(voiceId, config, token) {
-  const base = `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input`;
+  const resolvedVoiceId = voiceId || DEFAULT_VOICE_ID;
+  const base = `wss://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}/stream-input`;
   const params = new URLSearchParams();
 
   params.set('single_use_token', token);
