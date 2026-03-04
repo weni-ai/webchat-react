@@ -166,11 +166,12 @@ describe("AudioCapture", () => {
       await capture.start();
 
       expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
-        audio: expect.objectContaining({
-          echoCancellation: false,
+        audio: {
+          echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-        }),
+          sampleRate: { ideal: 16000 },
+        },
       });
       expect(window.AudioContext).toHaveBeenCalled();
       expect(capture.isCapturing).toBe(true);

@@ -2,6 +2,9 @@
  * Voice mode orchestrator.
  * Coordinate AudioCapture, STTConnection, TTSPlayer, TextChunker, and EchoGuard
  * through a 6-state machine: idle → initializing → listening → processing → speaking → error.
+ *
+ * Authentication uses single-use tokens obtained via `config.getTokens()`.
+ * Neither the ElevenLabs API key nor long-lived credentials ever reach the browser.
  */
 
 import { AudioCapture } from './AudioCapture';
@@ -10,7 +13,7 @@ import { TTSPlayer } from './TTSPlayer';
 import { TextChunker } from './TextChunker';
 import { EchoGuard } from './EchoGuard';
 import { VoiceError, VoiceErrorCode, createVoiceError } from './errors';
-import { mergeVoiceConfig } from './config';
+import { mergeVoiceConfig, buildTTSWebSocketURL } from './config';
 
 export const VoiceSessionState = {
   IDLE: 'idle',
@@ -44,7 +47,7 @@ export class VoiceService {
     this.echoGuard = null;
     this.partialTranscript = '';
     this.error = null;
-    this.currentToken = null;
+    this.currentTokens = null;
     this.listeners = new Map();
     this.onMessageCallback = null;
   }
@@ -66,7 +69,9 @@ export class VoiceService {
     this.config = mergeVoiceConfig(config);
 
     this.audioCapture = new AudioCapture();
-    this.ttsPlayer = new TTSPlayer();
+    this.ttsPlayer = new TTSPlayer({
+      getConnectionUrl: () => this._buildTTSConnectionUrl(),
+    });
     this.textChunker = new TextChunker();
     this.echoGuard = new EchoGuard({
       cooldownMs: 350,
@@ -80,7 +85,7 @@ export class VoiceService {
   }
 
   /**
-   * Start a voice session: acquire mic, connect STT, begin listening.
+   * Start a voice session: acquire mic, connect STT + TTS, begin listening.
    * @returns {{ id: string, startedAt: number }}
    */
   async startSession() {
@@ -94,15 +99,24 @@ export class VoiceService {
     this.setState(VoiceSessionState.INITIALIZING);
 
     try {
-      this.currentToken = await this.config.getToken();
-      this.sttConnection = new STTConnection(this.config, this.currentToken);
+      this.currentTokens = await this.config.getTokens();
+
+      this.sttConnection = new STTConnection(
+        this.config,
+        this.currentTokens.sttToken,
+      );
 
       await this.audioCapture.start({ vadThreshold: this.config.vadThreshold });
-      // Wire listeners only AFTER connect() succeeds so that a rejected
-      // connection (e.g. 1008 auth failure) never has a 'close' listener that
-      // could trigger _reconnectSTT and create an infinite retry loop.
+
       await this.sttConnection.connect();
       this._wireSTTListeners();
+
+      const ttsUrl = buildTTSWebSocketURL(
+        this.config.voiceId,
+        this.config,
+        this.currentTokens.ttsToken,
+      );
+      await this.ttsPlayer.connect(ttsUrl);
 
       this.sessionId = generateSessionId();
       this.sessionStartTime = Date.now();
@@ -136,12 +150,13 @@ export class VoiceService {
     this.audioCapture?.stop();
     this.sttConnection?.disconnect();
     this.ttsPlayer?.stop(true);
+    this.ttsPlayer?.disconnect();
     this.textChunker?.clear();
     this.echoGuard?.reset();
 
     this.partialTranscript = '';
     this.error = null;
-    this.currentToken = null;
+    this.currentTokens = null;
     this.sessionId = null;
     this.sessionStartTime = null;
     this.sttConnection = null;
@@ -171,7 +186,7 @@ export class VoiceService {
 
   /**
    * Stop TTS playback.
-   * @param {boolean} [immediate=true] - Hard stop vs fade
+   * @param {boolean} [immediate=true]
    */
   stopSpeaking(immediate = true) {
     this.ttsPlayer?.stop(immediate);
@@ -186,7 +201,6 @@ export class VoiceService {
   /** Update language for subsequent STT/TTS requests. */
   setLanguage(languageCode) {
     if (this.config && languageCode) {
-      // Normalize BCP-47 to ISO 639-1 ("en-us" → "en").
       this.config.languageCode = languageCode.split('-')[0].toLowerCase();
     }
   }
@@ -221,10 +235,6 @@ export class VoiceService {
   _wireAudioCaptureListeners() {
     this.audioCapture.on('audioData', (data) => {
       if (this.state === VoiceSessionState.SPEAKING) {
-        // Re-evaluate voice activity against the echo guard's dynamic
-        // threshold (elevated during TTS) instead of AudioCapture's low
-        // default.  This prevents speaker echo from being mistaken for
-        // user speech.
         const hasVoiceAtThreshold =
           data.energy > this.echoGuard.bargeInThreshold;
         if (this.echoGuard.shouldTriggerBargeIn(hasVoiceAtThreshold)) {
@@ -276,9 +286,6 @@ export class VoiceService {
     });
 
     stt.on('close', () => {
-      // Only reconnect when a session is already active.
-      // INITIALIZING means startSession() hasn't finished yet — let its own
-      // error handling set the state; reconnecting here would cause a loop.
       const reconnectStates = [
         VoiceSessionState.LISTENING,
         VoiceSessionState.PROCESSING,
@@ -293,10 +300,11 @@ export class VoiceService {
   /** @private */
   async _reconnectSTT() {
     try {
-      this.currentToken = await this.config.getToken();
-      const newStt = new STTConnection(this.config, this.currentToken);
-      // Connect before wiring so that a failing reconnect attempt cannot
-      // trigger another reconnect via the 'close' event.
+      this.currentTokens = await this.config.getTokens();
+      const newStt = new STTConnection(
+        this.config,
+        this.currentTokens.sttToken,
+      );
       await newStt.connect();
       this.sttConnection = newStt;
       this._wireSTTListeners();
@@ -309,6 +317,21 @@ export class VoiceService {
       this.emit('error', voiceErr);
       this.setState(VoiceSessionState.ERROR);
     }
+  }
+
+  /**
+   * Build a fresh TTS WebSocket URL.  Called by TTSPlayer when it needs
+   * to (re)connect — fetches new tokens automatically.
+   * @private
+   * @returns {Promise<string>}
+   */
+  async _buildTTSConnectionUrl() {
+    this.currentTokens = await this.config.getTokens();
+    return buildTTSWebSocketURL(
+      this.config.voiceId,
+      this.config,
+      this.currentTokens.ttsToken,
+    );
   }
 
   /** @private Wire permanent TTS listeners once during init. */
@@ -329,18 +352,7 @@ export class VoiceService {
     this.setState(VoiceSessionState.SPEAKING);
     this.emit('speaking:started', { text });
 
-    const opts = {
-      voiceId: this.config.voiceId,
-      apiKey: this.config.getApiKey(),
-      ttsModel: this.config.ttsModel,
-      audioFormat: this.config.audioFormat,
-      languageCode: this.config.languageCode,
-      latencyOptimization: this.config.latencyOptimization,
-    };
-
-    this.ttsPlayer.speak(text, opts).catch((err) => {
-      // If state already left SPEAKING (barge-in stopped TTS), the rejection
-      // is expected — swallow it so it doesn't surface as a user-facing error.
+    this.ttsPlayer.speak(text).catch((err) => {
       if (this.state !== VoiceSessionState.SPEAKING) return;
 
       this.emit(

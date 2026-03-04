@@ -16,7 +16,10 @@ describe("voice/errors", () => {
         "MICROPHONE_NOT_FOUND",
         "BROWSER_NOT_SUPPORTED",
         "STT_CONNECTION_FAILED",
+        "STT_AUTH_FAILED",
         "STT_TRANSCRIPTION_FAILED",
+        "TTS_CONNECTION_FAILED",
+        "TTS_AUTH_FAILED",
         "TTS_GENERATION_FAILED",
         "NETWORK_ERROR",
         "TOKEN_EXPIRED",
@@ -264,14 +267,20 @@ describe("voice/errors", () => {
   });
 
   describe("getTTSErrorCode", () => {
-    it("maps response with status 401 → TOKEN_EXPIRED", () => {
-      expect(getTTSErrorCode({ status: 401 })).toBe(
-        VoiceErrorCode.TOKEN_EXPIRED,
+    it("maps WebSocket close code 1008 → TTS_AUTH_FAILED", () => {
+      expect(getTTSErrorCode({ code: 1008 })).toBe(
+        VoiceErrorCode.TTS_AUTH_FAILED,
       );
     });
 
-    it("maps response with status 429 → RATE_LIMITED", () => {
-      expect(getTTSErrorCode({ status: 429 })).toBe(
+    it("maps code 401 → TTS_AUTH_FAILED", () => {
+      expect(getTTSErrorCode({ code: 401 })).toBe(
+        VoiceErrorCode.TTS_AUTH_FAILED,
+      );
+    });
+
+    it("maps code 429 → RATE_LIMITED", () => {
+      expect(getTTSErrorCode({ code: 429 })).toBe(
         VoiceErrorCode.RATE_LIMITED,
       );
     });
@@ -282,8 +291,8 @@ describe("voice/errors", () => {
       );
     });
 
-    it('maps error with "fetch" in message → NETWORK_ERROR', () => {
-      expect(getTTSErrorCode({ message: "fetch failed" })).toBe(
+    it('maps error with "connection" in message → NETWORK_ERROR', () => {
+      expect(getTTSErrorCode({ message: "connection refused" })).toBe(
         VoiceErrorCode.NETWORK_ERROR,
       );
     });

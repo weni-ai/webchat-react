@@ -23,8 +23,7 @@ export const DEFAULT_VOICE_CONFIG = {
   latencyOptimization: 3,
   enableBargeIn: true,
   autoListen: true,
-  getToken: null,
-  getApiKey: null,
+  getTokens: null,
   texts: {
     title: '',
     listening: '',
@@ -47,12 +46,10 @@ export function validateVoiceConfig(config) {
     errors.push('voiceId is required and must be a non-empty string');
   }
 
-  if (typeof config.getToken !== 'function') {
-    errors.push('getToken must be a function');
-  }
-
-  if (typeof config.getApiKey !== 'function') {
-    errors.push('getApiKey must be a function');
+  if (typeof config.getTokens !== 'function') {
+    errors.push(
+      'getTokens must be a function returning Promise<{ sttToken, ttsToken }>',
+    );
   }
 
   if (
@@ -151,41 +148,25 @@ export function buildSTTWebSocketURL(config, token) {
 }
 
 /**
- * Build the ElevenLabs TTS stream URL with query parameters.
+ * Build the ElevenLabs TTS WebSocket URL with query parameters.
+ * Uses single-use token for authentication so no API key reaches the browser.
  * @param {string} voiceId
  * @param {object} config
+ * @param {string} token - Single-use tts_websocket token
  * @returns {string}
  */
-export function buildTTSStreamURL(voiceId, config) {
-  const base = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
+export function buildTTSWebSocketURL(voiceId, config, token) {
+  const base = `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input`;
   const params = new URLSearchParams();
 
+  params.set('single_use_token', token);
+  params.set('model_id', config.ttsModel);
   params.set('output_format', config.audioFormat);
-  params.set('optimize_streaming_latency', String(config.latencyOptimization));
-
-  return `${base}?${params.toString()}`;
-}
-
-/**
- * Build the TTS request body.
- * @param {string} text
- * @param {object} config
- * @param {string} [previousText]
- * @returns {object}
- */
-export function buildTTSRequestBody(text, config, previousText) {
-  const body = {
-    text,
-    model_id: config.ttsModel,
-  };
+  params.set('inactivity_timeout', '120');
 
   if (config.languageCode) {
-    body.language_code = config.languageCode;
+    params.set('language_code', config.languageCode);
   }
 
-  if (previousText) {
-    body.previous_text = previousText;
-  }
-
-  return body;
+  return `${base}?${params.toString()}`;
 }

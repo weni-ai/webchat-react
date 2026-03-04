@@ -335,8 +335,14 @@ export function ChatProvider({ children, config }) {
     lastProcessedVoiceMsgIdRef.current = null;
     processedTextRef.current = '';
 
+    const getTokens = () => service.requestVoiceTokens();
+
     const vs = new VoiceService();
-    await vs.init({ ...mergedConfig.voiceMode, languageCode: voiceLanguage });
+    await vs.init({
+      ...mergedConfig.voiceMode,
+      languageCode: voiceLanguage,
+      getTokens,
+    });
     vs.on('state:changed', ({ state }) => setVoiceModeState(state));
     vs.on('transcript:partial', ({ text }) => setVoicePartialTranscript(text));
     vs.on('transcript:committed', ({ text }) => {
@@ -536,8 +542,6 @@ ChatProvider.propTypes = {
     voiceMode: PropTypes.shape({
       enabled: PropTypes.bool,
       voiceId: PropTypes.string,
-      getToken: PropTypes.func,
-      getApiKey: PropTypes.func,
       languageCode: PropTypes.string,
       silenceThreshold: PropTypes.number,
       enableBargeIn: PropTypes.bool,

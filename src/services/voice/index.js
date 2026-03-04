@@ -16,6 +16,5 @@ export {
   validateVoiceConfig,
   mergeVoiceConfig,
   buildSTTWebSocketURL,
-  buildTTSStreamURL,
-  buildTTSRequestBody,
+  buildTTSWebSocketURL,
 } from './config';

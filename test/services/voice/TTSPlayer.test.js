@@ -1,26 +1,58 @@
 import TTSPlayer from "@/services/voice/TTSPlayer";
 import { VoiceError, VoiceErrorCode } from "@/services/voice/errors";
 
-// ---------------------------------------------------------------------------
-// Mock config helpers
-// ---------------------------------------------------------------------------
-
-jest.mock("@/services/voice/config", () => ({
-  buildTTSStreamURL: jest.fn(
-    (voiceId, opts) =>
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=${opts.audioFormat}&optimize_streaming_latency=${opts.latencyOptimization}`,
-  ),
-  buildTTSRequestBody: jest.fn((text, opts, prevText) => {
-    const body = { text, model_id: opts.ttsModel };
-    if (opts.languageCode) body.language_code = opts.languageCode;
-    if (prevText) body.previous_text = prevText;
-    return body;
-  }),
-}));
-
 jest.mock("@/utils/audioUtils", () => ({
   mergeAudioChunks: jest.fn(() => new ArrayBuffer(8)),
 }));
+
+// ---------------------------------------------------------------------------
+// WebSocket mock
+// ---------------------------------------------------------------------------
+
+class MockWebSocket {
+  static OPEN = 1;
+  static CLOSED = 3;
+
+  constructor(url) {
+    this.url = url;
+    this.readyState = MockWebSocket.OPEN;
+    this.onopen = null;
+    this.onmessage = null;
+    this.onerror = null;
+    this.onclose = null;
+    this._sentMessages = [];
+
+    Promise.resolve().then(() => this.onopen?.());
+  }
+
+  send(data) {
+    this._sentMessages.push(JSON.parse(data));
+  }
+
+  close(code, reason) {
+    this.readyState = MockWebSocket.CLOSED;
+    Promise.resolve().then(() =>
+      this.onclose?.({ code: code || 1000, reason }),
+    );
+  }
+
+  _receiveAudio(base64 = "AAAA") {
+    this.onmessage?.({ data: JSON.stringify({ audio: base64 }) });
+  }
+
+  _receiveFinal() {
+    this.onmessage?.({ data: JSON.stringify({ isFinal: true }) });
+  }
+
+  _triggerError() {
+    this.onerror?.({});
+  }
+
+  _triggerClose(code = 1000, reason = "") {
+    this.readyState = MockWebSocket.CLOSED;
+    this.onclose?.({ code, reason });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Browser API mocks
@@ -32,9 +64,7 @@ const createMockBufferSource = () => {
     onended: null,
     connect: jest.fn(),
     start: jest.fn(() => {
-      Promise.resolve().then(() => {
-        if (source.onended) source.onended();
-      });
+      Promise.resolve().then(() => source.onended?.());
     }),
     stop: jest.fn(),
   };
@@ -68,160 +98,170 @@ function installAudioContext() {
 }
 
 // ---------------------------------------------------------------------------
-// fetch mock helpers
-// ---------------------------------------------------------------------------
-
-function createReadableStream(chunks = [new Uint8Array([1, 2, 3])]) {
-  let idx = 0;
-  return {
-    getReader: () => ({
-      read: jest.fn(() => {
-        if (idx < chunks.length) {
-          const value = chunks[idx++];
-          return Promise.resolve({ done: false, value });
-        }
-        return Promise.resolve({ done: true });
-      }),
-      releaseLock: jest.fn(),
-    }),
-  };
-}
-
-function mockFetchOk() {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      status: 200,
-      body: createReadableStream(),
-    }),
-  );
-}
-
-function mockFetchError(status = 500) {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: false,
-      status,
-      json: () => Promise.resolve({ detail: { message: "Server error" } }),
-    }),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Test options
-// ---------------------------------------------------------------------------
-
-const ttsOptions = {
-  voiceId: "voice-1",
-  apiKey: "key-123",
-  ttsModel: "eleven_flash_v2_5",
-  audioFormat: "mp3_44100_128",
-  languageCode: "en",
-  latencyOptimization: 3,
-};
-
-// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("TTSPlayer", () => {
+describe("TTSPlayer (WebSocket)", () => {
   let player;
   let mockCtx;
+  let lastWs;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockCtx = installAudioContext();
-    mockFetchOk();
+
+    const wsMock = jest.fn((url) => {
+      lastWs = new MockWebSocket(url);
+      return lastWs;
+    });
+    wsMock.OPEN = 1;
+    wsMock.CLOSED = 3;
+    global.WebSocket = wsMock;
+
     player = new TTSPlayer();
   });
 
   afterEach(() => {
     player.destroy();
     jest.restoreAllMocks();
-    delete global.fetch;
+    jest.useRealTimers();
+    delete global.WebSocket;
   });
 
-  // -- speak ----------------------------------------------------------------
+  // -- connect ----------------------------------------------------------------
+
+  describe("connect()", () => {
+    it("opens WebSocket and sends init message with blank space", async () => {
+      await player.connect("wss://example.com/tts?token=abc");
+
+      expect(global.WebSocket).toHaveBeenCalledWith(
+        "wss://example.com/tts?token=abc",
+      );
+      expect(lastWs._sentMessages[0]).toEqual(
+        expect.objectContaining({ text: " " }),
+      );
+    });
+
+    it("sets generation_config.chunk_length_schedule in init", async () => {
+      await player.connect("wss://example.com/tts?token=abc");
+
+      const initMsg = lastWs._sentMessages[0];
+      expect(initMsg.generation_config).toEqual({ chunk_length_schedule: [50] });
+    });
+
+    it("isConnected() returns true after connect", async () => {
+      await player.connect("wss://example.com/tts?token=abc");
+      expect(player.isConnected()).toBe(true);
+    });
+
+    it("rejects on timeout", async () => {
+      const staleWsMock = jest.fn(() => ({
+        onopen: null,
+        onmessage: null,
+        onerror: null,
+        onclose: null,
+        send: jest.fn(),
+        close: jest.fn(),
+        readyState: 0,
+      }));
+      staleWsMock.OPEN = 1;
+      global.WebSocket = staleWsMock;
+
+      const p = player.connect("wss://example.com/tts");
+      jest.advanceTimersByTime(11000);
+      await expect(p).rejects.toMatchObject({
+        code: VoiceErrorCode.TTS_CONNECTION_FAILED,
+      });
+    });
+
+    it("rejects on auth failure (1008)", async () => {
+      const authFailWsMock = jest.fn((url) => {
+        const ws = {
+          url,
+          readyState: 0,
+          onopen: null,
+          onmessage: null,
+          onerror: null,
+          onclose: null,
+          send: jest.fn(),
+          close: jest.fn(),
+        };
+        Promise.resolve().then(() => {
+          ws.readyState = MockWebSocket.CLOSED;
+          ws.onclose?.({ code: 1008, reason: "invalid token" });
+        });
+        return ws;
+      });
+      authFailWsMock.OPEN = 1;
+      global.WebSocket = authFailWsMock;
+
+      await expect(
+        player.connect("wss://example.com/tts"),
+      ).rejects.toMatchObject({
+        code: VoiceErrorCode.TTS_AUTH_FAILED,
+      });
+    });
+  });
+
+  // -- speak ------------------------------------------------------------------
 
   describe("speak()", () => {
-    it("makes fetch with correct URL, headers, and body", async () => {
-      await player.speak("Hello", ttsOptions);
+    it("sends text with trailing space and flush=true", async () => {
+      await player.connect("wss://example.com/tts");
 
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      const speakPromise = player.speak("Hello world.");
+      await Promise.resolve();
+      lastWs._receiveAudio("AAAA");
+      jest.advanceTimersByTime(700);
 
-      const [url, init] = global.fetch.mock.calls[0];
-      expect(url).toContain("voice-1");
-      expect(url).toContain("output_format=mp3_44100_128");
-      expect(url).toContain("optimize_streaming_latency=3");
+      await speakPromise;
 
-      expect(init.method).toBe("POST");
-      expect(init.headers["xi-api-key"]).toBe("key-123");
-      expect(init.headers["Content-Type"]).toBe("application/json");
-
-      const body = JSON.parse(init.body);
-      expect(body.text).toBe("Hello");
-      expect(body.model_id).toBe("eleven_flash_v2_5");
-      expect(body.language_code).toBe("en");
-    });
-
-    it("decodes audio and plays via BufferSource", async () => {
-      await player.speak("Hi", ttsOptions);
-
-      expect(mockCtx.decodeAudioData).toHaveBeenCalled();
-      const source = mockCtx.createBufferSource.mock.results[0].value;
-      expect(source.start).toHaveBeenCalledWith(0);
-      expect(source.connect).toHaveBeenCalled();
-    });
-
-    it("tracks previousText for subsequent calls", async () => {
-      const { buildTTSRequestBody } = require("@/services/voice/config");
-
-      await player.speak("First", ttsOptions);
-      expect(player.previousText).toBe("First");
-
-      await player.speak("Second", ttsOptions);
-
-      const lastCall =
-        buildTTSRequestBody.mock.calls[
-          buildTTSRequestBody.mock.calls.length - 1
-        ];
-      expect(lastCall[2]).toBe("First");
-      expect(player.previousText).toBe("Second");
+      const textMsg = lastWs._sentMessages[1];
+      expect(textMsg.text).toBe("Hello world. ");
+      expect(textMsg.flush).toBe(true);
     });
 
     it("emits started and ended events", async () => {
+      await player.connect("wss://example.com/tts");
+
       const started = jest.fn();
       const ended = jest.fn();
       player.on("started", started);
       player.on("ended", ended);
 
-      await player.speak("Text", ttsOptions);
+      const speakPromise = player.speak("Text");
+      await Promise.resolve();
+      lastWs._receiveAudio("AAAA");
+      jest.advanceTimersByTime(700);
+
+      await speakPromise;
 
       expect(started).toHaveBeenCalledWith({ text: "Text" });
       expect(ended).toHaveBeenCalled();
     });
-  });
 
-  // -- Queue ----------------------------------------------------------------
+    it("emits queue:drained after last item processed", async () => {
+      await player.connect("wss://example.com/tts");
 
-  describe("queue", () => {
-    it("processes multiple speak() calls sequentially", async () => {
-      const order = [];
-      player.on("started", ({ text }) => order.push(text));
+      const drained = jest.fn();
+      player.on("queue:drained", drained);
 
-      const p1 = player.speak("One", ttsOptions);
-      const p2 = player.speak("Two", ttsOptions);
+      const speakPromise = player.speak("Only one");
+      await Promise.resolve();
+      lastWs._receiveAudio("AAAA");
+      jest.advanceTimersByTime(700);
 
-      await p1;
-      await p2;
-
-      expect(order).toEqual(["One", "Two"]);
+      await speakPromise;
+      expect(drained).toHaveBeenCalled();
     });
   });
 
-  // -- stop -----------------------------------------------------------------
+  // -- stop -------------------------------------------------------------------
 
   describe("stop()", () => {
-    it("stop(immediate=true) stops source immediately", () => {
+    it("stop(immediate=true) stops source immediately", async () => {
+      await player.connect("wss://example.com/tts");
+
       player._initAudioContext();
       const mockSource = { stop: jest.fn() };
       player._currentSource = mockSource;
@@ -233,9 +273,10 @@ describe("TTSPlayer", () => {
       expect(player.isPlaying).toBe(false);
     });
 
-    it("stop(bargeIn=true) uses fast fade and clears previousText", () => {
+    it("stop(bargeIn=true) uses fast fade", async () => {
+      await player.connect("wss://example.com/tts");
+
       player._initAudioContext();
-      player.previousText = "Text";
       player._currentSource = { stop: jest.fn() };
       player.isPlaying = true;
 
@@ -245,81 +286,98 @@ describe("TTSPlayer", () => {
       expect(gain.gain.exponentialRampToValueAtTime).toHaveBeenCalled();
       const fadeArgs = gain.gain.exponentialRampToValueAtTime.mock.calls[0];
       expect(fadeArgs[0]).toBeCloseTo(0.001);
-      expect(player.previousText).toBe("");
     });
 
-    it("stop() with neither flag uses 150ms fade", () => {
-      player._initAudioContext();
-      player._currentSource = { stop: jest.fn() };
-      player.isPlaying = true;
+    it("stop() rejects pending queue entries", () => {
+      player._ttsQueue = [
+        { text: "A", resolve: jest.fn(), reject: jest.fn() },
+        { text: "B", resolve: jest.fn(), reject: jest.fn() },
+      ];
+      const rejectA = player._ttsQueue[0].reject;
+      const rejectB = player._ttsQueue[1].reject;
 
-      player.stop(false, false);
+      player.stop(true);
 
-      const gain = mockCtx.createGain.mock.results[0].value;
-      expect(gain.gain.exponentialRampToValueAtTime).toHaveBeenCalled();
-      const fadeArgs = gain.gain.exponentialRampToValueAtTime.mock.calls[0];
-      expect(fadeArgs[1]).toBeCloseTo(0.15, 1);
-    });
-  });
-
-  // -- clearPreviousText ----------------------------------------------------
-
-  describe("clearPreviousText()", () => {
-    it("resets previousText to empty string", async () => {
-      await player.speak("Text", ttsOptions);
-      expect(player.previousText).toBe("Text");
-      player.clearPreviousText();
-      expect(player.previousText).toBe("");
+      expect(rejectA).toHaveBeenCalled();
+      expect(rejectB).toHaveBeenCalled();
+      expect(player._ttsQueue).toEqual([]);
     });
   });
 
-  // -- Error handling -------------------------------------------------------
+  // -- disconnect -------------------------------------------------------------
 
-  describe("error handling", () => {
-    it("throws VoiceError on fetch failure", async () => {
-      global.fetch = jest.fn(() => Promise.reject(new Error("network fail")));
+  describe("disconnect()", () => {
+    it("sends close message and closes WebSocket", async () => {
+      await player.connect("wss://example.com/tts");
 
-      await expect(player.speak("Text", ttsOptions)).rejects.toThrow();
+      player.disconnect();
+
+      const lastMsg = lastWs._sentMessages[lastWs._sentMessages.length - 1];
+      expect(lastMsg.text).toBe("");
+    });
+  });
+
+  // -- auto-reconnect via getConnectionUrl ------------------------------------
+
+  describe("auto-reconnect", () => {
+    it("reconnects transparently when WebSocket is disconnected", async () => {
+      const getUrl = jest.fn(() =>
+        Promise.resolve("wss://example.com/tts?token=fresh"),
+      );
+      player = new TTSPlayer({ getConnectionUrl: getUrl });
+
+      await player.connect("wss://example.com/tts?token=initial");
+
+      lastWs._triggerClose(1000, "inactivity");
+      expect(player.isConnected()).toBe(false);
+
+      const speakPromise = player.speak("After reconnect");
+
+      // Flush microtask queue multiple times for the async reconnection chain
+      for (let i = 0; i < 5; i++) {
+        await Promise.resolve();
+      }
+
+      lastWs._receiveAudio("BBBB");
+      jest.advanceTimersByTime(700);
+
+      await speakPromise;
+
+      expect(getUrl).toHaveBeenCalled();
+      expect(player.isConnected()).toBe(true);
     });
 
-    it("ignores AbortError", async () => {
-      const abortErr = new Error("aborted");
-      abortErr.name = "AbortError";
-      global.fetch = jest.fn(() => Promise.reject(abortErr));
-      const errorHandler = jest.fn();
-      player.on("error", errorHandler);
+    it("throws after max reconnect retries", async () => {
+      const getUrl = jest.fn(() =>
+        Promise.reject(new Error("token service down")),
+      );
+      player = new TTSPlayer({ getConnectionUrl: getUrl });
 
-      await player.speak("Text", ttsOptions);
+      const speakPromise = player.speak("Will fail");
 
-      expect(errorHandler).not.toHaveBeenCalled();
-    });
+      // Each retry has a setTimeout delay + promise resolution
+      for (let i = 0; i < 15; i++) {
+        jest.advanceTimersByTime(3000);
+        await Promise.resolve();
+      }
 
-    it("throws VoiceError on non-ok response", async () => {
-      mockFetchError(500);
-
-      await expect(player.speak("Text", ttsOptions)).rejects.toMatchObject({
-        code: VoiceErrorCode.TTS_GENERATION_FAILED,
+      await expect(speakPromise).rejects.toMatchObject({
+        code: VoiceErrorCode.TTS_CONNECTION_FAILED,
       });
     });
-
-    it("maps 401 response to TOKEN_EXPIRED", async () => {
-      mockFetchError(401);
-
-      await expect(player.speak("Text", ttsOptions)).rejects.toMatchObject({
-        code: VoiceErrorCode.TOKEN_EXPIRED,
-      });
-    });
   });
 
-  // -- destroy --------------------------------------------------------------
+  // -- destroy ----------------------------------------------------------------
 
   describe("destroy()", () => {
-    it("stops playback and closes AudioContext", async () => {
-      await player.speak("Text", ttsOptions);
+    it("stops playback, disconnects, and closes AudioContext", async () => {
+      await player.connect("wss://example.com/tts");
 
+      player._initAudioContext();
       player.destroy();
 
       expect(mockCtx.close).toHaveBeenCalled();
+      expect(player.isConnected()).toBe(false);
     });
 
     it("removes all listeners", () => {
@@ -332,7 +390,7 @@ describe("TTSPlayer", () => {
     });
   });
 
-  // -- Edge cases for coverage -----------------------------------------------
+  // -- edge cases -------------------------------------------------------------
 
   describe("edge cases", () => {
     it("_playBuffer resolves immediately when isStopped", async () => {
@@ -351,51 +409,20 @@ describe("TTSPlayer", () => {
       expect(player._currentSource).toBeNull();
     });
 
-    it("stop rejects pending queue entries", () => {
-      player._ttsQueue = [
-        { text: "A", options: {}, resolve: jest.fn(), reject: jest.fn() },
-        { text: "B", options: {}, resolve: jest.fn(), reject: jest.fn() },
-      ];
-      const rejectA = player._ttsQueue[0].reject;
-      const rejectB = player._ttsQueue[1].reject;
+    it("handles isFinal message by flushing collected audio", async () => {
+      await player.connect("wss://example.com/tts");
 
-      player.stop(true);
+      const speakPromise = player.speak("Hello");
+      await Promise.resolve();
 
-      expect(rejectA).toHaveBeenCalled();
-      expect(rejectB).toHaveBeenCalled();
-      expect(player._ttsQueue).toEqual([]);
-    });
+      lastWs._receiveAudio("CCCC");
+      lastWs._receiveFinal();
 
-    it("_speakImmediate handles isStopped during streaming", async () => {
-      await player.speak("First", ttsOptions);
-
-      player.isStopped = false;
-      player._isProcessingTTS = false;
-
-      mockCtx.decodeAudioData.mockImplementationOnce(async () => {
-        player.isStopped = true;
-        return { duration: 1.0 };
-      });
-
-      await player.speak("Second", ttsOptions);
-    });
-
-    it("handles error in response body JSON parsing", async () => {
-      global.fetch = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          status: 500,
-          json: () => Promise.reject(new Error("bad json")),
-        }),
-      );
-
-      await expect(player.speak("Text", ttsOptions)).rejects.toMatchObject({
-        code: VoiceErrorCode.TTS_GENERATION_FAILED,
-      });
+      await speakPromise;
     });
   });
 
-  // -- Event emitter --------------------------------------------------------
+  // -- Event emitter ----------------------------------------------------------
 
   describe("event emitter", () => {
     it("on/off work correctly", () => {

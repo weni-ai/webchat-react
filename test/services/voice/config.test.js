@@ -3,15 +3,13 @@ import {
   validateVoiceConfig,
   mergeVoiceConfig,
   buildSTTWebSocketURL,
-  buildTTSStreamURL,
-  buildTTSRequestBody,
+  buildTTSWebSocketURL,
 } from "../../../src/services/voice/config";
 import { VoiceError } from "../../../src/services/voice/errors";
 
 const validConfig = {
   voiceId: "test-voice-id",
-  getToken: jest.fn(),
-  getApiKey: jest.fn(),
+  getTokens: jest.fn(),
   languageCode: "en",
   ttsModel: "eleven_flash_v2_5",
   audioFormat: "mp3_44100_128",
@@ -42,9 +40,8 @@ describe("voice/config", () => {
       expect(DEFAULT_VOICE_CONFIG.sampleRate).toBe(16000);
     });
 
-    it("has null getToken and getApiKey", () => {
-      expect(DEFAULT_VOICE_CONFIG.getToken).toBeNull();
-      expect(DEFAULT_VOICE_CONFIG.getApiKey).toBeNull();
+    it("has null getTokens", () => {
+      expect(DEFAULT_VOICE_CONFIG.getTokens).toBeNull();
     });
 
     it("has texts object with expected keys", () => {
@@ -77,22 +74,13 @@ describe("voice/config", () => {
       );
     });
 
-    it("fails when getToken is not a function", () => {
+    it("fails when getTokens is not a function", () => {
       const { valid, errors } = validateVoiceConfig({
         ...validConfig,
-        getToken: null,
+        getTokens: null,
       });
       expect(valid).toBe(false);
-      expect(errors).toContain("getToken must be a function");
-    });
-
-    it("fails when getApiKey is not a function", () => {
-      const { valid, errors } = validateVoiceConfig({
-        ...validConfig,
-        getApiKey: "not-fn",
-      });
-      expect(valid).toBe(false);
-      expect(errors).toContain("getApiKey must be a function");
+      expect(errors[0]).toMatch(/getTokens must be a function/);
     });
 
     it("fails when silenceThreshold is out of range (too low)", () => {
@@ -160,8 +148,7 @@ describe("voice/config", () => {
     it("collects multiple errors at once", () => {
       const { valid, errors } = validateVoiceConfig({
         voiceId: "",
-        getToken: null,
-        getApiKey: null,
+        getTokens: null,
         silenceThreshold: 99,
         vadThreshold: 99,
         latencyOptimization: 99,
@@ -177,8 +164,7 @@ describe("voice/config", () => {
     it("merges user config with defaults", () => {
       const merged = mergeVoiceConfig({
         voiceId: "v1",
-        getToken: jest.fn(),
-        getApiKey: jest.fn(),
+        getTokens: jest.fn(),
       });
       expect(merged.voiceId).toBe("v1");
       expect(merged.languageCode).toBe("en");
@@ -189,8 +175,7 @@ describe("voice/config", () => {
     it("deep-merges texts", () => {
       const merged = mergeVoiceConfig({
         voiceId: "v1",
-        getToken: jest.fn(),
-        getApiKey: jest.fn(),
+        getTokens: jest.fn(),
         texts: { title: "Voice" },
       });
       expect(merged.texts.title).toBe("Voice");
@@ -276,73 +261,67 @@ describe("voice/config", () => {
     });
   });
 
-  describe("buildTTSStreamURL", () => {
+  describe("buildTTSWebSocketURL", () => {
     const config = {
+      ttsModel: "eleven_flash_v2_5",
       audioFormat: "mp3_44100_128",
-      latencyOptimization: 3,
+      languageCode: "en",
     };
 
     it("includes voiceId in path", () => {
-      const url = buildTTSStreamURL("v123", config);
-      expect(url).toContain("/text-to-speech/v123/stream");
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      expect(url).toContain("/text-to-speech/v123/stream-input");
+    });
+
+    it("uses wss:// protocol", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      expect(url.startsWith("wss://")).toBe(true);
+    });
+
+    it("includes single_use_token in query params", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      const params = new URL(url).searchParams;
+      expect(params.get("single_use_token")).toBe("tok456");
+    });
+
+    it("includes model_id query param", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      const params = new URL(url).searchParams;
+      expect(params.get("model_id")).toBe("eleven_flash_v2_5");
     });
 
     it("includes output_format query param", () => {
-      const url = buildTTSStreamURL("v123", config);
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
       const params = new URL(url).searchParams;
       expect(params.get("output_format")).toBe("mp3_44100_128");
     });
 
-    it("includes optimize_streaming_latency query param", () => {
-      const url = buildTTSStreamURL("v123", config);
+    it("includes inactivity_timeout", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
       const params = new URL(url).searchParams;
-      expect(params.get("optimize_streaming_latency")).toBe("3");
-    });
-  });
-
-  describe("buildTTSRequestBody", () => {
-    const config = {
-      ttsModel: "eleven_flash_v2_5",
-      languageCode: "en",
-      audioFormat: "mp3_44100_128",
-    };
-
-    it("includes text in body", () => {
-      const body = buildTTSRequestBody("Hello", config);
-      expect(body.text).toBe("Hello");
+      expect(params.get("inactivity_timeout")).toBe("120");
     });
 
-    it("includes model_id in body", () => {
-      const body = buildTTSRequestBody("Hello", config);
-      expect(body.model_id).toBe("eleven_flash_v2_5");
-    });
-
-    it("includes language_code in body", () => {
-      const body = buildTTSRequestBody("Hello", config);
-      expect(body.language_code).toBe("en");
-    });
-
-    it("does not include output_format in body", () => {
-      const body = buildTTSRequestBody("Hello", config);
-      expect(body.output_format).toBeUndefined();
-    });
-
-    it("includes previous_text when provided", () => {
-      const body = buildTTSRequestBody("world", config, "Hello");
-      expect(body.previous_text).toBe("Hello");
-    });
-
-    it("omits previous_text when not provided", () => {
-      const body = buildTTSRequestBody("Hello", config);
-      expect(body.previous_text).toBeUndefined();
+    it("includes language_code when present", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      const params = new URL(url).searchParams;
+      expect(params.get("language_code")).toBe("en");
     });
 
     it("omits language_code when empty", () => {
-      const body = buildTTSRequestBody("Hello", {
-        ...config,
-        languageCode: "",
-      });
-      expect(body.language_code).toBeUndefined();
+      const url = buildTTSWebSocketURL(
+        "v123",
+        { ...config, languageCode: "" },
+        "tok456",
+      );
+      const params = new URL(url).searchParams;
+      expect(params.has("language_code")).toBe(false);
+    });
+
+    it("does not include xi-api-key", () => {
+      const url = buildTTSWebSocketURL("v123", config, "tok456");
+      expect(url).not.toContain("xi-api-key");
+      expect(url).not.toContain("api_key");
     });
   });
 });

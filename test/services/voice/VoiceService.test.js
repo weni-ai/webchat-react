@@ -35,8 +35,10 @@ const mockSTTConnection = {
 const mockTTSPlayer = {
   speak: jest.fn(() => Promise.resolve()),
   stop: jest.fn(),
+  connect: jest.fn(() => Promise.resolve()),
+  disconnect: jest.fn(),
   destroy: jest.fn(),
-  clearPreviousText: jest.fn(),
+  isConnected: jest.fn(() => true),
   on: jest.fn(),
   once: jest.fn(),
   off: jest.fn(),
@@ -59,6 +61,7 @@ const mockEchoGuard = {
   onBargeInDetected: jest.fn(),
   reset: jest.fn(),
   destroy: jest.fn(),
+  bargeInThreshold: 0.08,
 };
 
 jest.mock("@/services/voice/AudioCapture", () => ({
@@ -72,9 +75,15 @@ jest.mock("@/services/voice/STTConnection", () => ({
 }));
 
 jest.mock("@/services/voice/TTSPlayer", () => ({
-  TTSPlayer: jest.fn(() => ({ ...mockTTSPlayer })),
+  TTSPlayer: jest.fn((opts) => ({
+    ...mockTTSPlayer,
+    _getConnectionUrl: opts?.getConnectionUrl || null,
+  })),
   __esModule: true,
-  default: jest.fn(() => ({ ...mockTTSPlayer })),
+  default: jest.fn((opts) => ({
+    ...mockTTSPlayer,
+    _getConnectionUrl: opts?.getConnectionUrl || null,
+  })),
 }));
 
 jest.mock("@/services/voice/TextChunker", () => ({
@@ -97,10 +106,17 @@ jest.mock("@/services/voice/config", () => ({
     audioFormat: "mp3_44100_128",
     latencyOptimization: 3,
     vadThreshold: 0.02,
-    getToken: cfg.getToken || jest.fn(() => Promise.resolve("token-abc")),
-    getApiKey: cfg.getApiKey || jest.fn(() => "api-key-123"),
+    getTokens:
+      cfg.getTokens ||
+      jest.fn(() =>
+        Promise.resolve({ sttToken: "stt-token-abc", ttsToken: "tts-token-xyz" }),
+      ),
     ...cfg,
   })),
+  buildTTSWebSocketURL: jest.fn(
+    (voiceId, config, token) =>
+      `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input?single_use_token=${token}`,
+  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -114,8 +130,9 @@ function createInitializedService(overrides = {}) {
   const svc = new VoiceService();
   const config = {
     voiceId: "voice-1",
-    getToken: jest.fn(() => Promise.resolve("token-abc")),
-    getApiKey: jest.fn(() => "api-key-123"),
+    getTokens: jest.fn(() =>
+      Promise.resolve({ sttToken: "stt-token-abc", ttsToken: "tts-token-xyz" }),
+    ),
     ...overrides,
   };
   svc.init(config);
@@ -130,6 +147,12 @@ function getAudioCaptureListenerFor(svc, eventName) {
 
 function getSTTListenerFor(svc, eventName) {
   const onCalls = svc.sttConnection.on.mock.calls;
+  const match = onCalls.find(([name]) => name === eventName);
+  return match ? match[1] : null;
+}
+
+function getTTSListenerFor(svc, eventName) {
+  const onCalls = svc.ttsPlayer.on.mock.calls;
   const match = onCalls.find(([name]) => name === eventName);
   return match ? match[1] : null;
 }
@@ -222,6 +245,16 @@ describe("VoiceService", () => {
       expect(onCalls).toContain("audioData");
       expect(onCalls).toContain("voiceActivity");
     });
+
+    it("passes getConnectionUrl callback to TTSPlayer", () => {
+      svc = createInitializedService();
+      const { TTSPlayer } = require("@/services/voice/TTSPlayer");
+      expect(TTSPlayer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getConnectionUrl: expect.any(Function),
+        }),
+      );
+    });
   });
 
   // -- startSession ---------------------------------------------------------
@@ -247,6 +280,26 @@ describe("VoiceService", () => {
       );
       expect(result).toHaveProperty("id");
       expect(result).toHaveProperty("startedAt");
+    });
+
+    it("calls getTokens and passes sttToken to STTConnection", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      expect(svc.config.getTokens).toHaveBeenCalled();
+      expect(STTConnection).toHaveBeenCalledWith(
+        expect.anything(),
+        "stt-token-abc",
+      );
+    });
+
+    it("connects TTS WebSocket with ttsToken", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      expect(svc.ttsPlayer.connect).toHaveBeenCalledWith(
+        expect.stringContaining("tts-token-xyz"),
+      );
     });
 
     it("starts AudioCapture and connects STT", async () => {
@@ -301,7 +354,7 @@ describe("VoiceService", () => {
   // -- endSession -----------------------------------------------------------
 
   describe("endSession()", () => {
-    it("stops all components and transitions to IDLE", async () => {
+    it("stops all components, disconnects TTS, and transitions to IDLE", async () => {
       svc = createInitializedService();
       await svc.startSession();
 
@@ -312,6 +365,7 @@ describe("VoiceService", () => {
 
       expect(svc.audioCapture.stop).toHaveBeenCalled();
       expect(svc.ttsPlayer.stop).toHaveBeenCalledWith(true);
+      expect(svc.ttsPlayer.disconnect).toHaveBeenCalled();
       expect(svc.textChunker.clear).toHaveBeenCalled();
       expect(svc.echoGuard.reset).toHaveBeenCalled();
       expect(svc.state).toBe(VoiceSessionState.IDLE);
@@ -321,6 +375,15 @@ describe("VoiceService", () => {
           duration: expect.any(Number),
         }),
       );
+    });
+
+    it("clears currentTokens on end", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      expect(svc.currentTokens).toBeTruthy();
+
+      svc.endSession();
+      expect(svc.currentTokens).toBeNull();
     });
   });
 
@@ -381,7 +444,12 @@ describe("VoiceService", () => {
       svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
 
       const audioHandler = getAudioCaptureListenerFor(svc, "audioData");
-      audioHandler({ data: "base64", sampleRate: 16000, hasVoice: false });
+      audioHandler({
+        data: "base64",
+        sampleRate: 16000,
+        hasVoice: false,
+        energy: 0.01,
+      });
 
       expect(svc.echoGuard.shouldTriggerBargeIn).not.toHaveBeenCalled();
       expect(svc.sttConnection.sendAudio).toHaveBeenCalled();
@@ -422,7 +490,7 @@ describe("VoiceService", () => {
 
       expect(svc.textChunker.addText).toHaveBeenCalledWith("Hello world.");
       expect(svc.echoGuard.onTTSStarted).toHaveBeenCalled();
-      expect(svc.ttsPlayer.speak).toHaveBeenCalled();
+      expect(svc.ttsPlayer.speak).toHaveBeenCalledWith("Hello world.");
       expect(svc.state).toBe(VoiceSessionState.SPEAKING);
     });
 
@@ -435,7 +503,7 @@ describe("VoiceService", () => {
       svc.processTextChunk("last bit", true);
 
       expect(svc.textChunker.flush).toHaveBeenCalled();
-      expect(svc.ttsPlayer.speak).toHaveBeenCalled();
+      expect(svc.ttsPlayer.speak).toHaveBeenCalledWith("last bit");
     });
 
     it("does nothing if textChunker is null", () => {
@@ -444,22 +512,19 @@ describe("VoiceService", () => {
     });
   });
 
-  // -- TTS ended → back to LISTENING ---------------------------------------
+  // -- TTS queue:drained → back to LISTENING ---------------------------------
 
-  describe("TTS ended transition", () => {
-    it("transitions SPEAKING → LISTENING on TTS ended", async () => {
+  describe("TTS queue:drained transition", () => {
+    it("transitions SPEAKING → LISTENING on TTS queue:drained", async () => {
       svc = createInitializedService();
       await svc.startSession();
-      svc.textChunker.addText.mockReturnValueOnce("Chunk");
 
-      svc.processTextChunk("Chunk");
-      expect(svc.state).toBe(VoiceSessionState.SPEAKING);
+      svc.setState(VoiceSessionState.SPEAKING);
 
-      const onceCalls = svc.ttsPlayer.once.mock.calls;
-      const endedCallback = onceCalls.find(([ev]) => ev === "ended")?.[1];
-      expect(endedCallback).toBeDefined();
+      const drainedCallback = getTTSListenerFor(svc, "queue:drained");
+      expect(drainedCallback).toBeDefined();
 
-      endedCallback();
+      drainedCallback();
 
       expect(svc.echoGuard.onTTSStopped).toHaveBeenCalled();
       expect(svc.state).toBe(VoiceSessionState.LISTENING);
@@ -479,7 +544,12 @@ describe("VoiceService", () => {
       svc.on("barge-in", bargeHandler);
 
       const audioDataHandler = getAudioCaptureListenerFor(svc, "audioData");
-      audioDataHandler({ data: "base64", sampleRate: 16000, hasVoice: true });
+      audioDataHandler({
+        data: "base64",
+        sampleRate: 16000,
+        hasVoice: true,
+        energy: 0.1,
+      });
 
       expect(svc.ttsPlayer.stop).toHaveBeenCalledWith(false, true);
       expect(svc.textChunker.clear).toHaveBeenCalled();
@@ -500,7 +570,12 @@ describe("VoiceService", () => {
       svc.echoGuard.shouldForwardAudio.mockReturnValueOnce(false);
 
       const audioDataHandler = getAudioCaptureListenerFor(svc, "audioData");
-      audioDataHandler({ data: "base64", sampleRate: 16000, hasVoice: false });
+      audioDataHandler({
+        data: "base64",
+        sampleRate: 16000,
+        hasVoice: false,
+        energy: 0.01,
+      });
 
       expect(svc.sttConnection.sendAudio).not.toHaveBeenCalled();
     });
@@ -512,7 +587,12 @@ describe("VoiceService", () => {
       svc.echoGuard.shouldForwardAudio.mockReturnValueOnce(true);
 
       const audioDataHandler = getAudioCaptureListenerFor(svc, "audioData");
-      audioDataHandler({ data: "base64", sampleRate: 16000, hasVoice: false });
+      audioDataHandler({
+        data: "base64",
+        sampleRate: 16000,
+        hasVoice: false,
+        energy: 0.01,
+      });
 
       expect(svc.sttConnection.sendAudio).toHaveBeenCalledWith(
         "base64",
@@ -530,7 +610,12 @@ describe("VoiceService", () => {
       await svc.startSession();
 
       const audioDataHandler = getAudioCaptureListenerFor(svc, "audioData");
-      const payload = { data: "base64", sampleRate: 16000, hasVoice: false };
+      const payload = {
+        data: "base64",
+        sampleRate: 16000,
+        hasVoice: false,
+        energy: 0.01,
+      };
 
       svc.echoGuard.shouldForwardAudio.mockReturnValue(false);
       audioDataHandler(payload);
@@ -545,7 +630,7 @@ describe("VoiceService", () => {
       expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(1);
     });
 
-    it("calls onTTSStarted when speaking and onTTSStopped when ended", async () => {
+    it("calls onTTSStarted when speaking", async () => {
       svc = createInitializedService();
       await svc.startSession();
 
@@ -553,14 +638,6 @@ describe("VoiceService", () => {
       svc.processTextChunk("Hello.");
 
       expect(svc.echoGuard.onTTSStarted).toHaveBeenCalled();
-
-      const endedCallback = svc.ttsPlayer.once.mock.calls.find(
-        ([ev]) => ev === "ended",
-      )?.[1];
-      expect(endedCallback).toBeDefined();
-      endedCallback();
-
-      expect(svc.echoGuard.onTTSStopped).toHaveBeenCalled();
     });
   });
 
@@ -593,6 +670,19 @@ describe("VoiceService", () => {
 
       await Promise.resolve();
       expect(STTConnection).not.toHaveBeenCalled();
+    });
+
+    it("refreshes tokens on STT reconnect", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.config.getTokens.mockClear();
+
+      const closeHandler = getSTTListenerFor(svc, "close");
+      closeHandler();
+
+      await Promise.resolve();
+      expect(svc.config.getTokens).toHaveBeenCalled();
     });
   });
 
@@ -693,7 +783,7 @@ describe("VoiceService", () => {
       svc = createInitializedService();
       await svc.startSession();
 
-      svc.config.getToken = jest.fn(() =>
+      svc.config.getTokens = jest.fn(() =>
         Promise.reject(new Error("token fail")),
       );
       const errorHandler = jest.fn();

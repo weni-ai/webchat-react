@@ -10,6 +10,8 @@ export const VoiceErrorCode = {
   STT_CONNECTION_FAILED: 'STT_CONNECTION_FAILED',
   STT_AUTH_FAILED: 'STT_AUTH_FAILED',
   STT_TRANSCRIPTION_FAILED: 'STT_TRANSCRIPTION_FAILED',
+  TTS_CONNECTION_FAILED: 'TTS_CONNECTION_FAILED',
+  TTS_AUTH_FAILED: 'TTS_AUTH_FAILED',
   TTS_GENERATION_FAILED: 'TTS_GENERATION_FAILED',
   NETWORK_ERROR: 'NETWORK_ERROR',
   TOKEN_EXPIRED: 'TOKEN_EXPIRED',
@@ -47,6 +49,16 @@ const ERROR_METADATA = {
   [VoiceErrorCode.STT_TRANSCRIPTION_FAILED]: {
     message: 'O reconhecimento de voz falhou',
     suggestion: 'Por favor, tente falar novamente',
+    recoverable: true,
+  },
+  [VoiceErrorCode.TTS_CONNECTION_FAILED]: {
+    message: 'Não foi possível conectar ao serviço de síntese de voz',
+    suggestion: 'Verifique sua conexão e tente novamente',
+    recoverable: true,
+  },
+  [VoiceErrorCode.TTS_AUTH_FAILED]: {
+    message: 'Autenticação com o serviço de síntese de voz falhou',
+    suggestion: 'Reconectando...',
     recoverable: true,
   },
   [VoiceErrorCode.TTS_GENERATION_FAILED]: {
@@ -194,20 +206,25 @@ export function getSTTMessageErrorCode(messageType) {
 }
 
 /**
- * Map fetch/TTS errors to VoiceErrorCode.
- * @param {Error|Response} error
+ * Map TTS WebSocket errors to VoiceErrorCode.
+ * @param {Error|CloseEvent|{code?:number,message?:string}} error
  * @returns {string}
  */
 export function getTTSErrorCode(error) {
-  if (error?.status === 401) {
-    return VoiceErrorCode.TOKEN_EXPIRED;
+  const code = error?.code;
+  if (code === 1008 || code === 401) {
+    return VoiceErrorCode.TTS_AUTH_FAILED;
   }
-  if (error?.status === 429) {
+  if (code === 429) {
     return VoiceErrorCode.RATE_LIMITED;
   }
 
   const msg = (error?.message || '').toLowerCase();
-  if (msg.includes('network') || msg.includes('fetch')) {
+  if (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('connection')
+  ) {
     return VoiceErrorCode.NETWORK_ERROR;
   }
 
