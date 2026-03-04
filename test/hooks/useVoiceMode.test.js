@@ -13,6 +13,7 @@ jest.mock("@/contexts/ChatContext", () => ({
 
 function buildContext(overrides = {}) {
   return {
+    isVoiceEnabledByServer: true,
     isVoiceModeActive: false,
     isVoiceModeSupported: true,
     voiceModeState: "idle",
@@ -25,8 +26,7 @@ function buildContext(overrides = {}) {
     retryVoiceMode: mockRetryVoiceMode,
     config: {
       voiceMode: {
-        enabled: true,
-        voiceId: "voice-123",
+        elevenLabs: { voiceId: "voice-123" },
         texts: { title: "Talk" },
       },
     },
@@ -40,31 +40,44 @@ describe("useVoiceMode", () => {
     mockContextValue = buildContext();
   });
 
-  it("returns isEnabled=true when config has voiceMode.enabled + voiceId", () => {
-    const { result } = renderHook(() => useVoiceMode());
-    expect(result.current.isEnabled).toBe(true);
-  });
-
-  it("returns isEnabled=false when voiceMode is not configured", () => {
-    mockContextValue = buildContext({ config: {} });
-    const { result } = renderHook(() => useVoiceMode());
-    expect(result.current.isEnabled).toBe(false);
-  });
-
-  it("returns isEnabled=false when voiceMode.enabled is false", () => {
-    mockContextValue = buildContext({
-      config: { voiceMode: { enabled: false, voiceId: "v1" } },
+  describe("isEnabled", () => {
+    it("returns true when server enables voice", () => {
+      const { result } = renderHook(() => useVoiceMode());
+      expect(result.current.isEnabled).toBe(true);
     });
-    const { result } = renderHook(() => useVoiceMode());
-    expect(result.current.isEnabled).toBe(false);
-  });
 
-  it("returns isEnabled=false when voiceId is missing", () => {
-    mockContextValue = buildContext({
-      config: { voiceMode: { enabled: true } },
+    it("returns true when server enables voice even without voiceId", () => {
+      mockContextValue = buildContext({
+        isVoiceEnabledByServer: true,
+        config: { voiceMode: {} },
+      });
+      const { result } = renderHook(() => useVoiceMode());
+      expect(result.current.isEnabled).toBe(true);
     });
-    const { result } = renderHook(() => useVoiceMode());
-    expect(result.current.isEnabled).toBe(false);
+
+    it("returns true when server enables voice even without voiceMode config", () => {
+      mockContextValue = buildContext({
+        isVoiceEnabledByServer: true,
+        config: {},
+      });
+      const { result } = renderHook(() => useVoiceMode());
+      expect(result.current.isEnabled).toBe(true);
+    });
+
+    it("returns false when server has not enabled voice", () => {
+      mockContextValue = buildContext({ isVoiceEnabledByServer: false });
+      const { result } = renderHook(() => useVoiceMode());
+      expect(result.current.isEnabled).toBe(false);
+    });
+
+    it("returns false when server has not enabled voice even with voiceId configured", () => {
+      mockContextValue = buildContext({
+        isVoiceEnabledByServer: false,
+        config: { voiceMode: { elevenLabs: { voiceId: "v1" } } },
+      });
+      const { result } = renderHook(() => useVoiceMode());
+      expect(result.current.isEnabled).toBe(false);
+    });
   });
 
   it("returns isSupported from context", () => {
@@ -103,8 +116,8 @@ describe("useVoiceMode", () => {
     expect(result.current.isSpeaking).toBe(false);
   });
 
-  it("enter() returns false when not enabled", async () => {
-    mockContextValue = buildContext({ config: {} });
+  it("enter() returns false when not enabled (server disabled)", async () => {
+    mockContextValue = buildContext({ isVoiceEnabledByServer: false });
     const { result } = renderHook(() => useVoiceMode());
 
     let value;
@@ -194,7 +207,7 @@ describe("useVoiceMode", () => {
 
   it("returns empty texts when config has no voiceMode texts", () => {
     mockContextValue = buildContext({
-      config: { voiceMode: { enabled: true, voiceId: "v1" } },
+      config: { voiceMode: { elevenLabs: { voiceId: "v1" } } },
     });
     const { result } = renderHook(() => useVoiceMode());
     expect(result.current.texts).toEqual({});

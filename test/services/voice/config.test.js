@@ -8,7 +8,7 @@ import {
 import { VoiceError } from "../../../src/services/voice/errors";
 
 const validConfig = {
-  voiceId: "test-voice-id",
+  elevenLabs: { voiceId: "test-voice-id" },
   getTokens: jest.fn(),
   languageCode: "en",
   ttsModel: "eleven_flash_v2_5",
@@ -63,15 +63,12 @@ describe("voice/config", () => {
       expect(errors).toHaveLength(0);
     });
 
-    it("fails when voiceId is missing", () => {
-      const { valid, errors } = validateVoiceConfig({
+    it("passes when elevenLabs.voiceId is missing (optional)", () => {
+      const { valid } = validateVoiceConfig({
         ...validConfig,
-        voiceId: "",
+        elevenLabs: { voiceId: "" },
       });
-      expect(valid).toBe(false);
-      expect(errors).toContain(
-        "voiceId is required and must be a non-empty string",
-      );
+      expect(valid).toBe(true);
     });
 
     it("fails when getTokens is not a function", () => {
@@ -147,7 +144,7 @@ describe("voice/config", () => {
 
     it("collects multiple errors at once", () => {
       const { valid, errors } = validateVoiceConfig({
-        voiceId: "",
+        elevenLabs: { voiceId: "" },
         getTokens: null,
         silenceThreshold: 99,
         vadThreshold: 99,
@@ -156,25 +153,33 @@ describe("voice/config", () => {
         audioFormat: "bad",
       });
       expect(valid).toBe(false);
-      expect(errors.length).toBeGreaterThanOrEqual(5);
+      expect(errors.length).toBeGreaterThanOrEqual(4);
     });
   });
 
   describe("mergeVoiceConfig", () => {
     it("merges user config with defaults", () => {
       const merged = mergeVoiceConfig({
-        voiceId: "v1",
+        elevenLabs: { voiceId: "v1" },
         getTokens: jest.fn(),
       });
-      expect(merged.voiceId).toBe("v1");
+      expect(merged.elevenLabs.voiceId).toBe("v1");
       expect(merged.languageCode).toBe("en");
       expect(merged.ttsModel).toBe("eleven_flash_v2_5");
       expect(merged.silenceThreshold).toBe(1.5);
     });
 
+    it("deep-merges elevenLabs", () => {
+      const merged = mergeVoiceConfig({
+        elevenLabs: { voiceId: "v1" },
+        getTokens: jest.fn(),
+      });
+      expect(merged.elevenLabs.voiceId).toBe("v1");
+    });
+
     it("deep-merges texts", () => {
       const merged = mergeVoiceConfig({
-        voiceId: "v1",
+        elevenLabs: { voiceId: "v1" },
         getTokens: jest.fn(),
         texts: { title: "Voice" },
       });
@@ -182,7 +187,7 @@ describe("voice/config", () => {
       expect(merged.texts.listening).toBe("");
     });
 
-    it("throws VoiceError on invalid config", () => {
+    it("throws VoiceError on invalid config (missing getTokens)", () => {
       expect(() => mergeVoiceConfig({})).toThrow(VoiceError);
     });
 
@@ -192,8 +197,21 @@ describe("voice/config", () => {
         fail("should have thrown");
       } catch (err) {
         expect(err.message).toMatch(/Invalid voice configuration/);
-        expect(err.message).toMatch(/voiceId/);
+        expect(err.message).toMatch(/getTokens/);
       }
+    });
+
+    it("forces silenceThreshold, enableBargeIn, autoListen to defaults", () => {
+      const merged = mergeVoiceConfig({
+        elevenLabs: { voiceId: "v1" },
+        getTokens: jest.fn(),
+        silenceThreshold: 3.0,
+        enableBargeIn: false,
+        autoListen: false,
+      });
+      expect(merged.silenceThreshold).toBe(1.5);
+      expect(merged.enableBargeIn).toBe(true);
+      expect(merged.autoListen).toBe(true);
     });
   });
 

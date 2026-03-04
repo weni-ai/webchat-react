@@ -100,7 +100,7 @@ jest.mock("@/services/voice/EchoGuard", () => ({
 
 jest.mock("@/services/voice/config", () => ({
   mergeVoiceConfig: jest.fn((cfg) => ({
-    voiceId: "voice-1",
+    elevenLabs: { voiceId: "voice-1", ...cfg?.elevenLabs },
     languageCode: "en",
     ttsModel: "eleven_flash_v2_5",
     audioFormat: "mp3_44100_128",
@@ -129,7 +129,7 @@ const { STTConnection } = require("@/services/voice/STTConnection");
 function createInitializedService(overrides = {}) {
   const svc = new VoiceService();
   const config = {
-    voiceId: "voice-1",
+    elevenLabs: { voiceId: "voice-1" },
     getTokens: jest.fn(() =>
       Promise.resolve({ sttToken: "stt-token-abc", ttsToken: "tts-token-xyz" }),
     ),
