@@ -12,9 +12,9 @@ window.WebChat = WebChat;
 const config = {
   // socketUrl: 'wss://websocket.weni.ai',
   // channelUuid: 'your-channel-uuid-here', // Replace with your actual channel UUID
-  socketUrl: 'https://websocket.weni.ai',
-  channelUuid: '5de2d244-2138-43c4-be6b-59a9eaae2f3b', // Replace with your actual channel UUID
-  host: 'https://flows.weni.ai',
+  socketUrl: 'https://websocket.stg.cloud.weni.ai',
+  channelUuid: '66c1f276-42d0-46f1-b5e3-37bb4d9e908d', // Replace with your actual channel UUID
+  host: 'https://flows.stg.cloud.weni.ai',
 
   // Optional configurations
   connectOn: 'mount', // or 'manual'

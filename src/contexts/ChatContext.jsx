@@ -353,7 +353,6 @@ ChatProvider.propTypes = {
     socketUrl: PropTypes.string.isRequired,
     channelUuid: PropTypes.string.isRequired,
     host: PropTypes.string.isRequired,
-    preview:  PropTypes.bool,
 
     // Connection settings
     initPayload: PropTypes.string,

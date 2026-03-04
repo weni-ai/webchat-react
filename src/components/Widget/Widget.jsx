@@ -60,6 +60,7 @@ Widget.propTypes = {
     socketUrl: PropTypes.string.isRequired,
     channelUuid: PropTypes.string.isRequired,
     host: PropTypes.string.isRequired,
+    params: PropTypes.object,
     // TODO: Add all config properties
   }).isRequired,
   theme: PropTypes.object,
