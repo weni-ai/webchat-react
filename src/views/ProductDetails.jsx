@@ -63,11 +63,13 @@ export function ProductDetails({ product }) {
         {quantity > 0 && (
           <>
             <CounterControls
+              uuid={product.uuid}
               counter={quantity}
               setCounter={(counter) =>
                 setCounter(product.uuid, product, counter)
               }
               size="medium"
+              sellerId={product.sellerId}
             />
             <Button
               className="weni-view-product-details__footer-button"

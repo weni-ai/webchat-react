@@ -79,6 +79,7 @@ export function Button({
         `weni-button--${size}`,
         `weni-button--${alignContent}-aligned`,
         hoverState && 'weni-button--hover-state',
+        isLoading && 'weni-button--loading',
         icon && !children && 'weni-button--only-icon',
         className,
         isDisabled ? 'weni-button--disabled' : 'weni-button--enabled',
@@ -90,14 +91,21 @@ export function Button({
       href={href}
       {...props}
     >
-      {/* TODO: Add loading spinner */}
-      {icon && (
+      {isLoading ? (
+        <Icon
+          name="progress_activity"
+          color={getIconColor()}
+          filled={iconFilled}
+          className="weni-button__icon"
+        />
+      ) : icon ? (
         <Icon
           name={icon}
           color={getIconColor()}
           filled={iconFilled}
+          className="weni-button__icon"
         />
-      )}
+      ) : null}
 
       {children}
     </ButtonComponent>
