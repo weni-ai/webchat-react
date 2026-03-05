@@ -79,15 +79,20 @@ export function InlineProduct({
         : null;
 
   const productURLObject = useMemo(() => {
-    return URL.canParse(productURL) ? new URL(productURL) : { origin: '', pathname: '' };
+    return URL.canParse(productURL)
+      ? new URL(productURL)
+      : { origin: '', pathname: '' };
   }, [productURL]);
-  
+
   const canUserNavigateToProductPage = useMemo(() => {
     return productURLObject.origin === window.location.origin;
   }, [productURLObject]);
 
   const handleClick = useCallback(() => {
-    if (canUserNavigateToProductPage && productURLObject.pathname === window.location.pathname) {
+    if (
+      canUserNavigateToProductPage &&
+      productURLObject.pathname === window.location.pathname
+    ) {
       return;
     }
 

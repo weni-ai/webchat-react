@@ -74,7 +74,7 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
-  
+
   async function handleAddProductToOrderForm() {
     const parsed = parseUuid(uuid, sellerIdProp);
 

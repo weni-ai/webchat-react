@@ -41,31 +41,27 @@ export function OrderFormProvider({ children }) {
       if (!orderFormId) {
         return Promise.reject(new Error('No orderFormId'));
       }
-      return fetch(
-        `/api/checkout/pub/orderForm/${orderFormId}/items`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            orderItems: [
-              {
-                id: skuId,
-                quantity,
-                seller: sellerId,
-              },
-            ],
-          }),
-        }
-      )
-        .then((res) => {
-          if (!res.ok) throw new Error('Add item failed');
-          return res.json();
-        });
+      return fetch(`/api/checkout/pub/orderForm/${orderFormId}/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          orderItems: [
+            {
+              id: skuId,
+              quantity,
+              seller: sellerId,
+            },
+          ],
+        }),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Add item failed');
+        return res.json();
+      });
     },
-    [orderFormId]
+    [orderFormId],
   );
 
   const value = {
