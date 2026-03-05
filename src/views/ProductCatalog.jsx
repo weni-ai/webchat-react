@@ -56,6 +56,7 @@ export function ProductCatalog({ productGroups }) {
                   setCounter(product.uuid, product, counter)
                 }
                 sellerId={product.sellerId}
+                productURL={product.productURL}
                 onClick={() =>
                   setCurrentPage({
                     view: 'product-details',
