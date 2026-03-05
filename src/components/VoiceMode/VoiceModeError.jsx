@@ -1,13 +1,20 @@
-import PropTypes from "prop-types";
-import { Icon } from "@/components/common/Icon";
-import { Button } from "@/components/common/Button";
+import PropTypes from 'prop-types';
+import { Icon } from '@/components/common/Icon';
+import { Button } from '@/components/common/Button';
 
 export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
-  const title = texts.errorTitle || "Something went wrong";
+  const title = texts.errorTitle || 'Something went wrong';
 
   return (
-    <div className="weni-voice-error" role="alert">
-      <Icon name="error" size="x-large" className="weni-voice-error__icon" />
+    <div
+      className="weni-voice-error"
+      role="alert"
+    >
+      <Icon
+        name="error"
+        size="x-large"
+        className="weni-voice-error__icon"
+      />
 
       <h2 className="weni-voice-error__title">{title}</h2>
 
@@ -27,7 +34,7 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
             onClick={onRetry}
             className="weni-voice-error__retry-btn"
           >
-            {texts.retry || "Try again"}
+            {texts.retry || 'Try again'}
           </Button>
         )}
 
@@ -36,7 +43,7 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
           onClick={onDismiss}
           className="weni-voice-error__dismiss-btn"
         >
-          {texts.dismiss || "Dismiss"}
+          {texts.dismiss || 'Dismiss'}
         </Button>
       </div>
     </div>

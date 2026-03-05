@@ -45,7 +45,8 @@ const ERROR_METADATA = {
   },
   [VoiceErrorCode.STT_AUTH_FAILED]: {
     message: 'Autenticação com ElevenLabs falhou',
-    suggestion: 'Verifique a API key e as permissões do plano (Scribe v2 Realtime é necessário)',
+    suggestion:
+      'Verifique a API key e as permissões do plano (Scribe v2 Realtime é necessário)',
     recoverable: false,
   },
   [VoiceErrorCode.STT_TRANSCRIPTION_FAILED]: {

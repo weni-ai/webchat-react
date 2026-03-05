@@ -439,11 +439,7 @@ export class VoiceService {
 
     if (hasVoice) {
       for (const buffered of this._leadInBuffer) {
-        this.sttConnection.sendAudio(
-          buffered.data,
-          buffered.sampleRate,
-          false,
-        );
+        this.sttConnection.sendAudio(buffered.data, buffered.sampleRate, false);
       }
       this._leadInBuffer = [];
       this._isForwardingToSTT = true;

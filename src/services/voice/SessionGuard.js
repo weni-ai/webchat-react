@@ -19,8 +19,7 @@ class SessionGuard {
   constructor(options = {}) {
     this._maxDurationMs =
       options.maxSessionDurationMs ?? DEFAULT_MAX_DURATION_MS;
-    this._idleTimeoutMs =
-      options.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS;
+    this._idleTimeoutMs = options.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS;
     this._hiddenGraceMs =
       options.hiddenGracePeriodMs ?? DEFAULT_HIDDEN_GRACE_MS;
 
@@ -107,10 +106,7 @@ class SessionGuard {
     this._boundVisibilityHandler = () => {
       this._onVisibilityChange();
     };
-    document.addEventListener(
-      'visibilitychange',
-      this._boundVisibilityHandler,
-    );
+    document.addEventListener('visibilitychange', this._boundVisibilityHandler);
   }
 
   /** @private */
@@ -130,8 +126,7 @@ class SessionGuard {
   _onVisibilityChange() {
     if (!this._active) return;
 
-    const hidden =
-      typeof document !== 'undefined' && document.hidden;
+    const hidden = typeof document !== 'undefined' && document.hidden;
 
     if (hidden && !this._isTabHidden) {
       this._isTabHidden = true;

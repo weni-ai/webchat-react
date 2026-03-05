@@ -1,20 +1,20 @@
-import PropTypes from "prop-types";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/common/Button";
-import "./VoiceModeButton.scss";
+import PropTypes from 'prop-types';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/common/Button';
+import './VoiceModeButton.scss';
 
 function getAnimationState(voiceState) {
   switch (voiceState) {
-    case "speaking":
-      return "speaking";
-    case "processing":
-    case "thinking":
-      return "processing";
-    case "listening":
-    case "listening_active":
+    case 'speaking':
+      return 'speaking';
+    case 'processing':
+    case 'thinking':
+      return 'processing';
+    case 'listening':
+    case 'listening_active':
     default:
-      return "listening";
+      return 'listening';
   }
 }
 
@@ -22,8 +22,8 @@ export function VoiceModeButton({
   onClick,
   disabled = false,
   isActive = false,
-  voiceState = "idle",
-  className = "",
+  voiceState = 'idle',
+  className = '',
 }) {
   const { t } = useTranslation();
 
@@ -47,7 +47,7 @@ export function VoiceModeButton({
         onClick={onClick}
         disabled={disabled}
         className={`weni-voice-mode-btn weni-voice-mode-btn--active ${className}`}
-        aria-label={t("voice_mode.stop")}
+        aria-label="Exit voice mode"
       >
         <div
           className={`weni-voice-mode-btn__bars weni-voice-mode-btn__bars--${animState}`}
@@ -55,7 +55,7 @@ export function VoiceModeButton({
           {bars}
         </div>
         <span className="weni-voice-mode-btn__label">
-          {t("voice_mode.stop")}
+          {t('voice_mode.stop')}
         </span>
       </button>
     );

@@ -1,24 +1,24 @@
-import PropTypes from "prop-types";
-import { useMemo } from "react";
-import "./WaveformVisualizer.scss";
+import PropTypes from 'prop-types';
+import { useMemo } from 'react';
+import './WaveformVisualizer.scss';
 
 function getAriaLabel(state) {
   switch (state) {
-    case "listening":
-      return "Listening for your voice";
-    case "speaking":
-      return "Playing audio response";
-    case "processing":
-      return "Processing your speech";
+    case 'listening':
+      return 'Listening for your voice';
+    case 'speaking':
+      return 'Playing audio response';
+    case 'processing':
+      return 'Processing your speech';
     default:
-      return "Voice mode indicator";
+      return 'Voice mode indicator';
   }
 }
 
 export function WaveformVisualizer({
-  state = "idle",
+  state = 'idle',
   barCount = 5,
-  className = "",
+  className = '',
 }) {
   const bars = useMemo(
     () =>
@@ -44,7 +44,7 @@ export function WaveformVisualizer({
 }
 
 WaveformVisualizer.propTypes = {
-  state: PropTypes.oneOf(["idle", "listening", "speaking", "processing"]),
+  state: PropTypes.oneOf(['idle', 'listening', 'speaking', 'processing']),
   barCount: PropTypes.number,
   className: PropTypes.string,
 };

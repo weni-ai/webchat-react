@@ -106,8 +106,7 @@ export function mergeVoiceConfig(userConfig) {
     elevenLabs: {
       ...DEFAULT_VOICE_CONFIG.elevenLabs,
       ...userConfig?.elevenLabs,
-      voiceId:
-        userConfig?.elevenLabs?.voiceId || DEFAULT_VOICE_ID,
+      voiceId: userConfig?.elevenLabs?.voiceId || DEFAULT_VOICE_ID,
     },
     silenceThreshold: DEFAULT_VOICE_CONFIG.silenceThreshold,
     enableBargeIn: DEFAULT_VOICE_CONFIG.enableBargeIn,

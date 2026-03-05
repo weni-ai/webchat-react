@@ -408,7 +408,13 @@ export function ChatProvider({ children, config }) {
       // This catch prevents an unhandled promise rejection when the user
       // cancels during initialization or when startSession fails.
     }
-  }, [mergedConfig, voiceLanguage, isVoiceModeSupported, isVoiceEnabledByServer, service]);
+  }, [
+    mergedConfig,
+    voiceLanguage,
+    isVoiceModeSupported,
+    isVoiceEnabledByServer,
+    service,
+  ]);
 
   const exitVoiceMode = useCallback(() => {
     if (voiceServiceRef.current) {

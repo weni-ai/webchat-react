@@ -155,17 +155,20 @@ export function InputBox({ maxLength = 5000 }) {
           disabled={isEnteringVoiceMode || mode === 'preview'}
         />
 
-        {!text.trim() && !isVoiceModeActive && !isEnteringVoiceMode && config.showCameraRecorder && (
-          <Button
-            onClick={handleRecordCamera}
-            disabled={hasCameraPermissionState === false}
-            aria-label="Take photo"
-            variant="tertiary"
-            icon="add_a_photo"
-            iconColor="gray-500"
-            className="weni-input-box__photo-icon"
-          />
-        )}
+        {!text.trim() &&
+          !isVoiceModeActive &&
+          !isEnteringVoiceMode &&
+          config.showCameraRecorder && (
+            <Button
+              onClick={handleRecordCamera}
+              disabled={hasCameraPermissionState === false}
+              aria-label="Take photo"
+              variant="tertiary"
+              icon="add_a_photo"
+              iconColor="gray-500"
+              className="weni-input-box__photo-icon"
+            />
+          )}
       </section>
 
       {!isVoiceModeActive && !isEnteringVoiceMode && !text.trim() && (
@@ -214,13 +217,15 @@ export function InputBox({ maxLength = 5000 }) {
         </button>
       )}
 
-      {!isEnteringVoiceMode && showVoiceButton && (isVoiceModeActive || !text.trim()) && (
-        <VoiceModeButton
-          onClick={handleVoiceToggle}
-          isActive={isVoiceModeActive}
-          voiceState={voiceModeState}
-        />
-      )}
+      {!isEnteringVoiceMode &&
+        showVoiceButton &&
+        (isVoiceModeActive || !text.trim()) && (
+          <VoiceModeButton
+            onClick={handleVoiceToggle}
+            isActive={isVoiceModeActive}
+            voiceState={voiceModeState}
+          />
+        )}
     </section>
   );
 }

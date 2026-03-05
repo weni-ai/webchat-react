@@ -45,7 +45,14 @@ import './Chat.scss';
  */
 export function Chat() {
   const { t } = useTranslation();
-  const { isChatOpen, isConnectionClosed, currentPage, config, isEnteringVoiceMode, mode } = useWeniChat();
+  const {
+    isChatOpen,
+    isConnectionClosed,
+    currentPage,
+    config,
+    isEnteringVoiceMode,
+    mode,
+  } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 

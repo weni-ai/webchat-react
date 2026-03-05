@@ -170,11 +170,11 @@ export class AudioCapture {
     const cbs = this.listeners.get(event);
     if (cbs) {
       cbs.forEach((cb) => {
-      try {
-        cb(data);
-      } catch {
-        // Prevent listener errors from disrupting audio processing
-      }
+        try {
+          cb(data);
+        } catch {
+          // Prevent listener errors from disrupting audio processing
+        }
       });
     }
   }
@@ -232,7 +232,12 @@ export class AudioCapture {
 
     const pcm16 = floatTo16BitPCM(samples);
     const base64 = int16ToBase64(pcm16);
-    this.emit('audioData', { data: base64, sampleRate: targetRate, hasVoice, energy });
+    this.emit('audioData', {
+      data: base64,
+      sampleRate: targetRate,
+      hasVoice,
+      energy,
+    });
   }
 
   /** @private Track speaking/silence transitions and emit events. */
