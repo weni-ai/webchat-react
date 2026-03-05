@@ -5,6 +5,7 @@ import {
   useState,
   useRef,
 } from 'react';
+import PropTypes from 'prop-types';
 
 const OrderFormContext = createContext(null);
 
@@ -77,6 +78,10 @@ export function OrderFormProvider({ children }) {
     </OrderFormContext.Provider>
   );
 }
+
+OrderFormProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export function useOrderFormId() {
   const context = useContext(OrderFormContext);
