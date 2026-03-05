@@ -131,6 +131,7 @@ export function ChatProvider({ children, config }) {
   // Voice mode state
   const [isVoiceEnabledByServer, setIsVoiceEnabledByServer] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
+  const [isEnteringVoiceMode, setIsEnteringVoiceMode] = useState(false);
   const [voiceModeState, setVoiceModeState] = useState(null);
   const [voicePartialTranscript, setVoicePartialTranscript] = useState('');
   const [voiceError, setVoiceError] = useState(null);
@@ -340,6 +341,8 @@ export function ChatProvider({ children, config }) {
     lastProcessedVoiceMsgIdRef.current = null;
     processedTextRef.current = '';
 
+    setIsEnteringVoiceMode(true);
+
     const getTokens = () => service.requestVoiceTokens();
 
     const vs = new VoiceService();
@@ -353,8 +356,12 @@ export function ChatProvider({ children, config }) {
     vs.on('transcript:committed', () => {
       setVoicePartialTranscript('');
     });
-    vs.on('session:started', () => setIsVoiceModeActive(true));
+    vs.on('session:started', () => {
+      setIsEnteringVoiceMode(false);
+      setIsVoiceModeActive(true);
+    });
     vs.on('session:ended', ({ reason } = {}) => {
+      setIsEnteringVoiceMode(false);
       setIsVoiceModeActive(false);
       setVoiceModeState(null);
       setVoicePartialTranscript('');
@@ -371,10 +378,20 @@ export function ChatProvider({ children, config }) {
         voiceServiceRef.current = null;
       }
     });
-    vs.on('error', (error) => setVoiceError(error));
+    vs.on('error', (error) => {
+      setIsEnteringVoiceMode(false);
+      setVoiceError(error);
+    });
     vs.setMessageCallback((text) => service.sendMessage(text));
     voiceServiceRef.current = vs;
-    await vs.startSession();
+
+    try {
+      await vs.startSession();
+    } catch {
+      // Errors are surfaced via the 'error' event listener above.
+      // This catch prevents an unhandled promise rejection when the user
+      // cancels during initialization or when startSession fails.
+    }
   }, [mergedConfig, voiceLanguage, isVoiceModeSupported, isVoiceEnabledByServer, service]);
 
   const exitVoiceMode = useCallback(() => {
@@ -435,6 +452,7 @@ export function ChatProvider({ children, config }) {
     // Voice mode state
     isVoiceEnabledByServer,
     isVoiceModeActive,
+    isEnteringVoiceMode,
     isVoiceModeSupported,
     voiceModeState,
     voicePartialTranscript,

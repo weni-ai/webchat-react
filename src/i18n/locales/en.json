@@ -52,6 +52,9 @@
     "errorTitle": "Something went wrong",
     "you": "You",
     "youSaid": "You said",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "stop": "Stop",
+    "microphonePermissionHint": "Enable microphone in your browser settings to use voice mode",
+    "cancel": "Cancel"
   }
 }

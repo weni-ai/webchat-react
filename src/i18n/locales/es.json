@@ -52,6 +52,9 @@
     "errorTitle": "Algo salió mal",
     "you": "Tú",
     "youSaid": "Dijiste",
-    "assistant": "Asistente"
+    "assistant": "Asistente",
+    "stop": "Detener",
+    "microphonePermissionHint": "Activa el micrófono en la configuración de tu navegador para usar el modo de voz",
+    "cancel": "Cancelar"
   }
 }

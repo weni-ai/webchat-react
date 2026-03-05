@@ -8,9 +8,11 @@
   }
 
   &--active {
-    width: 40px;
     height: 40px;
-    border-radius: $border-radius-full;
+    width: auto;
+    padding: 0 12px 0 10px;
+    gap: 6px;
+    border-radius: 9999px;
     background-color: var(--weni-main-color);
     border: none;
     cursor: pointer;
@@ -19,7 +21,6 @@
     justify-content: center;
     flex-shrink: 0;
     transition: background-color 0.2s ease, filter 0.2s ease;
-    padding: 0;
 
     &:hover {
       filter: brightness(0.85);
@@ -29,6 +30,14 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+
+  &__label {
+    color: $white;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   &__bars {

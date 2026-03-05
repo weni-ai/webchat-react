@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import { useChatContext } from '@/contexts/ChatContext';
 
@@ -12,6 +13,7 @@ import { VoiceModeButton } from '@/components/VoiceMode';
 import './InputBox.scss';
 
 export function InputBox({ maxLength = 5000 }) {
+  const { t } = useTranslation();
   const {
     isRecording,
     sendMessage,
@@ -26,11 +28,12 @@ export function InputBox({ maxLength = 5000 }) {
     isVoiceEnabledByServer,
     isVoiceModeSupported,
     isVoiceModeActive,
+    isEnteringVoiceMode,
     voiceModeState,
     enterVoiceMode,
     exitVoiceMode,
+    config,
   } = useChatContext();
-  const { config } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
@@ -139,9 +142,10 @@ export function InputBox({ maxLength = 5000 }) {
           onKeyDown={handleKeyPress}
           maxLength={maxLength}
           rows={1}
+          disabled={isEnteringVoiceMode}
         />
 
-        {!text.trim() && !isVoiceModeActive && config.showCameraRecorder && (
+        {!text.trim() && !isVoiceModeActive && !isEnteringVoiceMode && config.showCameraRecorder && (
           <Button
             onClick={handleRecordCamera}
             disabled={hasCameraPermissionState === false}
@@ -154,7 +158,7 @@ export function InputBox({ maxLength = 5000 }) {
         )}
       </section>
 
-      {!isVoiceModeActive && !text.trim() && (
+      {!isVoiceModeActive && !isEnteringVoiceMode && !text.trim() && (
         <>
           <InputFile ref={fileInputRef} />
           {config.showFileUploader && (
@@ -180,7 +184,7 @@ export function InputBox({ maxLength = 5000 }) {
         </>
       )}
 
-      {!!text.trim() && (
+      {!!text.trim() && !isEnteringVoiceMode && (
         <Button
           onClick={handleSend}
           variant="primary"
@@ -189,7 +193,18 @@ export function InputBox({ maxLength = 5000 }) {
         />
       )}
 
-      {showVoiceButton && (isVoiceModeActive || !text.trim()) && (
+      {isEnteringVoiceMode && (
+        <button
+          className="weni-input-box__voice-cancel-btn"
+          onClick={exitVoiceMode}
+          aria-label={t('voice_mode.cancel')}
+        >
+          <span className="weni-input-box__voice-cancel-spinner" />
+          <span>{t('voice_mode.cancel')}</span>
+        </button>
+      )}
+
+      {!isEnteringVoiceMode && showVoiceButton && (isVoiceModeActive || !text.trim()) && (
         <VoiceModeButton
           onClick={handleVoiceToggle}
           isActive={isVoiceModeActive}

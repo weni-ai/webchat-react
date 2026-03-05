@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/common/Button";
 import "./VoiceModeButton.scss";
 
@@ -24,6 +25,8 @@ export function VoiceModeButton({
   voiceState = "idle",
   className = "",
 }) {
+  const { t } = useTranslation();
+
   const bars = useMemo(
     () =>
       Array.from({ length: 4 }, (_, i) => (
@@ -44,13 +47,16 @@ export function VoiceModeButton({
         onClick={onClick}
         disabled={disabled}
         className={`weni-voice-mode-btn weni-voice-mode-btn--active ${className}`}
-        aria-label="Exit voice mode"
+        aria-label={t("voice_mode.stop")}
       >
         <div
           className={`weni-voice-mode-btn__bars weni-voice-mode-btn__bars--${animState}`}
         >
           {bars}
         </div>
+        <span className="weni-voice-mode-btn__label">
+          {t("voice_mode.stop")}
+        </span>
       </button>
     );
   }

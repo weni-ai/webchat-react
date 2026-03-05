@@ -52,6 +52,9 @@
     "errorTitle": "Algo deu errado",
     "you": "Você",
     "youSaid": "Você disse",
-    "assistant": "Assistente"
+    "assistant": "Assistente",
+    "stop": "Parar",
+    "microphonePermissionHint": "Ative o microfone nas configurações do navegador para usar o modo voz",
+    "cancel": "Cancelar"
   }
 }
