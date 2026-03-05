@@ -124,10 +124,10 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage || 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
-    showCameraRecorder: params.showCameraRecorder || false,
-    showAudioRecorder: params.showAudioRecorder || false,
-    showFileUploader: params.showFileUploader || false,
-    showChatAvatar: params.showChatAvatar || true,
+    showCameraRecorder: params.showCameraRecorder !== false,
+    showAudioRecorder: params.showAudioRecorder !== false,
+    showFileUploader: params.showFileUploader !== false,
+    showChatAvatar: params.showChatAvatar !== false,
 
     // Media settings
     docViewer: params.docViewer || false,
@@ -272,6 +272,17 @@ async function clear() {
 }
 
 /**
+ * Clear page history (e.g. close product/catalog views and return to chat)
+ * @returns {Promise<void>}
+ */
+async function clearPageHistory() {
+  const service = await serviceWhenReady();
+  if (typeof service.clearPageHistory === 'function') {
+    service.clearPageHistory();
+  }
+}
+
+/**
  * Set session ID
  * If there's an active session, restarts it with the new ID
  * @param {string} sessionId
@@ -366,6 +377,7 @@ const WebChat = {
   toggle,
   send,
   clear,
+  clearPageHistory,
   setSessionId,
   setContext,
   getContext,
