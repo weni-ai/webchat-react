@@ -1,0 +1,29 @@
+# webchat-react Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-19
+
+## Active Technologies
+
+- JavaScript (ES2020+), React 18, JSX + `@weni/webchat-service ^1.7.0` (peer), `i18next`, `prop-types`, `react-i18next`. External API: ElevenLabs (STT WebSocket, TTS HTTP streaming). No new npm packages needed. (001-full-voice-mode)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+JavaScript (ES2020+), React 18, JSX: Follow standard conventions
+
+## Recent Changes
+
+- 001-full-voice-mode: Added JavaScript (ES2020+), React 18, JSX + `@weni/webchat-service ^1.7.0` (peer), `i18next`, `prop-types`, `react-i18next`. External API: ElevenLabs (STT WebSocket, TTS HTTP streaming). No new npm packages needed.
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

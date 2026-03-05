@@ -1,5 +1,5 @@
 module.exports = {
   __esModule: true,
-  default: 'svg-mock',
+  default: "svg-mock",
   ReactComponent: () => null,
 };

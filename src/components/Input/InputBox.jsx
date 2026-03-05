@@ -8,14 +8,10 @@ import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
 import CameraRecording from '@/components/CameraRecording/CameraRecording';
+import { VoiceModeButton } from '@/components/VoiceMode';
 
 import './InputBox.scss';
 
-/**
- * InputBox - Message input component
- * TODO: Handle emoji picker
- * TODO: Add character limit indicator
- */
 export function InputBox({ maxLength = 5000 }) {
   const { t } = useTranslation();
 
@@ -30,9 +26,16 @@ export function InputBox({ maxLength = 5000 }) {
     hasCameraPermission,
     requestCameraPermission,
     startCameraRecording,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+    isVoiceModeActive,
+    isEnteringVoiceMode,
+    voiceModeState,
+    enterVoiceMode,
+    exitVoiceMode,
+    config,
     mode,
   } = useChatContext();
-  const { config } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
@@ -40,6 +43,8 @@ export function InputBox({ maxLength = 5000 }) {
     useState(false);
 
   const fileInputRef = useRef(null);
+
+  const showVoiceButton = isVoiceEnabledByServer && isVoiceModeSupported;
 
   const inputTextFieldHint = useMemo(() => {
     if (mode === 'preview') {
@@ -105,6 +110,14 @@ export function InputBox({ maxLength = 5000 }) {
     if (cameraPermission) startCameraRecording();
   };
 
+  const handleVoiceToggle = () => {
+    if (isVoiceModeActive) {
+      exitVoiceMode();
+    } else {
+      enterVoiceMode();
+    }
+  };
+
   if (isRecording) {
     return (
       <section className="weni-input-box">
@@ -139,23 +152,26 @@ export function InputBox({ maxLength = 5000 }) {
           onKeyDown={handleKeyPress}
           maxLength={maxLength}
           rows={1}
-          disabled={mode === 'preview'}
+          disabled={isEnteringVoiceMode || mode === 'preview'}
         />
 
-        {!text.trim() && config.showCameraRecorder && (
-          <Button
-            onClick={handleRecordCamera}
-            disabled={hasCameraPermissionState === false}
-            aria-label="Take photo"
-            variant="tertiary"
-            icon="add_a_photo"
-            iconColor="gray-500"
-            className="weni-input-box__photo-icon"
-          />
-        )}
+        {!text.trim() &&
+          !isVoiceModeActive &&
+          !isEnteringVoiceMode &&
+          config.showCameraRecorder && (
+            <Button
+              onClick={handleRecordCamera}
+              disabled={hasCameraPermissionState === false}
+              aria-label="Take photo"
+              variant="tertiary"
+              icon="add_a_photo"
+              iconColor="gray-500"
+              className="weni-input-box__photo-icon"
+            />
+          )}
       </section>
 
-      {!text.trim() && (
+      {!isVoiceModeActive && !isEnteringVoiceMode && !text.trim() && (
         <>
           <InputFile ref={fileInputRef} />
           {config.showFileUploader && (
@@ -181,7 +197,7 @@ export function InputBox({ maxLength = 5000 }) {
         </>
       )}
 
-      {!!text.trim() && (
+      {!!text.trim() && !isEnteringVoiceMode && (
         <Button
           onClick={handleSend}
           variant="primary"
@@ -189,6 +205,27 @@ export function InputBox({ maxLength = 5000 }) {
           aria-label="Send message"
         />
       )}
+
+      {isEnteringVoiceMode && (
+        <button
+          className="weni-input-box__voice-cancel-btn"
+          onClick={exitVoiceMode}
+          aria-label={t('voice_mode.cancel')}
+        >
+          <span className="weni-input-box__voice-cancel-spinner" />
+          <span>{t('voice_mode.cancel')}</span>
+        </button>
+      )}
+
+      {!isEnteringVoiceMode &&
+        showVoiceButton &&
+        (isVoiceModeActive || !text.trim()) && (
+          <VoiceModeButton
+            onClick={handleVoiceToggle}
+            isActive={isVoiceModeActive}
+            voiceState={voiceModeState}
+          />
+        )}
     </section>
   );
 }
