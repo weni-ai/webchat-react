@@ -2,13 +2,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: $white;
   color: $gray-500;
   font-weight: 500;
   user-select: none;
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
+
+  &--with-background-color {
+    background-color: $white;
+  }
 
   &--small {
     width: $icon-size-4;

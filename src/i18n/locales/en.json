@@ -56,5 +56,14 @@
     "stop": "Stop",
     "microphonePermissionHint": "Enable microphone in your browser settings to use voice mode",
     "cancel": "Cancel"
+  },
+  "mode": {
+    "live": {
+      "title": "Live"
+    },
+    "preview": {
+      "title": "Preview",
+      "input_placeholder": "Preview only..."
+    }
   }
 }

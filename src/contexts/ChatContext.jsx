@@ -61,6 +61,12 @@ const defaultConfig = {
 
   // Experimental flags
   navigateIfSameDomain: false,
+
+  // showChatAvatar: false,
+
+  mode: 'live',
+  showMode: false,
+  showChatAvatar: true,
 };
 
 /**
@@ -94,7 +100,7 @@ export function ChatProvider({ children, config }) {
 
   // Service instance
   const [service] = useState(() => {
-    const fns = serviceInstance.fns;
+    const fns = serviceInstance?.fns ?? [];
     serviceInstance = new WeniWebchatService(mergedConfig);
     fns.forEach((fn) => fn(serviceInstance));
     return serviceInstance;
@@ -122,6 +128,9 @@ export function ChatProvider({ children, config }) {
   );
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
+  const [shouldRender, setShouldRender] = useState(true);
+  const [mode, _setMode] = useState(mergedConfig.mode);
+  const [showMode, _setShowMode] = useState(mergedConfig.showMode);
 
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
@@ -207,7 +216,11 @@ export function ChatProvider({ children, config }) {
 
     service
       .init()
-      .then(() => {
+      .then(({ shouldRender }) => {
+        if (typeof shouldRender === 'boolean') {
+          setShouldRender(shouldRender);
+        }
+
         if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
@@ -282,12 +295,15 @@ export function ChatProvider({ children, config }) {
 
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
+    service.clearPageHistory = clearPageHistory;
+
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
       if (voiceServiceRef.current) {
         voiceServiceRef.current.destroy();
         voiceServiceRef.current = null;
       }
+      delete service.clearPageHistory;
       service.removeAllListeners();
       service.disconnect();
     };
@@ -433,6 +449,7 @@ export function ChatProvider({ children, config }) {
     title,
     isChatOpen,
     setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
+    shouldRender,
     isChatFullscreen,
     toggleChatFullscreen: () => setIsChatFullscreen(!isChatFullscreen),
     unreadCount,
@@ -448,6 +465,8 @@ export function ChatProvider({ children, config }) {
     pageHistory,
     cart,
     setCart,
+    mode,
+    isModeVisible: showMode,
 
     // Voice mode state
     isVoiceEnabledByServer,

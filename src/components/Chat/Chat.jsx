@@ -45,7 +45,7 @@ import './Chat.scss';
  */
 export function Chat() {
   const { t } = useTranslation();
-  const { isChatOpen, isConnectionClosed, currentPage, config, isEnteringVoiceMode } = useWeniChat();
+  const { isChatOpen, isConnectionClosed, currentPage, config, isEnteringVoiceMode, mode } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -72,7 +72,7 @@ export function Chat() {
 
   return (
     <section
-      className={`weni-chat ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
+      className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
     >
       <Header />
       <ChatContent />

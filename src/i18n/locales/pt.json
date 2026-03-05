@@ -56,5 +56,14 @@
     "stop": "Parar",
     "microphonePermissionHint": "Ative o microfone nas configurações do navegador para usar o modo voz",
     "cancel": "Cancelar"
+  },
+  "mode": {
+    "live": {
+      "title": "Ao vivo"
+    },
+    "preview": {
+      "title": "Pré-visualização",
+      "input_placeholder": "Pré-visualização apenas..."
+    }
   }
 }

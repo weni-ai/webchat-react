@@ -7,6 +7,16 @@
   vertical-align: middle;
   fill: currentColor;
 
+  &--xx-small {
+    width: $icon-size-2;
+    height: $icon-size-2;
+  }
+
+  &--x-small {
+    width: $icon-size-3;
+    height: $icon-size-3;
+  }
+
   &--small {
     width: $icon-size-4;
     height: $icon-size-4;
