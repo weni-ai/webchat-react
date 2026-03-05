@@ -10,6 +10,7 @@ export { STTConnection } from './STTConnection';
 export { TTSPlayer } from './TTSPlayer';
 export { TextChunker } from './TextChunker';
 export { EchoGuard } from './EchoGuard';
+export { SessionGuard } from './SessionGuard';
 export { VoiceError, VoiceErrorCode, createVoiceError } from './errors';
 export {
   DEFAULT_VOICE_CONFIG,

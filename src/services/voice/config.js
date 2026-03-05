@@ -26,6 +26,11 @@ export const DEFAULT_VOICE_CONFIG = {
   latencyOptimization: 3,
   enableBargeIn: true,
   autoListen: true,
+  maxSessionDurationMs: 15 * 60 * 1000,
+  idleTimeoutMs: 2 * 60 * 1000,
+  hiddenGracePeriodMs: 30 * 1000,
+  sttLeadInFrames: 3,
+  sttTrailFrames: 8,
   getTokens: null,
   texts: {
     title: '',

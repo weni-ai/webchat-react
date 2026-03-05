@@ -64,6 +64,13 @@ const mockEchoGuard = {
   bargeInThreshold: 0.08,
 };
 
+const mockSessionGuard = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  recordActivity: jest.fn(),
+  destroy: jest.fn(),
+};
+
 jest.mock("@/services/voice/AudioCapture", () => ({
   AudioCapture: jest.fn(() => ({ ...mockAudioCapture })),
 }));
@@ -98,6 +105,12 @@ jest.mock("@/services/voice/EchoGuard", () => ({
   default: jest.fn(() => ({ ...mockEchoGuard })),
 }));
 
+jest.mock("@/services/voice/SessionGuard", () => ({
+  SessionGuard: jest.fn(() => ({ ...mockSessionGuard })),
+  __esModule: true,
+  default: jest.fn(() => ({ ...mockSessionGuard })),
+}));
+
 jest.mock("@/services/voice/config", () => ({
   mergeVoiceConfig: jest.fn((cfg) => ({
     elevenLabs: { voiceId: "voice-1", ...cfg?.elevenLabs },
@@ -106,6 +119,11 @@ jest.mock("@/services/voice/config", () => ({
     audioFormat: "mp3_44100_128",
     latencyOptimization: 3,
     vadThreshold: 0.02,
+    maxSessionDurationMs: 15 * 60 * 1000,
+    idleTimeoutMs: 4 * 60 * 1000,
+    hiddenGracePeriodMs: 30 * 1000,
+    sttLeadInFrames: 3,
+    sttTrailFrames: 8,
     getTokens:
       cfg.getTokens ||
       jest.fn(() =>
@@ -368,12 +386,28 @@ describe("VoiceService", () => {
       expect(svc.ttsPlayer.disconnect).toHaveBeenCalled();
       expect(svc.textChunker.clear).toHaveBeenCalled();
       expect(svc.echoGuard.reset).toHaveBeenCalled();
+      expect(svc.sessionGuard.stop).toHaveBeenCalled();
       expect(svc.state).toBe(VoiceSessionState.IDLE);
       expect(ended).toHaveBeenCalledWith(
         expect.objectContaining({
           sessionId: expect.any(String),
           duration: expect.any(Number),
+          reason: 'user',
         }),
+      );
+    });
+
+    it("includes custom reason in session:ended event", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const ended = jest.fn();
+      svc.on("session:ended", ended);
+
+      svc.endSession('idle');
+
+      expect(ended).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: 'idle' }),
       );
     });
 
@@ -447,8 +481,8 @@ describe("VoiceService", () => {
       audioHandler({
         data: "base64",
         sampleRate: 16000,
-        hasVoice: false,
-        energy: 0.01,
+        hasVoice: true,
+        energy: 0.05,
       });
 
       expect(svc.echoGuard.shouldTriggerBargeIn).not.toHaveBeenCalled();
@@ -573,14 +607,14 @@ describe("VoiceService", () => {
       audioDataHandler({
         data: "base64",
         sampleRate: 16000,
-        hasVoice: false,
-        energy: 0.01,
+        hasVoice: true,
+        energy: 0.05,
       });
 
       expect(svc.sttConnection.sendAudio).not.toHaveBeenCalled();
     });
 
-    it("forwards audio when echoGuard allows", async () => {
+    it("forwards voice audio when echoGuard allows", async () => {
       svc = createInitializedService();
       await svc.startSession();
 
@@ -590,8 +624,8 @@ describe("VoiceService", () => {
       audioDataHandler({
         data: "base64",
         sampleRate: 16000,
-        hasVoice: false,
-        energy: 0.01,
+        hasVoice: true,
+        energy: 0.05,
       });
 
       expect(svc.sttConnection.sendAudio).toHaveBeenCalledWith(
@@ -610,23 +644,23 @@ describe("VoiceService", () => {
       await svc.startSession();
 
       const audioDataHandler = getAudioCaptureListenerFor(svc, "audioData");
-      const payload = {
+      const voicePayload = {
         data: "base64",
         sampleRate: 16000,
-        hasVoice: false,
-        energy: 0.01,
+        hasVoice: true,
+        energy: 0.05,
       };
 
       svc.echoGuard.shouldForwardAudio.mockReturnValue(false);
-      audioDataHandler(payload);
+      audioDataHandler(voicePayload);
       expect(svc.sttConnection.sendAudio).not.toHaveBeenCalled();
 
       svc.echoGuard.shouldForwardAudio.mockReturnValue(false);
-      audioDataHandler(payload);
+      audioDataHandler(voicePayload);
       expect(svc.sttConnection.sendAudio).not.toHaveBeenCalled();
 
       svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
-      audioDataHandler(payload);
+      audioDataHandler(voicePayload);
       expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(1);
     });
 
@@ -683,6 +717,51 @@ describe("VoiceService", () => {
 
       await Promise.resolve();
       expect(svc.config.getTokens).toHaveBeenCalled();
+    });
+
+    it("destroys old connection on reconnect", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const oldStt = svc.sttConnection;
+      const closeHandler = getSTTListenerFor(svc, "close");
+      closeHandler();
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(oldStt.destroy).toHaveBeenCalled();
+      expect(svc.sttConnection).not.toBe(oldStt);
+    });
+
+    it("prevents concurrent reconnections", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const closeHandler = getSTTListenerFor(svc, "close");
+      closeHandler();
+      closeHandler();
+      closeHandler();
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(STTConnection).toHaveBeenCalledTimes(2);
+    });
+
+    it("resets silence filter on reconnect", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const audioHandler = getAudioCaptureListenerFor(svc, "audioData");
+      audioHandler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+      expect(svc._isForwardingToSTT).toBe(true);
+
+      const closeHandler = getSTTListenerFor(svc, "close");
+      closeHandler();
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(svc._isForwardingToSTT).toBe(false);
     });
   });
 
@@ -855,6 +934,239 @@ describe("VoiceService", () => {
       expect(errorHandler.mock.calls[0][0].code).toBe(
         VoiceErrorCode.STT_TRANSCRIPTION_FAILED,
       );
+    });
+  });
+
+  // -- Silence filter -------------------------------------------------------
+
+  describe("silence filter", () => {
+    it("buffers silence frames in lead-in without forwarding", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "s1", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "s2", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      expect(svc.sttConnection.sendAudio).not.toHaveBeenCalled();
+    });
+
+    it("flushes lead-in buffer when voice detected", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "s1", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "s2", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      handler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+
+      expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(3);
+      expect(svc.sttConnection.sendAudio).toHaveBeenNthCalledWith(
+        1, "s1", 16000, false,
+      );
+      expect(svc.sttConnection.sendAudio).toHaveBeenNthCalledWith(
+        2, "s2", 16000, false,
+      );
+      expect(svc.sttConnection.sendAudio).toHaveBeenNthCalledWith(
+        3, "v1", 16000, false,
+      );
+    });
+
+    it("caps lead-in buffer to sttLeadInFrames", async () => {
+      svc = createInitializedService({ sttLeadInFrames: 2 });
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "s1", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "s2", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "s3", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      handler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+
+      expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(3);
+      expect(svc.sttConnection.sendAudio).toHaveBeenNthCalledWith(
+        1, "s2", 16000, false,
+      );
+    });
+
+    it("sends trailing silence frames up to sttTrailFrames", async () => {
+      svc = createInitializedService({ sttTrailFrames: 2 });
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+      svc.sttConnection.sendAudio.mockClear();
+
+      handler({ data: "t1", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "t2", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(2);
+    });
+
+    it("stops forwarding and commits after trail frames exceeded", async () => {
+      svc = createInitializedService({ sttTrailFrames: 2 });
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+      svc.sttConnection.sendAudio.mockClear();
+
+      handler({ data: "t1", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "t2", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "t3", sampleRate: 16000, hasVoice: false, energy: 0 });
+      handler({ data: "t4", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(2);
+      expect(svc.sttConnection.commit).toHaveBeenCalledTimes(1);
+    });
+
+    it("resumes forwarding when voice detected during trail", async () => {
+      svc = createInitializedService({ sttTrailFrames: 2 });
+      await svc.startSession();
+      svc.echoGuard.shouldForwardAudio.mockReturnValue(true);
+
+      const handler = getAudioCaptureListenerFor(svc, "audioData");
+      handler({ data: "v1", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+      handler({ data: "t1", sampleRate: 16000, hasVoice: false, energy: 0 });
+
+      handler({ data: "v2", sampleRate: 16000, hasVoice: true, energy: 0.1 });
+
+      expect(svc.sttConnection.sendAudio).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  // -- SessionGuard integration ---------------------------------------------
+
+  describe("SessionGuard integration", () => {
+    it("starts session guard during startSession", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      expect(svc.sessionGuard.start).toHaveBeenCalledWith(
+        expect.objectContaining({
+          onTimeout: expect.any(Function),
+          onIdle: expect.any(Function),
+          onHidden: expect.any(Function),
+          onVisible: expect.any(Function),
+          onHiddenExpired: expect.any(Function),
+        }),
+      );
+    });
+
+    it("does NOT record activity on voiceActivity (only transcribed text resets idle)", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.sessionGuard.recordActivity.mockClear();
+
+      const handler = getAudioCaptureListenerFor(svc, "voiceActivity");
+      handler({ speaking: true });
+
+      expect(svc.sessionGuard.recordActivity).not.toHaveBeenCalled();
+    });
+
+    it("records activity on STT committed", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const handler = getSTTListenerFor(svc, "committed");
+      handler({ text: "hello" });
+
+      expect(svc.sessionGuard.recordActivity).toHaveBeenCalled();
+    });
+
+    it("onTimeout ends session with max_duration reason", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const timeoutHandler = jest.fn();
+      svc.on("session:timeout", timeoutHandler);
+      const endedHandler = jest.fn();
+      svc.on("session:ended", endedHandler);
+
+      const guardCallbacks = svc.sessionGuard.start.mock.calls[0][0];
+      guardCallbacks.onTimeout();
+
+      expect(timeoutHandler).toHaveBeenCalledWith({
+        reason: "max_duration",
+      });
+      expect(endedHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: "max_duration" }),
+      );
+    });
+
+    it("onIdle ends session with idle reason", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const endedHandler = jest.fn();
+      svc.on("session:ended", endedHandler);
+
+      const guardCallbacks = svc.sessionGuard.start.mock.calls[0][0];
+      guardCallbacks.onIdle();
+
+      expect(endedHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: "idle" }),
+      );
+    });
+
+    it("onHidden pauses audio capture", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const pausedHandler = jest.fn();
+      svc.on("session:paused", pausedHandler);
+
+      const guardCallbacks = svc.sessionGuard.start.mock.calls[0][0];
+      guardCallbacks.onHidden();
+
+      expect(svc.audioCapture.pause).toHaveBeenCalled();
+      expect(pausedHandler).toHaveBeenCalledWith({
+        reason: "tab_hidden",
+      });
+    });
+
+    it("onVisible resumes audio capture", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const resumedHandler = jest.fn();
+      svc.on("session:resumed", resumedHandler);
+
+      const guardCallbacks = svc.sessionGuard.start.mock.calls[0][0];
+      guardCallbacks.onVisible();
+
+      expect(svc.audioCapture.resume).toHaveBeenCalled();
+      expect(resumedHandler).toHaveBeenCalled();
+    });
+
+    it("onHiddenExpired ends session with tab_hidden reason", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const endedHandler = jest.fn();
+      svc.on("session:ended", endedHandler);
+
+      const guardCallbacks = svc.sessionGuard.start.mock.calls[0][0];
+      guardCallbacks.onHiddenExpired();
+
+      expect(endedHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: "tab_hidden" }),
+      );
+    });
+
+    it("destroyed with VoiceService", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.destroy();
+
+      expect(svc.sessionGuard).toBeNull();
     });
   });
 });

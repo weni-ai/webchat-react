@@ -24,6 +24,8 @@ describe("voice/errors", () => {
         "NETWORK_ERROR",
         "TOKEN_EXPIRED",
         "RATE_LIMITED",
+        "SESSION_TIMEOUT",
+        "SESSION_IDLE_TIMEOUT",
         "UNKNOWN_ERROR",
       ];
 

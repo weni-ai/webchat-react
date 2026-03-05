@@ -12,6 +12,7 @@ import { STTConnection } from './STTConnection';
 import { TTSPlayer } from './TTSPlayer';
 import { TextChunker } from './TextChunker';
 import { EchoGuard } from './EchoGuard';
+import { SessionGuard } from './SessionGuard';
 import { VoiceError, VoiceErrorCode, createVoiceError } from './errors';
 import { mergeVoiceConfig, buildTTSWebSocketURL } from './config';
 
@@ -45,11 +46,17 @@ export class VoiceService {
     this.ttsPlayer = null;
     this.textChunker = null;
     this.echoGuard = null;
+    this.sessionGuard = null;
     this.partialTranscript = '';
     this.error = null;
     this.currentTokens = null;
     this.listeners = new Map();
     this.onMessageCallback = null;
+
+    this._leadInBuffer = [];
+    this._isForwardingToSTT = false;
+    this._trailingSilenceFrames = 0;
+    this._isReconnectingSTT = false;
   }
 
   /** Check browser support for voice mode. */
@@ -78,6 +85,11 @@ export class VoiceService {
       consecutiveFramesRequired: 2,
       normalThreshold: 0.02,
       elevatedThreshold: 0.06,
+    });
+    this.sessionGuard = new SessionGuard({
+      maxSessionDurationMs: this.config.maxSessionDurationMs,
+      idleTimeoutMs: this.config.idleTimeoutMs,
+      hiddenGracePeriodMs: this.config.hiddenGracePeriodMs,
     });
 
     this._wireAudioCaptureListeners();
@@ -121,6 +133,14 @@ export class VoiceService {
       this.sessionId = generateSessionId();
       this.sessionStartTime = Date.now();
 
+      this.sessionGuard?.start({
+        onTimeout: () => this._onSessionTimeout(),
+        onIdle: () => this._onIdleTimeout(),
+        onHidden: () => this._onTabHidden(),
+        onVisible: () => this._onTabVisible(),
+        onHiddenExpired: () => this._onHiddenExpired(),
+      });
+
       this.setState(VoiceSessionState.LISTENING);
       this.emit('session:started', {
         id: this.sessionId,
@@ -140,19 +160,24 @@ export class VoiceService {
     }
   }
 
-  /** End the current session and release all resources. */
-  endSession() {
+  /**
+   * End the current session and release all resources.
+   * @param {string} [reason='user'] - Why the session ended
+   */
+  endSession(reason = 'user') {
     const duration = this.sessionStartTime
       ? Date.now() - this.sessionStartTime
       : 0;
     const prevSessionId = this.sessionId;
 
     this.audioCapture?.stop();
-    this.sttConnection?.disconnect();
+    this.sttConnection?.destroy();
     this.ttsPlayer?.stop(true);
     this.ttsPlayer?.disconnect();
     this.textChunker?.clear();
     this.echoGuard?.reset();
+    this.sessionGuard?.stop();
+    this._resetSilenceFilter();
 
     this.partialTranscript = '';
     this.error = null;
@@ -162,7 +187,11 @@ export class VoiceService {
     this.sttConnection = null;
 
     this.setState(VoiceSessionState.IDLE);
-    this.emit('session:ended', { sessionId: prevSessionId, duration });
+    this.emit('session:ended', {
+      sessionId: prevSessionId,
+      duration,
+      reason,
+    });
     this.emit('listening:stopped');
   }
 
@@ -247,13 +276,15 @@ export class VoiceService {
         this.echoGuard.shouldForwardAudio() &&
         this.sttConnection?.isConnected()
       ) {
-        this.sttConnection.sendAudio(data.data, data.sampleRate, false);
+        this._forwardWithSilenceFilter(data);
       }
     });
 
     this.audioCapture.on('voiceActivity', (data) => {
-      if (data.speaking && this.state === VoiceSessionState.LISTENING) {
-        this.setState(VoiceSessionState.PROCESSING);
+      if (data.speaking) {
+        if (this.state === VoiceSessionState.LISTENING) {
+          this.setState(VoiceSessionState.PROCESSING);
+        }
       }
     });
   }
@@ -268,6 +299,7 @@ export class VoiceService {
     });
 
     stt.on('committed', (data) => {
+      this.sessionGuard?.recordActivity();
       const text = data.text?.trim();
       if (text) {
         this.partialTranscript = '';
@@ -299,6 +331,11 @@ export class VoiceService {
 
   /** @private */
   async _reconnectSTT() {
+    if (this._isReconnectingSTT) return;
+    this._isReconnectingSTT = true;
+
+    const oldStt = this.sttConnection;
+
     try {
       this.currentTokens = await this.config.getTokens();
       const newStt = new STTConnection(
@@ -306,8 +343,12 @@ export class VoiceService {
         this.currentTokens.sttToken,
       );
       await newStt.connect();
+
+      oldStt?.destroy();
+
       this.sttConnection = newStt;
       this._wireSTTListeners();
+      this._resetSilenceFilter();
     } catch (err) {
       const voiceErr =
         err instanceof VoiceError
@@ -316,6 +357,8 @@ export class VoiceService {
       this.error = voiceErr;
       this.emit('error', voiceErr);
       this.setState(VoiceSessionState.ERROR);
+    } finally {
+      this._isReconnectingSTT = false;
     }
   }
 
@@ -349,6 +392,8 @@ export class VoiceService {
   /** @private */
   _speak(text) {
     this.echoGuard.onTTSStarted();
+    this.sessionGuard?.recordActivity();
+    this._resetSilenceFilter();
     this.setState(VoiceSessionState.SPEAKING);
     this.emit('speaking:started', { text });
 
@@ -372,7 +417,101 @@ export class VoiceService {
     this.textChunker?.clear();
     this.echoGuard.onBargeInDetected();
     this.audioCapture?.resetSpeakingState();
+    this.sessionGuard?.recordActivity();
+    this._resetSilenceFilter();
     this.emit('barge-in');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Silence filter: avoid sending silence to STT to reduce billing
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Buffer silence frames locally and only forward to STT when voice
+   * is detected (with a lead-in context) and for a trailing period
+   * after voice stops (so server-side VAD can commit).
+   * @private
+   */
+  _forwardWithSilenceFilter(data) {
+    const { data: audioData, sampleRate, hasVoice } = data;
+    const leadInMax = this.config.sttLeadInFrames ?? 3;
+    const trailMax = this.config.sttTrailFrames ?? 8;
+
+    if (hasVoice) {
+      for (const buffered of this._leadInBuffer) {
+        this.sttConnection.sendAudio(
+          buffered.data,
+          buffered.sampleRate,
+          false,
+        );
+      }
+      this._leadInBuffer = [];
+      this._isForwardingToSTT = true;
+      this._trailingSilenceFrames = 0;
+      this.sttConnection.sendAudio(audioData, sampleRate, false);
+      return;
+    }
+
+    if (this._isForwardingToSTT) {
+      this._trailingSilenceFrames++;
+      if (this._trailingSilenceFrames <= trailMax) {
+        this.sttConnection.sendAudio(audioData, sampleRate, false);
+      } else {
+        this.sttConnection.commit();
+        this._isForwardingToSTT = false;
+        this._trailingSilenceFrames = 0;
+        this._leadInBuffer = [];
+      }
+      return;
+    }
+
+    this._leadInBuffer.push({ data: audioData, sampleRate });
+    if (this._leadInBuffer.length > leadInMax) {
+      this._leadInBuffer.shift();
+    }
+  }
+
+  /** @private */
+  _resetSilenceFilter() {
+    this._leadInBuffer = [];
+    this._isForwardingToSTT = false;
+    this._trailingSilenceFrames = 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Session guard callbacks
+  // ---------------------------------------------------------------------------
+
+  /** @private */
+  _onSessionTimeout() {
+    this.emit('session:timeout', { reason: 'max_duration' });
+    this.endSession('max_duration');
+  }
+
+  /** @private */
+  _onIdleTimeout() {
+    this.emit('session:timeout', { reason: 'idle' });
+    this.endSession('idle');
+  }
+
+  /** @private */
+  _onTabHidden() {
+    this.audioCapture?.pause();
+    this._resetSilenceFilter();
+    this.emit('session:paused', { reason: 'tab_hidden' });
+  }
+
+  /** @private */
+  _onTabVisible() {
+    this.audioCapture?.resume();
+    this.sessionGuard?.recordActivity();
+    this.emit('session:resumed');
+  }
+
+  /** @private */
+  _onHiddenExpired() {
+    this.emit('session:timeout', { reason: 'tab_hidden' });
+    this.endSession('tab_hidden');
   }
 
   // ---------------------------------------------------------------------------
@@ -418,10 +557,12 @@ export class VoiceService {
     this.audioCapture?.destroy();
     this.ttsPlayer?.destroy();
     this.echoGuard?.destroy();
+    this.sessionGuard?.destroy();
     this.audioCapture = null;
     this.ttsPlayer = null;
     this.textChunker = null;
     this.echoGuard = null;
+    this.sessionGuard = null;
     this.onMessageCallback = null;
     this.removeAllListeners();
     this.config = null;

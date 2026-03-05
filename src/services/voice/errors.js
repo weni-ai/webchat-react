@@ -16,6 +16,8 @@ export const VoiceErrorCode = {
   NETWORK_ERROR: 'NETWORK_ERROR',
   TOKEN_EXPIRED: 'TOKEN_EXPIRED',
   RATE_LIMITED: 'RATE_LIMITED',
+  SESSION_TIMEOUT: 'SESSION_TIMEOUT',
+  SESSION_IDLE_TIMEOUT: 'SESSION_IDLE_TIMEOUT',
   UNKNOWN_ERROR: 'UNKNOWN_ERROR',
 };
 
@@ -79,6 +81,16 @@ const ERROR_METADATA = {
   [VoiceErrorCode.RATE_LIMITED]: {
     message: 'Muitas solicitações',
     suggestion: 'Por favor, aguarde um momento e tente novamente',
+    recoverable: true,
+  },
+  [VoiceErrorCode.SESSION_TIMEOUT]: {
+    message: 'A sessão de voz atingiu o tempo máximo',
+    suggestion: 'Por favor, inicie uma nova sessão',
+    recoverable: true,
+  },
+  [VoiceErrorCode.SESSION_IDLE_TIMEOUT]: {
+    message: 'A sessão foi encerrada por inatividade',
+    suggestion: 'Fale algo para iniciar uma nova sessão',
     recoverable: true,
   },
   [VoiceErrorCode.UNKNOWN_ERROR]: {

@@ -330,8 +330,12 @@ export function ChatProvider({ children, config }) {
   const enterVoiceMode = useCallback(async () => {
     if (!isVoiceEnabledByServer || !isVoiceModeSupported) return;
 
-    // Snapshot how many messages exist right now so the state:changed handler
-    // can skip historical messages and only speak brand-new agent replies.
+    if (voiceServiceRef.current) {
+      voiceServiceRef.current.removeAllListeners();
+      voiceServiceRef.current.destroy();
+      voiceServiceRef.current = null;
+    }
+
     voiceStartMessageCountRef.current = (state.messages || []).length;
     lastProcessedVoiceMsgIdRef.current = null;
     processedTextRef.current = '';
@@ -350,13 +354,22 @@ export function ChatProvider({ children, config }) {
       setVoicePartialTranscript('');
     });
     vs.on('session:started', () => setIsVoiceModeActive(true));
-    vs.on('session:ended', () => {
+    vs.on('session:ended', ({ reason } = {}) => {
       setIsVoiceModeActive(false);
       setVoiceModeState(null);
       setVoicePartialTranscript('');
-      setVoiceError(null);
       processedTextRef.current = '';
       lastProcessedVoiceMsgIdRef.current = null;
+
+      if (reason === 'user') {
+        setVoiceError(null);
+      }
+
+      if (voiceServiceRef.current === vs) {
+        vs.removeAllListeners();
+        vs.destroy();
+        voiceServiceRef.current = null;
+      }
     });
     vs.on('error', (error) => setVoiceError(error));
     vs.setMessageCallback((text) => service.sendMessage(text));
@@ -367,8 +380,6 @@ export function ChatProvider({ children, config }) {
   const exitVoiceMode = useCallback(() => {
     if (voiceServiceRef.current) {
       voiceServiceRef.current.endSession();
-      voiceServiceRef.current.destroy();
-      voiceServiceRef.current = null;
     }
   }, []);
 
