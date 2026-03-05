@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useCallback, useMemo } from 'react';
 
 import { CounterControls } from '@/components/Product/CounterControls';
 import { PriceDisplay } from '@/components/Product/PriceDisplay';
@@ -26,6 +27,7 @@ const VARIANT_LAYOUT = {
 };
 
 export function InlineProduct({
+  uuid,
   variant = 'catalog',
   image,
   title,
@@ -36,6 +38,8 @@ export function InlineProduct({
   counter,
   setCounter,
   onClick,
+  productURL,
+  sellerId,
 }) {
   const layout = VARIANT_LAYOUT[variant] ?? VARIANT_LAYOUT.catalog;
   const hasCounter = counter !== undefined && setCounter !== undefined;
@@ -52,8 +56,10 @@ export function InlineProduct({
   const counterElement =
     hasCounter && layout.counterSlot ? (
       <CounterControls
+        uuid={uuid}
         counter={counter}
         setCounter={setCounter}
+        sellerId={sellerId}
         {...layout.counterProps}
       />
     ) : null;
@@ -72,10 +78,30 @@ export function InlineProduct({
         ? counterElement
         : null;
 
+  const productURLObject = useMemo(() => {
+    return URL.canParse(productURL) ? new URL(productURL) : { origin: '', pathname: '' };
+  }, [productURL]);
+  
+  const canUserNavigateToProductPage = useMemo(() => {
+    return productURLObject.origin === window.location.origin;
+  }, [productURLObject]);
+
+  const handleClick = useCallback(() => {
+    if (canUserNavigateToProductPage && productURLObject.pathname === window.location.pathname) {
+      return;
+    }
+
+    if (canUserNavigateToProductPage) {
+      window.location.href = productURL;
+    } else {
+      onClick();
+    }
+  }, [canUserNavigateToProductPage, onClick, productURL]);
+
   return (
     <section
       className={`weni-inline-product weni-inline-product--${variant}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <section className="weni-inline-product__image-container">
         <img
@@ -106,6 +132,7 @@ export function InlineProduct({
 }
 
 InlineProduct.propTypes = {
+  uuid: PropTypes.string,
   variant: PropTypes.oneOf(['catalog', 'cart', 'product', 'order']),
   image: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
@@ -116,4 +143,6 @@ InlineProduct.propTypes = {
   counter: PropTypes.number,
   setCounter: PropTypes.func,
   onClick: PropTypes.func,
+  sellerId: PropTypes.string,
+  productURL: PropTypes.string,
 };
