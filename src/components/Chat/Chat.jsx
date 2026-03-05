@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWeniChat } from '@/hooks/useWeniChat';
+import { OrderFormProvider } from '@/contexts/OrderFormContext';
 import Header from '@/components/Header/Header';
 import MessagesList from '@/components/Messages/MessagesList';
 import InputBox from '@/components/Input/InputBox';
@@ -74,7 +75,9 @@ export function Chat() {
       className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
     >
       <Header />
-      <ChatContent />
+      <OrderFormProvider>
+        <ChatContent />
+      </OrderFormProvider>
       <footer className="weni-chat__footer">
         {!isConnectionClosed && !currentPage && <InputBox />}
         <PoweredBy />
