@@ -7,12 +7,16 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
   const { t } = useTranslation();
 
   const title = texts.errorTitle || t('voice_mode.errorTitle');
-  const message = t(`voice_mode.errors.${error.code}.message`, {
-    defaultValue: error.message,
-  });
-  const suggestion = t(`voice_mode.errors.${error.code}.suggestion`, {
-    defaultValue: error.suggestion,
-  });
+  const message = error.message
+    ? t(`voice_mode.errors.${error.code}.message`, {
+        defaultValue: error.message,
+      })
+    : undefined;
+  const suggestion = error.suggestion
+    ? t(`voice_mode.errors.${error.code}.suggestion`, {
+        defaultValue: error.suggestion,
+      })
+    : undefined;
 
   return (
     <section
@@ -27,9 +31,7 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
 
       <h2 className="weni-voice-error__title">{title}</h2>
 
-      {message && (
-        <p className="weni-voice-error__message">{message}</p>
-      )}
+      {message && <p className="weni-voice-error__message">{message}</p>}
 
       {suggestion && (
         <p className="weni-voice-error__suggestion">{suggestion}</p>

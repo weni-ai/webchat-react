@@ -165,16 +165,16 @@ export function InputBox({ maxLength = 5000 }) {
         />
 
         {canDisplayCameraRecorder && (
-            <Button
-              onClick={handleRecordCamera}
-              disabled={hasCameraPermissionState === false}
-              aria-label="Take photo"
-              variant="tertiary"
-              icon="add_a_photo"
-              iconColor="gray-500"
-              className="weni-input-box__photo-icon"
-            />
-          )}
+          <Button
+            onClick={handleRecordCamera}
+            disabled={hasCameraPermissionState === false}
+            aria-label="Take photo"
+            variant="tertiary"
+            icon="add_a_photo"
+            iconColor="gray-500"
+            className="weni-input-box__photo-icon"
+          />
+        )}
       </section>
 
       {shouldShowMediaActions && (
