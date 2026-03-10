@@ -23,80 +23,78 @@ export const VoiceErrorCode = {
 
 const ERROR_METADATA = {
   [VoiceErrorCode.MICROPHONE_PERMISSION_DENIED]: {
-    message: 'O acesso ao microfone foi negado',
-    suggestion:
-      'Por favor, permita o acesso ao microfone nas configurações do navegador',
+    message: 'Microphone access was denied',
+    suggestion: 'Please allow microphone access in your browser settings',
     recoverable: true,
   },
   [VoiceErrorCode.MICROPHONE_NOT_FOUND]: {
-    message: 'Nenhum microfone foi encontrado',
-    suggestion: 'Por favor, conecte um microfone e tente novamente',
+    message: 'No microphone was found',
+    suggestion: 'Please connect a microphone and try again',
     recoverable: false,
   },
   [VoiceErrorCode.BROWSER_NOT_SUPPORTED]: {
-    message: 'Seu navegador não suporta o modo de voz',
-    suggestion: 'Por favor, use Chrome, Firefox, Safari ou Edge',
+    message: 'Your browser does not support voice mode',
+    suggestion: 'Please use Chrome, Firefox, Safari or Edge',
     recoverable: false,
   },
   [VoiceErrorCode.STT_CONNECTION_FAILED]: {
-    message: 'Não foi possível conectar ao serviço de reconhecimento de voz',
-    suggestion: 'Verifique sua conexão e tente novamente',
+    message: 'Could not connect to the speech recognition service',
+    suggestion: 'Check your connection and try again',
     recoverable: true,
   },
   [VoiceErrorCode.STT_AUTH_FAILED]: {
-    message: 'Autenticação com ElevenLabs falhou',
-    suggestion:
-      'Verifique a API key e as permissões do plano (Scribe v2 Realtime é necessário)',
+    message: 'ElevenLabs authentication failed',
+    suggestion: 'Check the API key and plan permissions (Scribe v2 Realtime required)',
     recoverable: false,
   },
   [VoiceErrorCode.STT_TRANSCRIPTION_FAILED]: {
-    message: 'O reconhecimento de voz falhou',
-    suggestion: 'Por favor, tente falar novamente',
+    message: 'Speech recognition failed',
+    suggestion: 'Please try speaking again',
     recoverable: true,
   },
   [VoiceErrorCode.TTS_CONNECTION_FAILED]: {
-    message: 'Não foi possível conectar ao serviço de síntese de voz',
-    suggestion: 'Verifique sua conexão e tente novamente',
+    message: 'Could not connect to the text-to-speech service',
+    suggestion: 'Check your connection and try again',
     recoverable: true,
   },
   [VoiceErrorCode.TTS_AUTH_FAILED]: {
-    message: 'Autenticação com o serviço de síntese de voz falhou',
-    suggestion: 'Reconectando...',
+    message: 'Text-to-speech authentication failed',
+    suggestion: 'Reconnecting...',
     recoverable: true,
   },
   [VoiceErrorCode.TTS_GENERATION_FAILED]: {
-    message: 'Não foi possível gerar a fala',
-    suggestion: 'A resposta será mostrada como texto',
+    message: 'Could not generate speech',
+    suggestion: 'The response will be shown as text',
     recoverable: true,
   },
   [VoiceErrorCode.NETWORK_ERROR]: {
-    message: 'Conexão de rede perdida',
-    suggestion: 'Por favor, verifique sua conexão com a internet',
+    message: 'Network connection lost',
+    suggestion: 'Please check your internet connection',
     recoverable: true,
   },
   [VoiceErrorCode.TOKEN_EXPIRED]: {
-    message: 'A autenticação expirou',
-    suggestion: 'Reconectando...',
+    message: 'Authentication expired',
+    suggestion: 'Reconnecting...',
     recoverable: true,
   },
   [VoiceErrorCode.RATE_LIMITED]: {
-    message: 'Muitas solicitações',
-    suggestion: 'Por favor, aguarde um momento e tente novamente',
+    message: 'Too many requests',
+    suggestion: 'Please wait a moment and try again',
     recoverable: true,
   },
   [VoiceErrorCode.SESSION_TIMEOUT]: {
-    message: 'A sessão de voz atingiu o tempo máximo',
-    suggestion: 'Por favor, inicie uma nova sessão',
+    message: 'Voice session reached maximum duration',
+    suggestion: 'Please start a new session',
     recoverable: true,
   },
   [VoiceErrorCode.SESSION_IDLE_TIMEOUT]: {
-    message: 'A sessão foi encerrada por inatividade',
-    suggestion: 'Fale algo para iniciar uma nova sessão',
+    message: 'Session ended due to inactivity',
+    suggestion: 'Say something to start a new session',
     recoverable: true,
   },
   [VoiceErrorCode.UNKNOWN_ERROR]: {
-    message: 'Ocorreu um erro inesperado',
-    suggestion: 'Por favor, tente novamente',
+    message: 'An unexpected error occurred',
+    suggestion: 'Please try again',
     recoverable: true,
   },
 };
@@ -149,20 +147,16 @@ export function createVoiceError(code, errorOrMessage) {
  * @param {Error} error
  * @returns {string}
  */
+const MEDIA_ERROR_MAP = {
+  NotAllowedError: VoiceErrorCode.MICROPHONE_PERMISSION_DENIED,
+  PermissionDeniedError: VoiceErrorCode.MICROPHONE_PERMISSION_DENIED,
+  NotFoundError: VoiceErrorCode.MICROPHONE_NOT_FOUND,
+  DevicesNotFoundError: VoiceErrorCode.MICROPHONE_NOT_FOUND,
+  NotSupportedError: VoiceErrorCode.BROWSER_NOT_SUPPORTED,
+};
+
 export function getMediaErrorCode(error) {
-  const name = error?.name || '';
-  switch (name) {
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      return VoiceErrorCode.MICROPHONE_PERMISSION_DENIED;
-    case 'NotFoundError':
-    case 'DevicesNotFoundError':
-      return VoiceErrorCode.MICROPHONE_NOT_FOUND;
-    case 'NotSupportedError':
-      return VoiceErrorCode.BROWSER_NOT_SUPPORTED;
-    default:
-      return VoiceErrorCode.UNKNOWN_ERROR;
-  }
+  return MEDIA_ERROR_MAP[error?.name] ?? VoiceErrorCode.UNKNOWN_ERROR;
 }
 
 /**
@@ -194,28 +188,23 @@ export function getWebSocketErrorCode(error) {
  * @param {string} messageType
  * @returns {string}
  */
+const STT_MESSAGE_ERROR_MAP = {
+  error: VoiceErrorCode.STT_TRANSCRIPTION_FAILED,
+  input_error: VoiceErrorCode.STT_TRANSCRIPTION_FAILED,
+  chunk_size_exceeded: VoiceErrorCode.STT_TRANSCRIPTION_FAILED,
+  transcriber_error: VoiceErrorCode.STT_TRANSCRIPTION_FAILED,
+  auth_error: VoiceErrorCode.TOKEN_EXPIRED,
+  rate_limited: VoiceErrorCode.RATE_LIMITED,
+  quota_exceeded: VoiceErrorCode.RATE_LIMITED,
+  commit_throttled: VoiceErrorCode.RATE_LIMITED,
+  queue_overflow: VoiceErrorCode.RATE_LIMITED,
+  resource_exhausted: VoiceErrorCode.STT_CONNECTION_FAILED,
+  session_time_limit_exceeded: VoiceErrorCode.STT_CONNECTION_FAILED,
+  unaccepted_terms: VoiceErrorCode.UNKNOWN_ERROR,
+};
+
 export function getSTTMessageErrorCode(messageType) {
-  switch (messageType) {
-    case 'error':
-    case 'input_error':
-    case 'chunk_size_exceeded':
-    case 'transcriber_error':
-      return VoiceErrorCode.STT_TRANSCRIPTION_FAILED;
-    case 'auth_error':
-      return VoiceErrorCode.TOKEN_EXPIRED;
-    case 'rate_limited':
-    case 'quota_exceeded':
-    case 'commit_throttled':
-    case 'queue_overflow':
-      return VoiceErrorCode.RATE_LIMITED;
-    case 'resource_exhausted':
-    case 'session_time_limit_exceeded':
-      return VoiceErrorCode.STT_CONNECTION_FAILED;
-    case 'unaccepted_terms':
-      return VoiceErrorCode.UNKNOWN_ERROR;
-    default:
-      return VoiceErrorCode.UNKNOWN_ERROR;
-  }
+  return STT_MESSAGE_ERROR_MAP[messageType] ?? VoiceErrorCode.UNKNOWN_ERROR;
 }
 
 /**

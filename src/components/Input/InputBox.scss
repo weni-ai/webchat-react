@@ -49,34 +49,17 @@
   }
 
   .weni-input-box__voice-cancel-btn {
-    height: 40px;
-    width: auto;
-    padding: 0 12px 0 10px;
-    gap: 6px;
     border-radius: 9999px;
-    background-color: var(--weni-main-color);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     flex-shrink: 0;
-    color: $white;
-    font: $font-emphasis;
-    transition: filter 0.2s ease;
-
-    &:hover {
-      filter: brightness(0.85);
-    }
   }
 
   .weni-input-box__voice-cancel-spinner {
     display: block;
-    width: 16px;
-    height: 16px;
+    width: $icon-size-4;
+    height: $icon-size-4;
     border: 2px solid rgba(255, 255, 255, 0.4);
     border-top-color: $white;
-    border-radius: 50%;
+    border-radius: $border-radius-full;
     flex-shrink: 0;
     animation: voice-cancel-spin 0.75s linear infinite;
   }

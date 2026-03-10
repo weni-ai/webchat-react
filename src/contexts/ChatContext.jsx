@@ -231,11 +231,7 @@ export function ChatProvider({ children, config }) {
         console.error('Failed to initialize service:', error);
       });
 
-    service.on('state:changed', (newState) => {
-      setState(newState);
-
-      // Use ref instead of state to avoid stale closure — voiceServiceRef is
-      // always up-to-date even though this listener is registered once at mount.
+    const forwardIncomingMessageToVoiceMode = (newState) => {
       if (!voiceServiceRef.current) return;
 
       const messages = newState.messages || [];
@@ -244,7 +240,6 @@ export function ChatProvider({ children, config }) {
 
       if (!lastMsg || lastMsg.direction !== 'incoming') return;
 
-      // Skip messages that existed before voice mode was activated.
       if (lastMsgIndex < voiceStartMessageCountRef.current) return;
 
       if (lastMsg.id !== lastProcessedVoiceMsgIdRef.current) {
@@ -260,6 +255,11 @@ export function ChatProvider({ children, config }) {
         voiceServiceRef.current.processTextChunk(newText, !isStreaming);
         processedTextRef.current = isStreaming ? currentText : '';
       }
+    };
+
+    service.on('state:changed', (newState) => {
+      setState(newState);
+      forwardIncomingMessageToVoiceMode(newState);
     });
 
     // Audio recording events (UI-specific feedback)
@@ -279,16 +279,17 @@ export function ChatProvider({ children, config }) {
 
     service.on('context:changed', (context) => setContext(context));
 
-    service.on('language:changed', (language) => {
-      i18n.changeLanguage(language);
-      // ElevenLabs requires ISO 639-1 codes (e.g. "en", "pt").
-      // The webchat service emits BCP-47 locale codes (e.g. "en-us", "pt-BR"),
-      // so we strip the region suffix before forwarding to the voice service.
+    const syncVoiceModeLanguage = (language) => {
       const isoLang = language ? language.split('-')[0].toLowerCase() : 'en';
       setVoiceLanguage(isoLang);
       if (voiceServiceRef.current) {
         voiceServiceRef.current.setLanguage(isoLang);
       }
+    };
+
+    service.on('language:changed', (language) => {
+      i18n.changeLanguage(language);
+      syncVoiceModeLanguage(language);
     });
 
     service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));

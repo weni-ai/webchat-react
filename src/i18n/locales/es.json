@@ -55,7 +55,77 @@
     "assistant": "Asistente",
     "stop": "Detener",
     "microphonePermissionHint": "Activa el micrófono en la configuración de tu navegador para usar el modo de voz",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "aria_enter": "Entrar al modo de voz",
+    "aria_exit": "Salir del modo de voz",
+    "aria_listening": "Escuchando tu voz",
+    "aria_speaking": "Reproduciendo respuesta de audio",
+    "aria_processing": "Procesando tu voz",
+    "aria_indicator": "Indicador del modo de voz",
+    "errors": {
+      "retry": "Intentar de nuevo",
+      "dismiss": "Cerrar",
+      "MICROPHONE_PERMISSION_DENIED": {
+        "message": "El acceso al micrófono fue denegado",
+        "suggestion": "Por favor, permite el acceso al micrófono en la configuración del navegador"
+      },
+      "MICROPHONE_NOT_FOUND": {
+        "message": "No se encontró ningún micrófono",
+        "suggestion": "Por favor, conecta un micrófono e inténtalo de nuevo"
+      },
+      "BROWSER_NOT_SUPPORTED": {
+        "message": "Tu navegador no soporta el modo de voz",
+        "suggestion": "Por favor, usa Chrome, Firefox, Safari o Edge"
+      },
+      "STT_CONNECTION_FAILED": {
+        "message": "No se pudo conectar al servicio de reconocimiento de voz",
+        "suggestion": "Verifica tu conexión e inténtalo de nuevo"
+      },
+      "STT_AUTH_FAILED": {
+        "message": "La autenticación con ElevenLabs falló",
+        "suggestion": "Verifica la API key y los permisos del plan"
+      },
+      "STT_TRANSCRIPTION_FAILED": {
+        "message": "El reconocimiento de voz falló",
+        "suggestion": "Por favor, intenta hablar de nuevo"
+      },
+      "TTS_CONNECTION_FAILED": {
+        "message": "No se pudo conectar al servicio de síntesis de voz",
+        "suggestion": "Verifica tu conexión e inténtalo de nuevo"
+      },
+      "TTS_AUTH_FAILED": {
+        "message": "La autenticación con el servicio de síntesis de voz falló",
+        "suggestion": "Reconectando..."
+      },
+      "TTS_GENERATION_FAILED": {
+        "message": "No se pudo generar el habla",
+        "suggestion": "La respuesta se mostrará como texto"
+      },
+      "NETWORK_ERROR": {
+        "message": "Se perdió la conexión de red",
+        "suggestion": "Por favor, verifica tu conexión a internet"
+      },
+      "TOKEN_EXPIRED": {
+        "message": "La autenticación expiró",
+        "suggestion": "Reconectando..."
+      },
+      "RATE_LIMITED": {
+        "message": "Demasiadas solicitudes",
+        "suggestion": "Por favor, espera un momento e inténtalo de nuevo"
+      },
+      "SESSION_TIMEOUT": {
+        "message": "La sesión de voz alcanzó la duración máxima",
+        "suggestion": "Por favor, inicia una nueva sesión"
+      },
+      "SESSION_IDLE_TIMEOUT": {
+        "message": "La sesión finalizó por inactividad",
+        "suggestion": "Di algo para iniciar una nueva sesión"
+      },
+      "UNKNOWN_ERROR": {
+        "message": "Ocurrió un error inesperado",
+        "suggestion": "Por favor, inténtalo de nuevo"
+      }
+    }
   },
   "mode": {
     "live": {

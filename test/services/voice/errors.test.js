@@ -51,7 +51,7 @@ describe("voice/errors", () => {
       expect(err.code).toBe("NETWORK_ERROR");
       expect(err.message).toBe("custom msg");
       expect(err.suggestion).toBe(
-        "Por favor, verifique sua conexão com a internet",
+        "Please check your internet connection",
       );
       expect(err.recoverable).toBe(true);
       expect(err.originalError).toBe(orig);
@@ -59,14 +59,14 @@ describe("voice/errors", () => {
 
     it("uses default metadata message when no custom message provided", () => {
       const err = new VoiceError(VoiceErrorCode.MICROPHONE_NOT_FOUND);
-      expect(err.message).toBe("Nenhum microfone foi encontrado");
+      expect(err.message).toBe("No microphone was found");
       expect(err.recoverable).toBe(false);
       expect(err.originalError).toBeNull();
     });
 
     it("falls back to UNKNOWN_ERROR metadata for unrecognized code", () => {
       const err = new VoiceError("DOES_NOT_EXIST");
-      expect(err.suggestion).toBe("Por favor, tente novamente");
+      expect(err.suggestion).toBe("Please try again");
       expect(err.recoverable).toBe(true);
     });
 
@@ -77,7 +77,7 @@ describe("voice/errors", () => {
       expect(json).toEqual({
         code: "TOKEN_EXPIRED",
         message: "expired",
-        suggestion: "Reconectando...",
+        suggestion: "Reconnecting...",
         recoverable: true,
       });
     });
@@ -111,7 +111,7 @@ describe("voice/errors", () => {
 
     it("creates VoiceError with no second argument", () => {
       const err = createVoiceError(VoiceErrorCode.UNKNOWN_ERROR);
-      expect(err.message).toBe("Ocorreu um erro inesperado");
+      expect(err.message).toBe("An unexpected error occurred");
     });
   });
 

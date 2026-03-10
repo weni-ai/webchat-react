@@ -1,12 +1,21 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/common/Icon';
 import { Button } from '@/components/common/Button';
 
 export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
-  const title = texts.errorTitle || 'Something went wrong';
+  const { t } = useTranslation();
+
+  const title = texts.errorTitle || t('voice_mode.errorTitle');
+  const message = t(`voice_mode.errors.${error.code}.message`, {
+    defaultValue: error.message,
+  });
+  const suggestion = t(`voice_mode.errors.${error.code}.suggestion`, {
+    defaultValue: error.suggestion,
+  });
 
   return (
-    <div
+    <section
       className="weni-voice-error"
       role="alert"
     >
@@ -18,15 +27,15 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
 
       <h2 className="weni-voice-error__title">{title}</h2>
 
-      {error.message && (
-        <p className="weni-voice-error__message">{error.message}</p>
+      {message && (
+        <p className="weni-voice-error__message">{message}</p>
       )}
 
-      {error.suggestion && (
-        <p className="weni-voice-error__suggestion">{error.suggestion}</p>
+      {suggestion && (
+        <p className="weni-voice-error__suggestion">{suggestion}</p>
       )}
 
-      <div className="weni-voice-error__actions">
+      <section className="weni-voice-error__actions">
         {error.recoverable && onRetry && (
           <Button
             variant="secondary"
@@ -34,7 +43,7 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
             onClick={onRetry}
             className="weni-voice-error__retry-btn"
           >
-            {texts.retry || 'Try again'}
+            {texts.retry || t('voice_mode.errors.retry')}
           </Button>
         )}
 
@@ -43,10 +52,10 @@ export function VoiceModeError({ error, onRetry, onDismiss, texts = {} }) {
           onClick={onDismiss}
           className="weni-voice-error__dismiss-btn"
         >
-          {texts.dismiss || 'Dismiss'}
+          {texts.dismiss || t('voice_mode.errors.dismiss')}
         </Button>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
 

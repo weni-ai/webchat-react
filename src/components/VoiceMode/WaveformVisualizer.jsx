@@ -1,29 +1,25 @@
 import PropTypes from 'prop-types';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import './WaveformVisualizer.scss';
 
-function getAriaLabel(state) {
-  switch (state) {
-    case 'listening':
-      return 'Listening for your voice';
-    case 'speaking':
-      return 'Playing audio response';
-    case 'processing':
-      return 'Processing your speech';
-    default:
-      return 'Voice mode indicator';
-  }
-}
+const ARIA_LABEL_KEYS = {
+  listening: 'voice_mode.aria_listening',
+  speaking: 'voice_mode.aria_speaking',
+  processing: 'voice_mode.aria_processing',
+};
 
 export function WaveformVisualizer({
   state = 'idle',
   barCount = 5,
   className = '',
 }) {
+  const { t } = useTranslation();
+
   const bars = useMemo(
     () =>
       Array.from({ length: barCount }, (_, i) => (
-        <div
+        <span
           key={i}
           className={`weni-waveform__bar weni-waveform__bar--${i}`}
           style={{ animationDelay: `${i * 0.1}s` }}
@@ -33,13 +29,13 @@ export function WaveformVisualizer({
   );
 
   return (
-    <div
+    <section
       className={`weni-waveform weni-waveform--${state} ${className}`}
       role="img"
-      aria-label={getAriaLabel(state)}
+      aria-label={t(ARIA_LABEL_KEYS[state] || 'voice_mode.aria_indicator')}
     >
       {bars}
-    </div>
+    </section>
   );
 }
 

@@ -2,12 +2,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 48px;
+  gap: $spacing-2;
+  height: $spacing-10 + $spacing-2;
 
   &__bar {
-    width: 4px;
-    height: 16px;
+    width: $spacing-1;
+    height: $spacing-4;
     background-color: $white;
     border-radius: 2px;
     transition: height 0.2s ease;
@@ -18,19 +18,19 @@
       opacity: 0.6;
 
       &--0 {
-        height: 12px;
+        height: $spacing-3;
       }
       &--1 {
-        height: 20px;
+        height: $spacing-5;
       }
       &--2 {
-        height: 32px;
+        height: $spacing-8;
       }
       &--3 {
-        height: 20px;
+        height: $spacing-5;
       }
       &--4 {
-        height: 12px;
+        height: $spacing-3;
       }
     }
   }
@@ -106,37 +106,37 @@
 @keyframes waveform-listening {
   0%,
   100% {
-    height: 12px;
+    height: $spacing-3;
   }
   25% {
-    height: 28px;
+    height: $spacing-7;
   }
   50% {
-    height: 40px;
+    height: $spacing-10;
   }
   75% {
-    height: 24px;
+    height: $spacing-6;
   }
 }
 
 @keyframes waveform-speaking {
   0%,
   100% {
-    height: 16px;
+    height: $spacing-4;
   }
   50% {
-    height: 44px;
+    height: $spacing-10 + $spacing-1;
   }
 }
 
 @keyframes waveform-processing {
   0%,
   100% {
-    height: 16px;
+    height: $spacing-4;
     opacity: 0.5;
   }
   50% {
-    height: 24px;
+    height: $spacing-6;
     opacity: 0.8;
   }
 }

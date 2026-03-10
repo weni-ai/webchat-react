@@ -55,7 +55,77 @@
     "assistant": "Assistant",
     "stop": "Stop",
     "microphonePermissionHint": "Enable microphone in your browser settings to use voice mode",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "aria_enter": "Enter voice mode",
+    "aria_exit": "Exit voice mode",
+    "aria_listening": "Listening for your voice",
+    "aria_speaking": "Playing audio response",
+    "aria_processing": "Processing your speech",
+    "aria_indicator": "Voice mode indicator",
+    "errors": {
+      "retry": "Try again",
+      "dismiss": "Dismiss",
+      "MICROPHONE_PERMISSION_DENIED": {
+        "message": "Microphone access was denied",
+        "suggestion": "Please allow microphone access in your browser settings"
+      },
+      "MICROPHONE_NOT_FOUND": {
+        "message": "No microphone was found",
+        "suggestion": "Please connect a microphone and try again"
+      },
+      "BROWSER_NOT_SUPPORTED": {
+        "message": "Your browser does not support voice mode",
+        "suggestion": "Please use Chrome, Firefox, Safari or Edge"
+      },
+      "STT_CONNECTION_FAILED": {
+        "message": "Could not connect to the speech recognition service",
+        "suggestion": "Check your connection and try again"
+      },
+      "STT_AUTH_FAILED": {
+        "message": "ElevenLabs authentication failed",
+        "suggestion": "Check the API key and plan permissions"
+      },
+      "STT_TRANSCRIPTION_FAILED": {
+        "message": "Speech recognition failed",
+        "suggestion": "Please try speaking again"
+      },
+      "TTS_CONNECTION_FAILED": {
+        "message": "Could not connect to the text-to-speech service",
+        "suggestion": "Check your connection and try again"
+      },
+      "TTS_AUTH_FAILED": {
+        "message": "Text-to-speech authentication failed",
+        "suggestion": "Reconnecting..."
+      },
+      "TTS_GENERATION_FAILED": {
+        "message": "Could not generate speech",
+        "suggestion": "The response will be shown as text"
+      },
+      "NETWORK_ERROR": {
+        "message": "Network connection lost",
+        "suggestion": "Please check your internet connection"
+      },
+      "TOKEN_EXPIRED": {
+        "message": "Authentication expired",
+        "suggestion": "Reconnecting..."
+      },
+      "RATE_LIMITED": {
+        "message": "Too many requests",
+        "suggestion": "Please wait a moment and try again"
+      },
+      "SESSION_TIMEOUT": {
+        "message": "Voice session reached maximum duration",
+        "suggestion": "Please start a new session"
+      },
+      "SESSION_IDLE_TIMEOUT": {
+        "message": "Session ended due to inactivity",
+        "suggestion": "Say something to start a new session"
+      },
+      "UNKNOWN_ERROR": {
+        "message": "An unexpected error occurred",
+        "suggestion": "Please try again"
+      }
+    }
   },
   "mode": {
     "live": {

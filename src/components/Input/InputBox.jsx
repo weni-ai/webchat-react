@@ -118,6 +118,15 @@ export function InputBox({ maxLength = 5000 }) {
     }
   };
 
+  const hasNoTextInput = !text.trim();
+  const canDisplayCameraRecorder =
+    hasNoTextInput &&
+    !isVoiceModeActive &&
+    !isEnteringVoiceMode &&
+    config.showCameraRecorder;
+  const shouldShowMediaActions =
+    !isVoiceModeActive && !isEnteringVoiceMode && hasNoTextInput;
+
   if (isRecording) {
     return (
       <section className="weni-input-box">
@@ -155,10 +164,7 @@ export function InputBox({ maxLength = 5000 }) {
           disabled={isEnteringVoiceMode || mode === 'preview'}
         />
 
-        {!text.trim() &&
-          !isVoiceModeActive &&
-          !isEnteringVoiceMode &&
-          config.showCameraRecorder && (
+        {canDisplayCameraRecorder && (
             <Button
               onClick={handleRecordCamera}
               disabled={hasCameraPermissionState === false}
@@ -171,7 +177,7 @@ export function InputBox({ maxLength = 5000 }) {
           )}
       </section>
 
-      {!isVoiceModeActive && !isEnteringVoiceMode && !text.trim() && (
+      {shouldShowMediaActions && (
         <>
           <InputFile ref={fileInputRef} />
           {config.showFileUploader && (
@@ -197,7 +203,7 @@ export function InputBox({ maxLength = 5000 }) {
         </>
       )}
 
-      {!!text.trim() && !isEnteringVoiceMode && (
+      {!hasNoTextInput && !isEnteringVoiceMode && (
         <Button
           onClick={handleSend}
           variant="primary"
@@ -207,19 +213,20 @@ export function InputBox({ maxLength = 5000 }) {
       )}
 
       {isEnteringVoiceMode && (
-        <button
-          className="weni-input-box__voice-cancel-btn"
+        <Button
+          variant="primary"
           onClick={exitVoiceMode}
+          className="weni-input-box__voice-cancel-btn"
           aria-label={t('voice_mode.cancel')}
         >
           <span className="weni-input-box__voice-cancel-spinner" />
           <span>{t('voice_mode.cancel')}</span>
-        </button>
+        </Button>
       )}
 
       {!isEnteringVoiceMode &&
         showVoiceButton &&
-        (isVoiceModeActive || !text.trim()) && (
+        (isVoiceModeActive || hasNoTextInput) && (
           <VoiceModeButton
             onClick={handleVoiceToggle}
             isActive={isVoiceModeActive}

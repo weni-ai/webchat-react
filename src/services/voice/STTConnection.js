@@ -25,6 +25,39 @@ class STTConnection {
     this._ws = null;
     this._connected = false;
     this._listeners = new Map();
+
+    const emitSTTError = (msg) => {
+      const errorCode = getSTTMessageErrorCode(msg.message_type);
+      this.emit('error', new VoiceError(errorCode, msg.error));
+    };
+
+    this._messageHandlers = {
+      session_started: (msg) =>
+        this.emit('session', { sessionId: msg.session_id, config: msg }),
+      partial_transcript: (msg) =>
+        this.emit('partial', { text: msg.text || '' }),
+      committed_transcript: (msg) =>
+        this.emit('committed', { text: msg.text || '' }),
+      committed_transcript_with_timestamps: (msg) =>
+        this.emit('committed', {
+          text: msg.text || '',
+          languageCode: msg.language_code,
+          words: msg.words,
+        }),
+      insufficient_audio_activity: () => {},
+      error: emitSTTError,
+      auth_error: emitSTTError,
+      rate_limited: emitSTTError,
+      quota_exceeded: emitSTTError,
+      commit_throttled: emitSTTError,
+      input_error: emitSTTError,
+      chunk_size_exceeded: emitSTTError,
+      transcriber_error: emitSTTError,
+      queue_overflow: emitSTTError,
+      resource_exhausted: emitSTTError,
+      session_time_limit_exceeded: emitSTTError,
+      unaccepted_terms: emitSTTError,
+    };
   }
 
   /**
@@ -121,8 +154,8 @@ class STTConnection {
           : VoiceErrorCode.STT_CONNECTION_FAILED;
         const reasonDetail = event.reason ? ` — "${event.reason}"` : '';
         const message = isAuthFailure
-          ? `ElevenLabs rejeitou a autenticação (1008)${reasonDetail}. Verifique a API key e as permissões do plano (Scribe v2 Realtime).`
-          : `WebSocket encerrado antes de iniciar a sessão: ${event.code}${reasonDetail}`;
+          ? `ElevenLabs rejected authentication (1008)${reasonDetail}. Check API key and plan permissions (Scribe v2 Realtime required).`
+          : `WebSocket closed before session started: ${event.code}${reasonDetail}`;
 
         settle(reject, new VoiceError(errorCode, message));
         this.emit('close', { code: event.code, reason: event.reason });
@@ -267,53 +300,8 @@ class STTConnection {
    * @private
    */
   _handleMessage(message) {
-    switch (message.message_type) {
-      case 'session_started':
-        this.emit('session', {
-          sessionId: message.session_id,
-          config: message,
-        });
-        break;
-
-      case 'partial_transcript':
-        this.emit('partial', { text: message.text || '' });
-        break;
-
-      case 'committed_transcript':
-        this.emit('committed', { text: message.text || '' });
-        break;
-
-      case 'committed_transcript_with_timestamps':
-        this.emit('committed', {
-          text: message.text || '',
-          languageCode: message.language_code,
-          words: message.words,
-        });
-        break;
-
-      case 'insufficient_audio_activity':
-        break;
-
-      case 'error':
-      case 'auth_error':
-      case 'rate_limited':
-      case 'quota_exceeded':
-      case 'commit_throttled':
-      case 'input_error':
-      case 'chunk_size_exceeded':
-      case 'transcriber_error':
-      case 'queue_overflow':
-      case 'resource_exhausted':
-      case 'session_time_limit_exceeded':
-      case 'unaccepted_terms': {
-        const errorCode = getSTTMessageErrorCode(message.message_type);
-        this.emit('error', new VoiceError(errorCode, message.error));
-        break;
-      }
-
-      default:
-        break;
-    }
+    const handler = this._messageHandlers[message.message_type];
+    if (handler) handler(message);
   }
 
   /**

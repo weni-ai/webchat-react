@@ -1,22 +1,16 @@
 import PropTypes from 'prop-types';
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/common/Button';
+import { WaveformVisualizer } from './WaveformVisualizer';
 import './VoiceModeButton.scss';
 
-function getAnimationState(voiceState) {
-  switch (voiceState) {
-    case 'speaking':
-      return 'speaking';
-    case 'processing':
-    case 'thinking':
-      return 'processing';
-    case 'listening':
-    case 'listening_active':
-    default:
-      return 'listening';
-  }
-}
+const VOICE_STATE_TO_ANIMATION = {
+  speaking: 'speaking',
+  processing: 'processing',
+  thinking: 'processing',
+  listening: 'listening',
+  listening_active: 'listening',
+};
 
 export function VoiceModeButton({
   onClick,
@@ -27,37 +21,26 @@ export function VoiceModeButton({
 }) {
   const { t } = useTranslation();
 
-  const bars = useMemo(
-    () =>
-      Array.from({ length: 4 }, (_, i) => (
-        <span
-          key={i}
-          className="weni-voice-mode-btn__bar"
-          style={{ animationDelay: `${i * 0.12}s` }}
-        />
-      )),
-    [],
-  );
-
   if (isActive) {
-    const animState = getAnimationState(voiceState);
+    const animState = VOICE_STATE_TO_ANIMATION[voiceState] || 'listening';
 
     return (
-      <button
+      <Button
+        variant="primary"
         onClick={onClick}
         disabled={disabled}
         className={`weni-voice-mode-btn weni-voice-mode-btn--active ${className}`}
-        aria-label="Exit voice mode"
+        aria-label={t('voice_mode.aria_exit')}
       >
-        <div
-          className={`weni-voice-mode-btn__bars weni-voice-mode-btn__bars--${animState}`}
-        >
-          {bars}
-        </div>
+        <WaveformVisualizer
+          state={animState}
+          barCount={4}
+          className="weni-voice-mode-btn__waveform"
+        />
         <span className="weni-voice-mode-btn__label">
           {t('voice_mode.stop')}
         </span>
-      </button>
+      </Button>
     );
   }
 
@@ -69,7 +52,7 @@ export function VoiceModeButton({
       onClick={onClick}
       disabled={disabled}
       className={`weni-voice-mode-btn ${className}`}
-      aria-label="Enter voice mode"
+      aria-label={t('voice_mode.aria_enter')}
     />
   );
 }

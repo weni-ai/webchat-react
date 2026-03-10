@@ -67,7 +67,7 @@ describe("VoiceModeButton", () => {
       const { container } = render(
         <VoiceModeButton onClick={jest.fn()} isActive voiceState="listening" />,
       );
-      const bars = container.querySelectorAll(".weni-voice-mode-btn__bar");
+      const bars = container.querySelectorAll(".weni-waveform__bar");
       expect(bars).toHaveLength(4);
     });
 
@@ -76,7 +76,7 @@ describe("VoiceModeButton", () => {
         <VoiceModeButton onClick={jest.fn()} isActive voiceState="listening" />,
       );
       expect(
-        container.querySelector(".weni-voice-mode-btn__bars--listening"),
+        container.querySelector(".weni-waveform--listening"),
       ).toBeInTheDocument();
     });
 
@@ -85,7 +85,7 @@ describe("VoiceModeButton", () => {
         <VoiceModeButton onClick={jest.fn()} isActive voiceState="speaking" />,
       );
       expect(
-        container.querySelector(".weni-voice-mode-btn__bars--speaking"),
+        container.querySelector(".weni-waveform--speaking"),
       ).toBeInTheDocument();
     });
 
@@ -98,7 +98,7 @@ describe("VoiceModeButton", () => {
         />,
       );
       expect(
-        container.querySelector(".weni-voice-mode-btn__bars--processing"),
+        container.querySelector(".weni-waveform--processing"),
       ).toBeInTheDocument();
     });
 
@@ -107,7 +107,7 @@ describe("VoiceModeButton", () => {
         <VoiceModeButton onClick={jest.fn()} isActive voiceState="thinking" />,
       );
       expect(
-        container.querySelector(".weni-voice-mode-btn__bars--processing"),
+        container.querySelector(".weni-waveform--processing"),
       ).toBeInTheDocument();
     });
 
