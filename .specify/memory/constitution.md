@@ -1,23 +1,25 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 0.0.0 → 1.0.0 (Initial Creation)
+  Version change: 1.0.0 → 1.1.0 (MINOR — materially expanded guidance)
   Modified principles:
-    - Added Core Principles (I to VI)
+    - II. Code Style Standards — added dict map preference over switch
+    - IV. Testing & Quality Assurance — added i18n mock pattern
+    - V. Semantic HTML & Accessibility — added i18n requirement
   Added sections:
-    - Backend Standards
-    - Frontend Standards
-    - Design System Compliance
-    - Governance
+    - Design System Compliance: SCSS design token reference table
+    - Frontend Standards > Component Guidelines: reusable component rule
   Removed sections: None
   Templates requiring updates:
-    - .specify/templates/plan-template.md ✅ updated
-    - .specify/templates/spec-template.md ✅ updated
-    - .specify/templates/tasks-template.md ✅ updated
+    - .specify/templates/plan-template.md ✅ no changes needed
+    - .specify/templates/spec-template.md ✅ no changes needed
+    - .specify/templates/tasks-template.md ✅ no changes needed
   Follow-up TODOs: None
 
   Amendment Rationale:
-  - Initial creation of the Weni AI Webchat React constitution based on the Weni Roadmap constitution.
+  - Codify learnings from PR #56 voice mode review: design tokens,
+    dict maps, i18n for aria-labels, reusable component preference,
+    and test mock patterns for react-i18next.
 -->
 
 # Weni AI Webchat React Constitution
@@ -35,6 +37,7 @@ All code MUST be self-documenting through expressive naming and clear intent. We
 - Keep functions with a single responsibility
 - Limit file length to ~350 lines (frontend) and maintain logical organization
 - Organize code by "reading order": relevant actions first, then dependencies and definitions
+- Extract complex conditional expressions into descriptive named variables (e.g., `const shouldShowMediaActions = !isVoiceModeActive && !isEnteringVoiceMode && hasNoTextInput`)
 
 ### II. Code Style Standards
 
@@ -44,6 +47,7 @@ Backend and frontend code MUST adhere to their respective language style guides 
 - NEVER generate trailing whitespace in any file (code, config, documentation, templates)
 - All lines MUST end with the line content only—no spaces or tabs after the last visible character
 - Empty lines MUST be completely empty (zero characters before the newline)
+- Prefer dictionary/object maps over `switch` statements for value mapping and dispatch. Switch statements MUST be refactored to a const map when they map inputs to outputs or route to handlers (e.g., `const HANDLERS = { key: fn }; HANDLERS[value]?.()` instead of `switch (value) { case 'key': fn(); break; }`)
 
 **Backend (Python) Standards**:
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting, naming, and layout
@@ -123,6 +127,12 @@ Testing is MANDATORY and MUST achieve minimum 80% code coverage **for all metric
 - For lifecycle hooks, verify they trigger expected behavior
 - Avoid `any` types in test code—use proper TypeScript types for test helpers
 
+**i18n in Tests**:
+- Components using `useTranslation` MUST have `react-i18next` mocked in their test environment
+- The project provides a centralized mock at `test/__mocks__/react-i18next.js` that resolves keys from the English locale file—use it via `jest.config.js` `moduleNameMapper`
+- If a test requires custom translation overrides, use inline `jest.mock('react-i18next', ...)` following the pattern in `src/views/Cart.test.jsx`
+- Rationale: Without a mock, `useTranslation` crashes in Jest because no i18n provider is configured
+
 ### V. Semantic HTML & Accessibility
 
 Frontend code MUST use semantic HTML to improve accessibility, SEO, and maintainability.
@@ -133,6 +143,16 @@ Frontend code MUST use semantic HTML to improve accessibility, SEO, and maintain
 - Avoid non-semantic structures (excessive `div` nesting)
 - Add descriptive classes to elements even without styling for clarity
 - Avoid inline styles; use external stylesheets with BEM methodology or utility-first framework
+- Use `<section>` instead of `<div>` for meaningful grouped content
+- Use `<span>` (phrasing content) inside interactive elements like `<button>` — never `<p>` or `<div>`
+
+**Internationalization (i18n)**:
+- ALL user-facing strings MUST use `react-i18next` (`useTranslation` hook and `t()` function)
+- This includes `aria-label`, `aria-labelledby`, `title`, `placeholder`, and visible text
+- NEVER hardcode user-facing strings directly in JSX — even for accessibility attributes
+- Translation keys MUST be added to all locale files (`en.json`, `pt.json`, `es.json`)
+- For error messages originating from service layers, keep English strings as internal fallbacks and translate at the UI layer using i18n keys with `defaultValue`
+- Rationale: Hardcoded strings break localization and make the app inaccessible to non-English users
 
 ### VI. Pre-Commit Compliance
 
@@ -206,6 +226,9 @@ Frontend development follows Weni's coding conventions for consistency across al
 - Group related components in folders
 - Avoid abbreviations; prioritize clarity over brevity
 - Document non-trivial logic with concise comments explaining "why" not "what"
+- ALWAYS use existing reusable components (e.g., `Button`, `Icon`) instead of raw HTML elements (`<button>`, `<i>`). If the project provides a component for a UI pattern, it MUST be used — do not reimplement styling or behavior with raw elements
+- When a reusable component does not fully match the needed appearance, extend it via `className` props and SCSS overrides — do not bypass it with a raw element
+- Rationale: Raw elements bypass design system consistency, accessibility defaults, and interaction patterns already built into shared components
 
 ## Design System Compliance
 
@@ -219,6 +242,21 @@ All user interfaces MUST use the **Unnnic Design System** as the single source o
 - Do not create custom components when Unnnic equivalents exist
 - Extend Unnnic components through composition, not modification
 - Report missing components or patterns to the design system team
+
+**SCSS Design Tokens (CRITICAL)**:
+- NEVER use raw pixel values in SCSS — always use the project's design tokens
+- The only exceptions are decorative values with no close token match (e.g., `2px` borders, `9999px` pill radius)
+- Available token families and their values:
+
+| Token | Values |
+|-------|--------|
+| `$spacing-*` | `0`(0), `1`(4px), `2`(8px), `3`(12px), `4`(16px), `5`(20px), `6`(24px), `7`(28px), `8`(32px), `10`(40px) |
+| `$border-radius-*` | `0`(0), `1`(4px), `2`(8px), `3`(12px), `4`(16px), `full`(100%) |
+| `$icon-size-*` | `2`(8px), `3`(12px), `4`(16px), `5`(20px), `6`(24px), `7`(32px), `10`(40px) |
+| `$font-*` | `$font-emphasis`, `$font-body`, etc. |
+
+- For values between tokens, use SCSS arithmetic: `$spacing-10 + $spacing-1` (44px)
+- Rationale: Raw pixel values drift from the design system and make global spacing changes impossible
 
 ## Governance
 
@@ -241,4 +279,4 @@ This constitution supersedes all other coding practices within the Weni AI Webch
 - Complexity additions MUST be justified in PR description
 - Runtime guidance: Reference this constitution for development decisions
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-13 | **Last Amended**: 2026-02-19
+**Version**: 1.1.0 | **Ratified**: 2026-02-13 | **Last Amended**: 2026-03-09
