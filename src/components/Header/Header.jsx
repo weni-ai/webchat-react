@@ -9,13 +9,7 @@ import './Header.scss';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-function HeaderTitle({
-  profileAvatar,
-  title,
-  subtitle,
-  mode,
-  isModeVisible,
-}) {
+function HeaderTitle({ profileAvatar, title, subtitle, mode, isModeVisible }) {
   const { t } = useTranslation();
 
   return (
@@ -120,8 +114,8 @@ export function Header() {
           />
         )}
 
-        {interfaceVersion === 1 && (
-          currentPage ? (
+        {interfaceVersion === 1 &&
+          (currentPage ? (
             <HeaderTitle
               title={currentPage.title}
               mode={mode}
@@ -135,8 +129,7 @@ export function Header() {
               mode={mode}
               isModeVisible={isModeVisible}
             />
-          )
-        )}
+          ))}
       </section>
 
       <section className="weni-chat-header__actions">
