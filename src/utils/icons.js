@@ -52,6 +52,8 @@ import ShoppingCart from '@material-symbols/svg-400/rounded/shopping_cart.svg?re
 import ShoppingCartFilled from '@material-symbols/svg-400/rounded/shopping_cart-fill.svg?react';
 import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
 import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
+import AttachFile from '@material-symbols/svg-400/rounded/attach_file.svg?react';
+import AttachFileFilled from '@material-symbols/svg-400/rounded/attach_file-fill.svg?react';
 
 export const icons = {
   send: {
@@ -161,5 +163,9 @@ export const icons = {
   circle: {
     default: Circle,
     filled: CircleFilled,
+  },
+  attach_file: {
+    default: AttachFile,
+    filled: AttachFileFilled,
   },
 };
