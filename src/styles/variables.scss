@@ -189,6 +189,7 @@ $sl-color-green-8: #08A822;
 $sl-color-green-10: #017D10;
 
 $sl-color-gray-0: #FFF;
+$sl-color-gray-1: #F5F5F5;
 $sl-color-gray-6: #ADADAD;
 
 $sl-bg-base-disabled: #1d1d1d0d;
@@ -371,6 +372,7 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --sl-color-green-10: #{$sl-color-green-10};
 
   --gray-0: #{$sl-color-gray-0};
+  --gray-1: #{$sl-color-gray-1};
   --gray-6: #{$sl-color-gray-6};
 
   --bg-base-disabled: #{$sl-bg-base-disabled};

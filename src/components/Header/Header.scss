@@ -53,3 +53,9 @@
     gap: $spacing-2;
   }
 }
+
+.weni-widget-v2 .weni-chat-header {
+  background-color: transparent;
+  padding: $spacing-2 $spacing-4;
+  border-bottom: 1px solid $sl-color-gray-1;
+}

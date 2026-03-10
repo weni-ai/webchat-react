@@ -13,7 +13,6 @@ function HeaderTitle({
   profileAvatar,
   title,
   subtitle,
-  goBack,
   mode,
   isModeVisible,
 }) {
@@ -21,16 +20,6 @@ function HeaderTitle({
 
   return (
     <>
-      {goBack && (
-        <Button
-          onClick={goBack}
-          aria-label="Back"
-          variant="tertiary"
-          icon="arrow_back"
-          iconColor="white"
-        />
-      )}
-
       {profileAvatar && (
         <Avatar
           className="weni-chat-header__avatar"
@@ -70,7 +59,6 @@ HeaderTitle.propTypes = {
   profileAvatar: PropTypes.string,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
-  goBack: PropTypes.func,
   mode: PropTypes.string,
   isModeVisible: PropTypes.bool,
 };
@@ -89,6 +77,7 @@ export function Header() {
     cart,
     mode,
     isModeVisible,
+    interfaceVersion,
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
@@ -98,6 +87,22 @@ export function Header() {
     );
   }, [cart]);
 
+  const fullScreenButtonIcon = useMemo(() => {
+    if (interfaceVersion === 2) {
+      return isChatFullscreen ? 'close_fullscreen' : 'open_in_full';
+    }
+
+    return isChatFullscreen ? 'fullscreen_exit' : 'fullscreen';
+  }, [isChatFullscreen, interfaceVersion]);
+
+  const iconColor = useMemo(() => {
+    if (interfaceVersion === 2) {
+      return 'fg-base';
+    }
+
+    return 'white';
+  }, [interfaceVersion]);
+
   const { config } = useChatContext();
   // TODO: Implement header layout
   // TODO: Add connection status indicator
@@ -105,21 +110,32 @@ export function Header() {
   return (
     <header className="weni-chat-header">
       <section className="weni-chat-header__info">
-        {currentPage ? (
-          <HeaderTitle
-            title={currentPage.title}
-            goBack={goBack}
-            mode={mode}
-            isModeVisible={isModeVisible}
+        {currentPage && goBack && (
+          <Button
+            onClick={goBack}
+            aria-label="Back"
+            variant="tertiary"
+            icon="arrow_back"
+            iconColor={iconColor}
           />
-        ) : (
-          <HeaderTitle
-            profileAvatar={config.profileAvatar}
-            title={config.title}
-            subtitle={config.subtitle}
-            mode={mode}
-            isModeVisible={isModeVisible}
-          />
+        )}
+
+        {interfaceVersion === 1 && (
+          currentPage ? (
+            <HeaderTitle
+              title={currentPage.title}
+              mode={mode}
+              isModeVisible={isModeVisible}
+            />
+          ) : (
+            <HeaderTitle
+              profileAvatar={config.profileAvatar}
+              title={config.title}
+              subtitle={config.subtitle}
+              mode={mode}
+              isModeVisible={isModeVisible}
+            />
+          )
         )}
       </section>
 
@@ -129,29 +145,29 @@ export function Header() {
             aria-label="Cart"
             variant="primary"
             icon="shopping_cart"
-            iconColor="white"
+            iconColor={iconColor}
             onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
           >
             {cartTotalItems}
           </Button>
         )}
 
-        {config.showFullScreenButton && (
+        {(config.showFullScreenButton || interfaceVersion === 2) && (
           <Button
             onClick={toggleChatFullscreen}
             aria-label="Fullscreen chat"
             variant="tertiary"
-            icon={isChatFullscreen ? 'fullscreen_exit' : 'fullscreen'}
-            iconColor="white"
+            icon={fullScreenButtonIcon}
+            iconColor={iconColor}
           />
         )}
-        {config.showCloseButton && (
+        {(config.showCloseButton || interfaceVersion === 2) && (
           <Button
             onClick={toggleChat}
             aria-label="Close chat"
             variant="tertiary"
-            icon="close"
-            iconColor="white"
+            icon={interfaceVersion === 2 ? 'keyboard_arrow_down' : 'close'}
+            iconColor={iconColor}
           />
         )}
       </section>

@@ -27,3 +27,27 @@
   width: 100%;
   height: 100%;
 }
+
+.weni-widget-v2 {
+  $animation-duration: 0.25s;
+
+  transition: padding-bottom $animation-duration ease-in-out, gap $animation-duration ease-in-out;
+
+  .weni-launcher__container {
+    transition: height $animation-duration ease-in-out;
+    height: 60px;
+  }
+
+  &.weni-widget--fullscreen {
+    max-width: 524px;
+  }
+}
+
+.weni-widget-v2.weni-widget--open {
+  padding-bottom: 0;
+  gap: 0;
+
+  .weni-launcher__container {
+    height: 0;
+  }
+}

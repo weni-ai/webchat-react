@@ -54,6 +54,12 @@ import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
 import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
 import AttachFile from '@material-symbols/svg-400/rounded/attach_file.svg?react';
 import AttachFileFilled from '@material-symbols/svg-400/rounded/attach_file-fill.svg?react';
+import KeyboardArrowDown from '@material-symbols/svg-400/rounded/keyboard_arrow_down.svg?react';
+import KeyboardArrowDownFilled from '@material-symbols/svg-400/rounded/keyboard_arrow_down-fill.svg?react';
+import OpenInFull from '@material-symbols/svg-400/rounded/open_in_full.svg?react';
+import OpenInFullFilled from '@material-symbols/svg-400/rounded/open_in_full-fill.svg?react';
+import CloseFullscreen from '@material-symbols/svg-400/rounded/close_fullscreen.svg?react';
+import CloseFullscreenFilled from '@material-symbols/svg-400/rounded/close_fullscreen-fill.svg?react';
 
 export const icons = {
   send: {
@@ -167,5 +173,17 @@ export const icons = {
   attach_file: {
     default: AttachFile,
     filled: AttachFileFilled,
+  },
+  keyboard_arrow_down: {
+    default: KeyboardArrowDown,
+    filled: KeyboardArrowDownFilled,
+  },
+  open_in_full: {
+    default: OpenInFull,
+    filled: OpenInFullFilled,
+  },
+  close_fullscreen: {
+    default: CloseFullscreen,
+    filled: CloseFullscreenFilled,
   },
 };

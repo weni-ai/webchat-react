@@ -190,9 +190,7 @@ export function InputBox({ maxLength = 5000 }) {
   return (
     <section className="weni-input-box">
       <section className="weni-input-box__textarea-container">
-        <textarea
-          {...textAreaDefaultAttributes}
-        />
+        <textarea {...textAreaDefaultAttributes} />
 
         {!text.trim() && config.showCameraRecorder && (
           <Button
@@ -303,9 +301,9 @@ function InputBoxV2(props) {
 InputBoxV2.propTypes = {
   text: PropTypes.string,
   config: PropTypes.shape({
-    showCameraRecorder: PropTypes.boolean,
-    showFileUploader: PropTypes.boolean,
-    showAudioRecorder: PropTypes.boolean,
+    showCameraRecorder: PropTypes.bool,
+    showFileUploader: PropTypes.bool,
+    showAudioRecorder: PropTypes.bool,
   }),
   textAreaDefaultAttributes: PropTypes.object,
   recordCameraDefaultAttributes: PropTypes.object,

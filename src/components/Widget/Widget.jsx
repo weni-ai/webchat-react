@@ -21,6 +21,7 @@ function WidgetContent() {
     clearTooltipMessage,
     config,
     shouldRender,
+    interfaceVersion,
   } = useChatContext();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
@@ -37,7 +38,13 @@ function WidgetContent() {
 
   return (
     <aside
-      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''} ${config.embedded ? 'weni-widget--disabled-animation' : ''}`}
+      className={`
+        weni-widget
+        ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}
+        ${config.embedded ? 'weni-widget--disabled-animation' : ''}
+        weni-widget-v${interfaceVersion}
+        ${isChatOpen ? 'weni-widget--open' : 'weni-widget--closed'}
+      `}
     >
       <Chat />
       {!isChatFullscreenAndOpen && <Launcher />}
