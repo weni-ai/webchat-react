@@ -11,6 +11,7 @@ import TypingIndicator from './TypingIndicator';
 import Avatar from '@/components/common/Avatar';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
+import { ChatPresentation } from '@/components/Chat/ChatPresentation';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -63,7 +64,7 @@ Message.propTypes = {
  * TODO: Handle loading history on scroll
  */
 export function MessagesList() {
-  const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
+  const { isTyping, isThinking, messageGroups, isChatOpen, interfaceVersion } = useWeniChat();
   const { config } = useChatContext();
   const messagesEndRef = useRef(null);
 
@@ -93,6 +94,11 @@ export function MessagesList() {
   return (
     <section className="weni-messages-list">
       {/* TODO: Add empty state when no messages */}
+
+      {interfaceVersion === 2 && (
+        <ChatPresentation />
+      )}
+
       {messageGroups.map((group, index) => (
         <section
           className={`
