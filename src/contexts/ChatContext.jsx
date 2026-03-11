@@ -113,7 +113,7 @@ export function ChatProvider({ children, config }) {
   const [cameraDevices, setCameraDevices] = useState([]);
 
   // UI-specific state
-  const [isChatOpen, setIsChatOpen] = useState(!!(mergedConfig.startFullScreen));
+  const [isChatOpen, setIsChatOpen] = useState(!!mergedConfig.startFullScreen);
   const [isChatFullscreen, setIsChatFullscreen] = useState(
     mergedConfig.startFullScreen,
   );
