@@ -50,6 +50,8 @@ export function Button({
   hoverState = false,
   className = '',
   href = '',
+  rounded = false,
+  noPadding = false,
   ...props
 }) {
   // TODO: Implement button variants and sizes
@@ -80,6 +82,8 @@ export function Button({
         `weni-button--${alignContent}-aligned`,
         hoverState && 'weni-button--hover-state',
         icon && !children && 'weni-button--only-icon',
+        rounded && 'weni-button--rounded',
+        noPadding && 'weni-button--no-padding',
         className,
         isDisabled ? 'weni-button--disabled' : 'weni-button--enabled',
       ]
@@ -124,6 +128,8 @@ Button.propTypes = {
   className: PropTypes.string,
   href: PropTypes.string,
   children: PropTypes.node,
+  rounded: PropTypes.bool,
+  noPadding: PropTypes.bool,
 };
 
 export default Button;

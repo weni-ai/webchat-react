@@ -1,0 +1,22 @@
+.weni-chat-presentation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__avatar {
+    width: 80px;
+    height: 80px;
+    margin-bottom: $spacing-2;
+  }
+
+  &__title {
+    font: $font-display-3;
+    color: var(--fg-base);
+    margin-bottom: $spacing-1;
+  }
+
+  &__subtitle {
+    font: $font-body;
+    color: var(--fg-base);
+  }
+}

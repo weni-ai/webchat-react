@@ -7,7 +7,7 @@
 
   .weni-input-box__textarea-container {
     position: relative;
-    
+
     display: flex;
     flex: 1;
   }
@@ -46,5 +46,53 @@
     position: absolute;
     right: 0;
     top: 0;
+  }
+}
+
+.weni-input-box-v2 {
+  margin: 0 $spacing-4;
+  padding: $spacing-3;
+  outline: 1px solid $border-base;
+  border-radius: $border-radius-2;
+  cursor: text;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+
+  textarea {
+    font: $font-body;
+    resize: none;
+    width: 100%;
+  }
+
+  &:has(textarea:focus-visible) {
+    outline: 1px solid var(--weni-main-color);
+  }
+
+  &:has(textarea:disabled) {
+    cursor: not-allowed;
+    background-color: $sl-bg-base-disabled;
+    border-color: $sl-border-base-disabled;
+  }
+
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  .weni-input-box__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-1;
+  }
+
+  .weni-input-box__actions-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-1;
   }
 }

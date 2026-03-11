@@ -58,6 +58,9 @@ const defaultConfig = {
   mode: 'live',
   showMode: false,
   showChatAvatar: true,
+
+  // Interface version
+  interfaceVersion: 1,
 };
 
 /**
@@ -323,6 +326,7 @@ export function ChatProvider({ children, config }) {
     setCart,
     mode,
     isModeVisible: showMode,
+    interfaceVersion: mergedConfig.interfaceVersion,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),

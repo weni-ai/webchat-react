@@ -113,6 +113,7 @@ $bg-success: $green-50;
 $bg-warning: $yellow-50;
 $bg-critical: $red-50;
 $fg-base: $gray-500;
+$fg-base-soft: #707070;
 $fg-muted: $gray-300;
 $fg-emphasized: $gray-900;
 $fg-inverted: $white;
@@ -188,6 +189,7 @@ $sl-color-green-8: #08A822;
 $sl-color-green-10: #017D10;
 
 $sl-color-gray-0: #FFF;
+$sl-color-gray-1: #F5F5F5;
 $sl-color-gray-6: #ADADAD;
 
 $sl-bg-base-disabled: #1d1d1d0d;
@@ -370,6 +372,7 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --sl-color-green-10: #{$sl-color-green-10};
 
   --gray-0: #{$sl-color-gray-0};
+  --gray-1: #{$sl-color-gray-1};
   --gray-6: #{$sl-color-gray-6};
 
   --bg-base-disabled: #{$sl-bg-base-disabled};
@@ -384,6 +387,7 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --bg-warning: #{$bg-warning};
   --bg-critical: #{$bg-critical};
   --fg-base: #{$fg-base};
+  --fg-base-soft: #{$fg-base-soft};
   --fg-muted: #{$fg-muted};
   --fg-emphasized: #{$fg-emphasized};
   --fg-inverted: #{$fg-inverted};
