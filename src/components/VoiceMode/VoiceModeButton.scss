@@ -1,4 +1,8 @@
+@import '@/styles/animations.scss';
+
 .weni-voice-mode-btn {
+  @include weni-animation(0, 0.2s, weni-slide-in);
+
   &:hover {
     background-color: $gray-100;
   }
