@@ -311,6 +311,10 @@ export function ChatProvider({ children, config }) {
   }, []);
 
   useEffect(() => {
+    if (isChatOpen && mergedConfig.connectOn === 'demand') {
+      service.connect();
+    }
+
     if (isChatOpen && mergedConfig.initPayload) {
       const relevantMessages = service
         .getMessages()

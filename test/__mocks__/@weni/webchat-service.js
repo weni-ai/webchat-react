@@ -8,6 +8,8 @@ class WeniWebchatService {
     };
     this.session = { isChatOpen: false };
     this.isAudioRecordingSupported = true;
+    this._connected = false;
+    this._connecting = false;
   }
 
   // Event helpers
@@ -31,10 +33,20 @@ class WeniWebchatService {
 
   // Lifecycle
   async init() {
-    return;
+    if (this.config.connectOn === 'mount') {
+      this.connect();
+    }
+    return { shouldRender: true };
   }
-  connect() {}
-  disconnect() {}
+  connect() {
+    if (this._connected || this._connecting) return;
+    this._connecting = true;
+    this._connected = true;
+    this._connecting = false;
+  }
+  disconnect() {
+    this._connected = false;
+  }
 
   // State
   getState() {
