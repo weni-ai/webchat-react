@@ -42,6 +42,7 @@ export function ProductCatalog({ productGroups }) {
 
             {productGroup.products.map((product, productIndex) => (
               <InlineProduct
+                uuid={product.uuid}
                 variant="product"
                 key={productIndex}
                 image={product.image}
@@ -54,6 +55,8 @@ export function ProductCatalog({ productGroups }) {
                 setCounter={(counter) =>
                   setCounter(product.uuid, product, counter)
                 }
+                sellerId={product.sellerId}
+                productURL={product.productURL}
                 onClick={() =>
                   setCurrentPage({
                     view: 'product-details',

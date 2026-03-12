@@ -2,16 +2,42 @@ import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 
 import Button from '@/components/common/Button';
+import { useOrderForm } from '@/contexts/OrderFormContext';
+
+function parseUuid(uuid, sellerIdFallback) {
+  if (!uuid || typeof uuid !== 'string') return null;
+  const parts = uuid.split('#');
+  if (parts.length >= 2) {
+    return { skuId: parts[0], sellerId: parts[1] };
+  }
+  if (sellerIdFallback) {
+    return { skuId: uuid, sellerId: sellerIdFallback };
+  }
+  return null;
+}
 
 export function CounterControls({
+  uuid,
   counter,
   setCounter,
   hideWhenNotInteracted = false,
   size = 'small',
   className = '',
+  sellerId: sellerIdProp,
 }) {
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
+  const {
+    orderFormId,
+    isLoadingOrderForm,
+    requestOrderForm,
+    addOrderFormItem,
+  } = useOrderForm();
   const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    requestOrderForm();
+  }, [requestOrderForm]);
 
   function handleCounterChange(type) {
     if (timeoutRef.current) {
@@ -48,6 +74,39 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
+
+  async function handleAddProductToOrderForm() {
+    const parsed = parseUuid(uuid, sellerIdProp);
+
+    if (!parsed) return;
+
+    setIsAddingProduct(true);
+
+    try {
+      await addOrderFormItem(parsed.skuId, parsed.sellerId);
+    } finally {
+      setIsAddingProduct(false);
+    }
+  }
+
+  if (isLoadingOrderForm || orderFormId) {
+    return (
+      <section
+        className={`weni-product-quantity-controls weni-product-quantity-controls--${size} ${className}`}
+      >
+        <Button
+          isLoading={isLoadingOrderForm || isAddingProduct}
+          variant="secondary"
+          icon="add"
+          size={size}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddProductToOrderForm();
+          }}
+        />
+      </section>
+    );
+  }
 
   return (
     <section
@@ -95,9 +154,11 @@ export function CounterControls({
 }
 
 CounterControls.propTypes = {
+  uuid: PropTypes.string,
   counter: PropTypes.number.isRequired,
   setCounter: PropTypes.func.isRequired,
   hideWhenNotInteracted: PropTypes.bool,
   size: PropTypes.oneOf(['small', 'medium']),
   className: PropTypes.string,
+  sellerId: PropTypes.string,
 };

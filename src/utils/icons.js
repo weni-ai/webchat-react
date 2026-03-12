@@ -56,6 +56,8 @@ import GraphicEq from '@material-symbols/svg-400/rounded/graphic_eq.svg?react';
 import GraphicEqFilled from '@material-symbols/svg-400/rounded/graphic_eq-fill.svg?react';
 import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
 import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
+import ProgressActivity from '@material-symbols/svg-400/rounded/progress_activity.svg?react';
+import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_activity-fill.svg?react';
 
 export const icons = {
   send: {
@@ -173,5 +175,9 @@ export const icons = {
   circle: {
     default: Circle,
     filled: CircleFilled,
+  },
+  progress_activity: {
+    default: ProgressActivity,
+    filled: ProgressActivityFilled,
   },
 };
