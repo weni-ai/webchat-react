@@ -47,4 +47,24 @@
     right: 0;
     top: 0;
   }
+
+  .weni-input-box__voice-cancel-btn {
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+
+  .weni-input-box__voice-cancel-spinner {
+    display: block;
+    width: $icon-size-4;
+    height: $icon-size-4;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: $white;
+    border-radius: $border-radius-full;
+    flex-shrink: 0;
+    animation: voice-cancel-spin 0.75s linear infinite;
+  }
+}
+
+@keyframes voice-cancel-spin {
+  to { transform: rotate(360deg); }
 }

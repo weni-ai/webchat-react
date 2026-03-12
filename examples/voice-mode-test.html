@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Mode Test - Weni Webchat</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    h2 { margin: 0 0 12px; font-size: 1.15rem; }
+    .subtitle { color: #666; margin: 0 0 20px; }
+    code {
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .config-box {
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .config-box h3 { margin: 0 0 8px; color: #ad6800; font-size: 0.95rem; }
+    .config-box p { margin: 4px 0; font-size: 0.9rem; }
+    .config-var {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .config-var:last-child { border-bottom: none; }
+    .config-var code { font-weight: 600; }
+    .config-var span { color: #555; font-size: 0.88rem; }
+    .instructions ol { padding-left: 20px; margin: 0; }
+    .instructions li { margin-bottom: 6px; font-size: 0.92rem; }
+    .checklist { list-style: none; padding: 0; margin: 0; }
+    .checklist li { padding: 4px 0; font-size: 0.92rem; }
+    .checklist li::before { content: '\2713 '; color: #52c41a; font-weight: bold; margin-right: 4px; }
+    .error-banner {
+      display: none;
+      background: #fff1f0;
+      border: 1px solid #ffa39e;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: #a8071a;
+      font-size: 0.9rem;
+    }
+    .chat-container { height: 600px; }
+    #weni-webchat { height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>Voice Mode Test Page</h1>
+      <p class="subtitle">Standalone integration test for Full Voice Mode</p>
+
+      <div class="config-box">
+        <h3>Required Configuration (edit the script below)</h3>
+        <div class="config-var">
+          <code>CHANNEL_UUID</code>
+          <span>Your Weni channel UUID</span>
+        </div>
+        <div class="config-var">
+          <code>VOICE_ID</code>
+          <span>ElevenLabs voice ID for TTS (find at <a href="https://elevenlabs.io/app/voice-library" target="_blank">voice library</a>)</span>
+        </div>
+      </div>
+
+      <div id="error-banner" class="error-banner"></div>
+
+      <div class="instructions">
+        <h2>How to test</h2>
+        <ol>
+          <li>Build the standalone bundle: <code>npm run build:standalone</code></li>
+          <li>Set <code>CHANNEL_UUID</code> and <code>VOICE_ID</code> in the script section</li>
+          <li>Open this file in a browser (or serve via a local HTTP server)</li>
+          <li>Open the chat and click the voice mode button in the header</li>
+          <li>Allow microphone access when prompted</li>
+          <li>Speak naturally — your transcript auto-sends on silence</li>
+          <li>The agent response is spoken back via TTS</li>
+          <li>Interrupt the agent at any time by speaking (barge-in)</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Feature Checklist</h2>
+      <ul class="checklist">
+        <li>Real-time speech-to-text with partial + committed transcripts</li>
+        <li>Automatic message send on silence detection</li>
+        <li>Streaming text-to-speech for agent responses</li>
+        <li>Echo guard prevents self-transcription during TTS</li>
+        <li>Barge-in support (interrupt agent mid-speech)</li>
+        <li>Auto-return to listening after agent finishes speaking</li>
+        <li>Sentence-boundary chunking for TTS credit efficiency</li>
+        <li>Language detection from browser / manual override</li>
+        <li>Graceful error handling with retry support</li>
+        <li>Full visual overlay with waveform animation</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2>Chat Widget</h2>
+      <div class="chat-container">
+        <div id="weni-webchat"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../dist-standalone/webchat.umd.js"></script>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION — Replace these values before testing
+    // =========================================================================
+    var CHANNEL_UUID = 'a9687ddd-849c-44e2-8f81-da9a07de21b8';
+    var VOICE_ID = 'IrjWdL4OFv83a0lTXEQg'; // "Lily" multilingual voice
+
+    // =========================================================================
+    // Validation
+    // =========================================================================
+    function showError(msg) {
+      var banner = document.getElementById('error-banner');
+      banner.textContent = msg;
+      banner.style.display = 'block';
+    }
+
+    if (CHANNEL_UUID === 'YOUR-CHANNEL-UUID') {
+      showError('Channel UUID not configured. Edit the CHANNEL_UUID variable in this file.');
+    }
+
+    // =========================================================================
+    // Initialize WebChat with Voice Mode
+    // =========================================================================
+    window.WebChat.init({
+      selector: '#weni-webchat',
+      socketUrl: 'https://websocket.weni.ai',
+      host: 'https://flows.weni.ai',
+      channelUuid: CHANNEL_UUID,
+
+      embedded: true,
+      title: 'Voice Mode Test',
+      subtitle: 'Speak or type',
+      showFullScreenButton: true,
+
+      voiceMode: {
+        elevenLabs: {
+          voiceId: VOICE_ID,
+        },
+      },
+    });
+  </script>
+</body>
+</html>

@@ -158,6 +158,9 @@ function mapConfig(params) {
     // Suggestions
     suggestionsConfig: params.suggestionsConfig,
 
+    // Voice mode
+    voiceMode: params.voiceMode,
+
     // Legacy support
     selector: params.selector,
   };

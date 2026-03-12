@@ -4,10 +4,12 @@ class WeniWebchatService {
     this.listeners = {};
     this.state = {
       messages: [],
-      connection: { status: 'connected' },
+      connection: { status: "connected" },
     };
     this.session = { isChatOpen: false };
     this.isAudioRecordingSupported = true;
+    this._connected = false;
+    this._connecting = false;
   }
 
   // Event helpers
@@ -31,10 +33,20 @@ class WeniWebchatService {
 
   // Lifecycle
   async init() {
-    return;
+    if (this.config.connectOn === 'mount') {
+      this.connect();
+    }
+    return { shouldRender: true };
   }
-  connect() {}
-  disconnect() {}
+  connect() {
+    if (this._connected || this._connecting) return;
+    this._connecting = true;
+    this._connected = true;
+    this._connecting = false;
+  }
+  disconnect() {
+    this._connected = false;
+  }
 
   // State
   getState() {
@@ -48,41 +60,41 @@ class WeniWebchatService {
   }
   setIsChatOpen(isOpen) {
     this.session = { ...(this.session || {}), isChatOpen: isOpen };
-    this.emit('chat:open:changed', isOpen);
+    this.emit("chat:open:changed", isOpen);
   }
 
   // Messaging
   sendMessage(text) {
     this.state.messages.push({
-      direction: 'outgoing',
+      direction: "outgoing",
       text,
       timestamp: Date.now(),
     });
-    this.emit('state:changed', this.getState());
+    this.emit("state:changed", this.getState());
   }
 
   sendAttachment(_file) {}
 
   simulateMessageReceived(payload) {
-    const text = payload?.message?.text ?? '';
+    const text = payload?.message?.text ?? "";
     this.state.messages.push({
-      direction: 'incoming',
+      direction: "incoming",
       message: { text },
       timestamp: Date.now(),
     });
-    this.emit('message:received', text);
-    this.emit('state:changed', this.getState());
+    this.emit("message:received", text);
+    this.emit("state:changed", this.getState());
   }
 
   // Audio
   async startRecording() {
-    this.emit('recording:started');
+    this.emit("recording:started");
   }
   async stopRecording() {
-    this.emit('recording:stopped');
+    this.emit("recording:stopped");
   }
   cancelRecording() {
-    this.emit('recording:cancelled');
+    this.emit("recording:cancelled");
   }
   hasAudioPermission() {
     return true;
@@ -95,11 +107,11 @@ class WeniWebchatService {
   isCameraRecording = false;
   startCameraRecording() {
     this.isCameraRecording = true;
-    this.emit('camera:recording:started');
+    this.emit("camera:recording:started");
   }
   stopCameraRecording() {
     this.isCameraRecording = false;
-    this.emit('camera:recording:stopped');
+    this.emit("camera:recording:stopped");
   }
   switchToNextCameraDevice() {}
   hasCameraPermission() {
