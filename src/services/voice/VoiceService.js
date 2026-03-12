@@ -204,6 +204,11 @@ export class VoiceService {
     if (!this.textChunker || !this.ttsPlayer) return;
     if (VoiceService.NON_SPEAKABLE.test(textChunk)) return;
 
+    if (this.partialTranscript) {
+      this.partialTranscript = '';
+      this.emit('transcript:partial', { text: '' });
+    }
+
     const chunk = this.textChunker.addText(textChunk);
     if (chunk) this._speak(chunk);
 
@@ -294,6 +299,7 @@ export class VoiceService {
     const stt = this.sttConnection;
 
     stt.on('partial', (data) => {
+      if (this.state === VoiceSessionState.SPEAKING) return;
       this.partialTranscript = data.text;
       this.emit('transcript:partial', { text: data.text });
     });
@@ -306,7 +312,9 @@ export class VoiceService {
         this.emit('transcript:committed', { text });
         this.onMessageCallback?.(text);
       }
-      this.setState(VoiceSessionState.LISTENING);
+      if (this.state !== VoiceSessionState.SPEAKING) {
+        this.setState(VoiceSessionState.LISTENING);
+      }
     });
 
     stt.on('error', (err) => {

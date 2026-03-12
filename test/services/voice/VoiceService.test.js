@@ -546,6 +546,72 @@ describe("VoiceService", () => {
     });
   });
 
+  // -- Transcription interruption on agent message ---------------------------
+
+  describe("transcription interruption on agent message", () => {
+    it("clears partial transcript when processTextChunk receives agent text", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const partialHandler = getSTTListenerFor(svc, "partial");
+      partialHandler({ text: "how is the wea" });
+      expect(svc.partialTranscript).toBe("how is the wea");
+
+      const transcriptEvents = [];
+      svc.on("transcript:partial", (e) => transcriptEvents.push(e));
+
+      svc.textChunker.addText.mockReturnValueOnce("Hello from agent.");
+      svc.processTextChunk("Hello from agent.");
+
+      expect(svc.partialTranscript).toBe("");
+      expect(transcriptEvents).toContainEqual({ text: "" });
+    });
+
+    it("ignores STT partial events while in SPEAKING state", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.textChunker.addText.mockReturnValueOnce("Agent says hello.");
+      svc.processTextChunk("Agent says hello.");
+      expect(svc.state).toBe(VoiceSessionState.SPEAKING);
+
+      const partialHandler = getSTTListenerFor(svc, "partial");
+      partialHandler({ text: "stale partial" });
+
+      expect(svc.partialTranscript).toBe("");
+    });
+
+    it("processes STT committed during SPEAKING but keeps SPEAKING state", async () => {
+      svc = createInitializedService();
+      const msgCallback = jest.fn();
+      svc.setMessageCallback(msgCallback);
+      await svc.startSession();
+
+      svc.textChunker.addText.mockReturnValueOnce("Agent response.");
+      svc.processTextChunk("Agent response.");
+      expect(svc.state).toBe(VoiceSessionState.SPEAKING);
+
+      const committedHandler = getSTTListenerFor(svc, "committed");
+      committedHandler({ text: "user message before TTS" });
+
+      expect(msgCallback).toHaveBeenCalledWith("user message before TTS");
+      expect(svc.state).toBe(VoiceSessionState.SPEAKING);
+    });
+
+    it("does not clear partial when there is no active partial transcript", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      const transcriptEvents = [];
+      svc.on("transcript:partial", (e) => transcriptEvents.push(e));
+
+      svc.textChunker.addText.mockReturnValueOnce("Hello.");
+      svc.processTextChunk("Hello.");
+
+      expect(transcriptEvents).not.toContainEqual({ text: "" });
+    });
+  });
+
   // -- TTS queue:drained → back to LISTENING ---------------------------------
 
   describe("TTS queue:drained transition", () => {
