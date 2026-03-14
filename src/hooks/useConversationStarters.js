@@ -7,14 +7,12 @@ import {
   fetchProductData,
   selectProduct,
   extractProductData,
-  getSelectedSku,
-  buildSkuContextString,
+  buildProductContextString,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
-const SKU_DEBOUNCE_MS = 300;
 
 export function useConversationStartersCore() {
   const {
@@ -38,8 +36,6 @@ export function useConversationStartersCore() {
   const currentFingerprintRef = useRef(null);
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
-  const skuObserverRef = useRef(null);
-  const productRef = useRef(null);
 
   const isPdpEnabled = config?.conversationStarters?.pdp === true;
 
@@ -75,7 +71,6 @@ export function useConversationStartersCore() {
     clearMobileTimer();
     currentFingerprintRef.current = null;
     deferredProductDataRef.current = null;
-    productRef.current = null;
   }, [clearMobileTimer]);
 
   const requestStarters = useCallback((productData) => {
@@ -92,12 +87,12 @@ export function useConversationStartersCore() {
     }
   }, [service]);
 
-  const setSkuContext = useCallback((product) => {
+  const setProductContext = useCallback((product) => {
     if (!service || !product) return;
-    const sku = getSelectedSku(product);
-    if (!sku) return;
-    const contextString = buildSkuContextString(product, sku);
-    service.setContext(contextString);
+    const contextString = buildProductContextString(product);
+    if (contextString) {
+      service.setContext(contextString);
+    }
   }, [service]);
 
   const detectAndFetchPdp = useCallback(async () => {
@@ -126,11 +121,10 @@ export function useConversationStartersCore() {
       return;
     }
 
-    productRef.current = product;
     const productData = extractProductData(product, account);
     requestStarters(productData);
-    setSkuContext(product);
-  }, [isPdpEnabled, requestStarters, setSkuContext]);
+    setProductContext(product);
+  }, [isPdpEnabled, requestStarters, setProductContext]);
 
   const handleStarterClick = useCallback((question) => {
     setIsDismissed(true);
@@ -241,37 +235,8 @@ export function useConversationStartersCore() {
     return () => {
       monitor.stop();
       clearMobileTimer();
-      if (skuObserverRef.current) {
-        skuObserverRef.current.disconnect();
-        skuObserverRef.current = null;
-      }
     };
   }, [service]);
-
-  useEffect(() => {
-    if (!isPdpEnabled || !isVtexPdpPage() || !productRef.current) return;
-
-    let debounceTimer = null;
-
-    const skuParamHandler = () => {
-      const currentUrl = new URL(window.location.href);
-      if (currentUrl.searchParams.has('skuId')) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          if (productRef.current) {
-            setSkuContext(productRef.current);
-          }
-        }, SKU_DEBOUNCE_MS);
-      }
-    };
-
-    window.addEventListener('popstate', skuParamHandler);
-
-    return () => {
-      window.removeEventListener('popstate', skuParamHandler);
-      clearTimeout(debounceTimer);
-    };
-  }, [isPdpEnabled, setSkuContext]);
 
   return {
     questions,

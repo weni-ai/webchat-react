@@ -58,51 +58,54 @@ export function extractProductData(product, account) {
   };
 }
 
-export function getSelectedSku(product) {
-  const items = product?.items;
-  if (!items?.length) return null;
+function formatSkuLine(item) {
+  const offer = item.sellers?.[0]?.commertialOffer;
+  const price = offer?.Price ?? 'N/A';
+  const available = offer?.AvailableQuantity > 0 ? 'Available' : 'Unavailable';
+  const name = item.nameComplete || item.name || 'N/A';
+  const skuId = item.itemId || 'N/A';
 
-  const skuId = new URLSearchParams(window.location.search).get('skuId');
-  if (skuId) {
-    const match = items.find((item) => item.itemId === skuId);
-    if (match) return match;
-  }
+  const variationParts = (item.variations || []).map(
+    (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
+  );
+  const variationsStr = variationParts.length > 0
+    ? ` (${variationParts.join(', ')})`
+    : '';
 
-  const runtimeSlug = window.__RUNTIME__?.route?.params?.slug;
-  if (runtimeSlug) {
-    const match = items.find(
-      (item) => item.name?.toLowerCase() === runtimeSlug.toLowerCase(),
-    );
-    if (match) return match;
-  }
-
-  return items[0];
+  return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${available}`;
 }
 
-export function buildSkuContextString(product, sku) {
-  const offer = sku?.sellers?.[0]?.commertialOffer;
-  const price = offer?.Price ?? 'N/A';
-  const listPrice = offer?.ListPrice ?? 'N/A';
-  const available = offer?.AvailableQuantity > 0 ? 'In stock' : 'Out of stock';
-  const image = sku?.images?.[0]?.imageUrl || 'N/A';
-  const variant = sku?.nameComplete || sku?.name || 'N/A';
+export function buildProductContextString(product) {
+  if (!product) return null;
+
+  const description = product.description || '';
+  const attributes = filterInternalProperties(product.properties || []);
 
   const lines = [
-    `Product: ${product?.productName || 'N/A'}`,
-    `Brand: ${product?.brand || 'N/A'}`,
-    `Selected variant: ${variant}`,
-    `Price: ${price}`,
-    `List price: ${listPrice}`,
-    `Availability: ${available}`,
-    `Image: ${image}`,
+    `Product: ${product.productName || 'N/A'}`,
+    `Brand: ${product.brand || 'N/A'}`,
+    `Product ID: ${product.productId || 'N/A'}`,
   ];
 
-  const variations = sku?.variations;
-  if (variations?.length) {
-    const parts = variations.map(
-      (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
-    );
-    lines.push(`Variations: ${parts.join(' | ')}`);
+  if (description) {
+    const trimmed = description.length > 300
+      ? description.slice(0, 300) + '...'
+      : description;
+    lines.push(`Description: ${trimmed}`);
+  }
+
+  const attributeEntries = Object.entries(attributes);
+  if (attributeEntries.length > 0) {
+    const parts = attributeEntries.map(([key, val]) => `${key}: ${val}`);
+    lines.push(`Attributes: ${parts.join(' | ')}`);
+  }
+
+  const items = product.items || [];
+  if (items.length > 0) {
+    lines.push(`\nAvailable SKUs (${items.length}):`);
+    items.forEach((item) => {
+      lines.push(formatSkuLine(item));
+    });
   }
 
   return lines.join('\n');
