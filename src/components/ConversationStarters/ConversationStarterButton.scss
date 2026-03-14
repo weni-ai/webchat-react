@@ -20,23 +20,29 @@
   }
 
   &--compact {
-    background-color: $white;
-    color: var(--weni-main-color);
-    border-color: var(--weni-main-color);
+    padding: $spacing-1 $spacing-3;
+    max-width: var(--weni-widget-width, 360px);
+
+    .weni-starter-button__text {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font: $font-caption-2;
+    }
   }
 
   &--full {
-    background-color: $white;
-    color: var(--weni-main-color);
-    border-color: var(--weni-main-color);
+    padding: $spacing-1 $spacing-3;
+
+    .weni-starter-button__text {
+      display: block;
+      word-break: break-word;
+      font: $font-caption-2;
+    }
   }
 
   &__text {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
     font: $font-body;
     line-height: 1.4;
   }
