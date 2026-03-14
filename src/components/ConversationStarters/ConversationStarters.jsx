@@ -13,7 +13,9 @@ export function ConversationStartersCompact({
   const containerClass = [
     'weni-starters-compact',
     isHiding && 'weni-starters-compact--hiding',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <section className={containerClass}>

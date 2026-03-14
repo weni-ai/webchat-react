@@ -75,27 +75,33 @@ export function useConversationStartersCore() {
     deferredProductDataRef.current = null;
   }, [clearMobileTimer]);
 
-  const requestStarters = useCallback((productData) => {
-    if (!service) return;
+  const requestStarters = useCallback(
+    (productData) => {
+      if (!service) return;
 
-    try {
-      if (service.isConnected()) {
-        service.getStarters(productData);
-      } else {
-        deferredProductDataRef.current = productData;
+      try {
+        if (isConnected) {
+          service.getStarters(productData);
+        } else {
+          deferredProductDataRef.current = productData;
+        }
+      } catch {
+        setIsLoading(false);
       }
-    } catch {
-      setIsLoading(false);
-    }
-  }, [service]);
+    },
+    [service, isConnected],
+  );
 
-  const setProductContext = useCallback((product) => {
-    if (!service || !product) return;
-    const contextString = buildProductContextString(product);
-    if (contextString) {
-      service.setContext(contextString);
-    }
-  }, [service]);
+  const setProductContext = useCallback(
+    (product) => {
+      if (!service || !product) return;
+      const contextString = buildProductContextString(product);
+      if (contextString) {
+        service.setContext(contextString);
+      }
+    },
+    [service],
+  );
 
   const detectAndFetchPdp = useCallback(async () => {
     if (!isPdpEnabled || !isVtexPdpPage()) return;
@@ -128,18 +134,21 @@ export function useConversationStartersCore() {
     setProductContext(product);
   }, [isPdpEnabled, requestStarters, setProductContext]);
 
-  const handleStarterClick = useCallback((question) => {
-    setIsDismissed(true);
-    setIsCompactVisible(false);
-    clearMobileTimer();
+  const handleStarterClick = useCallback(
+    (question) => {
+      setIsDismissed(true);
+      setIsCompactVisible(false);
+      clearMobileTimer();
 
-    if (isChatOpen) {
-      sendMessage(question);
-    } else {
-      pendingStarterRef.current = question;
-      setIsChatOpen(true);
-    }
-  }, [isChatOpen, sendMessage, setIsChatOpen, clearMobileTimer]);
+      if (isChatOpen) {
+        sendMessage(question);
+      } else {
+        pendingStarterRef.current = question;
+        setIsChatOpen(true);
+      }
+    },
+    [isChatOpen, sendMessage, setIsChatOpen, clearMobileTimer],
+  );
 
   const clearStarters = useCallback(() => {
     resetStartersState();
@@ -206,7 +215,7 @@ export function useConversationStartersCore() {
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
 
-    if (service.isConnected()) {
+    if (isConnected) {
       handleConnected();
     }
 

@@ -50,7 +50,7 @@ describe('createNavigationMonitor', () => {
         new MessageEvent('message', {
           data: { eventName: 'vtex:pageView' },
           source: window,
-        })
+        }),
       );
       expect(onNavigate).toHaveBeenCalledTimes(1);
     });
@@ -60,7 +60,7 @@ describe('createNavigationMonitor', () => {
         new MessageEvent('message', {
           data: { eventName: 'vtex:pageView' },
           source: null,
-        })
+        }),
       );
       expect(onNavigate).not.toHaveBeenCalled();
     });
@@ -70,7 +70,7 @@ describe('createNavigationMonitor', () => {
         new MessageEvent('message', {
           data: { eventName: 'vtex:productView' },
           source: window,
-        })
+        }),
       );
       expect(onNavigate).not.toHaveBeenCalled();
     });
@@ -80,7 +80,7 @@ describe('createNavigationMonitor', () => {
         new MessageEvent('message', {
           data: { foo: 'bar' },
           source: window,
-        })
+        }),
       );
       expect(onNavigate).not.toHaveBeenCalled();
     });

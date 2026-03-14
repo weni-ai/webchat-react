@@ -95,32 +95,38 @@ describe('getVtexAccount', () => {
 });
 
 describe('fetchProductData', () => {
+  let originalFetch;
+
   beforeEach(() => {
-    global.fetch = jest.fn();
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = jest.fn();
   });
 
   afterEach(() => {
-    delete global.fetch;
+    globalThis.fetch = originalFetch;
   });
 
   it('returns parsed JSON on success', async () => {
     const data = { products: [{ id: 1 }] };
-    global.fetch.mockResolvedValue({ ok: true, json: () => Promise.resolve(data) });
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(data),
+    });
 
     const result = await fetchProductData('ipad-10th-gen');
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       '/api/io/_v/api/intelligent-search/product_search/ipad-10th-gen',
     );
     expect(result).toEqual(data);
   });
 
   it('returns null on non-ok response', async () => {
-    global.fetch.mockResolvedValue({ ok: false });
+    globalThis.fetch.mockResolvedValue({ ok: false });
     expect(await fetchProductData('missing')).toBeNull();
   });
 
   it('returns null on network error', async () => {
-    global.fetch.mockRejectedValue(new Error('Network failure'));
+    globalThis.fetch.mockRejectedValue(new Error('Network failure'));
     expect(await fetchProductData('broken')).toBeNull();
   });
 });

@@ -3,7 +3,11 @@ import { useTranslation } from 'react-i18next';
 import Button from '@/components/common/Button';
 import './ConversationStarterButton.scss';
 
-export function ConversationStarterButton({ question, variant = 'full', onClick }) {
+export function ConversationStarterButton({
+  question,
+  variant = 'full',
+  onClick,
+}) {
   const { t } = useTranslation();
 
   return (

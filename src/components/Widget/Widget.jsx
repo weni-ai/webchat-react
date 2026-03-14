@@ -38,10 +38,7 @@ function WidgetContent() {
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
   const shouldShowCompactStarters =
-    questions.length > 0 &&
-    isCompactVisible &&
-    !isChatOpen &&
-    !isDismissed;
+    questions.length > 0 && isCompactVisible && !isChatOpen && !isDismissed;
 
   useEffect(() => {
     if (isChatOpen) {

@@ -373,16 +373,14 @@ async function simulateMessageSent(message) {
 function validateStartersInput(questions) {
   if (!Array.isArray(questions)) return false;
   if (questions.length < 1 || questions.length > 3) return false;
-  return questions.every(
-    (q) => typeof q === 'string' && q.trim().length > 0,
-  );
+  return questions.every((q) => typeof q === 'string' && q.trim().length > 0);
 }
 
 async function setConversationStarters(questions) {
   if (!widgetInstance) return;
 
   if (!validateStartersInput(questions)) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (import.meta.env.DEV) {
       console.warn(
         'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
       );

@@ -125,7 +125,10 @@ describe('useConversationStartersCore', () => {
       getVtexAccount.mockReturnValue('mystore');
       fetchProductData.mockResolvedValue({ products: [fakeProduct] });
       selectProduct.mockReturnValue(fakeProduct);
-      extractProductData.mockReturnValue({ account: 'mystore', linkText: 'cool-shoe' });
+      extractProductData.mockReturnValue({
+        account: 'mystore',
+        linkText: 'cool-shoe',
+      });
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
     });
 
@@ -196,7 +199,7 @@ describe('useConversationStartersCore', () => {
     });
 
     it('defers getStarters when service is not connected', async () => {
-      mockService.isConnected.mockReturnValue(false);
+      useChatContext.mockReturnValue(buildContext({ isConnected: false }));
 
       await act(async () => {
         renderHook(() => useConversationStartersCore());
@@ -265,7 +268,7 @@ describe('useConversationStartersCore', () => {
       expect(hookResult.current.source).toBe('pdp');
 
       mockService.on.mockClear();
-      const { result, rerender } = renderHook(() => useConversationStartersCore());
+      renderHook(() => useConversationStartersCore());
 
       const receivedHandler = getEventHandler('starters:received');
       if (receivedHandler) {
@@ -326,14 +329,17 @@ describe('useConversationStartersCore', () => {
 
   describe('connected event with deferred product data', () => {
     it('sends deferred product data on connected event', async () => {
-      mockService.isConnected.mockReturnValue(false);
+      useChatContext.mockReturnValue(buildContext({ isConnected: false }));
       isVtexPdpPage.mockReturnValue(true);
       extractSlugFromUrl.mockReturnValue('shoe');
       getVtexAccount.mockReturnValue('store');
       const product = { linkText: 'shoe', items: [{ itemId: '1' }] };
       fetchProductData.mockResolvedValue({ products: [product] });
       selectProduct.mockReturnValue(product);
-      extractProductData.mockReturnValue({ account: 'store', linkText: 'shoe' });
+      extractProductData.mockReturnValue({
+        account: 'store',
+        linkText: 'shoe',
+      });
       buildProductContextString.mockReturnValue('ctx');
 
       await act(async () => {
@@ -412,7 +418,9 @@ describe('useConversationStartersCore', () => {
       });
       useChatContext.mockReturnValue(ctx);
 
-      const { result, rerender } = renderHook(() => useConversationStartersCore());
+      const { result, rerender } = renderHook(() =>
+        useConversationStartersCore(),
+      );
 
       act(() => {
         result.current.handleStarterClick('Pending Q?');

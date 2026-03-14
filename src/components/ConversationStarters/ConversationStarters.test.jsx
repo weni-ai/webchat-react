@@ -29,7 +29,7 @@ describe('ConversationStarterButton', () => {
       <ConversationStarterButton
         question="What is your return policy?"
         onClick={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText('What is your return policy?')).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('ConversationStarterButton', () => {
         question="Test question"
         variant="compact"
         onClick={jest.fn()}
-      />
+      />,
     );
 
     const button = container.querySelector('.weni-starter-button--compact');
@@ -54,7 +54,7 @@ describe('ConversationStarterButton', () => {
         question="Test question"
         variant="full"
         onClick={jest.fn()}
-      />
+      />,
     );
 
     const button = container.querySelector('.weni-starter-button--full');
@@ -67,7 +67,7 @@ describe('ConversationStarterButton', () => {
       <ConversationStarterButton
         question="How do I track my order?"
         onClick={handleClick}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText('How do I track my order?'));
@@ -80,11 +80,11 @@ describe('ConversationStarterButton', () => {
       <ConversationStarterButton
         question="Do you offer free shipping?"
         onClick={jest.fn()}
-      />
+      />,
     );
 
     expect(
-      screen.getByLabelText('Suggested question: Do you offer free shipping?')
+      screen.getByLabelText('Suggested question: Do you offer free shipping?'),
     ).toBeInTheDocument();
   });
 
@@ -93,7 +93,7 @@ describe('ConversationStarterButton', () => {
       <ConversationStarterButton
         question="Test question"
         onClick={jest.fn()}
-      />
+      />,
     );
 
     const button = container.querySelector('.weni-button');
@@ -108,7 +108,7 @@ describe('ConversationStartersCompact', () => {
         questions={mockQuestions}
         onStarterClick={jest.fn()}
         isVisible={true}
-      />
+      />,
     );
 
     mockQuestions.forEach((question) => {
@@ -116,7 +116,7 @@ describe('ConversationStartersCompact', () => {
     });
 
     const compactButtons = document.querySelectorAll(
-      '.weni-starter-button--compact'
+      '.weni-starter-button--compact',
     );
     expect(compactButtons).toHaveLength(mockQuestions.length);
   });
@@ -128,7 +128,7 @@ describe('ConversationStartersCompact', () => {
         onStarterClick={jest.fn()}
         isVisible={false}
         isHiding={false}
-      />
+      />,
     );
 
     expect(container.innerHTML).toBe('');
@@ -140,11 +140,11 @@ describe('ConversationStartersCompact', () => {
         questions={mockQuestions}
         onStarterClick={jest.fn()}
         isVisible={true}
-      />
+      />,
     );
 
     expect(
-      container.querySelector('.weni-starters-compact')
+      container.querySelector('.weni-starters-compact'),
     ).toBeInTheDocument();
   });
 
@@ -155,11 +155,11 @@ describe('ConversationStartersCompact', () => {
         onStarterClick={jest.fn()}
         isVisible={false}
         isHiding={true}
-      />
+      />,
     );
 
     expect(
-      container.querySelector('.weni-starters-compact--hiding')
+      container.querySelector('.weni-starters-compact--hiding'),
     ).toBeInTheDocument();
   });
 
@@ -170,7 +170,7 @@ describe('ConversationStartersCompact', () => {
         questions={mockQuestions}
         onStarterClick={handleClick}
         isVisible={true}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText(mockQuestions[1]));
@@ -185,16 +185,14 @@ describe('ConversationStartersFull', () => {
       <ConversationStartersFull
         questions={mockQuestions}
         onStarterClick={jest.fn()}
-      />
+      />,
     );
 
     mockQuestions.forEach((question) => {
       expect(screen.getByText(question)).toBeInTheDocument();
     });
 
-    const fullButtons = document.querySelectorAll(
-      '.weni-starter-button--full'
-    );
+    const fullButtons = document.querySelectorAll('.weni-starter-button--full');
     expect(fullButtons).toHaveLength(mockQuestions.length);
   });
 
@@ -203,7 +201,7 @@ describe('ConversationStartersFull', () => {
       <ConversationStartersFull
         questions={[]}
         onStarterClick={jest.fn()}
-      />
+      />,
     );
 
     expect(container.innerHTML).toBe('');
@@ -214,12 +212,10 @@ describe('ConversationStartersFull', () => {
       <ConversationStartersFull
         questions={mockQuestions}
         onStarterClick={jest.fn()}
-      />
+      />,
     );
 
-    expect(
-      container.querySelector('.weni-starters-full')
-    ).toBeInTheDocument();
+    expect(container.querySelector('.weni-starters-full')).toBeInTheDocument();
   });
 
   it('calls onStarterClick when a button is clicked', () => {
@@ -228,7 +224,7 @@ describe('ConversationStartersFull', () => {
       <ConversationStartersFull
         questions={mockQuestions}
         onStarterClick={handleClick}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText(mockQuestions[2]));

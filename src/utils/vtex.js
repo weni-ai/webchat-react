@@ -20,8 +20,7 @@ export function extractSlugFromUrl() {
 }
 
 export function getVtexAccount() {
-  return window.__RUNTIME__?.account
-    || window.location.hostname.split('.')[0];
+  return window.__RUNTIME__?.account || window.location.hostname.split('.')[0];
 }
 
 export async function fetchProductData(slug) {
@@ -70,9 +69,8 @@ function formatSkuLine(item) {
   const variationParts = (item.variations || []).map(
     (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
   );
-  const variationsStr = variationParts.length > 0
-    ? ` (${variationParts.join(', ')})`
-    : '';
+  const variationsStr =
+    variationParts.length > 0 ? ` (${variationParts.join(', ')})` : '';
 
   return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${available}`;
 }
@@ -103,7 +101,9 @@ export function buildProductContextString(product) {
   if (items.length > 0) {
     const visibleItems = items.slice(0, MAX_SKUS);
     const totalCount = items.length;
-    lines.push(`\nAvailable SKUs (showing ${visibleItems.length} of ${totalCount}):`);
+    lines.push(
+      `\nAvailable SKUs (showing ${visibleItems.length} of ${totalCount}):`,
+    );
     visibleItems.forEach((item) => {
       lines.push(formatSkuLine(item));
     });

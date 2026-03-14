@@ -15,12 +15,12 @@ export function createNavigationMonitor(onNavigate) {
     originalPushState = history.pushState;
     originalReplaceState = history.replaceState;
 
-    history.pushState = function(...args) {
+    history.pushState = function (...args) {
       originalPushState.apply(this, args);
       onNavigate();
     };
 
-    history.replaceState = function(...args) {
+    history.replaceState = function (...args) {
       originalReplaceState.apply(this, args);
       onNavigate();
     };
