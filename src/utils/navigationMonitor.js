@@ -26,6 +26,7 @@ export function createNavigationMonitor(onNavigate) {
     };
 
     messageHandler = (event) => {
+      if (event.source !== window) return;
       if (event.data?.eventName === 'vtex:pageView') {
         onNavigate();
       }

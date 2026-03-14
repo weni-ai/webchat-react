@@ -6,20 +6,12 @@ import {
   selectProduct,
   filterInternalProperties,
   extractProductData,
-  getSelectedSku,
-  buildSkuContextString,
+  buildProductContextString,
 } from './vtex';
 
 function mockPathname(value) {
   Object.defineProperty(window, 'location', {
     value: { ...window.location, pathname: value },
-    writable: true,
-  });
-}
-
-function mockSearch(value) {
-  Object.defineProperty(window, 'location', {
-    value: { ...window.location, search: value },
     writable: true,
   });
 }
@@ -242,116 +234,107 @@ describe('extractProductData', () => {
   });
 });
 
-describe('getSelectedSku', () => {
-  const items = [
-    { itemId: '100', name: 'Blue Shirt' },
-    { itemId: '200', name: 'Red Shirt' },
-  ];
-
-  it('returns SKU matching skuId URL param', () => {
-    mockSearch('?skuId=200');
-    expect(getSelectedSku({ items })).toBe(items[1]);
+describe('buildProductContextString', () => {
+  it('returns null for null product', () => {
+    expect(buildProductContextString(null)).toBeNull();
   });
 
-  it('returns SKU matching __RUNTIME__ slug', () => {
-    window.__RUNTIME__ = { route: { params: { slug: 'red shirt' } } };
-    expect(getSelectedSku({ items })).toBe(items[1]);
-  });
-
-  it('prefers skuId over runtime slug', () => {
-    mockSearch('?skuId=100');
-    window.__RUNTIME__ = { route: { params: { slug: 'red shirt' } } };
-    expect(getSelectedSku({ items })).toBe(items[0]);
-  });
-
-  it('falls back to first item when no params match', () => {
-    expect(getSelectedSku({ items })).toBe(items[0]);
-  });
-
-  it('returns null for empty items array', () => {
-    expect(getSelectedSku({ items: [] })).toBeNull();
-  });
-
-  it('returns null when product is null', () => {
-    expect(getSelectedSku(null)).toBeNull();
-  });
-
-  it('returns null when items is undefined', () => {
-    expect(getSelectedSku({})).toBeNull();
-  });
-});
-
-describe('buildSkuContextString', () => {
-  const product = { productName: 'iPad', brand: 'Apple' };
-
-  const sku = {
-    nameComplete: 'iPad 64GB Silver',
-    name: 'iPad Silver',
-    images: [{ imageUrl: 'https://img.vtex.com/ipad.jpg' }],
-    sellers: [
-      {
-        commertialOffer: {
-          Price: 3499,
-          ListPrice: 3999,
-          AvailableQuantity: 5,
-        },
-      },
-    ],
-  };
-
-  it('builds a formatted context string', () => {
-    const result = buildSkuContextString(product, sku);
+  it('builds context with basic product fields', () => {
+    const product = {
+      productName: 'iPad',
+      brand: 'Apple',
+      productId: '123',
+      description: 'A great tablet',
+      properties: [{ name: 'Color', values: ['Silver'] }],
+      items: [],
+    };
+    const result = buildProductContextString(product);
     expect(result).toContain('Product: iPad');
     expect(result).toContain('Brand: Apple');
-    expect(result).toContain('Selected variant: iPad 64GB Silver');
-    expect(result).toContain('Price: 3499');
-    expect(result).toContain('List price: 3999');
-    expect(result).toContain('Availability: In stock');
-    expect(result).toContain('Image: https://img.vtex.com/ipad.jpg');
+    expect(result).toContain('Product ID: 123');
+    expect(result).toContain('Description: A great tablet');
+    expect(result).toContain('Attributes: Color: Silver');
   });
 
-  it('shows out of stock when quantity is 0', () => {
-    const outOfStockSku = {
-      ...sku,
-      sellers: [{ commertialOffer: { ...sku.sellers[0].commertialOffer, AvailableQuantity: 0 } }],
+  it('limits SKUs to 5 and shows total count', () => {
+    const items = Array.from({ length: 8 }, (_, i) => ({
+      itemId: String(i + 1),
+      name: `SKU ${i + 1}`,
+      sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+    }));
+    const product = {
+      productName: 'Shirt',
+      brand: 'Brand',
+      productId: '1',
+      properties: [],
+      items,
     };
-    expect(buildSkuContextString(product, outOfStockSku)).toContain('Availability: Out of stock');
+    const result = buildProductContextString(product);
+    expect(result).toContain('showing 5 of 8');
+    expect(result).toContain('SKU 1:');
+    expect(result).toContain('SKU 5:');
+    expect(result).not.toContain('SKU 6:');
+    expect(result).not.toContain('SKU 8:');
   });
 
-  it('handles missing seller data with N/A', () => {
-    const result = buildSkuContextString(product, { name: 'Basic' });
-    expect(result).toContain('Price: N/A');
-    expect(result).toContain('List price: N/A');
-    expect(result).toContain('Availability: Out of stock');
-    expect(result).toContain('Image: N/A');
-  });
-
-  it('falls back to sku.name when nameComplete is missing', () => {
-    const skuNoComplete = { ...sku, nameComplete: undefined };
-    expect(buildSkuContextString(product, skuNoComplete)).toContain('Selected variant: iPad Silver');
-  });
-
-  it('includes variations when present', () => {
-    const skuWithVariations = {
-      ...sku,
-      variations: [
-        { name: 'Color', values: ['Silver', 'Space Gray'] },
-        { name: 'Storage', values: ['64GB'] },
-      ],
+  it('shows all SKUs when count is within limit', () => {
+    const items = Array.from({ length: 3 }, (_, i) => ({
+      itemId: String(i + 1),
+      name: `SKU ${i + 1}`,
+      sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 2 } }],
+    }));
+    const product = {
+      productName: 'Hat',
+      brand: 'Brand',
+      productId: '2',
+      properties: [],
+      items,
     };
-    const result = buildSkuContextString(product, skuWithVariations);
-    expect(result).toContain('Variations: Color: Silver, Space Gray | Storage: 64GB');
+    const result = buildProductContextString(product);
+    expect(result).toContain('showing 3 of 3');
+    expect(result).toContain('SKU 1:');
+    expect(result).toContain('SKU 3:');
   });
 
-  it('omits variations line when not present', () => {
-    const result = buildSkuContextString(product, sku);
-    expect(result).not.toContain('Variations:');
+  it('does not truncate description', () => {
+    const longDesc = 'A'.repeat(500);
+    const product = {
+      productName: 'Test',
+      brand: 'B',
+      productId: '1',
+      description: longDesc,
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product);
+    expect(result).toContain(`Description: ${longDesc}`);
   });
 
-  it('handles null product and sku gracefully', () => {
-    const result = buildSkuContextString(null, null);
+  it('includes all attributes without limit', () => {
+    const properties = Array.from({ length: 15 }, (_, i) => ({
+      name: `Attr${i + 1}`,
+      values: [`val${i + 1}`],
+    }));
+    const product = {
+      productName: 'Test',
+      brand: 'B',
+      productId: '1',
+      properties,
+      items: [],
+    };
+    const result = buildProductContextString(product);
+    expect(result).toContain('Attr1: val1');
+    expect(result).toContain('Attr15: val15');
+  });
+
+  it('handles missing optional fields with N/A', () => {
+    const product = {
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product);
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
-    expect(result).toContain('Selected variant: N/A');
+    expect(result).toContain('Product ID: N/A');
   });
 });

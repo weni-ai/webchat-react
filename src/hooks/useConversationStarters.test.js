@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useConversationStarters } from '@/hooks/useConversationStarters';
+import { useConversationStartersCore } from '@/hooks/useConversationStarters';
 import { useChatContext } from '@/contexts/ChatContext';
 import {
   isVtexPdpPage,
@@ -8,8 +8,7 @@ import {
   fetchProductData,
   selectProduct,
   extractProductData,
-  getSelectedSku,
-  buildSkuContextString,
+  buildProductContextString,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
@@ -24,8 +23,7 @@ jest.mock('@/utils/vtex', () => ({
   fetchProductData: jest.fn(),
   selectProduct: jest.fn(),
   extractProductData: jest.fn(),
-  getSelectedSku: jest.fn(),
-  buildSkuContextString: jest.fn(),
+  buildProductContextString: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -61,7 +59,7 @@ function getEventHandler(eventName) {
   return call ? call[1] : undefined;
 }
 
-describe('useConversationStarters', () => {
+describe('useConversationStartersCore', () => {
   let ctx;
 
   beforeEach(() => {
@@ -75,7 +73,7 @@ describe('useConversationStarters', () => {
 
   describe('Initialization', () => {
     it('returns initial state with empty questions, no loading, not dismissed', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       expect(result.current.questions).toEqual([]);
       expect(result.current.isLoading).toBe(false);
@@ -95,7 +93,7 @@ describe('useConversationStarters', () => {
       useChatContext.mockReturnValue(ctx);
       isVtexPdpPage.mockClear();
 
-      renderHook(() => useConversationStarters());
+      renderHook(() => useConversationStartersCore());
 
       expect(isVtexPdpPage).not.toHaveBeenCalled();
     });
@@ -105,7 +103,7 @@ describe('useConversationStarters', () => {
       useChatContext.mockReturnValue(ctx);
       isVtexPdpPage.mockClear();
 
-      renderHook(() => useConversationStarters());
+      renderHook(() => useConversationStartersCore());
 
       expect(isVtexPdpPage).not.toHaveBeenCalled();
     });
@@ -128,13 +126,12 @@ describe('useConversationStarters', () => {
       fetchProductData.mockResolvedValue({ products: [fakeProduct] });
       selectProduct.mockReturnValue(fakeProduct);
       extractProductData.mockReturnValue({ account: 'mystore', linkText: 'cool-shoe' });
-      getSelectedSku.mockReturnValue({ itemId: '1', name: 'SKU 1' });
-      buildSkuContextString.mockReturnValue('Product: Cool Shoe');
+      buildProductContextString.mockReturnValue('Product: Cool Shoe');
     });
 
     it('fetches product data and calls getStarters on a PDP page', async () => {
       await act(async () => {
-        renderHook(() => useConversationStarters());
+        renderHook(() => useConversationStartersCore());
       });
 
       expect(isVtexPdpPage).toHaveBeenCalled();
@@ -151,7 +148,7 @@ describe('useConversationStarters', () => {
     it('sets source to pdp and fingerprint during PDP fetch', async () => {
       let hookResult;
       await act(async () => {
-        const { result } = renderHook(() => useConversationStarters());
+        const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
@@ -164,7 +161,7 @@ describe('useConversationStarters', () => {
 
       let hookResult;
       await act(async () => {
-        const { result } = renderHook(() => useConversationStarters());
+        const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
@@ -177,7 +174,7 @@ describe('useConversationStarters', () => {
 
       let hookResult;
       await act(async () => {
-        const { result } = renderHook(() => useConversationStarters());
+        const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
@@ -190,7 +187,7 @@ describe('useConversationStarters', () => {
 
       let hookResult;
       await act(async () => {
-        const { result } = renderHook(() => useConversationStarters());
+        const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
@@ -202,7 +199,7 @@ describe('useConversationStarters', () => {
       mockService.isConnected.mockReturnValue(false);
 
       await act(async () => {
-        renderHook(() => useConversationStarters());
+        renderHook(() => useConversationStartersCore());
       });
 
       expect(mockService.getStarters).not.toHaveBeenCalled();
@@ -211,7 +208,7 @@ describe('useConversationStarters', () => {
 
   describe('starters:received event', () => {
     it('updates questions when starters:received fires', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
       expect(handler).toBeDefined();
@@ -226,7 +223,7 @@ describe('useConversationStarters', () => {
     });
 
     it('slices questions to a maximum of 3', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
 
@@ -238,7 +235,7 @@ describe('useConversationStarters', () => {
     });
 
     it('defaults to empty array when questions is undefined', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
 
@@ -257,18 +254,18 @@ describe('useConversationStarters', () => {
       fetchProductData.mockResolvedValue({ products: [product] });
       selectProduct.mockReturnValue(product);
       extractProductData.mockReturnValue({ account: 'store' });
-      getSelectedSku.mockReturnValue(null);
+      buildProductContextString.mockReturnValue('ctx');
 
       let hookResult;
       await act(async () => {
-        const { result } = renderHook(() => useConversationStarters());
+        const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
       expect(hookResult.current.source).toBe('pdp');
 
       mockService.on.mockClear();
-      const { result, rerender } = renderHook(() => useConversationStarters());
+      const { result, rerender } = renderHook(() => useConversationStartersCore());
 
       const receivedHandler = getEventHandler('starters:received');
       if (receivedHandler) {
@@ -281,7 +278,7 @@ describe('useConversationStarters', () => {
 
   describe('starters:error event', () => {
     it('sets loading to false and keeps questions empty', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const errorHandler = getEventHandler('starters:error');
       expect(errorHandler).toBeDefined();
@@ -297,7 +294,7 @@ describe('useConversationStarters', () => {
 
   describe('starters:set-manual event', () => {
     it('sets manual questions, source, and visibility', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:set-manual');
       expect(handler).toBeDefined();
@@ -315,7 +312,7 @@ describe('useConversationStarters', () => {
     });
 
     it('slices manual questions to 3', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:set-manual');
 
@@ -337,11 +334,10 @@ describe('useConversationStarters', () => {
       fetchProductData.mockResolvedValue({ products: [product] });
       selectProduct.mockReturnValue(product);
       extractProductData.mockReturnValue({ account: 'store', linkText: 'shoe' });
-      getSelectedSku.mockReturnValue({ itemId: '1' });
-      buildSkuContextString.mockReturnValue('ctx');
+      buildProductContextString.mockReturnValue('ctx');
 
       await act(async () => {
-        renderHook(() => useConversationStarters());
+        renderHook(() => useConversationStartersCore());
       });
 
       expect(mockService.getStarters).not.toHaveBeenCalled();
@@ -360,7 +356,7 @@ describe('useConversationStarters', () => {
     });
 
     it('does nothing on connected when no deferred data', () => {
-      renderHook(() => useConversationStarters());
+      renderHook(() => useConversationStartersCore());
 
       const connectedHandler = getEventHandler('connected');
 
@@ -377,7 +373,7 @@ describe('useConversationStarters', () => {
       ctx = buildContext({ isChatOpen: true, isConnected: true });
       useChatContext.mockReturnValue(ctx);
 
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       act(() => {
         result.current.handleStarterClick('Q1?');
@@ -394,7 +390,7 @@ describe('useConversationStarters', () => {
       ctx = buildContext({ isChatOpen: false, isConnected: true });
       useChatContext.mockReturnValue(ctx);
 
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       act(() => {
         result.current.handleStarterClick('Q1?');
@@ -416,7 +412,7 @@ describe('useConversationStarters', () => {
       });
       useChatContext.mockReturnValue(ctx);
 
-      const { result, rerender } = renderHook(() => useConversationStarters());
+      const { result, rerender } = renderHook(() => useConversationStartersCore());
 
       act(() => {
         result.current.handleStarterClick('Pending Q?');
@@ -441,7 +437,7 @@ describe('useConversationStarters', () => {
 
   describe('clearStarters', () => {
     it('resets state and calls service.clearStarters', () => {
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
       act(() => {
@@ -474,7 +470,7 @@ describe('useConversationStarters', () => {
     it('starts auto-hide timer on mobile when starters are received', () => {
       window.matchMedia = jest.fn().mockReturnValue({ matches: true });
 
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
 
@@ -502,7 +498,7 @@ describe('useConversationStarters', () => {
     it('does not auto-hide on desktop', () => {
       window.matchMedia = jest.fn().mockReturnValue({ matches: false });
 
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       const handler = getEventHandler('starters:received');
 
@@ -521,7 +517,7 @@ describe('useConversationStarters', () => {
 
   describe('Event listener cleanup', () => {
     it('unregisters listeners on unmount', () => {
-      const { unmount } = renderHook(() => useConversationStarters());
+      const { unmount } = renderHook(() => useConversationStartersCore());
 
       unmount();
 
@@ -546,7 +542,7 @@ describe('useConversationStarters', () => {
 
   describe('Navigation monitor', () => {
     it('starts the monitor on mount and stops on unmount', () => {
-      const { unmount } = renderHook(() => useConversationStarters());
+      const { unmount } = renderHook(() => useConversationStartersCore());
 
       expect(createNavigationMonitor).toHaveBeenCalledWith(
         expect.any(Function),
@@ -558,17 +554,27 @@ describe('useConversationStarters', () => {
       expect(mockMonitor.stop).toHaveBeenCalled();
     });
 
-    it('resets starters and clears context when navigation occurs', () => {
-      renderHook(() => useConversationStarters());
+    it('debounces navigation events before clearing starters', () => {
+      jest.useFakeTimers();
+      renderHook(() => useConversationStartersCore());
 
       const onNavigate = createNavigationMonitor.mock.calls[0][0];
 
       act(() => {
         onNavigate();
+        onNavigate();
+        onNavigate();
       });
 
-      expect(mockService.clearStarters).toHaveBeenCalled();
+      expect(mockService.clearStarters).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(mockService.clearStarters).toHaveBeenCalledTimes(1);
       expect(mockService.setContext).toHaveBeenCalledWith('');
+      jest.useRealTimers();
     });
   });
 
@@ -577,7 +583,7 @@ describe('useConversationStarters', () => {
       ctx = buildContext({ service: null });
       useChatContext.mockReturnValue(ctx);
 
-      const { result } = renderHook(() => useConversationStarters());
+      const { result } = renderHook(() => useConversationStartersCore());
 
       expect(result.current.questions).toEqual([]);
 

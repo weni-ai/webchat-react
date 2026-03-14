@@ -13,6 +13,7 @@ import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
+const NAVIGATION_DEBOUNCE_MS = 300;
 
 export function useConversationStartersCore() {
   const {
@@ -36,6 +37,7 @@ export function useConversationStartersCore() {
   const currentFingerprintRef = useRef(null);
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
+  const navigationDebounceRef = useRef(null);
 
   const isPdpEnabled = config?.conversationStarters?.pdp === true;
 
@@ -222,18 +224,22 @@ export function useConversationStartersCore() {
     detectAndFetchPdp();
 
     const monitor = createNavigationMonitor(() => {
-      service.clearStarters();
-      service.setContext('');
-      resetStartersState();
-      if (isPdpEnabled) {
-        setTimeout(() => detectAndFetchPdp(), 0);
-      }
+      clearTimeout(navigationDebounceRef.current);
+      navigationDebounceRef.current = setTimeout(() => {
+        service.clearStarters();
+        service.setContext('');
+        resetStartersState();
+        if (isPdpEnabled) {
+          detectAndFetchPdp();
+        }
+      }, NAVIGATION_DEBOUNCE_MS);
     });
 
     monitor.start();
 
     return () => {
       monitor.stop();
+      clearTimeout(navigationDebounceRef.current);
       clearMobileTimer();
     };
   }, [service]);

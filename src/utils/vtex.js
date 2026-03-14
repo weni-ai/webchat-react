@@ -6,6 +6,8 @@ const INTERNAL_PROPERTIES = new Set([
   'allSpecificationsGroups',
 ]);
 
+const MAX_SKUS = 5;
+
 export function isVtexPdpPage() {
   return /\/[^/]+\/p\/?$/.test(window.location.pathname);
 }
@@ -88,10 +90,7 @@ export function buildProductContextString(product) {
   ];
 
   if (description) {
-    const trimmed = description.length > 300
-      ? description.slice(0, 300) + '...'
-      : description;
-    lines.push(`Description: ${trimmed}`);
+    lines.push(`Description: ${description}`);
   }
 
   const attributeEntries = Object.entries(attributes);
@@ -102,8 +101,10 @@ export function buildProductContextString(product) {
 
   const items = product.items || [];
   if (items.length > 0) {
-    lines.push(`\nAvailable SKUs (${items.length}):`);
-    items.forEach((item) => {
+    const visibleItems = items.slice(0, MAX_SKUS);
+    const totalCount = items.length;
+    lines.push(`\nAvailable SKUs (showing ${visibleItems.length} of ${totalCount}):`);
+    visibleItems.forEach((item) => {
       lines.push(formatSkuLine(item));
     });
   }

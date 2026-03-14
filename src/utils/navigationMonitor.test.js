@@ -45,19 +45,31 @@ describe('createNavigationMonitor', () => {
       monitor.start();
     });
 
-    it('calls onNavigate for vtex:pageView messages', () => {
+    it('calls onNavigate for vtex:pageView messages from same window', () => {
       window.dispatchEvent(
         new MessageEvent('message', {
           data: { eventName: 'vtex:pageView' },
+          source: window,
         })
       );
       expect(onNavigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores vtex:pageView messages from cross-origin sources', () => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { eventName: 'vtex:pageView' },
+          source: null,
+        })
+      );
+      expect(onNavigate).not.toHaveBeenCalled();
     });
 
     it('ignores messages with other eventNames', () => {
       window.dispatchEvent(
         new MessageEvent('message', {
           data: { eventName: 'vtex:productView' },
+          source: window,
         })
       );
       expect(onNavigate).not.toHaveBeenCalled();
@@ -65,7 +77,10 @@ describe('createNavigationMonitor', () => {
 
     it('ignores messages without an eventName', () => {
       window.dispatchEvent(
-        new MessageEvent('message', { data: { foo: 'bar' } })
+        new MessageEvent('message', {
+          data: { foo: 'bar' },
+          source: window,
+        })
       );
       expect(onNavigate).not.toHaveBeenCalled();
     });
