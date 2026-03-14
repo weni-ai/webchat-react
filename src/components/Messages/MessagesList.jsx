@@ -14,6 +14,8 @@ import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useConversationStarters } from '@/contexts/ConversationStartersContext';
+import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
 
 import './MessagesList.scss';
 
@@ -60,6 +62,8 @@ export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
   const { config, isVoiceModeActive, voicePartialTranscript } =
     useChatContext();
+  const { questions, isDismissed, handleStarterClick } =
+    useConversationStarters();
   const messagesEndRef = useRef(null);
 
   function scrollToBottom(behavior = 'smooth') {
@@ -168,6 +172,13 @@ export function MessagesList() {
             <TypingIndicator />
           </MessageContainer>
         </section>
+      )}
+
+      {questions.length > 0 && !isDismissed && (
+        <ConversationStartersFull
+          questions={questions}
+          onStarterClick={handleStarterClick}
+        />
       )}
 
       <div ref={messagesEndRef} />
