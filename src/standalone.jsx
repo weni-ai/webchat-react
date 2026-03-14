@@ -161,6 +161,9 @@ function mapConfig(params) {
     // Voice mode
     voiceMode: params.voiceMode,
 
+    // Conversation starters
+    conversationStarters: params.conversationStarters,
+
     // Legacy support
     selector: params.selector,
   };
@@ -367,6 +370,28 @@ async function simulateMessageSent(message) {
   service.simulateMessageSent(message);
 }
 
+function validateStartersInput(questions) {
+  if (!Array.isArray(questions)) return false;
+  if (questions.length < 1 || questions.length > 3) return false;
+  return questions.every((q) => typeof q === 'string' && q.trim().length > 0);
+}
+
+async function setConversationStarters(questions) {
+  if (!widgetInstance) return;
+
+  if (!validateStartersInput(questions)) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
+      );
+    }
+    return;
+  }
+
+  const svc = await serviceWhenReady();
+  svc.emit('starters:set-manual', questions);
+}
+
 function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
@@ -385,6 +410,7 @@ const WebChat = {
   setContext,
   getContext,
   setCustomField,
+  setConversationStarters,
   isOpen,
   isVisible,
   reload,

@@ -2,7 +2,12 @@ import PropTypes from 'prop-types';
 
 import Chat from '@/components/Chat/Chat';
 import Launcher from '@/components/Launcher/Launcher';
+import { ConversationStartersCompact } from '@/components/ConversationStarters/ConversationStarters';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext.jsx';
+import {
+  ConversationStartersProvider,
+  useConversationStarters,
+} from '@/contexts/ConversationStartersContext';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
 import { useEffect } from 'react';
@@ -23,7 +28,17 @@ function WidgetContent() {
     shouldRender,
   } = useChatContext();
 
+  const {
+    questions,
+    isCompactVisible,
+    isHiding,
+    isDismissed,
+    handleStarterClick,
+  } = useConversationStarters();
+
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
+  const shouldShowCompactStarters =
+    questions.length > 0 && isCompactVisible && !isChatOpen && !isDismissed;
 
   useEffect(() => {
     if (isChatOpen) {
@@ -40,7 +55,19 @@ function WidgetContent() {
       className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''} ${config.embedded ? 'weni-widget--disabled-animation' : ''}`}
     >
       <Chat />
-      {!isChatFullscreenAndOpen && <Launcher />}
+      {!isChatFullscreenAndOpen && (
+        <>
+          {(shouldShowCompactStarters || isHiding) && (
+            <ConversationStartersCompact
+              questions={questions}
+              onStarterClick={handleStarterClick}
+              isVisible={shouldShowCompactStarters}
+              isHiding={isHiding}
+            />
+          )}
+          <Launcher />
+        </>
+      )}
     </aside>
   );
 }
@@ -49,7 +76,9 @@ export function Widget({ config, theme = null }) {
   return (
     <ThemeProvider theme={theme}>
       <ChatProvider config={config}>
-        <WidgetContent />
+        <ConversationStartersProvider>
+          <WidgetContent />
+        </ConversationStartersProvider>
       </ChatProvider>
     </ThemeProvider>
   );
