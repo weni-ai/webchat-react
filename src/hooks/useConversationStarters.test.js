@@ -207,6 +207,39 @@ describe('useConversationStartersCore', () => {
 
       expect(mockService.getStarters).not.toHaveBeenCalled();
     });
+
+    it('calls getStarters directly when connection establishes during fetch', async () => {
+      let resolveProductFetch;
+      fetchProductData.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveProductFetch = resolve;
+          }),
+      );
+
+      const product = { linkText: 'shoe', items: [{ itemId: '1' }] };
+      selectProduct.mockReturnValue(product);
+      extractProductData.mockReturnValue({
+        account: 'store',
+        linkText: 'shoe',
+      });
+      buildProductContextString.mockReturnValue('ctx');
+
+      useChatContext.mockReturnValue(buildContext({ isConnected: false }));
+      const { rerender } = renderHook(() => useConversationStartersCore());
+
+      useChatContext.mockReturnValue(buildContext({ isConnected: true }));
+      rerender();
+
+      await act(async () => {
+        resolveProductFetch({ products: [product] });
+      });
+
+      expect(mockService.getStarters).toHaveBeenCalledWith({
+        account: 'store',
+        linkText: 'shoe',
+      });
+    });
   });
 
   describe('starters:received event', () => {

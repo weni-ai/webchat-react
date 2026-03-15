@@ -38,6 +38,8 @@ export function useConversationStartersCore() {
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
   const navigationDebounceRef = useRef(null);
+  const isConnectedRef = useRef(isConnected);
+  isConnectedRef.current = isConnected;
 
   const isPdpEnabled = config?.conversationStarters?.pdp === true;
 
@@ -80,7 +82,7 @@ export function useConversationStartersCore() {
       if (!service) return;
 
       try {
-        if (isConnected) {
+        if (isConnectedRef.current) {
           service.getStarters(productData);
         } else {
           deferredProductDataRef.current = productData;
@@ -89,7 +91,7 @@ export function useConversationStartersCore() {
         setIsLoading(false);
       }
     },
-    [service, isConnected],
+    [service],
   );
 
   const setProductContext = useCallback(
