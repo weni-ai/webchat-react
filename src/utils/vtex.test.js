@@ -158,9 +158,7 @@ describe('selectProduct', () => {
   });
 
   it('does not match when linkText is a partial segment of slug', () => {
-    const items = [
-      { linkText: 'surface-go-3', productName: 'Surface Go 3' },
-    ];
+    const items = [{ linkText: 'surface-go-3', productName: 'Surface Go 3' }];
     expect(selectProduct(items, 'surface-go-30')).toBeNull();
   });
 
