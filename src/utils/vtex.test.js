@@ -141,8 +141,31 @@ describe('selectProduct', () => {
     expect(selectProduct(products, 'product-b')).toBe(products[1]);
   });
 
-  it('falls back to first product when slug has no match', () => {
-    expect(selectProduct(products, 'nonexistent')).toBe(products[0]);
+  it('returns prefix match when slug extends a linkText with a hyphen', () => {
+    const items = [
+      { linkText: 'surface-go-3', productName: 'Surface Go 3' },
+      { linkText: 'other-product', productName: 'Other' },
+    ];
+    expect(selectProduct(items, 'surface-go-3-40')).toBe(items[0]);
+  });
+
+  it('prefers exact match over prefix match', () => {
+    const items = [
+      { linkText: 'surface-go-3', productName: 'Surface Go 3' },
+      { linkText: 'surface-go-3-40', productName: 'Surface Go 3 40' },
+    ];
+    expect(selectProduct(items, 'surface-go-3-40')).toBe(items[1]);
+  });
+
+  it('does not match when linkText is a partial segment of slug', () => {
+    const items = [
+      { linkText: 'surface-go-3', productName: 'Surface Go 3' },
+    ];
+    expect(selectProduct(items, 'surface-go-30')).toBeNull();
+  });
+
+  it('returns null when no product matches the slug', () => {
+    expect(selectProduct(products, 'nonexistent')).toBeNull();
   });
 
   it('returns null for empty array', () => {

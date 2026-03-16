@@ -36,7 +36,11 @@ export async function fetchProductData(slug) {
 
 export function selectProduct(products, slug) {
   if (!products?.length) return null;
-  return products.find((p) => p.linkText === slug) || products[0];
+  return (
+    products.find((p) => p.linkText === slug) ||
+    products.find((p) => slug.startsWith(p.linkText + '-')) ||
+    null
+  );
 }
 
 export function filterInternalProperties(properties) {
