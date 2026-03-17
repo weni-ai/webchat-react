@@ -127,6 +127,10 @@
       }
     }
   },
+  "conversation_starters": {
+    "aria_label": "Pergunta sugerida: {{question}}",
+    "send_question": "Enviar pergunta"
+  },
   "mode": {
     "live": {
       "title": "Ao vivo"

@@ -62,7 +62,8 @@ const defaultConfig = {
   // Experimental flags
   navigateIfSameDomain: false,
 
-  // showChatAvatar: false,
+  // Conversation starters
+  conversationStarters: undefined,
 
   mode: 'live',
   showMode: false,
@@ -569,6 +570,11 @@ ChatProvider.propTypes = {
 
     // Experimental flags
     navigateIfSameDomain: PropTypes.bool,
+
+    // Conversation starters
+    conversationStarters: PropTypes.shape({
+      pdp: PropTypes.bool,
+    }),
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),
