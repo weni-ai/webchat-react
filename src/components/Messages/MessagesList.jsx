@@ -65,6 +65,7 @@ export function MessagesList() {
   const { questions, isDismissed, handleStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
+  const showConversationStartersFull = questions.length > 0 && !isDismissed;
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -174,7 +175,7 @@ export function MessagesList() {
         </section>
       )}
 
-      {questions.length > 0 && !isDismissed && (
+      {showConversationStartersFull && (
         <ConversationStartersFull
           questions={questions}
           onStarterClick={handleStarterClick}

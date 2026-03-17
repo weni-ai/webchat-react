@@ -37,8 +37,9 @@ function WidgetContent() {
   } = useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
-  const shouldShowCompactStarters =
+  const isCompactStartersVisible =
     questions.length > 0 && isCompactVisible && !isChatOpen && !isDismissed;
+  const shouldShowCompactStarters = isCompactStartersVisible || isHiding;
 
   useEffect(() => {
     if (isChatOpen) {
@@ -57,11 +58,11 @@ function WidgetContent() {
       <Chat />
       {!isChatFullscreenAndOpen && (
         <>
-          {(shouldShowCompactStarters || isHiding) && (
+          {shouldShowCompactStarters && (
             <ConversationStartersCompact
               questions={questions}
               onStarterClick={handleStarterClick}
-              isVisible={shouldShowCompactStarters}
+              isVisible={isCompactStartersVisible}
               isHiding={isHiding}
             />
           )}

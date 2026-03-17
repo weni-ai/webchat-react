@@ -17,7 +17,7 @@ export function ConversationStarterButton({
       onClick={() => onClick(question)}
       aria-label={t('conversation_starters.aria_label', { question })}
     >
-      <span className="weni-starter-button__text">{question}</span>
+      <p className="weni-starter-button__text">{question}</p>
     </Button>
   );
 }
