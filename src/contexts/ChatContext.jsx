@@ -55,9 +55,9 @@ const defaultConfig = {
   disableTooltips: false,
 
   // Components settings
-  showAudioRecorder: true,
-  showCameraRecorder: true,
-  showFileUploader: true,
+  showVoiceRecordingButton: true,
+  showCameraButton: true,
+  showFileUploaderButton: true,
 
   // Experimental flags
   navigateIfSameDomain: false,
