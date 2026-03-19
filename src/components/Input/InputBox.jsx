@@ -123,7 +123,7 @@ export function InputBox({ maxLength = 5000 }) {
     hasNoTextInput &&
     !isVoiceModeActive &&
     !isEnteringVoiceMode &&
-    config.showCameraRecorder;
+    config.showCameraButton;
   const shouldShowMediaActions =
     !isVoiceModeActive && !isEnteringVoiceMode && hasNoTextInput;
 
@@ -180,7 +180,7 @@ export function InputBox({ maxLength = 5000 }) {
       {shouldShowMediaActions && (
         <>
           <InputFile ref={fileInputRef} />
-          {config.showFileUploader && (
+          {config.showFileUploaderButton && (
             <Button
               onClick={() => fileInputRef.current?.click()}
               variant="tertiary"
@@ -190,7 +190,7 @@ export function InputBox({ maxLength = 5000 }) {
             />
           )}
 
-          {config.showAudioRecorder && (
+          {config.showVoiceRecordingButton && (
             <Button
               onClick={handleRecordAudio}
               variant="tertiary"
