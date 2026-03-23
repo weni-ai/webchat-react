@@ -225,7 +225,7 @@ export function ChatProvider({ children, config }) {
             const relevantMessages = service
               .getMessages()
               .filter((message) => !message.persisted);
-      
+
             if (relevantMessages.length === 0) {
               service.sendMessage(mergedConfig.initPayload, { hidden: true });
             }
