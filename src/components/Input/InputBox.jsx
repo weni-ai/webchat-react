@@ -31,7 +31,6 @@ export function InputBox({ maxLength = 5000 }) {
     requestCameraPermission,
     startCameraRecording,
     mode,
-    interfaceVersion,
   } = useChatContext();
   const { config } = useChatContext();
 
@@ -120,47 +119,28 @@ export function InputBox({ maxLength = 5000 }) {
     [inputTextFieldHint, text, setText, handleKeyPress, maxLength, mode],
   );
 
-  const recordCameraDefaultAttributes = useMemo(
-    () => ({
-      onClick: handleRecordCamera,
-      disabled: hasCameraPermissionState === false,
-      'aria-label': 'Take photo',
-      variant: 'tertiary',
-      icon: 'add_a_photo',
-      iconColor: 'gray-500',
-      className: 'weni-input-box__photo-icon',
-    }),
-    [handleRecordCamera, hasCameraPermissionState],
-  );
+  const textareaRef = useRef(null);
 
-  const attachFileDefaultAttributes = {
-    'aria-label': 'Attach file',
-    variant: 'tertiary',
-    icon: 'add_photo_alternate',
-    iconColor: 'gray-900',
-  };
+  function handleClick(event) {
+    if (event.target.dataset.focusable !== 'true') return;
+    textareaRef.current.focus();
+  }
 
-  const recordAudioDefaultAttributes = useMemo(
-    () => ({
-      onClick: handleRecordAudio,
-      disabled: hasAudioPermissionState === false,
-      'aria-label': 'Record audio',
-      variant: 'tertiary',
-      icon: 'mic',
-      iconColor: 'gray-900',
-    }),
-    [handleRecordAudio, hasAudioPermissionState],
-  );
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-  const sendMessageDefaultAttributes = useMemo(
-    () => ({
-      onClick: handleSend,
-      'aria-label': 'Send message',
-      variant: 'primary',
-      icon: 'send',
-    }),
-    [handleSend],
-  );
+    textarea.style.height = 'auto';
+
+    if (textarea.value === '') {
+      const temp = textarea.value;
+      textarea.value = textarea.placeholder;
+      textarea.style.height = textarea.scrollHeight + 'px';
+      textarea.value = temp;
+    } else {
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  }, [text]);
 
   if (isRecording) {
     return (
@@ -185,89 +165,14 @@ export function InputBox({ maxLength = 5000 }) {
     );
   }
 
-  if (interfaceVersion === 2) {
-    return (
-      <InputBoxV2
-        text={text}
-        config={config}
-        textAreaDefaultAttributes={textAreaDefaultAttributes}
-        recordCameraDefaultAttributes={recordCameraDefaultAttributes}
-        attachFileDefaultAttributes={attachFileDefaultAttributes}
-        recordAudioDefaultAttributes={recordAudioDefaultAttributes}
-        sendMessageDefaultAttributes={sendMessageDefaultAttributes}
-      />
-    );
-  }
-
-  return (
-    <section className="weni-input-box">
-      <section className="weni-input-box__textarea-container">
-        <textarea {...textAreaDefaultAttributes} />
-
-        {!text.trim() && config.showCameraRecorder && (
-          <Button {...recordCameraDefaultAttributes} />
-        )}
-      </section>
-
-      {!text.trim() && (
-        <>
-          <InputFile ref={fileInputRef} />
-          {config.showFileUploader && (
-            <Button
-              {...attachFileDefaultAttributes}
-              onClick={() => fileInputRef.current?.click()}
-            />
-          )}
-
-          {config.showAudioRecorder && (
-            <Button {...recordAudioDefaultAttributes} />
-          )}
-        </>
-      )}
-
-      {!!text.trim() && <Button {...sendMessageDefaultAttributes} />}
-    </section>
-  );
-}
-
-InputBox.propTypes = {
-  maxLength: PropTypes.number,
-};
-
-export default InputBox;
-
-function InputBoxV2(props) {
-  const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  function handleClick(event) {
-    if (event.target.dataset.focusable !== 'true') return;
-    textareaRef.current.focus();
-  }
-
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    textarea.style.height = 'auto';
-
-    if (textarea.value === '') {
-      const temp = textarea.value;
-      textarea.value = textarea.placeholder;
-      textarea.style.height = textarea.scrollHeight + 'px';
-      textarea.value = temp;
-    } else {
-      textarea.style.height = textarea.scrollHeight + 'px';
-    }
-  }, [props.text]);
-
   return (
     <section
-      className="weni-input-box-v2"
+      className="weni-input-box"
       onClick={handleClick}
       data-focusable="true"
     >
       <textarea
-        {...props.textAreaDefaultAttributes}
+        {...textAreaDefaultAttributes}
         ref={textareaRef}
       />
 
@@ -277,17 +182,22 @@ function InputBoxV2(props) {
       >
         <section className="weni-input-box__actions-left">
           <Button
-            {...props.recordCameraDefaultAttributes}
+            onClick={handleRecordCamera}
+            disabled={hasCameraPermissionState === false}
+            aria-label="Take photo"
+            variant="tertiary"
             icon="photo_camera"
             iconColor="fg-base-soft"
             noPadding
+            className="weni-input-box__photo-icon"
           />
 
           <InputFile ref={fileInputRef} />
 
-          {props.config.showFileUploader && (
+          {config.showFileUploader && (
             <Button
-              {...props.attachFileDefaultAttributes}
+              aria-label="Attach file"
+              variant="tertiary"
               onClick={() => fileInputRef.current?.click()}
               icon="attach_file"
               iconColor="fg-base-soft"
@@ -296,33 +206,32 @@ function InputBoxV2(props) {
           )}
 
           <Button
-            {...props.recordAudioDefaultAttributes}
+            onClick={handleRecordAudio}
+            disabled={hasAudioPermissionState === false}
+            aria-label="Record audio"
+            variant="tertiary"
+            icon="mic"
             iconColor="fg-base-soft"
             noPadding
           />
         </section>
 
         <Button
-          {...props.sendMessageDefaultAttributes}
+          onClick={handleSend}
+          aria-label="Send message"
+          variant="primary"
+          icon="send"
           size="large"
           rounded
-          disabled={!props.text.trim()}
+          disabled={!text.trim()}
         />
       </section>
     </section>
   );
 }
 
-InputBoxV2.propTypes = {
-  text: PropTypes.string,
-  config: PropTypes.shape({
-    showCameraRecorder: PropTypes.bool,
-    showFileUploader: PropTypes.bool,
-    showAudioRecorder: PropTypes.bool,
-  }),
-  textAreaDefaultAttributes: PropTypes.object,
-  recordCameraDefaultAttributes: PropTypes.object,
-  attachFileDefaultAttributes: PropTypes.object,
-  recordAudioDefaultAttributes: PropTypes.object,
-  sendMessageDefaultAttributes: PropTypes.object,
+InputBox.propTypes = {
+  maxLength: PropTypes.number,
 };
+
+export default InputBox;

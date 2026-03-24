@@ -147,9 +147,6 @@ function mapConfig(params) {
     // Experimental flags
     navigateIfSameDomain: params.navigateIfSameDomain,
 
-    // Interface version
-    interfaceVersion: params.interfaceVersion ?? 1,
-
     // Callbacks
     onSocketEvent: params.onSocketEvent,
     onWidgetEvent: params.onWidgetEvent,

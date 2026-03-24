@@ -69,9 +69,6 @@ export function Header() {
     setCurrentPage,
     goBack,
     cart,
-    mode,
-    isModeVisible,
-    interfaceVersion,
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
@@ -80,22 +77,6 @@ export function Header() {
       0,
     );
   }, [cart]);
-
-  const fullScreenButtonIcon = useMemo(() => {
-    if (interfaceVersion === 2) {
-      return isChatFullscreen ? 'close_fullscreen' : 'open_in_full';
-    }
-
-    return isChatFullscreen ? 'fullscreen_exit' : 'fullscreen';
-  }, [isChatFullscreen, interfaceVersion]);
-
-  const iconColor = useMemo(() => {
-    if (interfaceVersion === 2) {
-      return 'fg-base';
-    }
-
-    return 'white';
-  }, [interfaceVersion]);
 
   const { config } = useChatContext();
   // TODO: Implement header layout
@@ -110,26 +91,9 @@ export function Header() {
             aria-label="Back"
             variant="tertiary"
             icon="arrow_back"
-            iconColor={iconColor}
+            iconColor="fg-base"
           />
         )}
-
-        {interfaceVersion === 1 &&
-          (currentPage ? (
-            <HeaderTitle
-              title={currentPage.title}
-              mode={mode}
-              isModeVisible={isModeVisible}
-            />
-          ) : (
-            <HeaderTitle
-              profileAvatar={config.profileAvatar}
-              title={config.title}
-              subtitle={config.subtitle}
-              mode={mode}
-              isModeVisible={isModeVisible}
-            />
-          ))}
       </section>
 
       <section className="weni-chat-header__actions">
@@ -138,29 +102,29 @@ export function Header() {
             aria-label="Cart"
             variant="primary"
             icon="shopping_cart"
-            iconColor={iconColor}
+            iconColor="fg-base"
             onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
           >
             {cartTotalItems}
           </Button>
         )}
 
-        {(config.showFullScreenButton || interfaceVersion === 2) && (
+        {config.showFullScreenButton && (
           <Button
             onClick={toggleChatFullscreen}
             aria-label="Fullscreen chat"
             variant="tertiary"
-            icon={fullScreenButtonIcon}
-            iconColor={iconColor}
+            icon={isChatFullscreen ? 'close_fullscreen' : 'open_in_full'}
+            iconColor="fg-base"
           />
         )}
-        {(config.showCloseButton || interfaceVersion === 2) && (
+        {config.showCloseButton && (
           <Button
             onClick={toggleChat}
             aria-label="Close chat"
             variant="tertiary"
-            icon={interfaceVersion === 2 ? 'keyboard_arrow_down' : 'close'}
-            iconColor={iconColor}
+            icon="keyboard_arrow_down"
+            iconColor="fg-base"
           />
         )}
       </section>

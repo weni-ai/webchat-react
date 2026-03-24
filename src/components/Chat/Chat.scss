@@ -16,6 +16,11 @@
 
   overflow: hidden;
 
+  width: 33vw;
+  max-width: 524px;
+  min-width: 320px;
+  border-radius: $border-radius-2 $border-radius-2 0 0;
+
   &--closing {
     @include weni-animation(0, 0.25s, weni-expand-out);
   }
@@ -34,13 +39,6 @@
     flex-direction: column;
     gap: $spacing-2;
   }
-}
-
-.weni-widget-v2 .weni-chat {
-  width: 33vw;
-  max-width: 524px;
-  min-width: 320px;
-  border-radius: $border-radius-2 $border-radius-2 0 0;
 }
 
 .weni-widget--fullscreen .weni-chat {

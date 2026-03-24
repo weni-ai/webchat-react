@@ -1,11 +1,11 @@
 .weni-chat-header {
-  padding: $spacing-3 $spacing-4;
-  
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
-  background-color: var(--weni-header-bg-color);
+
+  background-color: transparent;
+  padding: $spacing-2 $spacing-4;
+  border-bottom: 1px solid $sl-color-gray-1;
 
   &__info {
     display: flex;
@@ -52,10 +52,4 @@
     align-items: center;
     gap: $spacing-2;
   }
-}
-
-.weni-widget-v2 .weni-chat-header {
-  background-color: transparent;
-  padding: $spacing-2 $spacing-4;
-  border-bottom: 1px solid $sl-color-gray-1;
 }
