@@ -106,9 +106,9 @@ The standalone initializer accepts:
 | `tooltipMessage` | string | — | First message displayed as a tooltip in a new session. |
 | `tooltipDelay` | number (ms) | 500 | Delay before showing the tooltip message. |
 | `disableTooltips` | boolean | false | Disable automatic tooltips on new messages. |
-| `showAudioRecorder` | boolean | true | Show audio recorder button in the input bar. |
-| `showCameraRecorder` | boolean | true | Show camera recorder button in the input bar. |
-| `showFileUploader` | boolean | true | Show file upload button in the input bar. |
+| `showVoiceRecordingButton` | boolean | true | Show audio recorder button in the input bar. |
+| `showCameraButton` | boolean | true | Show camera recorder button in the input bar. |
+| `showFileUploaderButton` | boolean | true | Show file upload button in the input bar. |
 | `navigateIfSameDomain` | boolean | false | Experimental flag: auto-navigate when an incoming message contains a link to the same domain. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |

@@ -8,14 +8,10 @@ import Button from '@/components/common/Button';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
 import CameraRecording from '@/components/CameraRecording/CameraRecording';
+import { VoiceModeButton } from '@/components/VoiceMode';
 
 import './InputBox.scss';
 
-/**
- * InputBox - Message input component
- * TODO: Handle emoji picker
- * TODO: Add character limit indicator
- */
 export function InputBox({ maxLength = 5000 }) {
   const { t } = useTranslation();
 
@@ -30,9 +26,16 @@ export function InputBox({ maxLength = 5000 }) {
     hasCameraPermission,
     requestCameraPermission,
     startCameraRecording,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+    isVoiceModeActive,
+    isEnteringVoiceMode,
+    voiceModeState,
+    enterVoiceMode,
+    exitVoiceMode,
+    config,
     mode,
   } = useChatContext();
-  const { config } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
@@ -40,6 +43,8 @@ export function InputBox({ maxLength = 5000 }) {
     useState(false);
 
   const fileInputRef = useRef(null);
+
+  const showVoiceButton = isVoiceEnabledByServer && isVoiceModeSupported;
 
   const inputTextFieldHint = useMemo(() => {
     if (mode === 'preview') {
@@ -113,10 +118,10 @@ export function InputBox({ maxLength = 5000 }) {
       onKeyDown: handleKeyPress,
       maxLength: maxLength,
       rows: 1,
-      disabled: mode === 'preview',
+      disabled: isEnteringVoiceMode || mode === 'preview',
       className: 'weni-input-box__textarea',
     }),
-    [inputTextFieldHint, text, setText, handleKeyPress, maxLength, mode],
+    [inputTextFieldHint, text, setText, handleKeyPress, maxLength, mode, isEnteringVoiceMode],
   );
 
   const textareaRef = useRef(null);
@@ -141,6 +146,22 @@ export function InputBox({ maxLength = 5000 }) {
       textarea.style.height = textarea.scrollHeight + 'px';
     }
   }, [text]);
+  const handleVoiceToggle = () => {
+    if (isVoiceModeActive) {
+      exitVoiceMode();
+    } else {
+      enterVoiceMode();
+    }
+  };
+
+  const hasNoTextInput = !text.trim();
+  const canDisplayCameraRecorder =
+    hasNoTextInput &&
+    !isVoiceModeActive &&
+    !isEnteringVoiceMode &&
+    config.showCameraButton;
+  const shouldShowMediaActions =
+    !isVoiceModeActive && !isEnteringVoiceMode && hasNoTextInput;
 
   if (isRecording) {
     return (
@@ -181,50 +202,86 @@ export function InputBox({ maxLength = 5000 }) {
         data-focusable="true"
       >
         <section className="weni-input-box__actions-left">
-          <Button
-            onClick={handleRecordCamera}
-            disabled={hasCameraPermissionState === false}
-            aria-label="Take photo"
-            variant="tertiary"
-            icon="photo_camera"
-            iconColor="fg-base-soft"
-            noPadding
-            className="weni-input-box__photo-icon"
-          />
-
-          <InputFile ref={fileInputRef} />
-
-          {config.showFileUploader && (
+          {canDisplayCameraRecorder && (
             <Button
-              aria-label="Attach file"
+              onClick={handleRecordCamera}
+              disabled={hasCameraPermissionState === false}
+              aria-label="Take photo"
               variant="tertiary"
-              onClick={() => fileInputRef.current?.click()}
-              icon="attach_file"
+              icon="photo_camera"
               iconColor="fg-base-soft"
               noPadding
+              className="weni-input-box__photo-icon"
             />
           )}
 
-          <Button
-            onClick={handleRecordAudio}
-            disabled={hasAudioPermissionState === false}
-            aria-label="Record audio"
-            variant="tertiary"
-            icon="mic"
-            iconColor="fg-base-soft"
-            noPadding
-          />
+          {shouldShowMediaActions && (
+            <>
+              <InputFile ref={fileInputRef} />
+
+              {config.showFileUploaderButton && (
+                <Button
+                  aria-label="Attach file"
+                />
+              )}
+
+              {config.showVoiceRecordingButton && (
+                <Button
+                  onClick={handleRecordAudio}
+                  variant="tertiary"
+                  onClick={() => fileInputRef.current?.click()}
+                  icon="attach_file"
+                  iconColor="fg-base-soft"
+                  noPadding
+                />
+              )}
+
+              <Button
+                onClick={handleRecordAudio}
+                disabled={hasAudioPermissionState === false}
+                aria-label="Record audio"
+                variant="tertiary"
+                icon="mic"
+                iconColor="fg-base-soft"
+                noPadding
+              />
+            </>
+          )}
         </section>
 
-        <Button
-          onClick={handleSend}
-          aria-label="Send message"
-          variant="primary"
-          icon="send"
-          size="large"
-          rounded
-          disabled={!text.trim()}
-        />
+        {!hasNoTextInput && !isEnteringVoiceMode && (
+          <Button
+            onClick={handleSend}
+            aria-label="Send message"
+            variant="primary"
+            icon="send"
+            size="large"
+            rounded
+            disabled={!text.trim()}
+          />
+        )}
+
+        {isEnteringVoiceMode && (
+          <Button
+            variant="primary"
+            onClick={exitVoiceMode}
+            className="weni-input-box__voice-cancel-btn"
+            aria-label={t('voice_mode.cancel')}
+          >
+            <span className="weni-input-box__voice-cancel-spinner" />
+            <span>{t('voice_mode.cancel')}</span>
+          </Button>
+        )}
+
+        {!isEnteringVoiceMode &&
+          showVoiceButton &&
+          (isVoiceModeActive || hasNoTextInput) && (
+            <VoiceModeButton
+              onClick={handleVoiceToggle}
+              isActive={isVoiceModeActive}
+              voiceState={voiceModeState}
+            />
+          )}
       </section>
     </section>
   );

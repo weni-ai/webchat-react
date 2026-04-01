@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDP Simulation - Conversation Starters Test</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+    .container { max-width: 840px; margin: 0 auto; }
+    .panel {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    h2 { margin: 0 0 12px; font-size: 1.15rem; }
+    .subtitle { color: #666; margin: 0 0 20px; }
+    code {
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .config-box {
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .config-box h3 { margin: 0 0 8px; color: #ad6800; font-size: 0.95rem; }
+    .instructions ol { padding-left: 20px; margin: 0; }
+    .instructions li { margin-bottom: 6px; font-size: 0.92rem; }
+    .product-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .product-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: #eee; }
+    .product-info h3 { margin: 0 0 4px; }
+    .product-info p { margin: 0; color: #666; font-size: 0.9rem; }
+    .product-price { font-size: 1.2rem; font-weight: bold; color: #00A49F; }
+    .status { padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; margin-top: 12px; }
+    .status--ok { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .status--warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>PDP Simulation Test Page</h1>
+      <p class="subtitle">Simulates a VTEX Product Detail Page for testing auto-generated conversation starters</p>
+
+      <div class="config-box">
+        <h3>How it works</h3>
+        <div class="instructions">
+          <ol>
+            <li>This page must be served at a URL ending in <code>/{slug}/p</code></li>
+            <li>It fakes <code>window.__RUNTIME__</code> and the VTEX Intelligent Search API</li>
+            <li>The webchat detects the PDP URL and triggers the starters flow</li>
+            <li>Since there's no real backend, it falls back to manual starters for demo</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="config-box">
+        <h3>Setup Steps</h3>
+        <div class="instructions">
+          <ol>
+            <li>Build: <code>npm run build:standalone</code></li>
+            <li>Set your <code>CHANNEL_UUID</code> below</li>
+            <li>Serve this folder with a local server that supports URL rewriting:</li>
+            <li><code>npx serve dist-standalone --single</code> or use the script below</li>
+            <li>Open: <code>http://localhost:3000/ipad-10th-gen/p</code></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Simulated Product</h2>
+      <div class="product-card">
+        <div style="width:80px;height:80px;background:#ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;">📱</div>
+        <div class="product-info">
+          <h3 id="product-name">iPad 10th Gen</h3>
+          <p id="product-brand">Apple</p>
+          <p class="product-price" id="product-price">R$ 3.999,00</p>
+          <p id="product-specs" style="margin-top:4px;font-size:0.85rem;color:#888;">Storage: 64GB, 256GB | Color: Blue, Silver, Pink</p>
+        </div>
+      </div>
+      <div class="status" id="status-box"></div>
+    </div>
+  </div>
+
+  <div id="weni-webchat"></div>
+  <script src="../dist-standalone/webchat.umd.js"></script>
+
+  <script>
+    var CHANNEL_UUID = 'a9687ddd-849c-44e2-8f81-da9a07de21b8';
+
+    var SIMULATED_PRODUCT = {
+      productId: '17',
+      productName: 'iPad 10th Gen',
+      description: 'Versatile tablet with large Retina display and support for Apple Pencil.',
+      brand: 'Apple',
+      linkText: 'ipad-10th-gen',
+      properties: [
+        { name: 'Storage', values: ['64GB', '256GB'] },
+        { name: 'Color', values: ['Blue', 'Silver', 'Pink'] },
+        { name: 'sellerId', values: ['1'] }
+      ],
+      items: [
+        {
+          itemId: '101',
+          name: '64GB Blue',
+          nameComplete: 'iPad 10th Gen 64GB Blue',
+          images: [{ imageUrl: 'https://via.placeholder.com/200' }],
+          sellers: [{
+            commertialOffer: {
+              Price: 3999.00,
+              ListPrice: 4499.00,
+              AvailableQuantity: 10
+            }
+          }],
+          variations: [
+            { name: 'Storage', values: ['64GB'] },
+            { name: 'Color', values: ['Blue'] }
+          ]
+        },
+        {
+          itemId: '102',
+          name: '256GB Silver',
+          nameComplete: 'iPad 10th Gen 256GB Silver',
+          images: [{ imageUrl: 'https://via.placeholder.com/200' }],
+          sellers: [{
+            commertialOffer: {
+              Price: 5299.00,
+              ListPrice: 5799.00,
+              AvailableQuantity: 5
+            }
+          }],
+          variations: [
+            { name: 'Storage', values: ['256GB'] },
+            { name: 'Color', values: ['Silver'] }
+          ]
+        }
+      ]
+    };
+
+    // Simulate PDP URL via History API (no special server needed)
+    var SIMULATED_SLUG = 'ipad-10th-gen';
+    history.replaceState(null, '', '/' + SIMULATED_SLUG + '/p');
+
+    window.__RUNTIME__ = {
+      account: 'demoaccount',
+      route: {
+        params: {
+          slug: SIMULATED_SLUG
+        }
+      }
+    };
+
+    var originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url.includes('/api/io/_v/api/intelligent-search/product_search/')) {
+        console.log('[PDP Sim] Intercepted VTEX API call:', url);
+        return Promise.resolve({
+          ok: true,
+          json: function() {
+            return Promise.resolve({ products: [SIMULATED_PRODUCT] });
+          }
+        });
+      }
+      return originalFetch.call(this, url, options);
+    };
+
+    var statusBox = document.getElementById('status-box');
+    statusBox.className = 'status status--ok';
+    statusBox.textContent = '✓ PDP simulated! URL set to /' + SIMULATED_SLUG + '/p — Auto-starters will trigger via WebSocket';
+
+    WebChat.init({
+      selector: '#weni-webchat',
+      socketUrl: 'https://5703-177-37-174-24.ngrok-free.app',
+      host: 'https://flows.weni.ai',
+      connectOn: 'mount',
+      channelUuid: CHANNEL_UUID,
+      title: 'Title',
+      subtitle: 'Subtitle',
+      showFullScreenButton: true,
+      conversationStarters: {
+        pdp: true,
+      },
+    });
+  </script>
+</body>
+</html>

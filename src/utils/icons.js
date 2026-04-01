@@ -50,6 +50,10 @@ import Minus from '@material-symbols/svg-400/rounded/remove.svg?react';
 import MinusFilled from '@material-symbols/svg-400/rounded/remove-fill.svg?react';
 import ShoppingCart from '@material-symbols/svg-400/rounded/shopping_cart.svg?react';
 import ShoppingCartFilled from '@material-symbols/svg-400/rounded/shopping_cart-fill.svg?react';
+import Refresh from '@material-symbols/svg-400/rounded/refresh.svg?react';
+import RefreshFilled from '@material-symbols/svg-400/rounded/refresh-fill.svg?react';
+import GraphicEq from '@material-symbols/svg-400/rounded/graphic_eq.svg?react';
+import GraphicEqFilled from '@material-symbols/svg-400/rounded/graphic_eq-fill.svg?react';
 import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
 import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
 import AttachFile from '@material-symbols/svg-400/rounded/attach_file.svg?react';
@@ -165,6 +169,14 @@ export const icons = {
   shopping_cart: {
     default: ShoppingCart,
     filled: ShoppingCartFilled,
+  },
+  refresh: {
+    default: Refresh,
+    filled: RefreshFilled,
+  },
+  graphic_eq: {
+    default: GraphicEq,
+    filled: GraphicEqFilled,
   },
   circle: {
     default: Circle,

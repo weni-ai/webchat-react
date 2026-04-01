@@ -15,6 +15,8 @@ import { ChatPresentation } from '@/components/Chat/ChatPresentation';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useConversationStarters } from '@/contexts/ConversationStartersContext';
+import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
 
 import './MessagesList.scss';
 
@@ -57,16 +59,14 @@ Message.propTypes = {
   componentsEnabled: PropTypes.bool,
 };
 
-/**
- * MessagesList - Scrollable list of messages
- * TODO: Render all messages with proper message components
- * TODO: Add virtualization for large message lists
- * TODO: Handle loading history on scroll
- */
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config } = useChatContext();
+  const { config, isVoiceModeActive, voicePartialTranscript } =
+    useChatContext();
+  const { questions, isDismissed, handleStarterClick } =
+    useConversationStarters();
   const messagesEndRef = useRef(null);
+  const showConversationStartersFull = questions.length > 0 && !isDismissed;
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -74,15 +74,13 @@ export function MessagesList() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messageGroups, isThinking]);
+  }, [messageGroups, isThinking, voicePartialTranscript]);
 
   useEffect(() => {
     setTimeout(() => {
       scrollToBottom('instant');
     }, 50);
   }, [isChatOpen]);
-
-  // TODO: Handle scroll to load history
 
   const enableComponents = (message) => {
     const isMessageInLastGroup = messageGroups
@@ -144,6 +142,20 @@ export function MessagesList() {
         </section>
       ))}
 
+      {isVoiceModeActive && voicePartialTranscript && (
+        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
+          <MessageContainer
+            className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
+            direction="outgoing"
+            type="text"
+          >
+            <section className="weni-message-text weni-message-text--outgoing">
+              {voicePartialTranscript}
+            </section>
+          </MessageContainer>
+        </section>
+      )}
+
       {(isTyping || isThinking) && (
         <section
           className={`
@@ -166,6 +178,13 @@ export function MessagesList() {
             <TypingIndicator />
           </MessageContainer>
         </section>
+      )}
+
+      {showConversationStartersFull && (
+        <ConversationStartersFull
+          questions={questions}
+          onStarterClick={handleStarterClick}
+        />
       )}
 
       <div ref={messagesEndRef} />

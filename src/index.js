@@ -5,6 +5,7 @@ export { default as Widget } from './components/Widget/Widget';
 // Context and Hooks
 export { ChatProvider, useChatContext } from './contexts/ChatContext.jsx';
 export { useWeniChat } from './hooks/useWeniChat';
+export { useVoiceMode } from './hooks/useVoiceMode';
 
 // Components
 export { default as Launcher } from './components/Launcher/Launcher';

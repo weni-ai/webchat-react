@@ -14,6 +14,7 @@ module.exports = {
     '\\.svg(\\?react)?$': '<rootDir>/test/__mocks__/svgrMock.js',
     '^marked$': '<rootDir>/test/__mocks__/marked.js',
     '^@weni/webchat-service$': '<rootDir>/test/__mocks__/@weni/webchat-service.js',
+    '^react-i18next$': '<rootDir>/test/__mocks__/react-i18next.js',
   },
   collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/__tests__/**', '!src/**/?(*.)+(test|spec).[jt]sx?'],
 };
