@@ -14,6 +14,7 @@ import {
   filterInternalProperties,
   extractProductData,
   buildProductContextString,
+  getSelectedSkuIdFromLdJson,
 } from './vtex';
 
 function mockPathname(value) {
@@ -365,12 +366,27 @@ describe('buildProductContextString', () => {
     expect(result).toContain('Attributes: Color: Silver');
   });
 
-  it('limits SKUs to 5 and shows total count', () => {
-    const items = Array.from({ length: 8 }, (_, i) => ({
-      itemId: String(i + 1),
-      name: `SKU ${i + 1}`,
-      sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
-    }));
+  it('includes only the selected SKU when selectedSkuId is provided', () => {
+    const items = [
+      {
+        itemId: '10',
+        name: 'SKU 10',
+        sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+        variations: [],
+      },
+      {
+        itemId: '20',
+        name: 'SKU 20',
+        sellers: [{ commertialOffer: { Price: 200, AvailableQuantity: 3 } }],
+        variations: [],
+      },
+      {
+        itemId: '30',
+        name: 'SKU 30',
+        sellers: [{ commertialOffer: { Price: 300, AvailableQuantity: 0 } }],
+        variations: [],
+      },
+    ];
     const product = {
       productName: 'Shirt',
       brand: 'Brand',
@@ -378,20 +394,21 @@ describe('buildProductContextString', () => {
       properties: [],
       items,
     };
-    const result = buildProductContextString(product);
-    expect(result).toContain('showing 5 of 8');
-    expect(result).toContain('SKU 1:');
-    expect(result).toContain('SKU 5:');
-    expect(result).not.toContain('SKU 6:');
-    expect(result).not.toContain('SKU 8:');
+    const result = buildProductContextString(product, '20');
+    expect(result).toContain('Selected SKU:');
+    expect(result).toContain('SKU 20:');
+    expect(result).not.toContain('SKU 10:');
+    expect(result).not.toContain('SKU 30:');
   });
 
-  it('shows all SKUs when count is within limit', () => {
-    const items = Array.from({ length: 3 }, (_, i) => ({
-      itemId: String(i + 1),
-      name: `SKU ${i + 1}`,
-      sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 2 } }],
-    }));
+  it('omits SKU section when selectedSkuId is not provided', () => {
+    const items = [
+      {
+        itemId: '10',
+        name: 'SKU 10',
+        sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+      },
+    ];
     const product = {
       productName: 'Hat',
       brand: 'Brand',
@@ -400,9 +417,49 @@ describe('buildProductContextString', () => {
       items,
     };
     const result = buildProductContextString(product);
-    expect(result).toContain('showing 3 of 3');
-    expect(result).toContain('SKU 1:');
-    expect(result).toContain('SKU 3:');
+    expect(result).not.toContain('Selected SKU');
+    expect(result).not.toContain('SKU 10');
+  });
+
+  it('omits SKU section when selectedSkuId does not match any item', () => {
+    const items = [
+      {
+        itemId: '10',
+        name: 'SKU 10',
+        sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+      },
+    ];
+    const product = {
+      productName: 'Test',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items,
+    };
+    const result = buildProductContextString(product, '999');
+    expect(result).not.toContain('Selected SKU');
+    expect(result).not.toContain('SKU 10');
+  });
+
+  it('matches selectedSkuId using string coercion', () => {
+    const items = [
+      {
+        itemId: 42,
+        name: 'SKU 42',
+        sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 2 } }],
+        variations: [],
+      },
+    ];
+    const product = {
+      productName: 'Test',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items,
+    };
+    const result = buildProductContextString(product, '42');
+    expect(result).toContain('Selected SKU:');
+    expect(result).toContain('SKU 42:');
   });
 
   it('does not truncate description', () => {
@@ -878,22 +935,7 @@ describe('resolveProductData', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('returns ld+json result when available (no API call)', async () => {
-    injectLdJson({
-      '@type': 'Product',
-      name: 'iPad',
-      description: 'Tablet',
-      brand: { name: 'Apple' },
-    });
-
-    const result = await resolveProductData('ipad', 'mystore');
-    expect(result.source).toBe('ld+json');
-    expect(result.productData.account).toBe('mystore');
-    expect(result.productData.productName).toBe('iPad');
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
-
-  it('falls to __NEXT_DATA__ when ld+json fails', async () => {
+  it('returns __NEXT_DATA__ result first when available (no API call)', async () => {
     window.__NEXT_DATA__ = {
       props: {
         pageProps: {
@@ -913,12 +955,12 @@ describe('resolveProductData', () => {
 
     const result = await resolveProductData('surface', 'store');
     expect(result.source).toBe('next-data');
+    expect(result.productData.account).toBe('store');
     expect(result.productData.productName).toBe('Surface');
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('falls to IS API when both page sources fail', async () => {
-    mockPathname('/test-product/p');
+  it('falls to IS API when __NEXT_DATA__ fails', async () => {
     globalThis.fetch.mockResolvedValue({
       ok: true,
       json: () =>
@@ -941,6 +983,21 @@ describe('resolveProductData', () => {
     expect(globalThis.fetch).toHaveBeenCalled();
   });
 
+  it('falls to ld+json when __NEXT_DATA__ and IS API fail', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      description: 'Tablet',
+      brand: { name: 'Apple' },
+    });
+
+    const result = await resolveProductData('ipad', 'mystore');
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.account).toBe('mystore');
+    expect(result.productData.productName).toBe('iPad');
+  });
+
   it('returns null when all strategies fail', async () => {
     globalThis.fetch.mockResolvedValue({ ok: false });
     const result = await resolveProductData('nothing', 'store');
@@ -948,16 +1005,40 @@ describe('resolveProductData', () => {
   });
 
   it('includes account in productData from all sources', async () => {
-    injectLdJson({
-      '@type': 'Product',
-      name: 'P',
-      brand: 'B',
-    });
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'P',
+              description: 'Desc',
+              brand: 'B',
+              isVariantOf: { name: 'P' },
+              customData: { specificationGroups: [] },
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
     const result = await resolveProductData('p', 'acme');
     expect(result.productData.account).toBe('acme');
   });
 
-  it('returns null when IS API fetch throws', async () => {
+  it('falls to ld+json when IS API fetch throws', async () => {
+    globalThis.fetch.mockRejectedValue(new Error('Network'));
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Fallback',
+      description: 'From ld+json',
+      brand: 'FBrand',
+    });
+    const result = await resolveProductData('slug', 'store');
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.productName).toBe('Fallback');
+  });
+
+  it('returns null when IS API throws and no ld+json', async () => {
     globalThis.fetch.mockRejectedValue(new Error('Network'));
     const result = await resolveProductData('slug', 'store');
     expect(result).toBeNull();
@@ -1024,7 +1105,7 @@ describe('edge cases for branch coverage', () => {
         },
       ],
     };
-    const ctx = buildProductContextString(product);
+    const ctx = buildProductContextString(product, '1');
     expect(ctx).toContain('Size: N/A');
   });
 
@@ -1109,5 +1190,271 @@ describe('edge cases for branch coverage', () => {
       page: '/[slug]/p',
     };
     expect(extractFromNextData('slug').productData.brand).toBe('StringBrand');
+  });
+});
+
+describe('getSelectedSkuIdFromLdJson', () => {
+  it('returns sku field from ld+json Product', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      sku: '12345',
+      productID: '99',
+      brand: 'Apple',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('12345');
+  });
+
+  it('returns null when only productID is present (productID is not a SKU)', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      productID: '99',
+      brand: 'Apple',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+
+  it('returns null when no ld+json product exists', () => {
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+
+  it('returns null when ld+json product has no sku or productID', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'NoSku',
+      brand: 'B',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+
+  it('does not use __NEXT_DATA__ for SKU resolution', () => {
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'P',
+              id: '777',
+              sku: '888',
+              description: 'D',
+              brand: 'B',
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+
+  it('handles ProductGroup type in ld+json', () => {
+    injectLdJson({
+      '@type': 'ProductGroup',
+      name: 'Group',
+      sku: 'G100',
+      brand: 'B',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('G100');
+  });
+
+  it('handles Product nested in @graph', () => {
+    injectLdJson({
+      '@graph': [
+        { '@type': 'BreadcrumbList' },
+        { '@type': 'Product', name: 'Watch', sku: 'W001', brand: 'B' },
+      ],
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('W001');
+  });
+
+  it('handles Product nested in mainEntity with sku', () => {
+    injectLdJson({
+      '@type': 'WebPage',
+      mainEntity: {
+        '@type': 'Product',
+        name: 'Ring',
+        sku: 'R500',
+        brand: 'B',
+      },
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('R500');
+  });
+
+  it('returns null for mainEntity with only productID', () => {
+    injectLdJson({
+      '@type': 'WebPage',
+      mainEntity: {
+        '@type': 'Product',
+        name: 'Ring',
+        productID: 'P500',
+        brand: 'B',
+      },
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+});
+
+describe('cross-source SKU matching', () => {
+  it('ld+json SKU matches next-data normalized itemId via variant.productID', () => {
+    const nextDataRaw = {
+      name: 'iPad 64GB Blue',
+      description: 'Tablet',
+      brand: { name: 'Apple' },
+      id: '101',
+      sku: '101',
+      isVariantOf: {
+        name: 'iPad',
+        productGroupID: '17',
+        skuVariants: {
+          allVariantProducts: [
+            { productID: '101', name: 'iPad 64GB Blue' },
+            { productID: '102', name: 'iPad 256GB Silver' },
+          ],
+        },
+      },
+      offers: {
+        offers: [{ price: 3999, quantity: 10 }],
+      },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(nextDataRaw, 'next-data');
+    const selectedSkuId = '101';
+    const ctx = buildProductContextString(normalized, selectedSkuId);
+
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('SKU 101:');
+    expect(ctx).toContain('iPad 64GB Blue');
+  });
+
+  it('ld+json SKU matches IS API normalized itemId', () => {
+    const isRaw = {
+      productName: 'iPad',
+      brand: 'Apple',
+      productId: '17',
+      description: 'Tablet',
+      properties: [],
+      items: [
+        {
+          itemId: '101',
+          name: '64GB Blue',
+          nameComplete: 'iPad 64GB Blue',
+          sellers: [
+            { commertialOffer: { Price: 3999, AvailableQuantity: 10 } },
+          ],
+          variations: [],
+        },
+        {
+          itemId: '102',
+          name: '256GB Silver',
+          nameComplete: 'iPad 256GB Silver',
+          sellers: [
+            { commertialOffer: { Price: 5299, AvailableQuantity: 5 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+
+    const normalized = normalizeForContext(isRaw, 'intelligent-search');
+    const ctx = buildProductContextString(normalized, '101');
+
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('iPad 64GB Blue');
+    expect(ctx).not.toContain('iPad 256GB Silver');
+  });
+
+  it('ld+json SKU matches ld+json normalized itemId via variant.sku', () => {
+    const ldJsonRaw = {
+      name: 'iPad',
+      brand: { name: 'Apple' },
+      productID: '17',
+      description: 'Tablet',
+      hasVariant: [
+        {
+          name: 'iPad 64GB Blue',
+          sku: '101',
+          offers: {
+            offers: [
+              { price: 3999, availability: 'https://schema.org/InStock' },
+            ],
+          },
+        },
+        {
+          name: 'iPad 256GB Silver',
+          sku: '102',
+          offers: {
+            offers: [
+              { price: 5299, availability: 'https://schema.org/InStock' },
+            ],
+          },
+        },
+      ],
+    };
+
+    const normalized = normalizeForContext(ldJsonRaw, 'ld+json');
+    const ctx = buildProductContextString(normalized, '101');
+
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('iPad 64GB Blue');
+    expect(ctx).not.toContain('iPad 256GB Silver');
+  });
+
+  it('no SKU section when selectedSkuId is null regardless of source', () => {
+    const nextDataRaw = {
+      name: 'iPad 64GB Blue',
+      description: 'Tablet',
+      brand: { name: 'Apple' },
+      id: '101',
+      isVariantOf: {
+        name: 'iPad',
+        productGroupID: '17',
+        skuVariants: {
+          allVariantProducts: [
+            { productID: '101', name: 'iPad 64GB Blue' },
+          ],
+        },
+      },
+      offers: { offers: [{ price: 3999, quantity: 10 }] },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(nextDataRaw, 'next-data');
+    const ctx = buildProductContextString(normalized, null);
+
+    expect(ctx).toContain('Product: iPad');
+    expect(ctx).not.toContain('Selected SKU');
+    expect(ctx).not.toContain('SKU 101');
+  });
+
+  it('next-data normalizer prefers variant.sku over variant.productID for itemId', () => {
+    const raw = {
+      name: 'Shoe',
+      description: 'Running shoe',
+      brand: 'Nike',
+      id: 'SKU-A',
+      isVariantOf: {
+        name: 'Shoe',
+        productGroupID: 'PG-1',
+        skuVariants: {
+          allVariantProducts: [
+            { sku: 'SKU-A', productID: 'PID-A', name: 'Shoe Red' },
+            { sku: 'SKU-B', productID: 'PID-B', name: 'Shoe Blue' },
+          ],
+        },
+      },
+      offers: { offers: [{ price: 200, quantity: 5 }] },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(raw, 'next-data');
+    expect(normalized.items[0].itemId).toBe('SKU-A');
+    expect(normalized.items[1].itemId).toBe('SKU-B');
+
+    const ctx = buildProductContextString(normalized, 'SKU-A');
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('Shoe Red');
+    expect(ctx).not.toContain('Shoe Blue');
   });
 });
