@@ -1350,7 +1350,9 @@ describe('cross-source SKU matching', () => {
           name: '256GB Silver',
           nameComplete: 'iPad 256GB Silver',
           sellers: [
-            { commertialOffer: { Price: 5299, AvailableQuantity: 5 } },
+            {
+              commertialOffer: { Price: 5299, AvailableQuantity: 5 },
+            },
           ],
           variations: [],
         },
@@ -1412,7 +1414,10 @@ describe('cross-source SKU matching', () => {
         productGroupID: '17',
         skuVariants: {
           allVariantProducts: [
-            { productID: '101', name: 'iPad 64GB Blue' },
+            {
+              productID: '101',
+              name: 'iPad 64GB Blue',
+            },
           ],
         },
       },
