@@ -4,9 +4,8 @@ import {
   isVtexPdpPage,
   extractSlugFromUrl,
   getVtexAccount,
-  fetchProductData,
-  selectProduct,
-  extractProductData,
+  resolveProductData,
+  normalizeForContext,
   buildProductContextString,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
@@ -94,17 +93,6 @@ export function useConversationStartersCore() {
     [service],
   );
 
-  const setProductContext = useCallback(
-    (product) => {
-      if (!service || !product) return;
-      const contextString = buildProductContextString(product);
-      if (contextString) {
-        service.setContext(contextString);
-      }
-    },
-    [service],
-  );
-
   const detectAndFetchPdp = useCallback(async () => {
     if (!isPdpEnabled || !isVtexPdpPage()) return;
 
@@ -112,6 +100,8 @@ export function useConversationStartersCore() {
     if (!slug) return;
 
     const account = getVtexAccount();
+    if (!account) return;
+
     const newFingerprint = `${account}:${slug}`;
 
     currentFingerprintRef.current = newFingerprint;
@@ -119,22 +109,20 @@ export function useConversationStartersCore() {
     setIsLoading(true);
     setSource('pdp');
 
-    const response = await fetchProductData(slug);
-    if (!response?.products) {
+    const result = await resolveProductData(slug, account);
+    if (!result) {
       setIsLoading(false);
       return;
     }
 
-    const product = selectProduct(response.products, slug);
-    if (!product) {
-      setIsLoading(false);
-      return;
-    }
+    requestStarters(result.productData);
 
-    const productData = extractProductData(product, account);
-    requestStarters(productData);
-    setProductContext(product);
-  }, [isPdpEnabled, requestStarters, setProductContext]);
+    const normalized = normalizeForContext(result.rawProduct, result.source);
+    const contextString = buildProductContextString(normalized);
+    if (contextString && service) {
+      service.setContext(contextString);
+    }
+  }, [isPdpEnabled, requestStarters, service]);
 
   const handleStarterClick = useCallback(
     (question) => {
