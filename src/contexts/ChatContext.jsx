@@ -55,9 +55,9 @@ const defaultConfig = {
   disableTooltips: false,
 
   // Components settings
-  showAudioRecorder: true,
-  showCameraRecorder: true,
-  showFileUploader: true,
+  showVoiceRecordingButton: true,
+  showCameraButton: true,
+  showFileUploaderButton: true,
 
   // Experimental flags
   navigateIfSameDomain: false,
@@ -220,6 +220,16 @@ export function ChatProvider({ children, config }) {
       .then(({ shouldRender }) => {
         if (typeof shouldRender === 'boolean') {
           setShouldRender(shouldRender);
+
+          if (shouldRender && mergedConfig.initPayload) {
+            const relevantMessages = service
+              .getMessages()
+              .filter((message) => !message.persisted);
+
+            if (relevantMessages.length === 0) {
+              service.sendMessage(mergedConfig.initPayload, { hidden: true });
+            }
+          }
         }
 
         if (mergedConfig.startFullScreen) {
@@ -314,16 +324,6 @@ export function ChatProvider({ children, config }) {
   useEffect(() => {
     if (isChatOpen && mergedConfig.connectOn === 'demand') {
       service.connect();
-    }
-
-    if (isChatOpen && mergedConfig.initPayload) {
-      const relevantMessages = service
-        .getMessages()
-        .filter((message) => !message.persisted);
-
-      if (relevantMessages.length === 0) {
-        service.sendMessage(mergedConfig.initPayload, { hidden: true });
-      }
     }
 
     const handleMessageReceived = (message) => {
