@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useMemo, useCallback } from 'react';
 
 import { CounterControls } from '@/components/Product/CounterControls';
 import { PriceDisplay } from '@/components/Product/PriceDisplay';
@@ -37,6 +38,9 @@ export function InlineProduct({
   setCounter,
   onClick,
   button,
+  uuid,
+  sellerId,
+  productURL,
 }) {
   const layout = VARIANT_LAYOUT[variant] ?? VARIANT_LAYOUT.catalog;
   const hasCounter = counter !== undefined && setCounter !== undefined;
@@ -55,6 +59,8 @@ export function InlineProduct({
       <CounterControls
         counter={counter}
         setCounter={setCounter}
+        uuid={uuid}
+        sellerId={sellerId}
         {...layout.counterProps}
       />
     ) : null;
@@ -73,10 +79,35 @@ export function InlineProduct({
         ? counterElement
         : null;
 
+  const productURLObject = useMemo(() => {
+    return URL.canParse(productURL)
+      ? new URL(productURL)
+      : { origin: '', pathname: '' };
+  }, [productURL]);
+
+  const canUserNavigateToProductPage = useMemo(() => {
+    return productURLObject.origin === window.location.origin;
+  }, [productURLObject]);
+
+  const handleClick = useCallback(() => {
+    if (
+      canUserNavigateToProductPage &&
+      productURLObject.pathname === window.location.pathname
+    ) {
+      return;
+    }
+
+    if (canUserNavigateToProductPage) {
+      window.location.href = productURL;
+    } else {
+      onClick();
+    }
+  }, [canUserNavigateToProductPage, onClick, productURLObject]);
+
   return (
     <section
       className={`weni-inline-product weni-inline-product--${variant}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <section className="weni-inline-product__image-container">
         <img
@@ -119,4 +150,7 @@ InlineProduct.propTypes = {
   setCounter: PropTypes.func,
   onClick: PropTypes.func,
   button: PropTypes.node,
+  uuid: PropTypes.string,
+  sellerId: PropTypes.string,
+  productURL: PropTypes.string,
 };

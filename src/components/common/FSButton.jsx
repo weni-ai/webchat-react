@@ -8,10 +8,24 @@ export function FSButton({
   className = '',
   variant = 'primary',
   icon = '',
+  isLoading = false,
+  disabled = false,
   ...props
 }) {
   return (
-    <button className={`weni-fs-button weni-fs-button--${variant} ${className}`} {...props}>
+    <button
+      className={`weni-fs-button weni-fs-button--${variant} ${className}`}
+      disabled={isLoading || disabled}
+      {...props}
+    >
+      {isLoading && (
+        <Icon
+          name="progress_activity"
+          size="medium"
+          className="weni-fs-button__loading-spinner"
+        />
+      )}
+
       {icon && (
         <Icon name={icon} size="medium" />
       )}
@@ -23,4 +37,6 @@ export function FSButton({
 
 FSButton.propTypes = {
   children: PropTypes.node.isRequired,
+  isLoading: PropTypes.bool,
+  disabled: PropTypes.bool,
 };

@@ -68,6 +68,8 @@ export function ProductDetails({ product }) {
                 setCounter(product.uuid, product, counter)
               }
               size="medium"
+              uuid={product.uuid}
+              sellerId={product.sellerId}
             />
             <Button
               className="weni-view-product-details__footer-button"

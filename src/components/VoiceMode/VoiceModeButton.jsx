@@ -48,7 +48,7 @@ export function VoiceModeButton({
     <Button
       variant="tertiary"
       icon="graphic_eq"
-      iconColor="gray-900"
+      iconColor="fg-base-soft"
       onClick={onClick}
       disabled={disabled}
       className={`weni-voice-mode-btn ${className}`}

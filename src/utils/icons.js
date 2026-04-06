@@ -66,6 +66,8 @@ import OpenInFull from '@material-symbols/svg-400/rounded/open_in_full.svg?react
 import OpenInFullFilled from '@material-symbols/svg-400/rounded/open_in_full-fill.svg?react';
 import CloseFullscreen from '@material-symbols/svg-400/rounded/close_fullscreen.svg?react';
 import CloseFullscreenFilled from '@material-symbols/svg-400/rounded/close_fullscreen-fill.svg?react';
+import ProgressActivity from '@material-symbols/svg-400/rounded/progress_activity.svg?react';
+import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_activity-fill.svg?react';
 
 export const icons = {
   send: {
@@ -203,5 +205,9 @@ export const icons = {
   close_fullscreen: {
     default: CloseFullscreen,
     filled: CloseFullscreenFilled,
+  },
+  progress_activity: {
+    default: ProgressActivity,
+    filled: ProgressActivityFilled,
   },
 };

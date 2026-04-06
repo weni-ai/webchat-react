@@ -3,7 +3,19 @@ import { useState, useEffect, useRef } from 'react';
 
 import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
-import { useTranslation } from 'react-i18next';
+import { useOrderForm } from '@/contexts/OrderFormContext';
+
+function parseUuid(uuid, sellerIdFallback) {
+  if (!uuid || typeof uuid !== 'string') return null;
+  const parts = uuid.split('#');
+  if (parts.length >= 2) {
+    return { skuId: parts[0], sellerId: parts[1] };
+  }
+  if (sellerIdFallback) {
+    return { skuId: uuid, sellerId: sellerIdFallback };
+  }
+  return null;
+}
 
 export function CounterControls({
   counter,
@@ -11,9 +23,22 @@ export function CounterControls({
   hideWhenNotInteracted = false,
   size = 'small',
   className = '',
+  uuid,
+  sellerId: sellerIdProp,
 }) {
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
+  const {
+    orderFormId,
+    isLoadingOrderForm,
+    requestOrderForm,
+    addOrderFormItem,
+  } = useOrderForm();
+
+  useEffect(() => {
+    requestOrderForm();
+  }, [requestOrderForm]);
 
   function handleCounterChange(type) {
     if (timeoutRef.current) {
@@ -50,17 +75,32 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
-  
-  if (counter === 0) {
+
+  async function handleAddProductToOrderForm() {
+    const parsed = parseUuid(uuid, sellerIdProp);
+
+    if (!parsed) return;
+
+    setIsAddingProduct(true);
+
+    try {
+      await addOrderFormItem(parsed.skuId, parsed.sellerId);
+    } finally {
+      setIsAddingProduct(false);
+    }
+  }
+
+  if (isLoadingOrderForm || orderFormId) {
     return (
       <FSButton
+        isLoading={isLoadingOrderForm || isAddingProduct}
         variant="secondary"
         onClick={(e) => {
           e.stopPropagation();
-          handleCounterChange('increment');
+          handleAddProductToOrderForm();
         }}
         icon="shopping_cart"
-      >
+        >
         Add
       </FSButton>
     );
@@ -117,4 +157,6 @@ CounterControls.propTypes = {
   hideWhenNotInteracted: PropTypes.bool,
   size: PropTypes.oneOf(['small', 'medium']),
   className: PropTypes.string,
+  uuid: PropTypes.string,
+  sellerId: PropTypes.string,
 };

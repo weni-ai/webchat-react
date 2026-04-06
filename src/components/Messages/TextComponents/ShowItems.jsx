@@ -33,6 +33,7 @@ export function ShowItems({
         salePrice: item.sale_price,
         currency: item.currency,
         sellerId: item.seller_id,
+        productURL: item.product_url,
       })),
     }));
   }, [productList]);
@@ -98,6 +99,7 @@ ShowItems.propTypes = {
             image: PropTypes.string.isRequired,
             description: PropTypes.string,
             seller_id: PropTypes.string,
+            product_url: PropTypes.string,
           }),
         ).isRequired,
       }),
