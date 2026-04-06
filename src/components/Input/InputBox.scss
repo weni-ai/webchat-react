@@ -1,17 +1,19 @@
 .weni-input-box {
   margin: 0 $spacing-4;
-  padding: $spacing-3;
+  padding: var(--fs-spacing-1);
+  padding-top: var(--fs-spacing-3);
   outline: 1px solid $border-base;
-  border-radius: $border-radius-2;
+  border-radius: 20px;
   cursor: text;
   display: flex;
   flex-direction: column;
-  gap: $spacing-2;
+  gap: var(--fs-spacing-0);
 
   textarea {
     font: $font-body;
     resize: none;
     width: 100%;
+    margin-inline: var(--fs-spacing-1);
   }
 
   &:has(textarea:focus-visible) {
@@ -35,7 +37,7 @@
   .weni-input-box__footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: $spacing-1;
   }
 

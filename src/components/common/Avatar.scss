@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: $gray-500;
+  color: var(--fs-color-accent-2);
   font-weight: 500;
   user-select: none;
   overflow: hidden;
@@ -10,7 +10,7 @@
   position: relative;
 
   &--with-background-color {
-    background-color: $white;
+    background-color: var(--fs-color-main-0);
   }
 
   &--small {

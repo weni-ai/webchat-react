@@ -61,7 +61,7 @@ function WidgetContent() {
       `}
     >
       <Chat />
-      {!isChatFullscreenAndOpen && (
+      {(!isChatFullscreenAndOpen && !isChatOpen) && (
         <>
           {shouldShowCompactStarters && (
             <ConversationStartersCompact

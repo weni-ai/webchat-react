@@ -17,6 +17,8 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
+import { ShowItems } from './TextComponents/ShowItems';
+import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
 
@@ -104,40 +106,51 @@ export function MessagesList() {
           `}
           key={index}
         >
-          {group.direction === 'incoming' && config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
-          )}
           {group.messages.map((message, messageIndex) => (
-            <MessageContainer
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
-              direction={group.direction}
-              type={message.type}
-              key={message.id || messageIndex}
-            >
-              <Message
-                message={message}
-                componentsEnabled={enableComponents(message)}
-              />
-
-              {message.status === 'pending' && (
-                <Icon
-                  name="schedule"
-                  size="small"
-                  color="fg-muted"
+            <>
+              <MessageContainer
+                className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
+                direction={group.direction}
+                type={message.type}
+                key={message.id || messageIndex}
+              >
+                <Message
+                  message={message}
+                  componentsEnabled={enableComponents(message)}
                 />
-              )}
 
-              {message.status === 'error' && (
-                <Icon
-                  name="error"
-                  size="small"
-                  color="fg-critical"
-                />
+                {message.status === 'pending' && (
+                  <Icon
+                    name="schedule"
+                    size="small"
+                    color="fg-muted"
+                  />
+                )}
+
+                {message.status === 'error' && (
+                  <Icon
+                    name="error"
+                    size="small"
+                    color="fg-critical"
+                  />
+                )}
+              </MessageContainer>
+
+              {message.product_list && (
+                <MessageContainer
+                  className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
+                  direction={group.direction}
+                  type={message.type}
+                  key={message.id || messageIndex}
+                >
+                  <ShowItems
+                    buttonText={message.product_list.buttonText}
+                    header={message.header}
+                    productList={message.product_list}
+                  />
+                </MessageContainer>
               )}
-            </MessageContainer>
+            </>
           ))}
         </section>
       ))}
@@ -186,6 +199,10 @@ export function MessagesList() {
           onStarterClick={handleStarterClick}
         />
       )}
+
+      <FSBadge type="success">
+        Meta Quest 2 added to cart
+      </FSBadge>
 
       <div ref={messagesEndRef} />
     </section>

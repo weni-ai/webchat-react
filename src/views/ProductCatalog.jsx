@@ -46,7 +46,6 @@ export function ProductCatalog({ productGroups }) {
                 key={productIndex}
                 image={product.image}
                 title={product.title}
-                lines={[product.description]}
                 price={product.price}
                 salePrice={product.salePrice}
                 currency={product.currency}

@@ -169,7 +169,7 @@ $icon-size-10: 40px;
 
 /* Font */
 $font-size: 16px;
-$font-family: Lato, sans-serif;
+$font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, sans-serif;
 $font-weight-bold: 700;
 $font-weight-medium: 500;
 $font-weight-regular: 400;
@@ -405,4 +405,6 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --border-success: #{$border-success};
   --border-warning: #{$border-warning};
   --border-critical: #{$border-critical};
+
+  --fs-text-face-body: #{$font-family};
 }

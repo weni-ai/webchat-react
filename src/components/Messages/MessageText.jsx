@@ -6,7 +6,6 @@ import { marked } from 'marked';
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
-import { ShowItems } from './TextComponents/ShowItems';
 
 import './MessageText.scss';
 
@@ -76,15 +75,6 @@ export function MessageText({ message, componentsEnabled }) {
         <CallToAction
           buttonText={message.cta_message.display_text}
           url={message.cta_message.url}
-          disabled={!componentsEnabled}
-        />
-      )}
-
-      {message.product_list && (
-        <ShowItems
-          buttonText={message.product_list.buttonText}
-          header={message.header}
-          productList={message.product_list}
           disabled={!componentsEnabled}
         />
       )}

@@ -6,10 +6,10 @@
   border-radius: $border-radius-2;
   gap: $spacing-2;
   padding-right: $spacing-2;
-  border: 1px solid $border-soft;
+  border: var(--fs-border-width) solid var(--fs-border-color);
 
   &__image-container {
-    width: 63px;
+    width: 72px;
     aspect-ratio: 1/1;
     display: flex;
     align-items: center;
@@ -17,14 +17,10 @@
   }
 
   &__image {
-    width: 45px;
+    width: 56px;
     aspect-ratio: 1/1;
     object-fit: cover;
-    border-radius: $border-radius-2 0 0 $border-radius-2;
-
-    &--catalog {
-      width: 63px;
-    }
+    border-radius: $border-radius-1;
   }
 
   &__content {
@@ -43,13 +39,14 @@
   }
 
   &__title {
-    font: $font-caption-1;
-    color: $fg-emphasized;
+    font: var(--fs-text-weight-medium) var(--fs-text-size-2)/1.25 $font-family;
+    color: var(--fs-color-text);
   }
 
   &__line {
     font: $font-caption-2;
-    color: $fg-base;
+    font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.42 $font-family;
+    color: var(--fs-color-text-light);
   }
 
   &__title, &__line {
@@ -59,28 +56,30 @@
     white-space: nowrap;
   }
 
+  &__line {
+    margin-top: var(--fs-spacing-0);
+  }
+
   &__price-container {
+    margin-top: 2px;
     display: flex;
     flex-direction: row;
-    gap: $spacing-1;
+    gap: var(--fs-spacing-1);
+    align-items: center;
   }
 
   &__price {
-    font: $font-caption-1;
-    color: $fg-emphasized;
+    font: var(--fs-text-weight-bold) var(--fs-text-size-2)/1.5 $font-family;
+    color: var(--fs-color-text-light);
 
     &--product {
       color: $fg-base;
     }
 
     &--muted {
-      font: $font-caption-2;
-      color: $fg-muted;
+      font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.42 $font-family;
+      color: var(--fs-color-text-light);
       text-decoration: line-through;
-    }
-
-    &--sale {
-      color: $fg-success;
     }
   }
 

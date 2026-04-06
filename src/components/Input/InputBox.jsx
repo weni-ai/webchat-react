@@ -222,44 +222,28 @@ export function InputBox({ maxLength = 5000 }) {
               {config.showFileUploaderButton && (
                 <Button
                   aria-label="Attach file"
-                />
-              )}
-
-              {config.showVoiceRecordingButton && (
-                <Button
-                  onClick={handleRecordAudio}
-                  variant="tertiary"
                   onClick={() => fileInputRef.current?.click()}
+                  variant="tertiary"
                   icon="attach_file"
                   iconColor="fg-base-soft"
                   noPadding
                 />
               )}
 
-              <Button
-                onClick={handleRecordAudio}
-                disabled={hasAudioPermissionState === false}
-                aria-label="Record audio"
-                variant="tertiary"
-                icon="mic"
-                iconColor="fg-base-soft"
-                noPadding
-              />
+              {config.showVoiceRecordingButton && (
+                <Button
+                  onClick={handleRecordAudio}
+                  disabled={hasAudioPermissionState === false}
+                  aria-label="Record audio"
+                  variant="tertiary"
+                  icon="mic"
+                  iconColor="fg-base-soft"
+                  noPadding
+                />
+              )}
             </>
           )}
         </section>
-
-        {!hasNoTextInput && !isEnteringVoiceMode && (
-          <Button
-            onClick={handleSend}
-            aria-label="Send message"
-            variant="primary"
-            icon="send"
-            size="large"
-            rounded
-            disabled={!text.trim()}
-          />
-        )}
 
         {isEnteringVoiceMode && (
           <Button
@@ -282,6 +266,18 @@ export function InputBox({ maxLength = 5000 }) {
               voiceState={voiceModeState}
             />
           )}
+
+        {!isEnteringVoiceMode && (
+          <Button
+            onClick={handleSend}
+            aria-label="Send message"
+            variant="primary"
+            icon="arrow_upward"
+            size="large"
+            rounded
+            disabled={!text.trim()}
+          />
+        )}
       </section>
     </section>
   );

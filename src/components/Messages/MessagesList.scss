@@ -30,6 +30,12 @@
     }
   }
 
+  &__message--product-list {
+    border: none;
+    padding: 0;
+    width: 100%;
+  }
+
   &__direction-group--incoming-with-avatar {
     grid-template-columns: minmax($icon-size-5, auto) 1fr;
   }

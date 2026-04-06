@@ -36,6 +36,7 @@ export function InlineProduct({
   counter,
   setCounter,
   onClick,
+  button,
 }) {
   const layout = VARIANT_LAYOUT[variant] ?? VARIANT_LAYOUT.catalog;
   const hasCounter = counter !== undefined && setCounter !== undefined;
@@ -79,7 +80,7 @@ export function InlineProduct({
     >
       <section className="weni-inline-product__image-container">
         <img
-          className={`weni-inline-product__image weni-inline-product__image--${variant}`}
+          className={`weni-inline-product__image`}
           src={image}
           alt={title}
         />
@@ -101,6 +102,7 @@ export function InlineProduct({
       </section>
 
       {trailingSlot}
+      {button}
     </section>
   );
 }
@@ -116,4 +118,5 @@ InlineProduct.propTypes = {
   counter: PropTypes.number,
   setCounter: PropTypes.func,
   onClick: PropTypes.func,
+  button: PropTypes.node,
 };

@@ -2,6 +2,8 @@ import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 
 import Button from '@/components/common/Button';
+import { FSButton } from '../common/FSButton';
+import { useTranslation } from 'react-i18next';
 
 export function CounterControls({
   counter,
@@ -48,6 +50,21 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
+  
+  if (counter === 0) {
+    return (
+      <FSButton
+        variant="secondary"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCounterChange('increment');
+        }}
+        icon="shopping_cart"
+      >
+        Add
+      </FSButton>
+    );
+  }
 
   return (
     <section

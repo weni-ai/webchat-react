@@ -91,7 +91,7 @@ export function Header() {
             aria-label="Back"
             variant="tertiary"
             icon="arrow_back"
-            iconColor="fg-base"
+            iconColor="fs-color-main-2"
           />
         )}
       </section>
@@ -102,7 +102,7 @@ export function Header() {
             aria-label="Cart"
             variant="primary"
             icon="shopping_cart"
-            iconColor="fg-base"
+            iconColor="fs-color-main-2"
             onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
           >
             {cartTotalItems}
@@ -115,7 +115,8 @@ export function Header() {
             aria-label="Fullscreen chat"
             variant="tertiary"
             icon={isChatFullscreen ? 'close_fullscreen' : 'open_in_full'}
-            iconColor="fg-base"
+            iconColor="fs-color-main-2"
+            className="weni--hide-on-mobile"
           />
         )}
         {config.showCloseButton && (
@@ -124,7 +125,7 @@ export function Header() {
             aria-label="Close chat"
             variant="tertiary"
             icon="keyboard_arrow_down"
-            iconColor="fg-base"
+            iconColor="fs-color-main-2"
           />
         )}
       </section>

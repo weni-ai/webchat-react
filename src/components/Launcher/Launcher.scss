@@ -11,8 +11,7 @@
     top: -7px;
     right: -7px;
   }
-  
-  min-height: var(--launcherHeight);
+
   min-width: var(--launcherWidth);
   height: var(--launcherHeight);
   width: var(--launcherWidth);
@@ -23,9 +22,8 @@
   align-items: center;
   justify-content: center;
 
-  box-shadow: $shadow-1;
   border: 0;
-  border-radius: $border-radius-full;
+  border-radius: var(--fs-border-radius-pill);
   background-color: var(--launcherColor);
   
   overflow: hidden;
@@ -39,6 +37,21 @@
 
   &--out-hovering, &:active {
     @include weni-animation(0, 0.25s, weni-scale-hover-out);
+  }
+
+  &:hover {
+    width: 100px;
+    height: 48px;
+    background-color: var(--fs-color-neutral-0);
+    border: var(--fs-border-width) solid var(--fs-border-color);
+    color: var(--fs-color-neutral-4);
+  }
+
+  &__separator {
+    width: var(--fs-border-width);
+    height: var(--fs-text-size-2);
+    background-color: var(--fs-border-color);
+    margin: 0 var(--fs-spacing-1);
   }
 }
 

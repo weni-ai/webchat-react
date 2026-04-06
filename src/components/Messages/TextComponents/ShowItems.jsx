@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 
-import Button from '@/components/common/Button';
+import { FSButton } from '@/components/common/FSButton';
 import { InlineProduct } from '@/components/Product/InlineProduct';
 
 import './ShowItems.scss';
@@ -56,25 +56,26 @@ export function ShowItems({
         lines={[
           `${totalItems} ${t('show_items.items', { count: totalItems })}`,
         ]}
-      />
-
-      <Button
-        className="weni-show-items__button"
-        key={buttonText}
-        variant="secondary"
-        disabled={disabled}
-        onClick={() =>
-          setCurrentPage({
-            view: 'product-catalog',
-            title: catalogTitle,
-            props: {
-              productGroups,
-            },
-          })
+        button={
+          <FSButton
+            className="weni-show-items__button"
+            key={buttonText}
+            variant="primary"
+            disabled={disabled}
+            onClick={() =>
+              setCurrentPage({
+                view: 'product-catalog',
+                title: catalogTitle,
+                props: {
+                  productGroups,
+                },
+              })
+            }
+          >
+            {buttonText}
+          </FSButton>
         }
-      >
-        {buttonText}
-      </Button>
+      />
     </section>
   );
 }

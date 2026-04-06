@@ -33,20 +33,36 @@ export function Launcher() {
         onMouseLeave={() => setIsHovering(false)}
         aria-label="Toggle chat"
       >
-        {config.profileAvatar && !isChatOpen ? (
-          <Avatar
-            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-            src={config.profileAvatar}
-            size="full"
-          />
+        {isHovering ? (
+          <>
+            <Icon
+              name="chat_bubble"
+              size="medium"
+            />
+
+            <span className="weni-launcher__separator" />
+
+            <Icon
+              name="mic"
+              size="medium"
+            />
+          </>
         ) : (
-          <Icon
-            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-            name={isChatOpen ? 'close' : 'chat_bubble'}
-            filled
-            color="white"
-            size="x-large"
-          />
+          config.profileAvatar && !isChatOpen ? (
+            <Avatar
+              className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+              src={config.profileAvatar}
+              size="full"
+            />
+          ) : (
+            <Icon
+              className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+              name={isChatOpen ? 'close' : 'chat_bubble'}
+              filled
+              color="white"
+              size="x-large"
+            />
+          )
         )}
       </button>
 
