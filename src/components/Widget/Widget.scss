@@ -32,7 +32,6 @@
 
   .weni-launcher__container {
     transition: height $animation-duration ease-in-out;
-    height: 60px;
 
     &:hover {
       height: 48px;

@@ -91,9 +91,7 @@ export function Badge({
       ]
         .filter(Boolean)
         .join(' ')}
-    >
-      {displayCount}
-    </span>
+    ></span>
   );
 }
 
