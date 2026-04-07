@@ -139,6 +139,7 @@ export function ChatProvider({ children, config }) {
   const [cart, setCart] = useState({});
 
   // Voice mode state
+  const [isVoiceEnabledByClient] = useState(!!mergedConfig.voiceMode?.enabled);
   const [isVoiceEnabledByServer, setIsVoiceEnabledByServer] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [isEnteringVoiceMode, setIsEnteringVoiceMode] = useState(false);
@@ -303,7 +304,9 @@ export function ChatProvider({ children, config }) {
       syncVoiceModeLanguage(language);
     });
 
-    service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));
+    if (isVoiceEnabledByClient) {
+      service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));
+    }
 
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
@@ -351,7 +354,7 @@ export function ChatProvider({ children, config }) {
   };
 
   const enterVoiceMode = useCallback(async () => {
-    if (!isVoiceEnabledByServer || !isVoiceModeSupported) return;
+    if (!isVoiceEnabledByClient || !isVoiceEnabledByServer || !isVoiceModeSupported) return;
 
     if (voiceServiceRef.current) {
       voiceServiceRef.current.removeAllListeners();
@@ -417,6 +420,7 @@ export function ChatProvider({ children, config }) {
   }, [
     mergedConfig,
     voiceLanguage,
+    isVoiceEnabledByClient,
     isVoiceModeSupported,
     isVoiceEnabledByServer,
     service,
@@ -481,6 +485,7 @@ export function ChatProvider({ children, config }) {
     isModeVisible: showMode,
 
     // Voice mode state
+    isVoiceEnabledByClient,
     isVoiceEnabledByServer,
     isVoiceModeActive,
     isEnteringVoiceMode,
@@ -599,6 +604,7 @@ ChatProvider.propTypes = {
 
     // Voice mode
     voiceMode: PropTypes.shape({
+      enabled: PropTypes.bool,
       elevenLabs: PropTypes.shape({
         voiceId: PropTypes.string,
       }),
