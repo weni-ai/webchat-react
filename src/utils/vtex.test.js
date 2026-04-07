@@ -1661,7 +1661,9 @@ describe('cross-source SKU matching', () => {
           name: 'iPad 64GB',
           productID: 'V-1',
           offers: {
-            offers: [{ price: 499, availability: 'https://schema.org/InStock' }],
+            offers: [
+              { price: 499, availability: 'https://schema.org/InStock' },
+            ],
           },
         },
       ],

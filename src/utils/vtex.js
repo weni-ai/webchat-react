@@ -215,8 +215,7 @@ function normalizeNextDataForContext(raw) {
   const rootHasSku = Boolean(raw.sku);
 
   for (const variant of allVariants) {
-    const variantSkuId =
-      variant.sku || (rootHasSku ? variant.productID : null);
+    const variantSkuId = variant.sku || (rootHasSku ? variant.productID : null);
     const isCurrent = variantSkuId
       ? String(variantSkuId) === String(raw.sku || raw.id)
       : String(variant.productID) === String(raw.id);
