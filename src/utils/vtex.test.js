@@ -871,13 +871,93 @@ describe('normalizeForContext', () => {
     );
   });
 
+  it('sets itemId to null for ld+json variants with only productID (no sku)', () => {
+    const raw = {
+      name: 'Shirt',
+      brand: 'Acme',
+      description: 'A shirt',
+      productID: 'PROD-1',
+      hasVariant: [
+        {
+          name: 'Shirt Red',
+          productID: 'V-1',
+          offers: {
+            offers: [{ price: 30, availability: 'https://schema.org/InStock' }],
+          },
+        },
+        {
+          name: 'Shirt Blue',
+          productID: 'V-2',
+          offers: {
+            offers: [{ price: 30, availability: 'https://schema.org/InStock' }],
+          },
+        },
+      ],
+    };
+    const result = normalizeForContext(raw, 'ld+json');
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0].itemId).toBeNull();
+    expect(result.items[1].itemId).toBeNull();
+    expect(result.items[0].sellers).toHaveLength(1);
+  });
+
+  it('sets fallback item itemId to null for ld+json with only productID (no sku)', () => {
+    const raw = {
+      name: 'iPad',
+      brand: 'Apple',
+      description: 'Tablet',
+      productID: '99',
+      offers: {
+        offers: [{ price: 499, availability: 'https://schema.org/InStock' }],
+      },
+    };
+    const result = normalizeForContext(raw, 'ld+json');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].itemId).toBeNull();
+    expect(result.items[0].sellers).toHaveLength(1);
+  });
+
   it('handles ld+json with no offers', () => {
     const raw = { name: 'NoOffer', brand: 'B', description: 'D' };
     const result = normalizeForContext(raw, 'ld+json');
     expect(result.items).toHaveLength(0);
   });
 
-  it('normalizes __NEXT_DATA__ product with variants', () => {
+  it('normalizes __NEXT_DATA__ product with variants that have sku field', () => {
+    const raw = {
+      name: 'Surface Go 3 Pentium 8GB 64GB',
+      brand: { name: 'Microsoft' },
+      description: 'Tablet',
+      id: '37',
+      sku: '37',
+      isVariantOf: {
+        name: 'Surface Go 3',
+        productGroupID: '7',
+        skuVariants: {
+          allVariantProducts: [
+            { name: 'Surface Go 3 64GB', sku: '37', productID: '37' },
+            { name: 'Surface Go 3 128GB', sku: '38', productID: '38' },
+          ],
+        },
+      },
+      offers: { offers: [{ price: 399, quantity: 10000 }] },
+      customData: {
+        specificationGroups: [
+          { specifications: [{ name: 'Storage', values: ['64GB'] }] },
+        ],
+      },
+    };
+    const result = normalizeForContext(raw, 'next-data');
+    expect(result.productName).toBe('Surface Go 3');
+    expect(result.productId).toBe('7');
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0].itemId).toBe('37');
+    expect(result.items[0].sellers).toHaveLength(1);
+    expect(result.items[1].itemId).toBe('38');
+    expect(result.items[1].sellers).toHaveLength(0);
+  });
+
+  it('sets itemId to null when next-data variants only have productID (no sku) and root has no sku', () => {
     const raw = {
       name: 'Surface Go 3 Pentium 8GB 64GB',
       brand: { name: 'Microsoft' },
@@ -894,21 +974,60 @@ describe('normalizeForContext', () => {
         },
       },
       offers: { offers: [{ price: 399, quantity: 10000 }] },
-      customData: {
-        specificationGroups: [
-          { specifications: [{ name: 'Storage', values: ['64GB'] }] },
-        ],
-      },
+      customData: { specificationGroups: [] },
     };
     const result = normalizeForContext(raw, 'next-data');
-    expect(result.productName).toBe('Surface Go 3');
-    expect(result.productId).toBe('7');
     expect(result.items).toHaveLength(2);
+    expect(result.items[0].itemId).toBeNull();
+    expect(result.items[1].itemId).toBeNull();
     expect(result.items[0].sellers).toHaveLength(1);
     expect(result.items[1].sellers).toHaveLength(0);
   });
 
-  it('handles __NEXT_DATA__ with no variants', () => {
+  it('validates variant.productID as SKU when root has sku field', () => {
+    const raw = {
+      name: 'Surface Go 3 Pentium 8GB 64GB',
+      brand: { name: 'Microsoft' },
+      description: 'Tablet',
+      id: '37',
+      sku: '37',
+      isVariantOf: {
+        name: 'Surface Go 3',
+        productGroupID: '7',
+        skuVariants: {
+          allVariantProducts: [
+            { name: 'Surface Go 3 64GB', productID: '37' },
+            { name: 'Surface Go 3 128GB', productID: '38' },
+          ],
+        },
+      },
+      offers: { offers: [{ price: 399, quantity: 10000 }] },
+      customData: { specificationGroups: [] },
+    };
+    const result = normalizeForContext(raw, 'next-data');
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0].itemId).toBe('37');
+    expect(result.items[1].itemId).toBe('38');
+    expect(result.items[0].sellers).toHaveLength(1);
+    expect(result.items[1].sellers).toHaveLength(0);
+  });
+
+  it('handles __NEXT_DATA__ with no variants and sku present', () => {
+    const raw = {
+      name: 'Simple',
+      brand: { name: 'B' },
+      description: 'D',
+      id: '1',
+      sku: '1',
+      offers: { offers: [{ price: 100, quantity: 5 }] },
+      customData: { specificationGroups: [] },
+    };
+    const result = normalizeForContext(raw, 'next-data');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].itemId).toBe('1');
+  });
+
+  it('sets fallback item itemId to null when next-data has no sku field', () => {
     const raw = {
       name: 'Simple',
       brand: { name: 'B' },
@@ -919,7 +1038,8 @@ describe('normalizeForContext', () => {
     };
     const result = normalizeForContext(raw, 'next-data');
     expect(result.items).toHaveLength(1);
-    expect(result.items[0].itemId).toBe('1');
+    expect(result.items[0].itemId).toBeNull();
+    expect(result.items[0].sellers).toHaveLength(1);
   });
 });
 
@@ -1118,10 +1238,10 @@ describe('edge cases for branch coverage', () => {
     };
     const result = normalizeForContext(raw, 'ld+json');
     expect(result.items[0].sellers).toEqual([]);
-    expect(result.items[0].itemId).toBe('10');
+    expect(result.items[0].itemId).toBeNull();
   });
 
-  it('normalizeForContext ld+json: uses productID fallback when sku missing', () => {
+  it('normalizeForContext ld+json: itemId is null when only productID present (no sku)', () => {
     const raw = {
       name: 'X',
       brand: 'B',
@@ -1132,7 +1252,7 @@ describe('edge cases for branch coverage', () => {
       },
     };
     const result = normalizeForContext(raw, 'ld+json');
-    expect(result.items[0].itemId).toBe('99');
+    expect(result.items[0].itemId).toBeNull();
     expect(result.items[0].sellers[0].commertialOffer.AvailableQuantity).toBe(
       0,
     );
@@ -1296,7 +1416,7 @@ describe('getSelectedSkuIdFromLdJson', () => {
 });
 
 describe('cross-source SKU matching', () => {
-  it('ld+json SKU matches next-data normalized itemId via variant.productID', () => {
+  it('next-data with root sku validates variant.productID as SKU ID for matching', () => {
     const nextDataRaw = {
       name: 'iPad 64GB Blue',
       description: 'Tablet',
@@ -1320,12 +1440,43 @@ describe('cross-source SKU matching', () => {
     };
 
     const normalized = normalizeForContext(nextDataRaw, 'next-data');
-    const selectedSkuId = '101';
-    const ctx = buildProductContextString(normalized, selectedSkuId);
+    expect(normalized.items[0].itemId).toBe('101');
+    expect(normalized.items[1].itemId).toBe('102');
 
+    const ctx = buildProductContextString(normalized, '101');
     expect(ctx).toContain('Selected SKU:');
-    expect(ctx).toContain('SKU 101:');
     expect(ctx).toContain('iPad 64GB Blue');
+  });
+
+  it('next-data without root sku: variant.productID is NOT used as SKU ID', () => {
+    const nextDataRaw = {
+      name: 'iPad 64GB Blue',
+      description: 'Tablet',
+      brand: { name: 'Apple' },
+      id: '101',
+      isVariantOf: {
+        name: 'iPad',
+        productGroupID: '17',
+        skuVariants: {
+          allVariantProducts: [
+            { productID: '101', name: 'iPad 64GB Blue' },
+            { productID: '102', name: 'iPad 256GB Silver' },
+          ],
+        },
+      },
+      offers: {
+        offers: [{ price: 3999, quantity: 10 }],
+      },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(nextDataRaw, 'next-data');
+    expect(normalized.items[0].itemId).toBeNull();
+    expect(normalized.items[1].itemId).toBeNull();
+
+    const ctx = buildProductContextString(normalized, '101');
+    expect(ctx).toContain('Product: iPad');
+    expect(ctx).not.toContain('Selected SKU');
   });
 
   it('ld+json SKU matches IS API normalized itemId', () => {
@@ -1409,12 +1560,14 @@ describe('cross-source SKU matching', () => {
       description: 'Tablet',
       brand: { name: 'Apple' },
       id: '101',
+      sku: '101',
       isVariantOf: {
         name: 'iPad',
         productGroupID: '17',
         skuVariants: {
           allVariantProducts: [
             {
+              sku: '101',
               productID: '101',
               name: 'iPad 64GB Blue',
             },
@@ -1461,5 +1614,186 @@ describe('cross-source SKU matching', () => {
     expect(ctx).toContain('Selected SKU:');
     expect(ctx).toContain('Shoe Red');
     expect(ctx).not.toContain('Shoe Blue');
+  });
+
+  it('isCurrent uses sku for matching when sku differs from productID', () => {
+    const raw = {
+      name: 'Shoe Red',
+      description: 'Running shoe',
+      brand: { name: 'Nike' },
+      id: 'PID-A',
+      sku: 'SKU-A',
+      isVariantOf: {
+        name: 'Shoe',
+        productGroupID: 'PG-1',
+        skuVariants: {
+          allVariantProducts: [
+            { sku: 'SKU-A', productID: 'PID-A', name: 'Shoe Red' },
+            { sku: 'SKU-B', productID: 'PID-B', name: 'Shoe Blue' },
+          ],
+        },
+      },
+      offers: { offers: [{ price: 200, quantity: 5 }] },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(raw, 'next-data');
+    expect(normalized.items[0].itemId).toBe('SKU-A');
+    expect(normalized.items[0].sellers).toHaveLength(1);
+    expect(normalized.items[0].sellers[0].commertialOffer.Price).toBe(200);
+    expect(normalized.items[1].itemId).toBe('SKU-B');
+    expect(normalized.items[1].sellers).toHaveLength(0);
+
+    const ctx = buildProductContextString(normalized, 'SKU-A');
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('Price: 200');
+    expect(ctx).toContain('Available');
+  });
+
+  it('does not match SKU when only productID is available in ld+json', () => {
+    const raw = {
+      name: 'Tablet',
+      brand: 'Apple',
+      productID: '17',
+      description: 'Tablet',
+      hasVariant: [
+        {
+          name: 'iPad 64GB',
+          productID: 'V-1',
+          offers: {
+            offers: [{ price: 499, availability: 'https://schema.org/InStock' }],
+          },
+        },
+      ],
+    };
+
+    const normalized = normalizeForContext(raw, 'ld+json');
+    expect(normalized.items[0].itemId).toBeNull();
+
+    const ctx = buildProductContextString(normalized, 'V-1');
+    expect(ctx).toContain('Product: Tablet');
+    expect(ctx).not.toContain('Selected SKU');
+  });
+});
+
+describe('real-world VTEX page data', () => {
+  it('FastStore multi-variant (Surface Go 3): next-data + ld+json SKU match', () => {
+    const nextDataRaw = {
+      brand: { name: 'Microsoft' },
+      description:
+        'Compact Windows tablet designed for portability and productivity.',
+      name: 'Surface Go 3 Pentium 8GB 64GB',
+      id: '37',
+      sku: '37',
+      isVariantOf: {
+        productGroupID: '7',
+        name: 'Surface Go 3',
+        skuVariants: {
+          allVariantProducts: [
+            { name: 'Surface Go 3 Pentium 8GB 64GB', productID: '37' },
+            { name: 'Surface Go 3 Pentium 8GB 128GB', productID: '38' },
+            { name: 'Surface Go 3 i3 8GB 128GB', productID: '39' },
+            { name: 'Surface Go 3 i3 16GB 256GB', productID: '40' },
+          ],
+        },
+      },
+      offers: {
+        offers: [{ price: 399, quantity: 10000 }],
+      },
+      customData: {
+        specificationGroups: [
+          {
+            name: 'allSpecifications',
+            specifications: [
+              { name: 'Storage', values: ['64GB', '128GB', '256GB'] },
+              { name: 'sellerId', values: ['1'] },
+            ],
+          },
+        ],
+      },
+    };
+
+    const normalized = normalizeForContext(nextDataRaw, 'next-data');
+
+    expect(normalized.productName).toBe('Surface Go 3');
+    expect(normalized.productId).toBe('7');
+    expect(normalized.items).toHaveLength(4);
+    expect(normalized.items[0].itemId).toBe('37');
+    expect(normalized.items[1].itemId).toBe('38');
+    expect(normalized.items[0].sellers).toHaveLength(1);
+    expect(normalized.items[1].sellers).toHaveLength(0);
+
+    const ctx = buildProductContextString(normalized, '37');
+    expect(ctx).toContain('Product: Surface Go 3');
+    expect(ctx).toContain('Brand: Microsoft');
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('SKU 37:');
+    expect(ctx).toContain('Price: 399');
+    expect(ctx).toContain('Available');
+  });
+
+  it('FastStore single-variant (Controle): next-data + ld+json SKU match', () => {
+    const nextDataRaw = {
+      brand: { name: 'Brand name' },
+      description: 'Feito para jogadores que exigem mais.',
+      name: 'Preto',
+      id: '209',
+      sku: '209',
+      isVariantOf: {
+        productGroupID: '77',
+        name: 'Controle Sem Fio para Videogame Ultra',
+        skuVariants: {
+          allVariantProducts: [{ name: 'Preto', productID: '209' }],
+        },
+      },
+      offers: {
+        offers: [{ price: 1100, quantity: 10000 }],
+      },
+      customData: { specificationGroups: [] },
+    };
+
+    const normalized = normalizeForContext(nextDataRaw, 'next-data');
+
+    expect(normalized.productName).toBe(
+      'Controle Sem Fio para Videogame Ultra',
+    );
+    expect(normalized.items).toHaveLength(1);
+    expect(normalized.items[0].itemId).toBe('209');
+    expect(normalized.items[0].sellers).toHaveLength(1);
+
+    const ctx = buildProductContextString(normalized, '209');
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('SKU 209:');
+    expect(ctx).toContain('Price: 1100');
+  });
+
+  it('StoreFramework (Brastemp): ld+json source with sku field', () => {
+    const ldJsonRaw = {
+      '@type': 'Product',
+      name: 'Fog\u00e3o Brastemp 5 Bocas Cor Inox',
+      brand: { name: 'Brastemp' },
+      description: 'Fog\u00e3o de Piso Brastemp 5 Bocas Cor Inox',
+      sku: '000326125867',
+      offers: {
+        offers: [
+          {
+            price: 2296.8,
+            availability: 'http://schema.org/InStock',
+            sku: '000326125867',
+          },
+        ],
+      },
+    };
+
+    const normalized = normalizeForContext(ldJsonRaw, 'ld+json');
+
+    expect(normalized.items).toHaveLength(1);
+    expect(normalized.items[0].itemId).toBe('000326125867');
+    expect(normalized.items[0].sellers[0].commertialOffer.Price).toBe(2296.8);
+
+    const ctx = buildProductContextString(normalized, '000326125867');
+    expect(ctx).toContain('Selected SKU:');
+    expect(ctx).toContain('SKU 000326125867:');
+    expect(ctx).toContain('Price: 2296.8');
   });
 });

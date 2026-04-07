@@ -157,7 +157,7 @@ function normalizeLdJsonForContext(raw) {
     for (const variant of variants) {
       const variantOffer = variant.offers?.offers?.[0];
       items.push({
-        itemId: variant.sku || variant.productID || 'N/A',
+        itemId: variant.sku || null,
         nameComplete: variant.name || '',
         name: variant.name || '',
         sellers: variantOffer
@@ -178,7 +178,7 @@ function normalizeLdJsonForContext(raw) {
     }
   } else if (offers.length > 0) {
     items.push({
-      itemId: raw.sku || raw.productID || 'N/A',
+      itemId: raw.sku || null,
       nameComplete: raw.name || '',
       name: raw.name || '',
       sellers: [
@@ -212,10 +212,16 @@ function normalizeNextDataForContext(raw) {
   const allVariants = raw.isVariantOf?.skuVariants?.allVariantProducts || [];
   const currentOffer = raw.offers?.offers?.[0];
 
+  const rootHasSku = Boolean(raw.sku);
+
   for (const variant of allVariants) {
-    const isCurrent = String(variant.productID) === String(raw.id);
+    const variantSkuId =
+      variant.sku || (rootHasSku ? variant.productID : null);
+    const isCurrent = variantSkuId
+      ? String(variantSkuId) === String(raw.sku || raw.id)
+      : String(variant.productID) === String(raw.id);
     items.push({
-      itemId: variant.sku || variant.productID || 'N/A',
+      itemId: variantSkuId,
       nameComplete: variant.name || '',
       name: variant.name || '',
       sellers:
@@ -235,7 +241,7 @@ function normalizeNextDataForContext(raw) {
 
   if (items.length === 0 && currentOffer) {
     items.push({
-      itemId: raw.sku || raw.id || 'N/A',
+      itemId: raw.sku || null,
       nameComplete: raw.name || '',
       name: raw.name || '',
       sellers: [
@@ -407,7 +413,7 @@ export function buildProductContextString(product, selectedSkuId) {
   if (selectedSkuId) {
     const items = product.items || [];
     const matched = items.find(
-      (item) => String(item.itemId) === String(selectedSkuId),
+      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
     );
     if (matched) {
       lines.push('\nSelected SKU:');
