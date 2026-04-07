@@ -354,7 +354,13 @@ export function ChatProvider({ children, config }) {
   };
 
   const enterVoiceMode = useCallback(async () => {
-    if (!isVoiceEnabledByClient || !isVoiceEnabledByServer || !isVoiceModeSupported) return;
+    if (
+      !isVoiceEnabledByClient ||
+      !isVoiceEnabledByServer ||
+      !isVoiceModeSupported
+    ) {
+      return;
+    }
 
     if (voiceServiceRef.current) {
       voiceServiceRef.current.removeAllListeners();
