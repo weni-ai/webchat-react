@@ -6,8 +6,6 @@ const INTERNAL_PROPERTIES = new Set([
   'allSpecificationsGroups',
 ]);
 
-const MAX_SKUS = 5;
-
 export function isVtexPdpPage() {
   return /\/[^/]+\/p\/?$/.test(window.location.pathname);
 }
@@ -159,7 +157,7 @@ function normalizeLdJsonForContext(raw) {
     for (const variant of variants) {
       const variantOffer = variant.offers?.offers?.[0];
       items.push({
-        itemId: variant.sku || variant.productID || 'N/A',
+        itemId: variant.sku || null,
         nameComplete: variant.name || '',
         name: variant.name || '',
         sellers: variantOffer
@@ -180,7 +178,7 @@ function normalizeLdJsonForContext(raw) {
     }
   } else if (offers.length > 0) {
     items.push({
-      itemId: raw.sku || raw.productID || 'N/A',
+      itemId: raw.sku || null,
       nameComplete: raw.name || '',
       name: raw.name || '',
       sellers: [
@@ -214,10 +212,15 @@ function normalizeNextDataForContext(raw) {
   const allVariants = raw.isVariantOf?.skuVariants?.allVariantProducts || [];
   const currentOffer = raw.offers?.offers?.[0];
 
+  const rootHasSku = Boolean(raw.sku);
+
   for (const variant of allVariants) {
-    const isCurrent = String(variant.productID) === String(raw.id);
+    const variantSkuId = variant.sku || (rootHasSku ? variant.productID : null);
+    const isCurrent = variantSkuId
+      ? String(variantSkuId) === String(raw.sku || raw.id)
+      : String(variant.productID) === String(raw.id);
     items.push({
-      itemId: variant.productID || 'N/A',
+      itemId: variantSkuId,
       nameComplete: variant.name || '',
       name: variant.name || '',
       sellers:
@@ -237,7 +240,7 @@ function normalizeNextDataForContext(raw) {
 
   if (items.length === 0 && currentOffer) {
     items.push({
-      itemId: raw.id || raw.sku || 'N/A',
+      itemId: raw.sku || null,
       nameComplete: raw.name || '',
       name: raw.name || '',
       sellers: [
@@ -283,16 +286,13 @@ export function normalizeForContext(rawProduct, source) {
   return normalizer ? normalizer(rawProduct) : rawProduct;
 }
 
-export async function resolveProductData(slug, account) {
-  const ldResult = extractFromLdJson(slug);
-  if (ldResult) {
-    return {
-      productData: { ...ldResult.productData, account },
-      rawProduct: ldResult.rawProduct,
-      source: 'ld+json',
-    };
-  }
+export function getSelectedSkuIdFromLdJson() {
+  const product = findProductInLdJson();
+  if (!product) return null;
+  return product.sku || null;
+}
 
+export async function resolveProductData(slug, account) {
   const nextResult = extractFromNextData(slug);
   if (nextResult) {
     return {
@@ -304,16 +304,31 @@ export async function resolveProductData(slug, account) {
 
   try {
     const response = await fetchProductData(slug);
-    if (!response?.products) return null;
-
-    const product = selectProduct(response.products, slug);
-    if (!product) return null;
-
-    const productData = extractProductData(product, account);
-    return { productData, rawProduct: product, source: 'intelligent-search' };
+    if (response?.products) {
+      const product = selectProduct(response.products, slug);
+      if (product) {
+        const productData = extractProductData(product, account);
+        return {
+          productData,
+          rawProduct: product,
+          source: 'intelligent-search',
+        };
+      }
+    }
   } catch {
-    return null;
+    /* network or parse error — fall through to ld+json */
   }
+
+  const ldResult = extractFromLdJson(slug);
+  if (ldResult) {
+    return {
+      productData: { ...ldResult.productData, account },
+      rawProduct: ldResult.rawProduct,
+      source: 'ld+json',
+    };
+  }
+
+  return null;
 }
 
 export async function fetchProductData(slug) {
@@ -372,7 +387,7 @@ function formatSkuLine(item) {
   return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${available}`;
 }
 
-export function buildProductContextString(product) {
+export function buildProductContextString(product, selectedSkuId) {
   if (!product) return null;
 
   const description = product.description || '';
@@ -394,16 +409,15 @@ export function buildProductContextString(product) {
     lines.push(`Attributes: ${parts.join(' | ')}`);
   }
 
-  const items = product.items || [];
-  if (items.length > 0) {
-    const visibleItems = items.slice(0, MAX_SKUS);
-    const totalCount = items.length;
-    lines.push(
-      `\nAvailable SKUs (showing ${visibleItems.length} of ${totalCount}):`,
+  if (selectedSkuId) {
+    const items = product.items || [];
+    const matched = items.find(
+      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
     );
-    visibleItems.forEach((item) => {
-      lines.push(formatSkuLine(item));
-    });
+    if (matched) {
+      lines.push('\nSelected SKU:');
+      lines.push(formatSkuLine(matched));
+    }
   }
 
   return lines.join('\n');
