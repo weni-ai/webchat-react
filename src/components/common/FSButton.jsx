@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 
 import './FSButton.scss';
 import { Icon } from './Icon';
+import { useMemo } from 'react';
 
 export function FSButton({
   children,
@@ -13,23 +14,33 @@ export function FSButton({
   disabled = false,
   ...props
 }) {
+  const IconComponent = useMemo(() => {
+    if (isLoading) {
+      return (
+        <Icon
+          name="progress_activity"
+          size="medium"
+          className="weni-fs-button__loading-spinner"
+        />
+      );
+    }
+
+    if (icon) {
+      return (
+        <Icon name={icon} size="medium" />
+      );
+    }
+
+    return null;
+  }, [isLoading, icon]);
+
   return (
     <button
       className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} ${className}`}
       disabled={isLoading || disabled}
       {...props}
     >
-      {isLoading && (
-        <Icon
-          name="progress_activity"
-          size="medium"
-          className="weni-fs-button__loading-spinner"
-        />
-      )}
-
-      {icon && (
-        <Icon name={icon} size="medium" />
-      )}
+      {IconComponent}
 
       {children}
     </button>
