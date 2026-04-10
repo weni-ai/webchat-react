@@ -65,10 +65,11 @@ export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
   const { config, isVoiceModeActive, voicePartialTranscript } =
     useChatContext();
-  const { questions, isDismissed, handleStarterClick } =
+  const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
-  const showConversationStartersFull = questions.length > 0 && !isDismissed;
+  const showConversationStartersFull =
+    questions.length > 0 && !isInChatStartersDismissed;
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -196,7 +197,7 @@ export function MessagesList() {
       {showConversationStartersFull && (
         <ConversationStartersFull
           questions={questions}
-          onStarterClick={handleStarterClick}
+          onStarterClick={handleFullStarterClick}
         />
       )}
 

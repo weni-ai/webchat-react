@@ -31,7 +31,8 @@ export function useConversationStartersCore() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompactVisible, setIsCompactVisible] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isInChatStartersDismissed, setIsInChatStartersDismissed] =
+    useState(false);
 
   const pendingStarterRef = useRef(null);
   const currentFingerprintRef = useRef(null);
@@ -39,6 +40,7 @@ export function useConversationStartersCore() {
   const deferredProductDataRef = useRef(null);
   const navigationDebounceRef = useRef(null);
   const isConnectedRef = useRef(isConnected);
+  const prevIsChatOpenRef = useRef(isChatOpen);
   isConnectedRef.current = isConnected;
 
   const isPdpEnabled = config?.conversationStarters?.pdp === true;
@@ -71,7 +73,7 @@ export function useConversationStartersCore() {
     setIsLoading(false);
     setIsCompactVisible(false);
     setIsHiding(false);
-    setIsDismissed(false);
+    setIsInChatStartersDismissed(false);
     clearMobileTimer();
     currentFingerprintRef.current = null;
     deferredProductDataRef.current = null;
@@ -126,12 +128,19 @@ export function useConversationStartersCore() {
     }
   }, [isPdpEnabled, requestStarters, service]);
 
-  const handleStarterClick = useCallback(
-    (question) => {
-      setIsDismissed(true);
-      setIsCompactVisible(false);
-      clearMobileTimer();
+  const removeQuestionFromList = useCallback((question) => {
+    setQuestions((prev) => {
+      const idx = prev.findIndex((q) => q === question);
+      if (idx === -1) return prev;
+      return prev.filter((_, i) => i !== idx);
+    });
+  }, []);
 
+  const handleFullStarterClick = useCallback(
+    (question) => {
+      clearMobileTimer();
+      removeQuestionFromList(question);
+      setIsInChatStartersDismissed(true);
       if (isChatOpen) {
         sendMessage(question);
       } else {
@@ -139,7 +148,33 @@ export function useConversationStartersCore() {
         setIsChatOpen(true);
       }
     },
-    [isChatOpen, sendMessage, setIsChatOpen, clearMobileTimer],
+    [
+      isChatOpen,
+      sendMessage,
+      setIsChatOpen,
+      clearMobileTimer,
+      removeQuestionFromList,
+    ],
+  );
+
+  const handleCompactStarterClick = useCallback(
+    (question) => {
+      clearMobileTimer();
+      if (isChatOpen) {
+        handleFullStarterClick(question);
+        return;
+      }
+      removeQuestionFromList(question);
+      pendingStarterRef.current = question;
+      setIsChatOpen(true);
+    },
+    [
+      isChatOpen,
+      handleFullStarterClick,
+      setIsChatOpen,
+      clearMobileTimer,
+      removeQuestionFromList,
+    ],
   );
 
   const clearStarters = useCallback(() => {
@@ -160,6 +195,14 @@ export function useConversationStartersCore() {
   }, [isChatOpen, isConnected, sendMessage]);
 
   useEffect(() => {
+    const wasOpen = prevIsChatOpenRef.current;
+    prevIsChatOpenRef.current = isChatOpen;
+    if (wasOpen && !isChatOpen && questions.length > 0 && isCompactVisible) {
+      startMobileAutoHide();
+    }
+  }, [isChatOpen, questions.length, isCompactVisible, startMobileAutoHide]);
+
+  useEffect(() => {
     if (!service) return;
 
     const handleStartersReceived = (data) => {
@@ -170,6 +213,7 @@ export function useConversationStartersCore() {
       if (shouldAcceptPdpResponse || shouldAcceptNonPdpResponse) {
         setQuestions(data.questions?.slice(0, 3) || []);
         setIsCompactVisible(true);
+        setIsInChatStartersDismissed(false);
         setIsLoading(false);
         startMobileAutoHide();
       }
@@ -196,7 +240,7 @@ export function useConversationStartersCore() {
       setSource('manual');
       setFingerprint(null);
       setIsCompactVisible(true);
-      setIsDismissed(false);
+      setIsInChatStartersDismissed(false);
       setIsLoading(false);
       currentFingerprintRef.current = null;
       startMobileAutoHide();
@@ -252,8 +296,9 @@ export function useConversationStartersCore() {
     isLoading,
     isCompactVisible,
     isHiding,
-    isDismissed,
-    handleStarterClick,
+    isInChatStartersDismissed,
+    handleCompactStarterClick,
+    handleFullStarterClick,
     clearStarters,
   };
 }
