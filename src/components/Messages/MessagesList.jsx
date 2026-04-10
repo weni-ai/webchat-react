@@ -8,7 +8,6 @@ import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
-import Avatar from '@/components/common/Avatar';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
 import { ChatPresentation } from '@/components/Chat/ChatPresentation';
@@ -103,7 +102,7 @@ export function MessagesList() {
           className={`
             weni-messages-list__direction-group 
             weni-messages-list__direction-group--${group.direction} 
-            weni-messages-list__direction-group--${group.direction}-${config.showChatAvatar ? 'with' : 'without'}-avatar'
+            weni-messages-list__direction-group--${group.direction}-without-avatar'
           `}
           key={index}
         >
@@ -175,15 +174,9 @@ export function MessagesList() {
           className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
-            weni-messages-list__direction-group--incoming-${config.showChatAvatar ? 'with' : 'without'}-avatar
+            weni-messages-list__direction-group--incoming-without-avatar
           `}
         >
-          {config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
-          )}
           <MessageContainer
             className="weni-messages-list__message weni-messages-list__message--incoming"
             direction="incoming"
