@@ -110,6 +110,7 @@ The standalone initializer accepts:
 | `showCameraButton` | boolean | true | Show camera recorder button in the input bar. |
 | `showFileUploaderButton` | boolean | true | Show file upload button in the input bar. |
 | `navigateIfSameDomain` | boolean | false | Experimental flag: auto-navigate when an incoming message contains a link to the same domain. |
+| `addToCart` | boolean | false | When true, shows the VTEX add-to-cart control in product quantity controls when order form and SKU context are available. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |
 | `handleNewUserMessage` | function | — | Custom handler for new user messages. |
@@ -120,6 +121,7 @@ The standalone initializer accepts:
 Experimental features can be enabled either via the `init` params or via LocalStorage. The following feature is currently available:
 
 - `navigateIfSameDomain` (default: `false`): when enabled, if an incoming message contains a link to the same domain, the page will automatically navigate to that link.
+- `addToCart` (default: `false`): when enabled, product quantity controls use the VTEX add-to-cart button when the store exposes order form and product SKU/seller data; when disabled, only the +/- counter is shown.
 
 Enable via init params:
 

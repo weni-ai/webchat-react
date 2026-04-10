@@ -36,7 +36,7 @@ export function CounterControls({
     isLoadingOrderForm,
     requestOrderForm,
   } = useOrderForm();
-  const { addProductToCart } = useChatContext();
+  const { addProductToCart, config } = useChatContext();
 
   useEffect(() => {
     requestOrderForm();
@@ -99,7 +99,11 @@ export function CounterControls({
     }
   }
 
-  if (isAbleToAddProduct && (isLoadingOrderForm || orderFormId)) {
+  if (
+    config.addToCart &&
+    isAbleToAddProduct &&
+    (isLoadingOrderForm || orderFormId)
+  ) {
     return (
       <FSButton
         isLoading={isLoadingOrderForm || isAddingProduct}

@@ -61,6 +61,7 @@ const defaultConfig = {
 
   // Experimental flags
   navigateIfSameDomain: false,
+  addToCart: false,
 
   // Conversation starters
   conversationStarters: undefined,
@@ -582,6 +583,7 @@ ChatProvider.propTypes = {
 
     // Experimental flags
     navigateIfSameDomain: PropTypes.bool,
+    addToCart: PropTypes.bool,
 
     // Conversation starters
     conversationStarters: PropTypes.shape({

@@ -146,6 +146,7 @@ function mapConfig(params) {
 
     // Experimental flags
     navigateIfSameDomain: params.navigateIfSameDomain,
+    addToCart: params.addToCart,
 
     // Callbacks
     onSocketEvent: params.onSocketEvent,
