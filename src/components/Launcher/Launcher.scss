@@ -13,8 +13,8 @@
   }
 
   min-width: 48px;
+  max-width: 48px;
   height: 48px;
-  width: 48px;
 
   padding: 0;
 
@@ -28,19 +28,11 @@
   border: var(--fs-border-width) solid $fs-border-color;
   color: var(--weni-main-color);
   box-shadow: $fs-drop-shadow-colored;
-  
-  overflow: hidden;
 
   overflow: hidden;
   cursor: pointer;
 
-  &--hovering {
-    @include weni-animation(0, 0.25s, weni-scale-hover-in);
-  }
-
-  &--out-hovering, &:active {
-    @include weni-animation(0, 0.25s, weni-scale-hover-out);
-  }
+  transition: max-width 0.5s ease;
 
   button {
     cursor: pointer;
@@ -79,7 +71,9 @@
     }
   }
 
-  &:hover, &--hovering {
+  &:hover,
+  &--hovering {
+    max-width: 280px;
     width: auto;
     background-color: var(--fs-color-neutral-0);
     border: var(--fs-border-width) solid var(--fs-border-color);
