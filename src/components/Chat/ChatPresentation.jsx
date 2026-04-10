@@ -8,21 +8,17 @@ export function ChatPresentation() {
 
   return (
     <section className="weni-chat-presentation">
-      <section className="weni-chat-presentation__avatar">
-        <Avatar
-          src={config.profileAvatar}
-          name={config.title}
-          size={56}
-        />
-      </section>
+      <Avatar
+        src={config.profileAvatar}
+        name={config.title}
+        size={56}
+      />
 
-      <section className="weni-chat-presentation__title-group">
-        <h1 className="weni-chat-presentation__title">{config.title}</h1>
+      <h1 className="weni-chat-presentation__title">{config.title}</h1>
 
-        {config.subtitle && (
-          <h2 className="weni-chat-presentation__subtitle">{config.subtitle}</h2>
-        )}
-      </section>
+      {config.subtitle && (
+        <h2 className="weni-chat-presentation__subtitle">{config.subtitle}</h2>
+      )}
     </section>
   );
 }

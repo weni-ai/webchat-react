@@ -1,11 +1,7 @@
 .weni-message-text {
   font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.2 $font-family;
-  &--incoming {
-    color: $fg-emphasized;
-  }
-
-  &--outgoing {
-    color: $fg-base;
+  &--incoming, &--outgoing {
+    color: $fs-fg-base;
   }
 
   & > * {
