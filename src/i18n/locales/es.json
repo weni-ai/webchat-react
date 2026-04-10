@@ -41,7 +41,8 @@
     "discount": "Descuento",
     "total": "Total",
     "continue_shopping": "Continuar la compra",
-    "make_order": "Hacer pedido"
+    "make_order": "Hacer pedido",
+    "add": "Agregar"
   },
   "voice_mode": {
     "title": "Modo de voz",
@@ -136,8 +137,8 @@
       "title": "En vivo"
     },
     "preview": {
-      "title": "Previsualización",
-      "input_placeholder": "Previsualización solo..."
+      "title": "Solo previsualización",
+      "input_placeholder": "Previsualización, pronto estará disponible"
     }
   }
 }

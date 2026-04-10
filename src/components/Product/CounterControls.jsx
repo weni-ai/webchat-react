@@ -6,6 +6,7 @@ import { FSButton } from '../common/FSButton';
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { getVtexAccount } from '@/utils/vtex';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useTranslation } from 'react-i18next';
 
 function parseUuid(uuid, sellerIdFallback) {
   if (!uuid || typeof uuid !== 'string') return null;
@@ -33,6 +34,7 @@ export function CounterControls({
   const timeoutRef = useRef(null);
   const { orderFormId, isLoadingOrderForm, requestOrderForm } = useOrderForm();
   const { addProductToCart, config } = useChatContext();
+  const { t } = useTranslation();
 
   useEffect(() => {
     requestOrderForm();
@@ -118,7 +120,7 @@ export function CounterControls({
         }}
         icon="shopping_cart"
       >
-        Add
+        {t('cart.add')}
       </FSButton>
     );
   }

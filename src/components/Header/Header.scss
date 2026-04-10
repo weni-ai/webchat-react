@@ -7,6 +7,12 @@
   padding: $spacing-2 $spacing-4;
   border-bottom: 1px solid $sl-color-gray-1;
 
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+  }
+
   &__info {
     display: flex;
     align-items: center;
@@ -29,21 +35,19 @@
   }
 
   &__tag {
-    text-transform: uppercase;
     font: $font-caption-1;
-    color: var(--fg-inverted);
+    font: var(--fs-text-weight-medium) var(--fs-text-size-1)/var(--fs-text-size-base) $font-family;
+    color: $fs-fg-base;
 
     border-radius: $border-radius-4;
     padding: $spacing-1 $spacing-3;
 
-    border: 2px solid $sl-color-gray-0;
-
     &--preview {
-      background-color: $sl-color-blue-10;
+      background-color: $sl-color-orange-3;
     }
 
     &--live {
-      background-color: $sl-color-green-10;
+      background-color: $sl-color-green-3;
     }
   }
 

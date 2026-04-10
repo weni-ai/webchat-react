@@ -41,7 +41,8 @@
     "discount": "Discount",
     "total": "Total",
     "continue_shopping": "Continue shopping",
-    "make_order": "Make order"
+    "make_order": "Make order",
+    "add": "Add"
   },
   "voice_mode": {
     "title": "Voice mode",
@@ -136,8 +137,8 @@
       "title": "Live"
     },
     "preview": {
-      "title": "Preview",
-      "input_placeholder": "Preview only..."
+      "title": "Preview only",
+      "input_placeholder": "Preview mode, test will be available soon"
     }
   }
 }
