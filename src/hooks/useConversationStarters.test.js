@@ -5,10 +5,10 @@ import {
   isVtexPdpPage,
   extractSlugFromUrl,
   getVtexAccount,
-  fetchProductData,
-  selectProduct,
-  extractProductData,
+  resolveProductData,
+  normalizeForContext,
   buildProductContextString,
+  getSelectedSkuIdFromLdJson,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
@@ -20,10 +20,10 @@ jest.mock('@/utils/vtex', () => ({
   isVtexPdpPage: jest.fn(),
   extractSlugFromUrl: jest.fn(),
   getVtexAccount: jest.fn(),
-  fetchProductData: jest.fn(),
-  selectProduct: jest.fn(),
-  extractProductData: jest.fn(),
+  resolveProductData: jest.fn(),
+  normalizeForContext: jest.fn(),
   buildProductContextString: jest.fn(),
+  getSelectedSkuIdFromLdJson: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -110,42 +110,69 @@ describe('useConversationStartersCore', () => {
   });
 
   describe('PDP detection and fetch', () => {
-    const fakeProduct = {
+    const fakeRawProduct = {
+      productName: 'Cool Shoe',
+      brand: 'Brand',
+      description: 'A shoe',
+      properties: [],
+      items: [{ itemId: '1', name: 'SKU 1' }],
+    };
+
+    const fakeProductData = {
+      account: 'mystore',
       linkText: 'cool-shoe',
       productName: 'Cool Shoe',
       description: 'A shoe',
       brand: 'Brand',
-      properties: [],
-      items: [{ itemId: '1', name: 'SKU 1' }],
+      attributes: {},
     };
 
     beforeEach(() => {
       isVtexPdpPage.mockReturnValue(true);
       extractSlugFromUrl.mockReturnValue('cool-shoe');
       getVtexAccount.mockReturnValue('mystore');
-      fetchProductData.mockResolvedValue({ products: [fakeProduct] });
-      selectProduct.mockReturnValue(fakeProduct);
-      extractProductData.mockReturnValue({
-        account: 'mystore',
-        linkText: 'cool-shoe',
+      resolveProductData.mockResolvedValue({
+        productData: fakeProductData,
+        rawProduct: fakeRawProduct,
+        source: 'ld+json',
       });
+      normalizeForContext.mockReturnValue(fakeRawProduct);
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
+      getSelectedSkuIdFromLdJson.mockReturnValue('SKU-001');
     });
 
-    it('fetches product data and calls getStarters on a PDP page', async () => {
+    it('resolves product data and calls getStarters on a PDP page', async () => {
       await act(async () => {
         renderHook(() => useConversationStartersCore());
       });
 
       expect(isVtexPdpPage).toHaveBeenCalled();
       expect(extractSlugFromUrl).toHaveBeenCalled();
-      expect(fetchProductData).toHaveBeenCalledWith('cool-shoe');
-      expect(selectProduct).toHaveBeenCalledWith([fakeProduct], 'cool-shoe');
-      expect(mockService.getStarters).toHaveBeenCalledWith({
-        account: 'mystore',
-        linkText: 'cool-shoe',
-      });
+      expect(resolveProductData).toHaveBeenCalledWith('cool-shoe', 'mystore');
+      expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
+      expect(getSelectedSkuIdFromLdJson).toHaveBeenCalled();
+      expect(normalizeForContext).toHaveBeenCalledWith(
+        fakeRawProduct,
+        'ld+json',
+      );
+      expect(buildProductContextString).toHaveBeenCalledWith(
+        fakeRawProduct,
+        'SKU-001',
+      );
       expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
+    });
+
+    it('passes null selectedSkuId when ld+json has no SKU', async () => {
+      getSelectedSkuIdFromLdJson.mockReturnValue(null);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(buildProductContextString).toHaveBeenCalledWith(
+        fakeRawProduct,
+        null,
+      );
     });
 
     it('sets source to pdp and fingerprint during PDP fetch', async () => {
@@ -159,21 +186,8 @@ describe('useConversationStartersCore', () => {
       expect(hookResult.current.fingerprint).toBe('mystore:cool-shoe');
     });
 
-    it('stops loading when fetchProductData returns no products', async () => {
-      fetchProductData.mockResolvedValue(null);
-
-      let hookResult;
-      await act(async () => {
-        const { result } = renderHook(() => useConversationStartersCore());
-        hookResult = result;
-      });
-
-      expect(hookResult.current.isLoading).toBe(false);
-      expect(mockService.getStarters).not.toHaveBeenCalled();
-    });
-
-    it('stops loading when selectProduct returns null', async () => {
-      selectProduct.mockReturnValue(null);
+    it('stops loading when resolveProductData returns null', async () => {
+      resolveProductData.mockResolvedValue(null);
 
       let hookResult;
       await act(async () => {
@@ -194,7 +208,20 @@ describe('useConversationStartersCore', () => {
         hookResult = result;
       });
 
-      expect(fetchProductData).not.toHaveBeenCalled();
+      expect(resolveProductData).not.toHaveBeenCalled();
+      expect(hookResult.current.isLoading).toBe(false);
+    });
+
+    it('returns early when getVtexAccount returns undefined', async () => {
+      getVtexAccount.mockReturnValue(undefined);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(resolveProductData).not.toHaveBeenCalled();
       expect(hookResult.current.isLoading).toBe(false);
     });
 
@@ -209,20 +236,14 @@ describe('useConversationStartersCore', () => {
     });
 
     it('calls getStarters directly when connection establishes during fetch', async () => {
-      let resolveProductFetch;
-      fetchProductData.mockImplementation(
+      let resolveWaterfall;
+      resolveProductData.mockImplementation(
         () =>
           new Promise((resolve) => {
-            resolveProductFetch = resolve;
+            resolveWaterfall = resolve;
           }),
       );
-
-      const product = { linkText: 'shoe', items: [{ itemId: '1' }] };
-      selectProduct.mockReturnValue(product);
-      extractProductData.mockReturnValue({
-        account: 'store',
-        linkText: 'shoe',
-      });
+      normalizeForContext.mockReturnValue(fakeRawProduct);
       buildProductContextString.mockReturnValue('ctx');
 
       useChatContext.mockReturnValue(buildContext({ isConnected: false }));
@@ -232,7 +253,11 @@ describe('useConversationStartersCore', () => {
       rerender();
 
       await act(async () => {
-        resolveProductFetch({ products: [product] });
+        resolveWaterfall({
+          productData: { account: 'store', linkText: 'shoe' },
+          rawProduct: fakeRawProduct,
+          source: 'intelligent-search',
+        });
       });
 
       expect(mockService.getStarters).toHaveBeenCalledWith({
@@ -286,10 +311,16 @@ describe('useConversationStartersCore', () => {
       isVtexPdpPage.mockReturnValue(true);
       extractSlugFromUrl.mockReturnValue('product-x');
       getVtexAccount.mockReturnValue('store');
-      const product = { linkText: 'product-x', items: [] };
-      fetchProductData.mockResolvedValue({ products: [product] });
-      selectProduct.mockReturnValue(product);
-      extractProductData.mockReturnValue({ account: 'store' });
+      resolveProductData.mockResolvedValue({
+        productData: { account: 'store', linkText: 'product-x' },
+        rawProduct: { productName: 'X' },
+        source: 'ld+json',
+      });
+      normalizeForContext.mockReturnValue({
+        productName: 'X',
+        properties: [],
+        items: [],
+      });
       buildProductContextString.mockReturnValue('ctx');
 
       let hookResult;
@@ -366,12 +397,15 @@ describe('useConversationStartersCore', () => {
       isVtexPdpPage.mockReturnValue(true);
       extractSlugFromUrl.mockReturnValue('shoe');
       getVtexAccount.mockReturnValue('store');
-      const product = { linkText: 'shoe', items: [{ itemId: '1' }] };
-      fetchProductData.mockResolvedValue({ products: [product] });
-      selectProduct.mockReturnValue(product);
-      extractProductData.mockReturnValue({
-        account: 'store',
-        linkText: 'shoe',
+      resolveProductData.mockResolvedValue({
+        productData: { account: 'store', linkText: 'shoe' },
+        rawProduct: { productName: 'Shoe' },
+        source: 'next-data',
+      });
+      normalizeForContext.mockReturnValue({
+        productName: 'Shoe',
+        properties: [],
+        items: [],
       });
       buildProductContextString.mockReturnValue('ctx');
 

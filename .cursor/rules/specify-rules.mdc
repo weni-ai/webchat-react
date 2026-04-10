@@ -5,6 +5,10 @@ Auto-generated from all feature plans. Last updated: 2026-02-19
 ## Active Technologies
 - JavaScript (ES2020+), React 18, SCSS + `@weni/webchat-service` 1.9.0 (peer dependency — provides `getStarters`, `clearStarters`, `setContext`, events), `react` 18, `react-i18next`, `prop-types` (003-pdp-conversation-starters)
 - React state in `ChatContext` (no persistent storage needed for starters) (003-pdp-conversation-starters)
+- JavaScript (ES2020+), React 18.2 + React 18, @weni/webchat-service 1.10.1, i18next, Vite 5 (004-pdp-product-data-strategy)
+- N/A (no persistent storage — product data is extracted per page load) (004-pdp-product-data-strategy)
+- JavaScript (ES2020+, transpiled via Babel for Jest, Vite for bundling) + React 18, Vite 5, Jest 29 + Testing Library, @weni/webchat-service (005-pdp-data-capture)
+- N/A (browser DOM APIs — `window.__NEXT_DATA__`, `document.querySelectorAll` for ld+json, `fetch` for Intelligent Search) (005-pdp-data-capture)
 
 - JavaScript (ES2020+), React 18, JSX + `@weni/webchat-service ^1.7.0` (peer), `i18next`, `prop-types`, `react-i18next`. External API: ElevenLabs (STT WebSocket, TTS HTTP streaming). No new npm packages needed. (001-full-voice-mode)
 
@@ -24,9 +28,10 @@ npm test && npm run lint
 JavaScript (ES2020+), React 18, JSX: Follow standard conventions
 
 ## Recent Changes
+- 005-pdp-data-capture: Added JavaScript (ES2020+, transpiled via Babel for Jest, Vite for bundling) + React 18, Vite 5, Jest 29 + Testing Library, @weni/webchat-service
+- 004-pdp-product-data-strategy: Added JavaScript (ES2020+), React 18.2 + React 18, @weni/webchat-service 1.10.1, i18next, Vite 5
 - 003-pdp-conversation-starters: Added JavaScript (ES2020+), React 18, SCSS + `@weni/webchat-service` 1.9.0 (peer dependency — provides `getStarters`, `clearStarters`, `setContext`, events), `react` 18, `react-i18next`, `prop-types`
 
-- 001-full-voice-mode: Added JavaScript (ES2020+), React 18, JSX + `@weni/webchat-service ^1.7.0` (peer), `i18next`, `prop-types`, `react-i18next`. External API: ElevenLabs (STT WebSocket, TTS HTTP streaming). No new npm packages needed.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
