@@ -43,7 +43,7 @@ export function Launcher() {
             <span className="weni-launcher__separator" />
 
             <Icon
-              name="mic"
+              name="graphic_eq"
               size="medium"
             />
           </>
