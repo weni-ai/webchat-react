@@ -7,6 +7,7 @@ export function FSButton({
   children,
   className = '',
   variant = 'primary',
+  size = 'medium',
   icon = '',
   isLoading = false,
   disabled = false,
@@ -14,7 +15,7 @@ export function FSButton({
 }) {
   return (
     <button
-      className={`weni-fs-button weni-fs-button--${variant} ${className}`}
+      className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} ${className}`}
       disabled={isLoading || disabled}
       {...props}
     >

@@ -377,14 +377,16 @@ function validateStartersInput(questions) {
 }
 
 async function setConversationStarters(questions) {
-  if (!widgetInstance) return;
-
   if (!validateStartersInput(questions)) {
     if (import.meta.env.DEV) {
       console.warn(
         'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
       );
     }
+    return;
+  }
+
+  if (!widgetInstance && typeof service.emit !== 'function') {
     return;
   }
 

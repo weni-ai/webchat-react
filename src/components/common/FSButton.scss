@@ -14,8 +14,18 @@
   }
 
   &--secondary {
-    color: var(--fs-color-main-2);
+    color: var(--weni-main-color);
     background-color: var(--fs-color-neutral-1);
+  }
+
+  &--tertiary {
+    color: var(--weni-main-color);
+    background-color: var(--fs-color-neutral-0);
+  }
+
+  &--small {
+    padding: var(--fs-spacing-1) var(--fs-spacing-3);
+    font: var(--fs-text-weight-semibold) var(--fs-text-size-1)/var(--fs-text-size-2) var(--fs-text-face-body);
   }
 
   &__loading-spinner {
