@@ -165,6 +165,7 @@ export function useConversationStartersCore() {
         return;
       }
       removeQuestionFromList(question);
+      setIsInChatStartersDismissed(true);
       pendingStarterRef.current = question;
       setIsChatOpen(true);
     },

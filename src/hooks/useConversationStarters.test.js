@@ -466,7 +466,7 @@ describe('useConversationStartersCore', () => {
   });
 
   describe('handleCompactStarterClick when chat is closed', () => {
-    it('calls setIsChatOpen(true), removes only the clicked question, keeps compact visible', () => {
+    it('opens chat, removes clicked question, hides in-chat starters row, keeps compact state for outside', () => {
       ctx = buildContext({ isChatOpen: false, isConnected: true });
       useChatContext.mockReturnValue(ctx);
 
@@ -483,7 +483,7 @@ describe('useConversationStartersCore', () => {
 
       expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
       expect(ctx.sendMessage).not.toHaveBeenCalled();
-      expect(result.current.isInChatStartersDismissed).toBe(false);
+      expect(result.current.isInChatStartersDismissed).toBe(true);
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.questions).toEqual(['Q2?', 'Q3?']);
     });
