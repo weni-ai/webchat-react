@@ -1,8 +1,11 @@
+$textarea-border-color: $border-base;
+$textarea-border-color-hover: #858585;
+
 .weni-input-box {
   margin: 0 $spacing-4;
   padding: var(--fs-spacing-1);
   padding-top: var(--fs-spacing-3);
-  outline: 1px solid $border-base;
+  outline: 1px solid $textarea-border-color;
   border-radius: 20px;
   cursor: text;
   display: flex;
@@ -17,7 +20,7 @@
   }
 
   &:has(textarea:focus-visible) {
-    outline: 1px solid var(--weni-main-color);
+    outline: 1px solid $textarea-border-color-hover;
   }
 
   &:has(textarea:disabled) {
