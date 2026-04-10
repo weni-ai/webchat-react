@@ -47,21 +47,19 @@ export function Launcher() {
               size="medium"
             />
           </>
+        ) : config.profileAvatar && !isChatOpen ? (
+          <Avatar
+            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+            src={config.profileAvatar}
+            size="full"
+          />
         ) : (
-          config.profileAvatar && !isChatOpen ? (
-            <Avatar
-              className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-              src={config.profileAvatar}
-              size="full"
-            />
-          ) : (
-            <Icon
-              className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-              name="sparkle"
-              filled
-              size="x-large"
-            />
-          )
+          <Icon
+            className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
+            name="sparkle"
+            filled
+            size="x-large"
+          />
         )}
       </button>
 

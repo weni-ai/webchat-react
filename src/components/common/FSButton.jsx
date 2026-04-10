@@ -27,7 +27,10 @@ export function FSButton({
 
     if (icon) {
       return (
-        <Icon name={icon} size="medium" />
+        <Icon
+          name={icon}
+          size="medium"
+        />
       );
     }
 
@@ -51,4 +54,8 @@ FSButton.propTypes = {
   children: PropTypes.node.isRequired,
   isLoading: PropTypes.bool,
   disabled: PropTypes.bool,
+  variant: PropTypes.oneOf(['primary', 'secondary', 'tertiary']),
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  icon: PropTypes.string,
+  className: PropTypes.string,
 };

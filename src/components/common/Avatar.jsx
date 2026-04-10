@@ -49,7 +49,11 @@ export function Avatar({
 
   const style = useMemo(() => {
     if (typeof size === 'number') {
-      return { width: sizeValue, height: sizeValue, fontSize: sizeValue * 0.45 };
+      return {
+        width: sizeValue,
+        height: sizeValue,
+        fontSize: sizeValue * 0.45,
+      };
     }
 
     return {};
@@ -89,7 +93,10 @@ Avatar.propTypes = {
   src: PropTypes.string,
   alt: PropTypes.string,
   name: PropTypes.string,
-  size: PropTypes.oneOfType([PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']), PropTypes.number]),
+  size: PropTypes.oneOfType([
+    PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']),
+    PropTypes.number,
+  ]),
   /** Avatar shape */
   shape: PropTypes.oneOf(['circle', 'square', 'rounded']),
   /** Additional CSS classes */

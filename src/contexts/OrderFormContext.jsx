@@ -77,19 +77,23 @@ export function useOrderForm() {
   return {
     orderFormId: context?.orderFormId ?? null,
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
-    requestOrderForm: context?.requestOrderForm ?? (() => { }),
+    requestOrderForm: context?.requestOrderForm ?? (() => {}),
   };
 }
 
 function getLocalOrderFormId() {
-  const fastStoreOrderFormId = window.faststore_sdk_stores?.get('fs::cart').read().id;
+  const fastStoreOrderFormId = window.faststore_sdk_stores
+    ?.get('fs::cart')
+    .read().id;
 
   if (fastStoreOrderFormId) {
     return fastStoreOrderFormId;
   }
 
   try {
-    const VTEXIOOrderFormId = localStorage.getItem('orderform') && JSON.parse(localStorage.getItem('orderform')).id;
+    const VTEXIOOrderFormId =
+      localStorage.getItem('orderform') &&
+      JSON.parse(localStorage.getItem('orderform')).id;
 
     if (VTEXIOOrderFormId) {
       return VTEXIOOrderFormId;

@@ -201,9 +201,7 @@ export function MessagesList() {
         />
       )}
 
-      <FSBadge type="success">
-        Meta Quest 2 added to cart
-      </FSBadge>
+      <FSBadge type="success">Meta Quest 2 added to cart</FSBadge>
 
       <div ref={messagesEndRef} />
     </section>

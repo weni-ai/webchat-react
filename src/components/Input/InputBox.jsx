@@ -121,7 +121,15 @@ export function InputBox({ maxLength = 5000 }) {
       disabled: isEnteringVoiceMode || mode === 'preview',
       className: 'weni-input-box__textarea',
     }),
-    [inputTextFieldHint, text, setText, handleKeyPress, maxLength, mode, isEnteringVoiceMode],
+    [
+      inputTextFieldHint,
+      text,
+      setText,
+      handleKeyPress,
+      maxLength,
+      mode,
+      isEnteringVoiceMode,
+    ],
   );
 
   const textareaRef = useRef(null);

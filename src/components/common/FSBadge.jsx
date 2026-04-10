@@ -2,14 +2,12 @@ import PropTypes from 'prop-types';
 
 import './FSBadge.scss';
 
-export function FSBadge({
-  children,
-  type,
-  className = '',
-  ...props
-}) {
+export function FSBadge({ children, type, className = '', ...props }) {
   return (
-    <span className={`weni-fs-badge weni-fs-badge--${type} ${className}`} {...props}>
+    <span
+      className={`weni-fs-badge weni-fs-badge--${type} ${className}`}
+      {...props}
+    >
       {children}
     </span>
   );

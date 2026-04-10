@@ -31,11 +31,7 @@ export function CounterControls({
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
-  const {
-    orderFormId,
-    isLoadingOrderForm,
-    requestOrderForm,
-  } = useOrderForm();
+  const { orderFormId, isLoadingOrderForm, requestOrderForm } = useOrderForm();
   const { addProductToCart, config } = useChatContext();
 
   useEffect(() => {
@@ -77,11 +73,19 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
-  
-  const parsed = useMemo(() => parseUuid(uuid, sellerIdProp), [uuid, sellerIdProp]);
-  
+
+  const parsed = useMemo(
+    () => parseUuid(uuid, sellerIdProp),
+    [uuid, sellerIdProp],
+  );
+
   const isAbleToAddProduct = useMemo(() => {
-    return !!(getVtexAccount() && orderFormId && parsed?.skuId && parsed?.sellerId);
+    return !!(
+      getVtexAccount() &&
+      orderFormId &&
+      parsed?.skuId &&
+      parsed?.sellerId
+    );
   }, [getVtexAccount, orderFormId, parsed]);
 
   async function handleAddProductToOrderForm() {
@@ -113,7 +117,7 @@ export function CounterControls({
           handleAddProductToOrderForm();
         }}
         icon="shopping_cart"
-        >
+      >
         Add
       </FSButton>
     );
