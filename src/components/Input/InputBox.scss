@@ -2,9 +2,9 @@ $textarea-border-color: $border-base;
 $textarea-border-color-hover: #858585;
 
 .weni-input-box {
-  margin: 0 $spacing-4;
-  padding: var(--fs-spacing-1);
-  padding-top: var(--fs-spacing-3);
+  margin: $fs-spacing-3;
+  padding: $fs-spacing-1;
+  padding-top: $fs-spacing-3;
   outline: 1px solid $textarea-border-color;
   border-radius: 20px;
   cursor: text;
