@@ -12,6 +12,9 @@
     right: -7px;
   }
 
+  margin-bottom: 20px;
+  margin-right: 20px;
+
   min-width: 48px;
   max-width: 48px;
   height: 48px;
@@ -24,7 +27,7 @@
 
   border: 0;
   border-radius: var(--fs-border-radius-pill);
-  background-color: var(--fs-color-neutral-0);
+  background-color: $fs-button-tertiary-bkg-color;
   border: var(--fs-border-width) solid $fs-border-color;
   color: var(--weni-main-color);
   box-shadow: $fs-drop-shadow-colored;
@@ -71,11 +74,14 @@
     }
   }
 
+  &--as-button:hover {
+    background-color: $fs-button-tertiary-bkg-color-hover;
+  }
+
   &:hover,
   &--hovering {
     max-width: 280px;
     width: auto;
-    background-color: var(--fs-color-neutral-0);
     border: var(--fs-border-width) solid var(--fs-border-color);
   }
 }

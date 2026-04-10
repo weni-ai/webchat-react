@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -24,14 +24,19 @@ export function Launcher() {
     useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
+  const isVoiceModeEnabled = useMemo(() => {
+    return false;
+  }, []);
+
   return (
     <section className="weni-launcher__container">
       <section
-        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''}`}
+        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!isVoiceModeEnabled ? 'weni-launcher--as-button' : ''}`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
+        onClick={toggleChat}
       >
-        {isHovering ? (
+        {isHovering && isVoiceModeEnabled ? (
           <>
             <button
               onClick={toggleChat}

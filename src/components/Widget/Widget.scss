@@ -7,8 +7,6 @@
   right: 0;
   bottom: 0;
 
-  padding: 0 $spacing-5 $spacing-5 0;
-
   box-sizing: border-box;
 
   display: flex;
@@ -29,10 +27,6 @@
 
   .weni-launcher__container {
     transition: height $animation-duration ease-in-out;
-
-    &:hover {
-      height: 48px;
-    }
   }
 
   &.weni-widget--open {
@@ -46,8 +40,6 @@
 
 @media screen and (max-width: 540px) {
   .weni-widget {
-    padding: 0;
-
     .weni--hide-on-mobile {
       display: none;
     }
