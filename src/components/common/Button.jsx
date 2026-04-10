@@ -100,6 +100,7 @@ export function Button({
           name={icon}
           color={getIconColor()}
           filled={iconFilled}
+          size={size}
         />
       )}
 
