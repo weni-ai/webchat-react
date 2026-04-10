@@ -506,6 +506,7 @@ export function ChatProvider({ children, config }) {
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
+    addProductToCart: (props) => service.addProductToCart(props),
     sendOrder: (productItems) => service.sendOrder(productItems),
     sendAttachment: (file) => service.sendAttachment(file),
     stopAndSendAudio,

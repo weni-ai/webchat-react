@@ -17,6 +17,14 @@ export function OrderFormProvider({ children }) {
   const requestOrderForm = useCallback(() => {
     if (fetchStartedRef.current) return;
     fetchStartedRef.current = true;
+
+    const localOrderFormId = getLocalOrderFormId();
+
+    if (localOrderFormId) {
+      setOrderFormId(localOrderFormId);
+      return;
+    }
+
     setIsLoadingOrderForm(true);
 
     fetch('/api/checkout/pub/orderForm')
@@ -37,39 +45,10 @@ export function OrderFormProvider({ children }) {
       });
   }, []);
 
-  const addOrderFormItem = useCallback(
-    (skuId, sellerId, quantity = 1) => {
-      if (!orderFormId) {
-        return Promise.reject(new Error('No orderFormId'));
-      }
-      return fetch(`/api/checkout/pub/orderForm/${orderFormId}/items`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          orderItems: [
-            {
-              id: skuId,
-              quantity,
-              seller: sellerId,
-            },
-          ],
-        }),
-      }).then((res) => {
-        if (!res.ok) throw new Error('Add item failed');
-        return res.json();
-      });
-    },
-    [orderFormId],
-  );
-
   const value = {
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
-    addOrderFormItem,
   };
 
   return (
@@ -98,9 +77,26 @@ export function useOrderForm() {
   return {
     orderFormId: context?.orderFormId ?? null,
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
-    requestOrderForm: context?.requestOrderForm ?? (() => {}),
-    addOrderFormItem:
-      context?.addOrderFormItem ??
-      (() => Promise.reject(new Error('Outside OrderFormProvider'))),
+    requestOrderForm: context?.requestOrderForm ?? (() => { }),
   };
+}
+
+function getLocalOrderFormId() {
+  const fastStoreOrderFormId = window.faststore_sdk_stores?.get('fs::cart').read().id;
+
+  if (fastStoreOrderFormId) {
+    return fastStoreOrderFormId;
+  }
+
+  try {
+    const VTEXIOOrderFormId = localStorage.getItem('orderform') && JSON.parse(localStorage.getItem('orderform')).id;
+
+    if (VTEXIOOrderFormId) {
+      return VTEXIOOrderFormId;
+    }
+  } catch {
+    // continue
+  }
+
+  return null;
 }

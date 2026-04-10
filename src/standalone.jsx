@@ -269,6 +269,20 @@ async function send(message, options = {}) {
 }
 
 /**
+ * Add product to cart
+ * @param {Object} props - Product properties
+ * @param {string} props.VTEXAccountName - VTEX account name
+ * @param {string} props.orderFormId - Order form ID
+ * @param {string} props.seller - Seller ID
+ * @param {string} props.id - Product ID
+ * @returns {Promise<void>}
+ */
+async function addProductToCart(props) {
+  const service = await serviceWhenReady();
+  await service.addProductToCart(props);
+}
+
+/**
  * Clear chat messages while keeping session and connection
  * @returns {Promise<void>}
  */
@@ -406,6 +420,7 @@ const WebChat = {
   close,
   toggle,
   send,
+  addProductToCart,
   clear,
   clearPageHistory,
   setSessionId,

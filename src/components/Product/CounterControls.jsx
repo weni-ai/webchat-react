@@ -1,9 +1,11 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
 import { useOrderForm } from '@/contexts/OrderFormContext';
+import { getVtexAccount } from '@/utils/vtex';
+import { useChatContext } from '@/contexts/ChatContext';
 
 function parseUuid(uuid, sellerIdFallback) {
   if (!uuid || typeof uuid !== 'string') return null;
@@ -33,8 +35,8 @@ export function CounterControls({
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
-    addOrderFormItem,
   } = useOrderForm();
+  const { addProductToCart } = useChatContext();
 
   useEffect(() => {
     requestOrderForm();
@@ -75,22 +77,29 @@ export function CounterControls({
     !hideWhenNotInteracted;
   const isCounterValueInteracted =
     wasCounterInteracted || !hideWhenNotInteracted;
+  
+  const parsed = useMemo(() => parseUuid(uuid, sellerIdProp), [uuid, sellerIdProp]);
+  
+  const isAbleToAddProduct = useMemo(() => {
+    return !!(getVtexAccount() && orderFormId && parsed?.skuId && parsed?.sellerId);
+  }, [getVtexAccount, orderFormId, parsed]);
 
   async function handleAddProductToOrderForm() {
-    const parsed = parseUuid(uuid, sellerIdProp);
-
-    if (!parsed) return;
-
     setIsAddingProduct(true);
 
     try {
-      await addOrderFormItem(parsed.skuId, parsed.sellerId);
+      await addProductToCart({
+        VTEXAccountName: getVtexAccount(),
+        orderFormId: orderFormId,
+        seller: parsed.sellerId,
+        id: parsed.skuId,
+      });
     } finally {
       setIsAddingProduct(false);
     }
   }
 
-  if (isLoadingOrderForm || orderFormId) {
+  if (isAbleToAddProduct && (isLoadingOrderForm || orderFormId)) {
     return (
       <FSButton
         isLoading={isLoadingOrderForm || isAddingProduct}
