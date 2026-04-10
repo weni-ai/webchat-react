@@ -1,3 +1,6 @@
+$fs-button-tertiary-bkg-color: var(--fs-color-neutral-0);
+$fs-button-tertiary-bkg-color-hover: #F5F5F5;
+
 .weni-fs-button {
   display: flex;
   align-items: center;
@@ -19,7 +22,12 @@
 
   &--tertiary {
     color: var(--weni-main-color);
-    background-color: var(--fs-color-neutral-0);
+    background-color: $fs-button-tertiary-bkg-color;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--fs-color-neutral-1);
+    }
   }
 
   &--small, &--medium, &--large {
