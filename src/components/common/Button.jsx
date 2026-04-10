@@ -63,7 +63,7 @@ export function Button({
     const mapColorToVariant = {
       primary: 'white',
       secondary: 'fg-emphasized',
-      tertiary: 'fg-emphasized',
+      tertiary: 'weni-main-color',
       warning: 'white',
       attention: 'white',
     };

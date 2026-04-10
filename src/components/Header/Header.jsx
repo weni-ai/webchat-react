@@ -91,7 +91,6 @@ export function Header() {
             aria-label="Back"
             variant="tertiary"
             icon="arrow_back"
-            iconColor="weni-main-color"
           />
         )}
       </section>
@@ -102,7 +101,6 @@ export function Header() {
             aria-label="Cart"
             variant="primary"
             icon="shopping_cart"
-            iconColor="weni-main-color"
             onClick={() => setCurrentPage({ view: 'cart', title: 'Carrinho' })}
           >
             {cartTotalItems}
@@ -115,7 +113,6 @@ export function Header() {
             aria-label="Fullscreen chat"
             variant="tertiary"
             icon={isChatFullscreen ? 'close_fullscreen' : 'open_in_full'}
-            iconColor="weni-main-color"
             className="weni--hide-on-mobile"
           />
         )}
@@ -125,7 +122,6 @@ export function Header() {
             aria-label="Close chat"
             variant="tertiary"
             icon="keyboard_arrow_down"
-            iconColor="weni-main-color"
           />
         )}
       </section>
