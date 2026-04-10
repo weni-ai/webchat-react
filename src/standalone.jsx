@@ -46,7 +46,7 @@ function extractThemeFromParams(params) {
 
     // Colors - Launcher
     launcherColor: getValue('launcherColor') || getValue('mainColor'),
-    mainColor: getValue('mainColor'),
+    mainColor: getValue('mainColor') || getValue('launcherColor'),
 
     // Colors - Input
     inputBackgroundColor: getValue('inputBackgroundColor'),

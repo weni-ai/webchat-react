@@ -68,6 +68,7 @@ import CloseFullscreen from '@material-symbols/svg-400/rounded/close_fullscreen.
 import CloseFullscreenFilled from '@material-symbols/svg-400/rounded/close_fullscreen-fill.svg?react';
 import ProgressActivity from '@material-symbols/svg-400/rounded/progress_activity.svg?react';
 import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_activity-fill.svg?react';
+import SparkleFilled from '@/assets/icons/sparkle.svg?react';
 
 export const icons = {
   send: {
@@ -209,5 +210,9 @@ export const icons = {
   progress_activity: {
     default: ProgressActivity,
     filled: ProgressActivityFilled,
+  },
+  sparkle: {
+    default: SparkleFilled,
+    filled: SparkleFilled,
   },
 };

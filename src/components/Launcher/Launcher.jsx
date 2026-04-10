@@ -57,9 +57,8 @@ export function Launcher() {
           ) : (
             <Icon
               className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-              name={isChatOpen ? 'close' : 'chat_bubble'}
+              name="sparkle"
               filled
-              color="white"
               size="x-large"
             />
           )

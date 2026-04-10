@@ -24,7 +24,9 @@
 
   border: 0;
   border-radius: var(--fs-border-radius-pill);
-  background-color: var(--launcherColor);
+  background-color: var(--fs-color-neutral-0);
+  border: var(--fs-border-width) solid $fs-border-color;
+  color: var(--weni-main-color);
   
   overflow: hidden;
 
