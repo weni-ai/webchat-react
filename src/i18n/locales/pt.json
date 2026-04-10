@@ -42,7 +42,8 @@
     "total": "Total",
     "continue_shopping": "Continuar a compra",
     "make_order": "Fazer pedido",
-    "add": "Adicionar"
+    "add": "Adicionar",
+    "product_added_to_cart": "{{productName}} adicionado ao carrinho"
   },
   "voice_mode": {
     "title": "Modo de voz",

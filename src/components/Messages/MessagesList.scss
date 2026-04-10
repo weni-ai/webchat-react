@@ -12,6 +12,12 @@
     grid-column: 1 / 2;
   }
 
+  &__conversation-status {
+    width: 100%;
+    justify-self: center;
+    display: flex;
+  }
+
   &__message {
     width: fit-content;
 
@@ -58,4 +64,9 @@
       align-self: flex-end;
     }
   }
+}
+
+.weni-widget .weni-messages-list__group--with-conversation-status {
+  width: 100%;
+  max-width: unset;
 }

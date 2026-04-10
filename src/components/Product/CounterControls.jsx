@@ -21,6 +21,7 @@ function parseUuid(uuid, sellerIdFallback) {
 }
 
 export function CounterControls({
+  productName,
   counter,
   setCounter,
   hideWhenNotInteracted = false,
@@ -33,7 +34,7 @@ export function CounterControls({
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
   const { orderFormId, isLoadingOrderForm, requestOrderForm } = useOrderForm();
-  const { addProductToCart, config } = useChatContext();
+  const { addProductToCart, config, addConversationStatus } = useChatContext();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -100,6 +101,13 @@ export function CounterControls({
         seller: parsed.sellerId,
         id: parsed.skuId,
       });
+
+      addConversationStatus(
+        t('cart.product_added_to_cart', {
+          productName: productName ?? '',
+        }),
+        'success',
+      );
     } finally {
       setIsAddingProduct(false);
     }
@@ -171,6 +179,7 @@ export function CounterControls({
 }
 
 CounterControls.propTypes = {
+  productName: PropTypes.string,
   counter: PropTypes.number.isRequired,
   setCounter: PropTypes.func.isRequired,
   hideWhenNotInteracted: PropTypes.bool,

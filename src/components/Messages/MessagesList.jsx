@@ -62,7 +62,7 @@ Message.propTypes = {
 
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config, isVoiceModeActive, voicePartialTranscript } =
+  const { isVoiceModeActive, voicePartialTranscript } =
     useChatContext();
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
@@ -103,54 +103,12 @@ export function MessagesList() {
             weni-messages-list__direction-group 
             weni-messages-list__direction-group--${group.direction} 
             weni-messages-list__direction-group--${group.direction}-without-avatar'
+            ${group.messages.some((message) => message.type === 'conversation_status') ? 'weni-messages-list__group--with-conversation-status' : ''}
           `}
           key={index}
         >
           {group.messages.map((message, messageIndex) => (
-            <>
-              <MessageContainer
-                className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
-                direction={group.direction}
-                type={message.type}
-                key={message.id || messageIndex}
-              >
-                <Message
-                  message={message}
-                  componentsEnabled={enableComponents(message)}
-                />
-
-                {message.status === 'pending' && (
-                  <Icon
-                    name="schedule"
-                    size="small"
-                    color="fg-muted"
-                  />
-                )}
-
-                {message.status === 'error' && (
-                  <Icon
-                    name="error"
-                    size="small"
-                    color="fg-critical"
-                  />
-                )}
-              </MessageContainer>
-
-              {message.product_list && (
-                <MessageContainer
-                  className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
-                  direction={group.direction}
-                  type={message.type}
-                  key={message.id || messageIndex}
-                >
-                  <ShowItems
-                    buttonText={message.product_list.buttonText}
-                    header={message.header}
-                    productList={message.product_list}
-                  />
-                </MessageContainer>
-              )}
-            </>
+            renderMessage(group, message, messageIndex, enableComponents)
           ))}
         </section>
       ))}
@@ -194,11 +152,67 @@ export function MessagesList() {
         />
       )}
 
-      {/* <FSBadge type="success">Meta Quest 2 added to cart</FSBadge> */}
-
       <div ref={messagesEndRef} />
     </section>
   );
 }
 
 export default MessagesList;
+
+function renderMessage(group, message, messageIndex, enableComponents) {
+  switch (message.type) {
+    case 'conversation_status':
+      return (
+        <section className="weni-messages-list__conversation-status" key={`${message.id || messageIndex}-conversation-status`}>
+          <FSBadge type={message.statusType}>{message.text}</FSBadge>
+        </section>
+      );
+    default:
+      return (
+        <>
+          <MessageContainer
+            className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
+            direction={group.direction}
+            type={message.type}
+            key={`${message.id || messageIndex}-message-container`}
+          >
+            <Message
+              message={message}
+              componentsEnabled={enableComponents(message)}
+            />
+
+            {message.status === 'pending' && (
+              <Icon
+                name="schedule"
+                size="small"
+                color="fg-muted"
+              />
+            )}
+
+            {message.status === 'error' && (
+              <Icon
+                name="error"
+                size="small"
+                color="fg-critical"
+              />
+            )}
+          </MessageContainer>
+
+          {message.product_list && (
+            <MessageContainer
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
+              direction={group.direction}
+              type={message.type}
+              key={`${message.id || messageIndex}-product-list`}
+            >
+              <ShowItems
+                buttonText={message.product_list.buttonText}
+                header={message.header}
+                productList={message.product_list}
+              />
+            </MessageContainer>
+          )}
+        </>
+      );
+  }
+}

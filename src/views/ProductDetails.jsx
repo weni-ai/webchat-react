@@ -63,6 +63,7 @@ export function ProductDetails({ product }) {
         {quantity > 0 && (
           <>
             <CounterControls
+              productName={product.title}
               counter={quantity}
               setCounter={(counter) =>
                 setCounter(product.uuid, product, counter)

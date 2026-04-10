@@ -57,6 +57,7 @@ export function InlineProduct({
   const counterElement =
     hasCounter && layout.counterSlot ? (
       <CounterControls
+        productName={title}
         counter={counter}
         setCounter={setCounter}
         uuid={uuid}
