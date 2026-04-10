@@ -3,7 +3,6 @@
   align-items: center;
   gap: var(--fs-spacing-0);
   width: fit-content;
-  padding: var(--fs-spacing-1) var(--fs-spacing-3);
   cursor: pointer;
   border-radius: var(--fs-border-radius-pill);
   font: var(--fs-text-weight-semibold) var(--fs-text-size-1)/var(--fs-text-size-2) var(--fs-text-face-body);
@@ -23,8 +22,11 @@
     background-color: var(--fs-color-neutral-0);
   }
 
+  &--small, &--medium, &--large {
+    padding: $fs-spacing-1 $fs-spacing-3;
+  }
+
   &--small {
-    padding: var(--fs-spacing-1) var(--fs-spacing-3);
     font: var(--fs-text-weight-semibold) var(--fs-text-size-1)/var(--fs-text-size-2) var(--fs-text-face-body);
   }
 

@@ -27,6 +27,7 @@
   background-color: var(--fs-color-neutral-0);
   border: var(--fs-border-width) solid $fs-border-color;
   color: var(--weni-main-color);
+  box-shadow: $fs-drop-shadow-colored;
   
   overflow: hidden;
 
@@ -41,19 +42,47 @@
     @include weni-animation(0, 0.25s, weni-scale-hover-out);
   }
 
-  &:hover {
-    width: 100px;
-    height: 48px;
-    background-color: var(--fs-color-neutral-0);
-    border: var(--fs-border-width) solid var(--fs-border-color);
+  button {
+    cursor: pointer;
+    display: flex;
+    padding-block: 14px;
+    position: relative;
+    background-color: transparent;
     color: var(--fs-color-neutral-4);
+
+    &:hover {
+      color: var(--weni-main-color);
+    }
+
+    &:first-child {
+      border-radius: var(--fs-border-radius-pill) 0 0 var(--fs-border-radius-pill);
+      padding-left: 20px;
+      padding-right: calc($fs-spacing-1 + $fs-border-width);
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0px;
+        width: $fs-border-width;
+        height: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: var(--fs-border-color);
+      }
+    }
+
+    &:last-child {
+      border-radius: 0 var(--fs-border-radius-pill) var(--fs-border-radius-pill) 0;
+      padding-left: $fs-spacing-1;
+      padding-right: 20px;
+    }
   }
 
-  &__separator {
-    width: var(--fs-border-width);
-    height: var(--fs-text-size-2);
-    background-color: var(--fs-border-color);
-    margin: 0 var(--fs-spacing-1);
+  &:hover, &--hovering {
+    width: auto;
+    background-color: var(--fs-color-neutral-0);
+    border: var(--fs-border-width) solid var(--fs-border-color);
   }
 }
 

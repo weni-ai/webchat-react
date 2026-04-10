@@ -8,6 +8,10 @@
   max-width: var(--weni-widget-width, 360px);
   align-items: flex-end;
 
+  .weni-starter-button {
+    box-shadow: $fs-drop-shadow-colored;
+  }
+
   @include weni-animation(0, 0.25s, weni-slide-in);
 
   &--hiding {

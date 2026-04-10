@@ -26,26 +26,32 @@ export function Launcher() {
 
   return (
     <section className="weni-launcher__container">
-      <button
+      <section
         className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''}`}
-        onClick={toggleChat}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        aria-label="Toggle chat"
       >
         {isHovering ? (
           <>
-            <Icon
-              name="chat_bubble"
-              size="medium"
-            />
+            <button
+              onClick={toggleChat}
+              aria-label="Toggle chat"
+            >
+              <Icon
+                name="chat_bubble"
+                size="medium"
+              />
+            </button>
 
-            <span className="weni-launcher__separator" />
-
-            <Icon
-              name="graphic_eq"
-              size="medium"
-            />
+            <button
+              onClick={toggleChat}
+              aria-label="Toggle chat"
+            >
+              <Icon
+                name="graphic_eq"
+                size="medium"
+              />
+            </button>
           </>
         ) : config.profileAvatar && !isChatOpen ? (
           <Avatar
@@ -61,7 +67,7 @@ export function Launcher() {
             size="x-large"
           />
         )}
-      </button>
+      </section>
 
       <Badge
         isVisible={config.displayUnreadCount && !isChatOpen && unreadCount > 0}
