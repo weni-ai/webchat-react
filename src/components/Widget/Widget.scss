@@ -10,9 +10,6 @@
   padding: 0 $spacing-5 $spacing-5 0;
 
   box-sizing: border-box;
-  width: 100%;
-  height: 600px;
-  max-height: 85vh;
 
   display: flex;
   flex-direction: column;
@@ -47,25 +44,9 @@
   }
 }
 
-.weni-widget--fullscreen {
-  height: 85vh;
-}
-
-
-@media screen and (max-width: 400px) {
-  .weni-widget {
-    padding: 0;
-  }
-}
-
 @media screen and (max-width: 540px) {
   .weni-widget {
     padding: 0;
-    height: 85vh;
-
-    .weni-chat {
-      max-width: 100%;
-    }
 
     .weni--hide-on-mobile {
       display: none;
