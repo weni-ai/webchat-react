@@ -7,22 +7,22 @@
  * Neither the ElevenLabs API key nor long-lived credentials ever reach the browser.
  */
 
-import { AudioCapture } from './AudioCapture';
-import { STTConnection } from './STTConnection';
-import { TTSPlayer } from './TTSPlayer';
-import { TextChunker } from './TextChunker';
-import { EchoGuard } from './EchoGuard';
-import { SessionGuard } from './SessionGuard';
-import { VoiceError, VoiceErrorCode, createVoiceError } from './errors';
-import { mergeVoiceConfig, buildTTSWebSocketURL } from './config';
+import { AudioCapture } from "./AudioCapture";
+import { STTConnection } from "./STTConnection";
+import { TTSPlayer } from "./TTSPlayer";
+import { TextChunker } from "./TextChunker";
+import { EchoGuard } from "./EchoGuard";
+import { SessionGuard } from "./SessionGuard";
+import { VoiceError, VoiceErrorCode, createVoiceError } from "./errors";
+import { mergeVoiceConfig, buildTTSWebSocketURL } from "./config";
 
 export const VoiceSessionState = {
-  IDLE: 'idle',
-  INITIALIZING: 'initializing',
-  LISTENING: 'listening',
-  PROCESSING: 'processing',
-  SPEAKING: 'speaking',
-  ERROR: 'error',
+  IDLE: "idle",
+  INITIALIZING: "initializing",
+  LISTENING: "listening",
+  PROCESSING: "processing",
+  SPEAKING: "speaking",
+  ERROR: "error",
 };
 
 let idCounter = 0;
@@ -31,7 +31,8 @@ function generateSessionId() {
   return `voice-${Date.now()}-${idCounter}`;
 }
 
-const NON_SPEAKABLE = /^[\p{Extended_Pictographic}\s]+$|^https?:\/\/\S+$|^```[\s\S]*```$/u;
+const NON_SPEAKABLE =
+  /^[\p{Extended_Pictographic}\s]+$|^https?:\/\/\S+$|^```[\s\S]*```$/u;
 
 export class VoiceService {
   static NON_SPEAKABLE = NON_SPEAKABLE;
@@ -47,7 +48,7 @@ export class VoiceService {
     this.textChunker = null;
     this.echoGuard = null;
     this.sessionGuard = null;
-    this.partialTranscript = '';
+    this.partialTranscript = "";
     this.error = null;
     this.currentTokens = null;
     this.listeners = new Map();
@@ -63,8 +64,8 @@ export class VoiceService {
   static isSupported() {
     return (
       AudioCapture.isSupported() &&
-      typeof WebSocket !== 'undefined' &&
-      typeof (window.AudioContext || window.webkitAudioContext) !== 'undefined'
+      typeof WebSocket !== "undefined" &&
+      typeof (window.AudioContext || window.webkitAudioContext) !== "undefined"
     );
   }
 
@@ -104,7 +105,7 @@ export class VoiceService {
     if (this.state !== VoiceSessionState.IDLE) {
       throw createVoiceError(
         VoiceErrorCode.UNKNOWN_ERROR,
-        'Cannot start session: not in IDLE state',
+        "Cannot start session: not in IDLE state",
       );
     }
 
@@ -142,11 +143,11 @@ export class VoiceService {
       });
 
       this.setState(VoiceSessionState.LISTENING);
-      this.emit('session:started', {
+      this.emit("session:started", {
         id: this.sessionId,
         startedAt: this.sessionStartTime,
       });
-      this.emit('listening:started');
+      this.emit("listening:started");
 
       return { id: this.sessionId, startedAt: this.sessionStartTime };
     } catch (err) {
@@ -155,7 +156,7 @@ export class VoiceService {
           ? err
           : createVoiceError(VoiceErrorCode.UNKNOWN_ERROR, err);
       this.setState(VoiceSessionState.ERROR);
-      this.emit('error', this.error);
+      this.emit("error", this.error);
       throw this.error;
     }
   }
@@ -164,7 +165,7 @@ export class VoiceService {
    * End the current session and release all resources.
    * @param {string} [reason='user'] - Why the session ended
    */
-  endSession(reason = 'user') {
+  endSession(reason = "user") {
     const duration = this.sessionStartTime
       ? Date.now() - this.sessionStartTime
       : 0;
@@ -179,7 +180,7 @@ export class VoiceService {
     this.sessionGuard?.stop();
     this._resetSilenceFilter();
 
-    this.partialTranscript = '';
+    this.partialTranscript = "";
     this.error = null;
     this.currentTokens = null;
     this.sessionId = null;
@@ -187,12 +188,12 @@ export class VoiceService {
     this.sttConnection = null;
 
     this.setState(VoiceSessionState.IDLE);
-    this.emit('session:ended', {
+    this.emit("session:ended", {
       sessionId: prevSessionId,
       duration,
       reason,
     });
-    this.emit('listening:stopped');
+    this.emit("listening:stopped");
   }
 
   /**
@@ -205,8 +206,8 @@ export class VoiceService {
     if (VoiceService.NON_SPEAKABLE.test(textChunk)) return;
 
     if (this.partialTranscript) {
-      this.partialTranscript = '';
-      this.emit('transcript:partial', { text: '' });
+      this.partialTranscript = "";
+      this.emit("transcript:partial", { text: "" });
     }
 
     const chunk = this.textChunker.addText(textChunk);
@@ -235,7 +236,7 @@ export class VoiceService {
   /** Update language for subsequent STT/TTS requests. */
   setLanguage(languageCode) {
     if (this.config && languageCode) {
-      this.config.languageCode = languageCode.split('-')[0].toLowerCase();
+      this.config.languageCode = languageCode.split("-")[0].toLowerCase();
     }
   }
 
@@ -262,12 +263,12 @@ export class VoiceService {
     if (this.state === newState) return;
     const previousState = this.state;
     this.state = newState;
-    this.emit('state:changed', { state: newState, previousState });
+    this.emit("state:changed", { state: newState, previousState });
   }
 
   /** @private */
   _wireAudioCaptureListeners() {
-    this.audioCapture.on('audioData', (data) => {
+    this.audioCapture.on("audioData", (data) => {
       if (this.state === VoiceSessionState.SPEAKING) {
         const hasVoiceAtThreshold =
           data.energy > this.echoGuard.bargeInThreshold;
@@ -285,7 +286,7 @@ export class VoiceService {
       }
     });
 
-    this.audioCapture.on('voiceActivity', (data) => {
+    this.audioCapture.on("voiceActivity", (data) => {
       if (data.speaking) {
         if (this.state === VoiceSessionState.LISTENING) {
           this.setState(VoiceSessionState.PROCESSING);
@@ -298,18 +299,18 @@ export class VoiceService {
   _wireSTTListeners() {
     const stt = this.sttConnection;
 
-    stt.on('partial', (data) => {
+    stt.on("partial", (data) => {
       if (this.state === VoiceSessionState.SPEAKING) return;
       this.partialTranscript = data.text;
-      this.emit('transcript:partial', { text: data.text });
+      this.emit("transcript:partial", { text: data.text });
     });
 
-    stt.on('committed', (data) => {
+    stt.on("committed", (data) => {
       this.sessionGuard?.recordActivity();
       const text = data.text?.trim();
       if (text) {
-        this.partialTranscript = '';
-        this.emit('transcript:committed', { text });
+        this.partialTranscript = "";
+        this.emit("transcript:committed", { text });
         this.onMessageCallback?.(text);
       }
       if (this.state !== VoiceSessionState.SPEAKING) {
@@ -317,15 +318,15 @@ export class VoiceService {
       }
     });
 
-    stt.on('error', (err) => {
+    stt.on("error", (err) => {
       this.error =
         err instanceof VoiceError
           ? err
           : createVoiceError(VoiceErrorCode.STT_TRANSCRIPTION_FAILED, err);
-      this.emit('error', this.error);
+      this.emit("error", this.error);
     });
 
-    stt.on('close', () => {
+    stt.on("close", () => {
       const reconnectStates = [
         VoiceSessionState.LISTENING,
         VoiceSessionState.PROCESSING,
@@ -363,7 +364,7 @@ export class VoiceService {
           ? err
           : createVoiceError(VoiceErrorCode.STT_CONNECTION_FAILED, err);
       this.error = voiceErr;
-      this.emit('error', voiceErr);
+      this.emit("error", voiceErr);
       this.setState(VoiceSessionState.ERROR);
     } finally {
       this._isReconnectingSTT = false;
@@ -387,12 +388,12 @@ export class VoiceService {
 
   /** @private Wire permanent TTS listeners once during init. */
   _wireTTSListeners() {
-    this.ttsPlayer.on('queue:drained', () => {
+    this.ttsPlayer.on("queue:drained", () => {
       this.echoGuard.onTTSStopped();
       if (this.state === VoiceSessionState.SPEAKING) {
         this.setState(VoiceSessionState.LISTENING);
-        this.emit('speaking:ended');
-        this.emit('listening:started');
+        this.emit("speaking:ended");
+        this.emit("listening:started");
       }
     });
   }
@@ -403,18 +404,18 @@ export class VoiceService {
     this.sessionGuard?.recordActivity();
     this._resetSilenceFilter();
     this.setState(VoiceSessionState.SPEAKING);
-    this.emit('speaking:started', { text });
+    this.emit("speaking:started", { text });
 
     this.ttsPlayer.speak(text).catch((err) => {
       if (this.state !== VoiceSessionState.SPEAKING) return;
 
       this.emit(
-        'error',
+        "error",
         createVoiceError(VoiceErrorCode.TTS_GENERATION_FAILED, err),
       );
       this.echoGuard.onTTSStopped();
       this.setState(VoiceSessionState.LISTENING);
-      this.emit('listening:started');
+      this.emit("listening:started");
     });
   }
 
@@ -427,7 +428,7 @@ export class VoiceService {
     this.audioCapture?.resetSpeakingState();
     this.sessionGuard?.recordActivity();
     this._resetSilenceFilter();
-    this.emit('barge-in');
+    this.emit("barge-in");
   }
 
   // ---------------------------------------------------------------------------
@@ -488,34 +489,34 @@ export class VoiceService {
 
   /** @private */
   _onSessionTimeout() {
-    this.emit('session:timeout', { reason: 'max_duration' });
-    this.endSession('max_duration');
+    this.emit("session:timeout", { reason: "max_duration" });
+    this.endSession("max_duration");
   }
 
   /** @private */
   _onIdleTimeout() {
-    this.emit('session:timeout', { reason: 'idle' });
-    this.endSession('idle');
+    this.emit("session:timeout", { reason: "idle" });
+    this.endSession("idle");
   }
 
   /** @private */
   _onTabHidden() {
     this.audioCapture?.pause();
     this._resetSilenceFilter();
-    this.emit('session:paused', { reason: 'tab_hidden' });
+    this.emit("session:paused", { reason: "tab_hidden" });
   }
 
   /** @private */
   _onTabVisible() {
     this.audioCapture?.resume();
     this.sessionGuard?.recordActivity();
-    this.emit('session:resumed');
+    this.emit("session:resumed");
   }
 
   /** @private */
   _onHiddenExpired() {
-    this.emit('session:timeout', { reason: 'tab_hidden' });
-    this.endSession('tab_hidden');
+    this.emit("session:timeout", { reason: "tab_hidden" });
+    this.endSession("tab_hidden");
   }
 
   // ---------------------------------------------------------------------------
