@@ -7,6 +7,7 @@
   gap: $spacing-2;
   max-width: var(--weni-widget-width, 360px);
   align-items: flex-end;
+  margin-right: 20px;
 
   .weni-starter-button {
     box-shadow: $fs-drop-shadow-colored;
