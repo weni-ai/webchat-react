@@ -7,7 +7,8 @@ import { useMemo } from 'react';
  * This hook provides:
  * - Access to service state (messages, connection, typing)
  * - UI-specific state (chat open/closed, unread count)
- * - Computed values (sorted messages; one group per message for layout)
+ * - Computed values (sorted messages; messageGroups merge consecutive
+ *   messages with same direction and same type)
  * - Helper methods (toggleChat, sendMessage, etc.)
  *
  * All business logic is handled by WeniWebchatService.
@@ -25,15 +26,35 @@ export function useWeniChat() {
     return [...context.messages].sort((a, b) => a.timestamp - b.timestamp);
   }, [context.messages]);
 
-  // One group per message — no batching by direction or type (keeps shape for UI)
-  const messageGroups = useMemo(
-    () =>
-      sortedMessages.map((message) => ({
-        direction: message.direction,
-        messages: [message],
-      })),
-    [sortedMessages],
-  );
+  const messageGroups = useMemo(() => {
+    if (sortedMessages.length === 0) return [];
+
+    const groups = [];
+    let currentGroup = {
+      direction: sortedMessages[0].direction,
+      messages: [sortedMessages[0]],
+    };
+
+    for (let i = 1; i < sortedMessages.length; i++) {
+      const message = sortedMessages[i];
+      const last = currentGroup.messages[currentGroup.messages.length - 1];
+      const sameBlock =
+        message.direction === last.direction && message.type === last.type;
+
+      if (sameBlock) {
+        currentGroup.messages.push(message);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = {
+          direction: message.direction,
+          messages: [message],
+        };
+      }
+    }
+
+    groups.push(currentGroup);
+    return groups;
+  }, [sortedMessages]);
 
   const toggleChat = () => {
     context.setIsChatOpen(!context.isChatOpen);

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, Fragment } from 'react';
 
 import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
@@ -85,10 +85,10 @@ export function MessagesList() {
   }, [isChatOpen]);
 
   const enableComponents = (message) => {
-    const isMessageInLastGroup = messageGroups
+    const inLastGroup = messageGroups
       .at(-1)
       ?.messages.some((m) => m.id === message.id);
-    return message.direction === 'incoming' && isMessageInLastGroup;
+    return message.direction === 'incoming' && inLastGroup;
   };
 
   return (
@@ -97,19 +97,22 @@ export function MessagesList() {
 
       <ChatPresentation />
 
-      {messageGroups.map((group, index) => (
+      {messageGroups.map((group, groupIndex) => (
         <section
           className={`
             weni-messages-list__direction-group 
             weni-messages-list__direction-group--${group.direction} 
             weni-messages-list__direction-group--${group.direction}-without-avatar'
-            ${group.messages.some((message) => message.type === 'conversation_status') ? 'weni-messages-list__group--with-conversation-status' : ''}
+            ${group.messages.some((m) => m.type === 'conversation_status') ? 'weni-messages-list__group--with-conversation-status' : ''}
           `}
-          key={index}
+          key={
+            group.messages[0].id ??
+            `grp-${group.messages[0].timestamp}-${groupIndex}`
+          }
         >
-          {group.messages.map((message, messageIndex) => (
-            renderMessage(group, message, messageIndex, enableComponents)
-          ))}
+          {group.messages.map((message, messageIndex) =>
+            renderMessage(group, message, messageIndex, enableComponents),
+          )}
         </section>
       ))}
 
@@ -160,21 +163,25 @@ export function MessagesList() {
 export default MessagesList;
 
 function renderMessage(group, message, messageIndex, enableComponents) {
+  const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
+
   switch (message.type) {
     case 'conversation_status':
       return (
-        <section className="weni-messages-list__conversation-status" key={`${message.id || messageIndex}-conversation-status`}>
+        <section
+          className="weni-messages-list__conversation-status"
+          key={`${rowKey}-conversation-status`}
+        >
           <FSBadge type={message.statusType}>{message.text}</FSBadge>
         </section>
       );
     default:
       return (
-        <>
+        <Fragment key={`${rowKey}-body`}>
           <MessageContainer
             className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
             direction={group.direction}
             type={message.type}
-            key={`${message.id || messageIndex}-message-container`}
           >
             <Message
               message={message}
@@ -203,7 +210,6 @@ function renderMessage(group, message, messageIndex, enableComponents) {
               className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
               direction={group.direction}
               type={message.type}
-              key={`${message.id || messageIndex}-product-list`}
             >
               <ShowItems
                 buttonText={message.product_list.buttonText}
@@ -212,7 +218,7 @@ function renderMessage(group, message, messageIndex, enableComponents) {
               />
             </MessageContainer>
           )}
-        </>
+        </Fragment>
       );
   }
 }
