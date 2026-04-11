@@ -68,7 +68,9 @@ export function MessagesList() {
     useConversationStarters();
   const messagesEndRef = useRef(null);
   const showConversationStartersFull =
-    questions.length > 0 && !isInChatStartersDismissed;
+    questions.length > 0 &&
+    !isInChatStartersDismissed &&
+    messageGroups.length === 0;
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
