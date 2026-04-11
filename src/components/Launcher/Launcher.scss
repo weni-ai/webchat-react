@@ -4,6 +4,8 @@
 .weni-launcher {
   &__container {
     position: relative;
+    margin-right: 20px;
+    margin-bottom: 20px;
   }
 
   &__badge {
@@ -11,9 +13,6 @@
     top: -7px;
     right: -7px;
   }
-
-  margin-bottom: 20px;
-  margin-right: 20px;
 
   min-width: 48px;
   max-width: 48px;
