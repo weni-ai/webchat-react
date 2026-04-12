@@ -38,8 +38,7 @@ export function useWeniChat() {
     for (let i = 1; i < sortedMessages.length; i++) {
       const message = sortedMessages[i];
       const last = currentGroup.messages[currentGroup.messages.length - 1];
-      const sameBlock =
-        message.direction === last.direction && message.type === last.type;
+      const sameBlock = message.direction === last.direction;
 
       if (sameBlock) {
         currentGroup.messages.push(message);
