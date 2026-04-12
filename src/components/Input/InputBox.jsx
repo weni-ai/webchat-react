@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import { useChatContext } from '@/contexts/ChatContext';
-import { AudioCapture } from '@/services/voice/AudioCapture';
 
 import Button from '@/components/common/Button';
 import { FSButton } from '@/components/common/FSButton';
@@ -14,15 +13,6 @@ import { VoiceModeButton } from '@/components/VoiceMode';
 import { Icon } from '@/components/common/Icon';
 
 import './InputBox.scss';
-
-async function getMicrophonePermissionState() {
-  try {
-    const status = await navigator.permissions.query({ name: 'microphone' });
-    return status.state;
-  } catch {
-    return 'prompt';
-  }
-}
 
 export function InputBox({ maxLength = 5000 }) {
   const { t } = useTranslation();
@@ -43,21 +33,21 @@ export function InputBox({ maxLength = 5000 }) {
     isVoiceModeActive,
     isEnteringVoiceMode,
     voiceModeState,
-    enterVoiceMode,
     exitVoiceMode,
     config,
     mode,
+    isVoiceModePageActive,
+    voiceIntentBanner,
+    handleVoiceModeIntent,
+    handleCloseVoiceModePage,
   } = useChatContext();
 
   const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
   const [hasCameraPermissionState, setHasCameraPermissionState] =
     useState(false);
-  const [voiceIntentBanner, setVoiceIntentBanner] = useState(null);
-  const [isVoiceModePageActive, setIsVoiceModePageActive] = useState(false);
 
   const fileInputRef = useRef(null);
-  const wasVoiceModeActiveRef = useRef(false);
 
   const showVoiceButton = isVoiceEnabledByServer && isVoiceModeSupported;
 
@@ -101,68 +91,6 @@ export function InputBox({ maxLength = 5000 }) {
     getHasAudioPermission();
     getHasCameraPermission();
   }, []);
-
-  useEffect(() => {
-    if (isVoiceModeActive) {
-      wasVoiceModeActiveRef.current = true;
-      let bannerKey = 'voice_mode.intent_status_listening';
-      if (voiceModeState === 'speaking') {
-        bannerKey = 'voice_mode.intent_status_agent_speaking';
-      } else if (voiceModeState === 'processing') {
-        bannerKey = 'voice_mode.intent_status_transcribing';
-      }
-      setVoiceIntentBanner(t(bannerKey));
-    } else if (wasVoiceModeActiveRef.current) {
-      setVoiceIntentBanner(null);
-      wasVoiceModeActiveRef.current = false;
-    }
-  }, [isVoiceModeActive, voiceModeState, t]);
-
-  const handleVoiceModeIntent = useCallback(async () => {
-    if (isVoiceModeActive) {
-      exitVoiceMode();
-      setIsVoiceModePageActive(false);
-      return;
-    }
-
-    setIsVoiceModePageActive(true);
-
-    const permissionState = await getMicrophonePermissionState();
-
-    if (permissionState === 'denied') {
-      setVoiceIntentBanner(t('voice_mode.microphone_disabled_in_browser'));
-      return;
-    }
-
-    if (permissionState === 'granted') {
-      setVoiceIntentBanner(t('voice_mode.connecting'));
-      enterVoiceMode();
-      return;
-    }
-
-    setVoiceIntentBanner(t('voice_mode.check_microphone_browser_settings'));
-    const micGranted =
-      await AudioCapture.requestPermission();
-    if (!micGranted) {
-      setVoiceIntentBanner(t('voice_mode.microphone_disabled_in_browser'));
-      return;
-    }
-
-    setVoiceIntentBanner(t('voice_mode.connecting'));
-    enterVoiceMode();
-  }, [
-    isVoiceModeActive,
-    exitVoiceMode,
-    enterVoiceMode,
-    t,
-  ]);
-
-  const handleCloseVoiceModePage = useCallback(() => {
-    if (isEnteringVoiceMode || isVoiceModeActive) {
-      exitVoiceMode();
-    }
-    setIsVoiceModePageActive(false);
-  }, [isEnteringVoiceMode, isVoiceModeActive, exitVoiceMode]);
 
   const handleRecordAudio = async () => {
     if (hasAudioPermissionState === undefined) {
@@ -296,6 +224,7 @@ export function InputBox({ maxLength = 5000 }) {
 
   return (
     <>
+      {JSON.stringify(isVoiceModePageActive)}
       <section
         className="weni-input-box"
         onClick={handleClick}

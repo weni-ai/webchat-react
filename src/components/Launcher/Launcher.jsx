@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -18,28 +18,77 @@ import './Launcher.scss';
  * TODO: Add dinamically image url as Icon
  */
 export function Launcher() {
-  const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
+  const {
+    isChatOpen,
+    unreadCount,
+    toggleChat,
+    isVoiceModePageActive,
+    handleCloseVoiceModePage,
+    runVoiceModeEntryFlow,
+    isVoiceModeActive,
+    isVoiceEnabledByClient,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+  } = useWeniChat();
 
   const { config, title, tooltipMessage, clearTooltipMessage } =
     useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
-  const isVoiceModeEnabled = useMemo(() => {
-    return config.voiceMode?.enabled;
-  }, [config.voiceMode?.enabled]);
+  const handleChatBubbleClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (isVoiceModePageActive) {
+        handleCloseVoiceModePage();
+      }
+      toggleChat();
+    },
+    [
+      isVoiceModePageActive,
+      handleCloseVoiceModePage,
+      toggleChat,
+    ],
+  );
+
+  const handleGraphicEqClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+
+      const canStartVoice =
+        isVoiceEnabledByClient &&
+        isVoiceEnabledByServer &&
+        isVoiceModeSupported &&
+        !isVoiceModeActive;
+
+      if (canStartVoice) {
+        void runVoiceModeEntryFlow();
+      }
+
+      toggleChat();
+    },
+    [
+      isChatOpen,
+      isVoiceEnabledByClient,
+      isVoiceEnabledByServer,
+      isVoiceModeSupported,
+      isVoiceModeActive,
+      runVoiceModeEntryFlow,
+    ],
+  );
 
   return (
     <section className="weni-launcher__container">
       <section
-        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!isVoiceModeEnabled ? 'weni-launcher--as-button' : ''}`}
+        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!isVoiceEnabledByClient ? 'weni-launcher--as-button' : ''}`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={toggleChat}
       >
-        {isHovering && isVoiceModeEnabled ? (
+        {isHovering && isVoiceEnabledByClient ? (
           <>
             <button
-              onClick={toggleChat}
+              type="button"
+              onClick={handleChatBubbleClick}
               aria-label="Toggle chat"
             >
               <Icon
@@ -49,7 +98,8 @@ export function Launcher() {
             </button>
 
             <button
-              onClick={toggleChat}
+              type="button"
+              onClick={handleGraphicEqClick}
               aria-label="Toggle chat"
             >
               <Icon

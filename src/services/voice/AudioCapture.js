@@ -62,7 +62,7 @@ export class AudioCapture {
    * Query current microphone permission state without prompting.
    * @returns {Promise<PermissionState>}
    */
-  async checkPermission() {
+  static async checkPermission() {
     try {
       const status = await navigator.permissions.query({ name: 'microphone' });
       return status.state;
