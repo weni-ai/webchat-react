@@ -48,7 +48,7 @@ export class AudioCapture {
    * Request microphone permission and return whether it was granted.
    * @returns {Promise<boolean>}
    */
-  async requestPermission() {
+  static async requestPermission() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());

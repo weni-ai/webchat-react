@@ -25,8 +25,8 @@ export function Launcher() {
   const [isHovering, setIsHovering] = useState(false);
 
   const isVoiceModeEnabled = useMemo(() => {
-    return false;
-  }, []);
+    return config.voiceMode?.enabled;
+  }, [config.voiceMode?.enabled]);
 
   return (
     <section className="weni-launcher__container">

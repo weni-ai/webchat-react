@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { OrderFormProvider } from '@/contexts/OrderFormContext';
 import Header from '@/components/Header/Header';
@@ -45,13 +44,11 @@ import './Chat.scss';
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
-  const { t } = useTranslation();
   const {
     isChatOpen,
     isConnectionClosed,
     currentPage,
     config,
-    isEnteringVoiceMode,
     mode,
   } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
@@ -87,11 +84,6 @@ export function Chat() {
         <ChatContent />
       </OrderFormProvider>
       <footer className="weni-chat__footer">
-        {isEnteringVoiceMode && (
-          <p className="weni-chat__voice-permission-hint">
-            {t('voice_mode.microphonePermissionHint')}
-          </p>
-        )}
         {!isConnectionClosed && !currentPage && <InputBox />}
         <PoweredBy />
       </footer>
