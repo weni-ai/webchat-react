@@ -32,7 +32,6 @@ export function InputBox({ maxLength = 5000 }) {
     isVoiceModeSupported,
     isVoiceModeActive,
     isEnteringVoiceMode,
-    voiceModeState,
     exitVoiceMode,
     config,
     mode,
@@ -224,7 +223,6 @@ export function InputBox({ maxLength = 5000 }) {
 
   return (
     <>
-      {JSON.stringify(isVoiceModePageActive)}
       <section
         className="weni-input-box"
         onClick={handleClick}
@@ -297,25 +295,20 @@ export function InputBox({ maxLength = 5000 }) {
 
           {!isEnteringVoiceMode &&
             showVoiceButton &&
-            (isVoiceModeActive || hasNoTextInput) && (
-              <VoiceModeButton
-                onClick={handleVoiceModeIntent}
-                isActive={isVoiceModeActive}
-                voiceState={voiceModeState}
+            hasNoTextInput ? (
+              <VoiceModeButton onClick={handleVoiceModeIntent} />
+            ) : (
+              <Button
+                onClick={handleSend}
+                aria-label="Send message"
+                variant="primary"
+                icon="arrow_upward"
+                size="large"
+                rounded
+                disabled={!text.trim()}
               />
-            )}
-
-          {!isEnteringVoiceMode && (
-            <Button
-              onClick={handleSend}
-              aria-label="Send message"
-              variant="primary"
-              icon="arrow_upward"
-              size="large"
-              rounded
-              disabled={!text.trim()}
-            />
-          )}
+            )
+          }
         </section>
       </section>
     </>
