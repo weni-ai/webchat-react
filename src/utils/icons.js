@@ -28,6 +28,8 @@ import Replay from '@material-symbols/svg-400/rounded/replay.svg?react';
 import ReplayFilled from '@material-symbols/svg-400/rounded/replay-fill.svg?react';
 import ArrowUpward from '@material-symbols/svg-400/rounded/arrow_upward.svg?react';
 import ArrowUpwardFilled from '@material-symbols/svg-400/rounded/arrow_upward-fill.svg?react';
+import ArrowDownward from '@material-symbols/svg-400/rounded/arrow_downward.svg?react';
+import ArrowDownwardFilled from '@material-symbols/svg-400/rounded/arrow_downward-fill.svg?react';
 import ArrowBack from '@material-symbols/svg-400/rounded/arrow_back.svg?react';
 import ArrowBackFilled from '@material-symbols/svg-400/rounded/arrow_back-fill.svg?react';
 import FullScreenExit from '@material-symbols/svg-400/rounded/fullscreen_exit.svg?react';
@@ -130,6 +132,10 @@ export const icons = {
   arrow_upward: {
     default: ArrowUpward,
     filled: ArrowUpwardFilled,
+  },
+  arrow_downward: {
+    default: ArrowDownward,
+    filled: ArrowDownwardFilled,
   },
   arrow_back: {
     default: ArrowBack,

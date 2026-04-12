@@ -12,6 +12,7 @@ export function FSButton({
   icon = '',
   isLoading = false,
   disabled = false,
+  rounded = false,
   ...props
 }) {
   const IconComponent = useMemo(() => {
@@ -29,7 +30,7 @@ export function FSButton({
       return (
         <Icon
           name={icon}
-          size="medium"
+          size={size}
         />
       );
     }
@@ -39,7 +40,7 @@ export function FSButton({
 
   return (
     <button
-      className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} ${className}`}
+      className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} weni-fs-button--${rounded ? 'rounded' : ''} ${className}`}
       disabled={isLoading || disabled}
       {...props}
     >

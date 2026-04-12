@@ -1,4 +1,5 @@
-import { useRef, useEffect, Fragment } from 'react';
+import { useRef, useEffect, Fragment, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
@@ -11,6 +12,7 @@ import TypingIndicator from './TypingIndicator';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
 import { ChatPresentation } from '@/components/Chat/ChatPresentation';
+import { FSButton } from '@/components/common/FSButton';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -21,6 +23,8 @@ import { QuickReplies } from './TextComponents/QuickReplies';
 import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
+
+const BOTTOM_SCROLL_THRESHOLD_PX = 100;
 
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
@@ -68,6 +72,9 @@ export function MessagesList() {
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
+  const listRef = useRef(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [showGoToBottom, setShowGoToBottom] = useState(false);
   const showConversationStartersFull =
     questions.length > 0 &&
     !isInChatStartersDismissed &&
@@ -77,15 +84,36 @@ export function MessagesList() {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messageGroups, isThinking, voicePartialTranscript]);
+  const syncScrollState = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    setScrollTop(top);
+    const distanceFromBottom = el.scrollHeight - top - el.clientHeight;
+    setShowGoToBottom(distanceFromBottom > BOTTOM_SCROLL_THRESHOLD_PX);
+  }, []);
 
   useEffect(() => {
-    setTimeout(() => {
+    const el = listRef.current;
+    if (!el) return undefined;
+    syncScrollState();
+    el.addEventListener('scroll', syncScrollState, { passive: true });
+    return () => el.removeEventListener('scroll', syncScrollState);
+  }, [syncScrollState]);
+
+  useEffect(() => {
+    scrollToBottom();
+    const id = requestAnimationFrame(() => syncScrollState());
+    return () => cancelAnimationFrame(id);
+  }, [messageGroups, isThinking, voicePartialTranscript, isTyping, syncScrollState]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
       scrollToBottom('instant');
+      syncScrollState();
     }, 50);
-  }, [isChatOpen]);
+    return () => clearTimeout(t);
+  }, [isChatOpen, syncScrollState]);
 
   const enableComponents = (message) => {
     const inLastGroup = messageGroups
@@ -95,7 +123,11 @@ export function MessagesList() {
   };
 
   return (
-    <section className="weni-messages-list">
+    <section
+      ref={listRef}
+      className="weni-messages-list"
+      data-scroll-top={scrollTop}
+    >
       {/* TODO: Add empty state when no messages */}
 
       <ChatPresentation />
@@ -158,12 +190,40 @@ export function MessagesList() {
         />
       )}
 
+      {showGoToBottom && (
+        <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
+      )}
+
       <div ref={messagesEndRef} />
     </section>
   );
 }
 
 export default MessagesList;
+
+function GoToBottomButton({ onScrollToBottom }) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="weni-messages-list__go-to-bottom-container">
+      <FSButton
+        variant="tertiary"
+        onClick={onScrollToBottom}
+        size="large"
+        rounded
+        icon="arrow_downward"
+        aria-label={t('messages_list.scroll_to_bottom')}
+        className="weni-messages-list__go-to-bottom-button"
+      >
+        {''}
+      </FSButton>
+    </section>
+  );
+}
+
+GoToBottomButton.propTypes = {
+  onScrollToBottom: PropTypes.func.isRequired,
+};
 
 function renderMessage(group, message, messageIndex, enableComponents) {
   const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;

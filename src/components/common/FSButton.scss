@@ -36,6 +36,10 @@
     padding: $fs-spacing-1 $fs-spacing-3;
   }
 
+  &--rounded {
+    padding: $fs-spacing-1;
+  }
+
   &--small {
     font: var(--fs-text-weight-semibold) var(--fs-text-size-1)/var(--fs-text-size-2) var(--fs-text-face-body);
   }

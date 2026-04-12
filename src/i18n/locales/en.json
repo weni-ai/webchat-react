@@ -23,6 +23,9 @@
       "send": "Send"
     }
   },
+  "messages_list": {
+    "scroll_to_bottom": "Go to bottom"
+  },
   "show_items": {
     "catalog_title": "Available products",
     "items_one": "item",
