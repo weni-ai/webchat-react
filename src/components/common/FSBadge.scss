@@ -9,6 +9,7 @@ $fs-color-success-bkg: #E6F9EC;
   font: var(--fs-text-weight-medium) var(--fs-text-size-0)/1.33 var(--fs-text-face-body);
   color: var(--fs-color-text);
   margin: 0 auto;
+  text-align: center;
 
   &--success {
     background-color: $fs-color-success-bkg;
