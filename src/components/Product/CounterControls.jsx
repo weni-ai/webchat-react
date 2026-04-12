@@ -33,7 +33,12 @@ export function CounterControls({
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
-  const { orderFormId, isLoadingOrderForm, requestOrderForm } = useOrderForm();
+  const {
+    orderFormId,
+    isLoadingOrderForm,
+    requestOrderForm,
+    trySyncFaststoreCart,
+  } = useOrderForm();
   const { addProductToCart, config, addConversationStatus } = useChatContext();
   const { t } = useTranslation();
 
@@ -108,6 +113,8 @@ export function CounterControls({
         }),
         'success',
       );
+
+      trySyncFaststoreCart();
     } finally {
       setIsAddingProduct(false);
     }

@@ -45,10 +45,21 @@ export function OrderFormProvider({ children }) {
       });
   }, []);
 
+  const trySyncFaststoreCart = useCallback(() => {
+    try {
+      const cart = window.faststore_sdk_stores?.get?.('fs::cart');
+      if (!cart?.set || !cart?.read) return;
+      cart.set(cart.read());
+    } catch {
+      // FastStore SDK unavailable or read/set failed — ignore
+    }
+  }, []);
+
   const value = {
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
+    trySyncFaststoreCart,
   };
 
   return (
@@ -78,6 +89,7 @@ export function useOrderForm() {
     orderFormId: context?.orderFormId ?? null,
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
     requestOrderForm: context?.requestOrderForm ?? (() => {}),
+    trySyncFaststoreCart: context?.trySyncFaststoreCart ?? (() => {}),
   };
 }
 
