@@ -17,6 +17,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
 import { ShowItems } from './TextComponents/ShowItems';
+import { QuickReplies } from './TextComponents/QuickReplies';
 import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
@@ -206,6 +207,20 @@ function renderMessage(group, message, messageIndex, enableComponents) {
               />
             )}
           </MessageContainer>
+
+          {Array.isArray(message.quick_replies) &&
+            message.quick_replies.length > 0 && (
+              <MessageContainer
+                className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--quick-replies`}
+                direction={group.direction}
+                type={message.type}
+              >
+                <QuickReplies
+                  quickReplies={message.quick_replies}
+                  disabled={!enableComponents(message)}
+                />
+              </MessageContainer>
+            )}
 
           {message.product_list && (
             <MessageContainer

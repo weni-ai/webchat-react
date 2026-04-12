@@ -22,8 +22,13 @@
     background-color: $fs-button-tertiary-bkg-color;
     transition: background-color 0.2s ease;
 
-    &:hover {
+    &:enabled:hover {
       background-color: var(--fs-color-neutral-1);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: $fs-color-disabled-text;
     }
   }
 

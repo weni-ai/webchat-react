@@ -30,6 +30,13 @@
     max-width: 100%;
   }
 
+  &__message--quick-replies {
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
   &__direction-group--incoming-with-avatar {
     grid-template-columns: minmax($icon-size-5, auto) 1fr;
   }
