@@ -23,6 +23,9 @@
       "send": "Send"
     }
   },
+  "messages_list": {
+    "scroll_to_bottom": "Go to bottom"
+  },
   "show_items": {
     "catalog_title": "Available products",
     "items_one": "item",
@@ -41,7 +44,9 @@
     "discount": "Discount",
     "total": "Total",
     "continue_shopping": "Continue shopping",
-    "make_order": "Make order"
+    "make_order": "Make order",
+    "add": "Add",
+    "product_added_to_cart": "{{productName}} added to cart"
   },
   "voice_mode": {
     "title": "Voice mode",
@@ -50,12 +55,18 @@
     "speaking": "Speaking...",
     "processing": "Processing...",
     "errorTitle": "Something went wrong",
+    "intent_status_agent_speaking": "Agent speaking",
+    "intent_status_listening": "Listening",
+    "intent_status_transcribing": "Transcribing",
     "you": "You",
     "youSaid": "You said",
     "assistant": "Assistant",
     "stop": "Stop",
     "microphonePermissionHint": "Enable microphone in your browser settings to use voice mode",
-    "cancel": "Cancel",
+    "cancel": "Go to text",
+    "check_microphone_browser_settings": "Check your browser settings to enable the microphone.",
+    "connecting": "Connecting",
+    "microphone_disabled_in_browser": "The microphone is currently disabled in your browser.",
     "aria_enter": "Enter voice mode",
     "aria_exit": "Exit voice mode",
     "aria_listening": "Listening for your voice",
@@ -136,8 +147,8 @@
       "title": "Live"
     },
     "preview": {
-      "title": "Preview",
-      "input_placeholder": "Preview only..."
+      "title": "Preview only",
+      "input_placeholder": "Preview mode, test will be available soon"
     }
   }
 }
