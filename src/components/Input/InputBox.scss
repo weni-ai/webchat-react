@@ -13,9 +13,15 @@ $textarea-border-color-hover: #858585;
   gap: $fs-spacing-0;
 
   textarea {
-    font: $font-body;
+    $factor: 16 / 14;
+    $resize-factor: 14 / 16;
+    $position-correction: ($factor - 1) / 2;
+    
+    transform: scale($resize-factor) translateY(-$position-correction * 100%) translateX(-$position-correction * 100%);
+    font: 400 calc($font-size) /* 14px */ / calc(1.5 * $font-size) /* 21px */ $font-family;
+    width: $factor * 100%;
     resize: none;
-    margin-inline: $fs-spacing-1;
+    padding-inline: $fs-spacing-1 * $factor;
   }
 
   &:has(textarea:focus-visible) {

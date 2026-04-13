@@ -149,14 +149,21 @@ export function InputBox({ maxLength = 5000 }) {
 
     textarea.style.height = 'auto';
 
+    let height;
+
     if (textarea.value === '') {
       const temp = textarea.value;
       textarea.value = textarea.placeholder;
-      textarea.style.height = textarea.scrollHeight + 'px';
+      height = textarea.scrollHeight;
+      textarea.style.height = height + 'px';
       textarea.value = temp;
     } else {
-      textarea.style.height = textarea.scrollHeight + 'px';
+      height = textarea.scrollHeight;
+      textarea.style.height = height + 'px';
     }
+
+    const marginBottom = textarea.getBoundingClientRect().height - textarea.scrollHeight;
+    textarea.style.marginBottom = `${marginBottom}px`;
   }, [text]);
   const hasNoTextInput = !text.trim();
   const canDisplayCameraRecorder =
