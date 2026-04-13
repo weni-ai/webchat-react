@@ -141,6 +141,15 @@ describe("AudioCapture", () => {
     });
   });
 
+  describe("requestPermission() (static)", () => {
+    it("matches instance requestPermission() success", async () => {
+      const staticResult = await AudioCapture.requestPermission();
+      const instanceResult = await capture.requestPermission();
+      expect(staticResult).toBe(true);
+      expect(instanceResult).toBe(true);
+    });
+  });
+
   // -- checkPermission ------------------------------------------------------
 
   describe("checkPermission()", () => {
