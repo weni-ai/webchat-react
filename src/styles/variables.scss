@@ -113,6 +113,7 @@ $bg-success: $green-50;
 $bg-warning: $yellow-50;
 $bg-critical: $red-50;
 $fg-base: $gray-500;
+$fg-base-soft: #707070;
 $fg-muted: $gray-300;
 $fg-emphasized: $gray-900;
 $fg-inverted: $white;
@@ -168,7 +169,7 @@ $icon-size-10: 40px;
 
 /* Font */
 $font-size: 16px;
-$font-family: Lato, sans-serif;
+$font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, sans-serif;
 $font-weight-bold: 700;
 $font-weight-medium: 500;
 $font-weight-regular: 400;
@@ -184,14 +185,69 @@ $font-caption-2: 400 calc(0.75 * $font-size) /* 12px */ / calc(1.125 * $font-siz
 
 $sl-color-blue-10: #0366DD;
 
+$sl-color-orange-3: #FFE0AE;
+
+$sl-color-green-3: #AFF79E;
 $sl-color-green-8: #08A822;
 $sl-color-green-10: #017D10;
 
 $sl-color-gray-0: #FFF;
+$sl-color-gray-1: #F5F5F5;
 $sl-color-gray-6: #ADADAD;
+
+$fs-border-radius: 2px;
+$fs-border-radius-medium: 8px;
+$fs-border-radius-pill: 100px;
+
+$fs-button-primary-text-color: $white;
+
+$fs-color-accent-2: #9d8abf;
+$fs-color-disabled-text: #858585;
+$fs-color-main-0: #f1f2f3;
+$fs-color-neutral-0: #ffffff;
+$fs-color-neutral-1: #f1f2f3;
+$fs-color-neutral-4: #858585;
+$fs-color-text: #171a1c;
+$fs-color-text-light: #5d666f;
 
 $sl-bg-base-disabled: #1d1d1d0d;
 $sl-border-base-disabled: $sl-color-gray-6;
+
+$fs-fg-base: #1F1F1F;
+
+$fs-border-width: 1px;
+$fs-border-color: #E0E0E0;
+
+$fs-drop-shadow-colored: 0px 8px 16px 0px #1A34701A;
+
+$fs-button-tertiary-bkg-color: $fs-color-neutral-0;
+$fs-button-tertiary-bkg-color-hover: #F5F5F5;
+
+$fs-text-size-base: 16px;
+$fs-text-size-0: 12px;
+$fs-text-size-1: 14px;
+$fs-text-size-2: $fs-text-size-base;
+
+$fs-text-weight-regular: 400;
+$fs-text-weight-medium: 500;
+$fs-text-weight-bold: 700;
+$fs-text-weight-semibold: 600;
+
+// NUMERIC SCALE
+$fs-spacing-0: .25rem; //  4px
+$fs-spacing-1: .5rem;  //  8px
+$fs-spacing-2: .75rem; // 12px
+$fs-spacing-3: 1rem;   // 16px (--fs-text-size-base)
+$fs-spacing-4: 1.5rem; // 24px
+$fs-spacing-5: 2rem;   // 32px
+$fs-spacing-6: 2.5rem; // 40px
+$fs-spacing-7: 3rem;   // 48px
+$fs-spacing-8: 3.5rem; // 56px
+$fs-spacing-9: 4rem;   // 64px
+$fs-spacing-10: 4.5rem; // 72px
+$fs-spacing-11: 5rem;   // 80px
+$fs-spacing-12: 5.5rem; // 88px
+$fs-spacing-13: 6rem;   // 96px
 
  :root {
   /* Main Color */
@@ -370,6 +426,7 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --sl-color-green-10: #{$sl-color-green-10};
 
   --gray-0: #{$sl-color-gray-0};
+  --gray-1: #{$sl-color-gray-1};
   --gray-6: #{$sl-color-gray-6};
 
   --bg-base-disabled: #{$sl-bg-base-disabled};
@@ -384,6 +441,7 @@ $sl-border-base-disabled: $sl-color-gray-6;
   --bg-warning: #{$bg-warning};
   --bg-critical: #{$bg-critical};
   --fg-base: #{$fg-base};
+  --fg-base-soft: #{$fg-base-soft};
   --fg-muted: #{$fg-muted};
   --fg-emphasized: #{$fg-emphasized};
   --fg-inverted: #{$fg-inverted};

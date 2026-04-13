@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import './Avatar.scss';
 
 /**
@@ -22,6 +22,7 @@ export function Avatar({
   onError = null,
   ...props
 }) {
+  const sizeValue = typeof size === 'number' ? size : size;
   const [imageError, setImageError] = useState(false);
 
   const getInitials = () => {
@@ -46,17 +47,30 @@ export function Avatar({
   const displayInitials = getInitials();
   const showImage = src && !imageError;
 
+  const style = useMemo(() => {
+    if (typeof size === 'number') {
+      return {
+        width: sizeValue,
+        height: sizeValue,
+        fontSize: sizeValue * 0.45,
+      };
+    }
+
+    return {};
+  }, [size]);
+
   return (
     <section
       className={`
         weni-avatar
-        weni-avatar--${size}
+        ${typeof size === 'string' ? `weni-avatar--${size}` : ''}
         weni-avatar--${shape}
         ${!showImage && 'weni-avatar--with-background-color'}
         ${className}
       `}
       role="img"
       aria-label={alt || name || 'Avatar'}
+      style={style}
       {...props}
     >
       {showImage ? (
@@ -79,7 +93,10 @@ Avatar.propTypes = {
   src: PropTypes.string,
   alt: PropTypes.string,
   name: PropTypes.string,
-  size: PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']),
+  size: PropTypes.oneOfType([
+    PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']),
+    PropTypes.number,
+  ]),
   /** Avatar shape */
   shape: PropTypes.oneOf(['circle', 'square', 'rounded']),
   /** Additional CSS classes */
