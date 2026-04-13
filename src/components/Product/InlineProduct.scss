@@ -6,7 +6,7 @@
   border-radius: $border-radius-2;
   gap: $spacing-2;
   padding-right: $spacing-2;
-  border: var(--fs-border-width) solid var(--fs-border-color);
+  border: $fs-border-width solid $fs-border-color;
 
   &__image-container {
     width: 72px;
@@ -39,14 +39,14 @@
   }
 
   &__title {
-    font: var(--fs-text-weight-medium) var(--fs-text-size-2)/1.25 $font-family;
-    color: var(--fs-color-text);
+    font: $fs-text-weight-medium #{$fs-text-size-2}/1.25 $font-family;
+    color: $fs-color-text;
   }
 
   &__line {
     font: $font-caption-2;
-    font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.42 $font-family;
-    color: var(--fs-color-text-light);
+    font: $fs-text-weight-regular #{$fs-text-size-1}/1.42 $font-family;
+    color: $fs-color-text-light;
   }
 
   &__title, &__line {
@@ -57,28 +57,28 @@
   }
 
   &__line {
-    margin-top: var(--fs-spacing-0);
+    margin-top: $fs-spacing-0;
   }
 
   &__price-container {
     margin-top: 2px;
     display: flex;
     flex-direction: row;
-    gap: var(--fs-spacing-1);
+    gap: $fs-spacing-1;
     align-items: center;
   }
 
   &__price {
-    font: var(--fs-text-weight-bold) var(--fs-text-size-2)/1.5 $font-family;
-    color: var(--fs-color-text-light);
+    font: $fs-text-weight-bold #{$fs-text-size-2}/1.5 $font-family;
+    color: $fs-color-text-light;
 
     &--product {
       color: $fg-base;
     }
 
     &--muted {
-      font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.42 $font-family;
-      color: var(--fs-color-text-light);
+      font: $fs-text-weight-regular #{$fs-text-size-1}/1.42 $font-family;
+      color: $fs-color-text-light;
       text-decoration: line-through;
     }
   }

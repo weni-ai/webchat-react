@@ -5,13 +5,13 @@
 
   &__title {
     margin-top: $spacing-2;
-    font: var(--fs-text-weight-semibold) var(--fs-text-size-2)/1.5 $font-family;
+    font: $fs-text-weight-semibold #{$fs-text-size-2}/1.5 $font-family;
     color: $fs-fg-base;
   }
 
   &__subtitle {
     margin-top: $spacing-1;
-    font: var(--fs-text-weight-regular) var(--fs-text-size-1)/1.42 $font-family;
+    font: $fs-text-weight-regular #{$fs-text-size-1}/1.42 $font-family;
     color: $fs-fg-base;
   }
 }

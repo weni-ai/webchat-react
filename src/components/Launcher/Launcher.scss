@@ -25,9 +25,9 @@
   justify-content: center;
 
   border: 0;
-  border-radius: var(--fs-border-radius-pill);
+  border-radius: $fs-border-radius-pill;
   background-color: $fs-button-tertiary-bkg-color;
-  border: var(--fs-border-width) solid $fs-border-color;
+  border: $fs-border-width solid $fs-border-color;
   color: var(--weni-main-color);
   box-shadow: $fs-drop-shadow-colored;
 
@@ -42,14 +42,14 @@
     padding-block: 14px;
     position: relative;
     background-color: transparent;
-    color: var(--fs-color-neutral-4);
+    color: $fs-color-neutral-4;
 
     &:hover {
       color: var(--weni-main-color);
     }
 
     &:first-child {
-      border-radius: var(--fs-border-radius-pill) 0 0 var(--fs-border-radius-pill);
+      border-radius: $fs-border-radius-pill 0 0 $fs-border-radius-pill;
       padding-left: 20px;
       padding-right: calc($fs-spacing-1 + $fs-border-width);
 
@@ -62,12 +62,12 @@
         height: 16px;
         top: 50%;
         transform: translateY(-50%);
-        background-color: var(--fs-border-color);
+        background-color: $fs-border-color;
       }
     }
 
     &:last-child {
-      border-radius: 0 var(--fs-border-radius-pill) var(--fs-border-radius-pill) 0;
+      border-radius: 0 $fs-border-radius-pill $fs-border-radius-pill 0;
       padding-left: $fs-spacing-1;
       padding-right: 20px;
     }
@@ -81,7 +81,7 @@
   &--hovering {
     max-width: 280px;
     width: auto;
-    border: var(--fs-border-width) solid var(--fs-border-color);
+    border: $fs-border-width solid $fs-border-color;
   }
 }
 

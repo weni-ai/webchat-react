@@ -10,12 +10,12 @@ $textarea-border-color-hover: #858585;
   cursor: text;
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-0);
+  gap: $fs-spacing-0;
 
   textarea {
     font: $font-body;
     resize: none;
-    margin-inline: var(--fs-spacing-1);
+    margin-inline: $fs-spacing-1;
   }
 
   &:has(textarea:focus-visible) {
@@ -79,7 +79,7 @@ $textarea-border-color-hover: #858585;
   padding: $fs-spacing-3;
 
   &__intent-banner {
-    font: var(--fs-text-weight-regular) var(--fs-text-size-0)/1.33 $font-family;
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
     color: $fs-fg-base;
     text-align: center;
 
@@ -123,7 +123,7 @@ $textarea-border-color-hover: #858585;
       border-radius: 50%;
       padding: $fs-spacing-2;
       background-color: var(--weni-main-color);
-      color: var(--fs-color-neutral-0);
+      color: $fs-color-neutral-0;
       z-index: 0;
       transition: background-color 0.25s ease;
     }

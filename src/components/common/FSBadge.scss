@@ -4,10 +4,10 @@ $fs-color-success-bkg: #E6F9EC;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--fs-border-radius-pill);
-  padding: var(--fs-spacing-0) var(--fs-spacing-2);
-  font: var(--fs-text-weight-medium) var(--fs-text-size-0)/1.33 var(--fs-text-face-body);
-  color: var(--fs-color-text);
+  border-radius: $fs-border-radius-pill;
+  padding: $fs-spacing-0 $fs-spacing-2;
+  font: $fs-text-weight-medium #{$fs-text-size-0}/1.33 $font-family;
+  color: $fs-color-text;
   margin: 0 auto;
   text-align: center;
 

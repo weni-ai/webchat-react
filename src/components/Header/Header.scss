@@ -36,7 +36,7 @@
 
   &__tag {
     font: $font-caption-1;
-    font: var(--fs-text-weight-medium) var(--fs-text-size-1)/var(--fs-text-size-base) $font-family;
+    font: $fs-text-weight-medium #{$fs-text-size-1}/#{$fs-text-size-base} $font-family;
     color: $fs-fg-base;
 
     border-radius: $border-radius-4;

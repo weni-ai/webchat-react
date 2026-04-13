@@ -9,7 +9,7 @@
   &__products {
     display: flex;
     flex-direction: column;
-    gap: var(--fs-spacing-3);
+    gap: $fs-spacing-3;
     overflow: auto;
   }
 
@@ -19,7 +19,7 @@
     gap: $spacing-2;
 
     &__title {
-      font: var(--fs-text-weight-regular) var(--fs-text-size-0)/1.33 $font-family;
+      font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
       color: $fg-base;
     }
   }

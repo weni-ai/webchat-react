@@ -195,9 +195,20 @@ $sl-color-gray-0: #FFF;
 $sl-color-gray-1: #F5F5F5;
 $sl-color-gray-6: #ADADAD;
 
-$fs-color-neutral-4: #858585;
+$fs-border-radius: 2px;
+$fs-border-radius-medium: 8px;
+$fs-border-radius-pill: 100px;
 
+$fs-button-primary-text-color: $white;
+
+$fs-color-accent-2: #9d8abf;
 $fs-color-disabled-text: #858585;
+$fs-color-main-0: #f1f2f3;
+$fs-color-neutral-0: #ffffff;
+$fs-color-neutral-1: #f1f2f3;
+$fs-color-neutral-4: #858585;
+$fs-color-text: #171a1c;
+$fs-color-text-light: #5d666f;
 
 $sl-bg-base-disabled: #1d1d1d0d;
 $sl-border-base-disabled: $sl-color-gray-6;
@@ -209,8 +220,18 @@ $fs-border-color: #E0E0E0;
 
 $fs-drop-shadow-colored: 0px 8px 16px 0px #1A34701A;
 
-$fs-button-tertiary-bkg-color: var(--fs-color-neutral-0);
+$fs-button-tertiary-bkg-color: $fs-color-neutral-0;
 $fs-button-tertiary-bkg-color-hover: #F5F5F5;
+
+$fs-text-size-base: 16px;
+$fs-text-size-0: 12px;
+$fs-text-size-1: 14px;
+$fs-text-size-2: $fs-text-size-base;
+
+$fs-text-weight-regular: 400;
+$fs-text-weight-medium: 500;
+$fs-text-weight-bold: 700;
+$fs-text-weight-semibold: 600;
 
 // NUMERIC SCALE
 $fs-spacing-0: .25rem; //  4px
@@ -438,6 +459,4 @@ $fs-spacing-13: 6rem;   // 96px
   --border-success: #{$border-success};
   --border-warning: #{$border-warning};
   --border-critical: #{$border-critical};
-
-  --fs-text-face-body: #{$font-family};
 }
