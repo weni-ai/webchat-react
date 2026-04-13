@@ -162,7 +162,8 @@ export function InputBox({ maxLength = 5000 }) {
       textarea.style.height = height + 'px';
     }
 
-    const marginBottom = textarea.getBoundingClientRect().height - textarea.scrollHeight;
+    const marginBottom =
+      textarea.getBoundingClientRect().height - textarea.scrollHeight;
     textarea.style.marginBottom = `${marginBottom}px`;
   }, [text]);
   const hasNoTextInput = !text.trim();
