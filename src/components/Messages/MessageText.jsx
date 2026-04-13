@@ -3,10 +3,8 @@ import PropTypes from 'prop-types';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
-import { QuickReplies } from './TextComponents/QuickReplies';
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
-import { ShowItems } from './TextComponents/ShowItems';
 
 import './MessageText.scss';
 
@@ -15,7 +13,6 @@ import './MessageText.scss';
  * Renders text with proper formatting, links, and markdown syntax
  * TODO: Add timestamp display
  * TODO: Show message status (sent, delivered, read)
- * TODO: Handle quick replies
  */
 export function MessageText({ message, componentsEnabled }) {
   const html = useMemo(() => {
@@ -57,13 +54,6 @@ export function MessageText({ message, componentsEnabled }) {
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
-      {message.quick_replies && (
-        <QuickReplies
-          quickReplies={message.quick_replies}
-          disabled={!componentsEnabled}
-        />
-      )}
-
       {message.list_message && (
         <ListMessage
           buttonText={message.list_message.button_text}
@@ -76,15 +66,6 @@ export function MessageText({ message, componentsEnabled }) {
         <CallToAction
           buttonText={message.cta_message.display_text}
           url={message.cta_message.url}
-          disabled={!componentsEnabled}
-        />
-      )}
-
-      {message.product_list && (
-        <ShowItems
-          buttonText={message.product_list.buttonText}
-          header={message.header}
-          productList={message.product_list}
           disabled={!componentsEnabled}
         />
       )}
@@ -102,7 +83,6 @@ MessageText.propTypes = {
     status: PropTypes.string,
     metadata: PropTypes.object,
     header: PropTypes.string,
-    quick_replies: PropTypes.array,
     list_message: PropTypes.shape({
       button_text: PropTypes.string.isRequired,
       list_items: PropTypes.array.isRequired,
