@@ -97,7 +97,11 @@ export function MessagesList() {
     if (!el) return undefined;
     syncScrollState();
     el.addEventListener('scroll', syncScrollState, { passive: true });
-    return () => el.removeEventListener('scroll', syncScrollState);
+    window.addEventListener('resize', syncScrollState);
+    return () => {
+      el.removeEventListener('scroll', syncScrollState);
+      window.removeEventListener('resize', syncScrollState);
+    };
   }, [syncScrollState]);
 
   useEffect(() => {
