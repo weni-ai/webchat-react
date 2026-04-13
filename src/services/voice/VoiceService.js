@@ -31,7 +31,8 @@ function generateSessionId() {
   return `voice-${Date.now()}-${idCounter}`;
 }
 
-const NON_SPEAKABLE = /^[\p{Emoji}\s]+$|^https?:\/\/\S+$|^```[\s\S]*```$/u;
+const NON_SPEAKABLE =
+  /^[\p{Extended_Pictographic}\s]+$|^https?:\/\/\S+$|^```[\s\S]*```$/u;
 
 export class VoiceService {
   static NON_SPEAKABLE = NON_SPEAKABLE;

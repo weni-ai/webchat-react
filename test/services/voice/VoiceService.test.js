@@ -544,6 +544,69 @@ describe("VoiceService", () => {
       svc = new VoiceService();
       expect(() => svc.processTextChunk("hi")).not.toThrow();
     });
+
+    it("skips emoji-only chunks", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("😀🎉");
+
+      expect(svc.textChunker.addText).not.toHaveBeenCalled();
+    });
+
+    it("skips text-presentation pictographic chunks", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("☀☺");
+
+      expect(svc.textChunker.addText).not.toHaveBeenCalled();
+    });
+
+    it("skips bare URL chunks", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("https://example.com/path?q=1");
+
+      expect(svc.textChunker.addText).not.toHaveBeenCalled();
+    });
+
+    it("skips fenced code block chunks", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("```js\nconsole.log(1);\n```");
+
+      expect(svc.textChunker.addText).not.toHaveBeenCalled();
+    });
+
+    it("does not skip chunks containing only digits", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("42");
+
+      expect(svc.textChunker.addText).toHaveBeenCalledWith("42");
+    });
+
+    it("does not skip chunks mixing text and numbers", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("item 3");
+
+      expect(svc.textChunker.addText).toHaveBeenCalledWith("item 3");
+    });
+
+    it("does not skip chunks mixing emoji and text", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+
+      svc.processTextChunk("hello 😀 world");
+
+      expect(svc.textChunker.addText).toHaveBeenCalledWith("hello 😀 world");
+    });
   });
 
   // -- Transcription interruption on agent message ---------------------------
