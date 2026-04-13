@@ -16,14 +16,21 @@ $textarea-border-color-hover: #858585;
     $factor: 16 / 14;
     $resize-factor: 14 / 16;
     $position-correction: ($factor - 1) / 2;
-    $initial-margin-bottom: -3px;
+
+    $initial-font-size: 14px;
+    $initial-line-height: 21px;
+
+    $font-size: $initial-font-size * $factor;
+    $line-height: $initial-line-height * $factor;
+
+    $margin-bottom: $initial-line-height - $line-height;
 
     transform: scale($resize-factor) translateY(-$position-correction * 100%) translateX(-$position-correction * 100%);
-    font: 400 calc($font-size) /* 14px */ / calc(1.5 * $font-size) /* 21px */ $font-family;
+    font: 400 #{$font-size} / #{$line-height} $font-family;
     width: $factor * 100%;
     resize: none;
     padding-inline: $fs-spacing-1 * $factor;
-    margin-bottom: $initial-margin-bottom;
+    margin-bottom: $margin-bottom;
   }
 
   &:has(textarea:focus-visible) {
