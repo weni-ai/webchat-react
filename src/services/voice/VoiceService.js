@@ -13,6 +13,7 @@ import { TTSPlayer } from './TTSPlayer';
 import { TextChunker } from './TextChunker';
 import { EchoGuard } from './EchoGuard';
 import { SessionGuard } from './SessionGuard';
+import { sanitizeForTTS } from './sanitizeForTTS';
 import { VoiceError, VoiceErrorCode, createVoiceError } from './errors';
 import { mergeVoiceConfig, buildTTSWebSocketURL } from './config';
 
@@ -210,11 +211,11 @@ export class VoiceService {
       this.emit('transcript:partial', { text: '' });
     }
 
-    const chunk = this.textChunker.addText(textChunk);
+    const chunk = sanitizeForTTS(this.textChunker.addText(textChunk));
     if (chunk) this._speak(chunk);
 
     if (isComplete) {
-      const remaining = this.textChunker.flush();
+      const remaining = sanitizeForTTS(this.textChunker.flush());
       if (remaining) this._speak(remaining);
     }
   }
