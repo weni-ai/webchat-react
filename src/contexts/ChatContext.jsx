@@ -481,7 +481,9 @@ export function ChatProvider({ children, config }) {
       return;
     }
 
-    setVoiceIntentBanner(i18n.t('voice_mode.check_microphone_browser_settings'));
+    setVoiceIntentBanner(
+      i18n.t('voice_mode.check_microphone_browser_settings'),
+    );
     const micGranted = await AudioCapture.requestPermission();
     if (!micGranted) {
       setVoiceIntentBanner(i18n.t('voice_mode.microphone_disabled_in_browser'));
@@ -577,7 +579,8 @@ export function ChatProvider({ children, config }) {
     connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
     addProductToCart: (props) => service.addProductToCart(props),
-    addConversationStatus: (text, status) => service.addConversationStatus(text, status),
+    addConversationStatus: (text, status) =>
+      service.addConversationStatus(text, status),
     sendOrder: (productItems) => service.sendOrder(productItems),
     sendAttachment: (file) => service.sendAttachment(file),
     stopAndSendAudio,

@@ -200,12 +200,17 @@ export function InputBox({ maxLength = 5000 }) {
           {voiceIntentBanner}
         </p>
 
-        <section className={`voice-mode-page__loading-indicator ${!isVoiceModeActive ? 'voice-mode-page__loading-indicator--disabled' : ''}`}>
+        <section
+          className={`voice-mode-page__loading-indicator ${!isVoiceModeActive ? 'voice-mode-page__loading-indicator--disabled' : ''}`}
+        >
           <section className="voice-mode-page__loading-indicator-item"></section>
           <section className="voice-mode-page__loading-indicator-item"></section>
 
           <section className="voice-mode-page__loading-indicator-icon">
-            <Icon name="graphic_eq" size="x-large" />
+            <Icon
+              name="graphic_eq"
+              size="x-large"
+            />
           </section>
         </section>
 
@@ -293,22 +298,19 @@ export function InputBox({ maxLength = 5000 }) {
             </Button>
           )}
 
-          {!isEnteringVoiceMode &&
-            showVoiceButton &&
-            hasNoTextInput ? (
-              <VoiceModeButton onClick={handleVoiceModeIntent} />
-            ) : (
-              <Button
-                onClick={handleSend}
-                aria-label="Send message"
-                variant="primary"
-                icon="arrow_upward"
-                size="large"
-                rounded
-                disabled={!text.trim()}
-              />
-            )
-          }
+          {!isEnteringVoiceMode && showVoiceButton && hasNoTextInput ? (
+            <VoiceModeButton onClick={handleVoiceModeIntent} />
+          ) : (
+            <Button
+              onClick={handleSend}
+              aria-label="Send message"
+              variant="primary"
+              icon="arrow_upward"
+              size="large"
+              rounded
+              disabled={!text.trim()}
+            />
+          )}
         </section>
       </section>
     </>

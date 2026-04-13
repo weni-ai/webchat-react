@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -43,11 +43,7 @@ export function Launcher() {
       }
       toggleChat();
     },
-    [
-      isVoiceModePageActive,
-      handleCloseVoiceModePage,
-      toggleChat,
-    ],
+    [isVoiceModePageActive, handleCloseVoiceModePage, toggleChat],
   );
 
   const handleGraphicEqClick = useCallback(

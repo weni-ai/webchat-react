@@ -30,7 +30,10 @@ export function ProductCatalog({ productGroups }) {
             <h2 className="weni-product-group__title">{productGroup.title}</h2>
 
             {productGroup.products.map((product, productIndex) => (
-              <ProductCatalogItem key={productIndex} product={product} />
+              <ProductCatalogItem
+                key={productIndex}
+                product={product}
+              />
             ))}
           </section>
         ))}
@@ -82,9 +85,7 @@ export function ProductCatalogItem({ product }) {
       salePrice={product.salePrice}
       currency={product.currency}
       counter={getCounter(product.uuid)}
-      setCounter={(counter) =>
-        setCounter(product.uuid, product, counter)
-      }
+      setCounter={(counter) => setCounter(product.uuid, product, counter)}
       uuid={product.uuid}
       sellerId={product.sellerId}
       productURL={product.productURL}

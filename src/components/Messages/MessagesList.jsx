@@ -67,8 +67,7 @@ Message.propTypes = {
 
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { isVoiceModeActive, voicePartialTranscript } =
-    useChatContext();
+  const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
@@ -105,7 +104,13 @@ export function MessagesList() {
     scrollToBottom();
     const id = requestAnimationFrame(() => syncScrollState());
     return () => cancelAnimationFrame(id);
-  }, [messageGroups, isThinking, voicePartialTranscript, isTyping, syncScrollState]);
+  }, [
+    messageGroups,
+    isThinking,
+    voicePartialTranscript,
+    isTyping,
+    syncScrollState,
+  ]);
 
   useEffect(() => {
     const t = setTimeout(() => {

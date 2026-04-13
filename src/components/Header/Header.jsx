@@ -60,7 +60,10 @@ export function Header() {
           </section>
         )}
 
-        <ModeTag isModeVisible={config.showMode} mode={config.mode} />
+        <ModeTag
+          isModeVisible={config.showMode}
+          mode={config.mode}
+        />
       </hgroup>
 
       <section className="weni-chat-header__actions">
@@ -99,7 +102,6 @@ export function Header() {
 
 export default Header;
 
-
 function ModeTag({ isModeVisible, mode }) {
   const { t } = useTranslation();
 
@@ -108,9 +110,7 @@ function ModeTag({ isModeVisible, mode }) {
   }
 
   return (
-    <h3
-      className={`weni-chat-header__tag weni-chat-header__tag--${mode}`}
-    >
+    <h3 className={`weni-chat-header__tag weni-chat-header__tag--${mode}`}>
       {t(`mode.${mode}.title`)}
     </h3>
   );

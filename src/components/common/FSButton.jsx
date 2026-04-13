@@ -59,4 +59,5 @@ FSButton.propTypes = {
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   icon: PropTypes.string,
   className: PropTypes.string,
+  rounded: PropTypes.bool,
 };
