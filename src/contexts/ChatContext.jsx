@@ -161,6 +161,10 @@ export function ChatProvider({ children, config }) {
     setPageHistory([]);
   };
 
+  const clearCart = () => {
+    setCart({});
+  };
+
   const pushPage = (page) => {
     if (page === null) {
       // If null is passed, clear the history (go to chat)
@@ -311,6 +315,7 @@ export function ChatProvider({ children, config }) {
     service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
 
     service.clearPageHistory = clearPageHistory;
+    service.clearCart = clearCart;
 
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
@@ -319,6 +324,7 @@ export function ChatProvider({ children, config }) {
         voiceServiceRef.current = null;
       }
       delete service.clearPageHistory;
+      delete service.clearCart;
       service.removeAllListeners();
       service.disconnect();
     };
@@ -487,6 +493,7 @@ export function ChatProvider({ children, config }) {
     pageHistory,
     cart,
     setCart,
+    clearCart,
     mode,
     isModeVisible: showMode,
 
