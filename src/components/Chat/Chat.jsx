@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useVtexCxVisualViewportCssVars } from '@/hooks/useVtexCxVisualViewportCssVars';
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { OrderFormProvider } from '@/contexts/OrderFormContext';
 import Header from '@/components/Header/Header';
@@ -10,6 +11,8 @@ import { ListMessage } from '@/views/ListMessage';
 import { ProductCatalog } from '@/views/ProductCatalog';
 import { ProductDetails } from '@/views/ProductDetails';
 import { Cart } from '@/views/Cart';
+
+import './Chat.scss';
 
 function ChatContent() {
   const { isConnectionClosed, currentPage } = useWeniChat();
@@ -37,7 +40,6 @@ function ChatContent() {
   return <MessagesList />;
 }
 
-import './Chat.scss';
 /**
  * Chat - Main chat container
  * TODO: Handle fullscreen mode
@@ -48,6 +50,8 @@ export function Chat() {
     useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const chatRootRef = useRef(null);
+  useVtexCxVisualViewportCssVars(chatRootRef, shouldRender);
 
   useEffect(() => {
     if (isChatOpen) {
@@ -72,6 +76,7 @@ export function Chat() {
 
   return (
     <section
+      ref={chatRootRef}
       className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
     >
       <Header />
