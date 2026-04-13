@@ -4,12 +4,12 @@ import './PoweredBy.scss';
 export function PoweredBy() {
   return (
     <a
-      href="https://weni.ai"
+      href="https://vtex.com/en-us/products/agentic-cx"
       className="weni-poweredby"
       target="_blank"
       rel="noopener noreferrer"
     >
-      <p className="weni-poweredby__text">Powered by Weni by VTEX</p>
+      <p className="weni-poweredby__text">Powered by VTEX Agentic CX</p>
     </a>
   );
 }
