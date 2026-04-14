@@ -113,9 +113,9 @@ export function Launcher() {
         ) : (
           <Icon
             className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-            name="sparkle"
+            name="rounded_x"
+            size="medium"
             filled
-            size="x-large"
           />
         )}
       </section>
