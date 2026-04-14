@@ -586,6 +586,7 @@ export function ChatProvider({ children, config }) {
     connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
     addProductToCart: (props) => service.addProductToCart(props),
+    setCustomField: (field, value) => service.setCustomField(field, value),
     addConversationStatus: (text, status) =>
       service.addConversationStatus(text, status),
     sendOrder: (productItems) => service.sendOrder(productItems),
