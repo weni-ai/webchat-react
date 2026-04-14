@@ -1,33 +1,40 @@
 .weni-messages-list {
-  padding: $spacing-4 $spacing-2;
+  padding: $fs-spacing-3;
   
   display: flex;
   flex-direction: column;
-  gap: $spacing-3;
  
   height: 100%;
   overflow: hidden auto;
 
-  &__avatar {
-    grid-column: 1 / 2;
+  &__conversation-status {
+    width: 100%;
+    justify-self: center;
+    display: flex;
   }
 
   &__message {
     width: fit-content;
-
-    &--incoming {
-      grid-column: 2 / 3;
-      justify-self: flex-start;
-    }
-
-    &--outgoing {
-      justify-self: flex-end;
-    }
+    max-width: 75%;
 
     &--voice-transcribing {
       opacity: 0.55;
       animation: none;
     }
+  }
+
+  &__message--product-list {
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  &__message--quick-replies {
+    border: none;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   &__direction-group--incoming-with-avatar {
@@ -38,18 +45,59 @@
     grid-template-columns: 1fr;
   }
 
-  &__direction-group {
-    max-width: 75%;
+  > section {
+    margin-top: $spacing-4;
+  }
 
-    display: grid;
-    gap: $spacing-1;
+  &__direction-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
 
     &--incoming {
-      align-self: flex-start;
+      align-items: flex-start;
     }
 
     &--outgoing {
-      align-self: flex-end;
+      align-items: flex-end;
     }
+  }
+
+  &__go-to-bottom-container {
+    display: flex;
+    justify-content: center;
+    position: sticky;
+    bottom: -16px;
+    left: 0;
+    right: 0;
+    height: 100px;
+    z-index: 9999999999;
+    pointer-events: none;
+    background-image: linear-gradient(to bottom, transparent, $white);
+
+    .weni-messages-list__go-to-bottom-button {
+      pointer-events: auto;
+      animation: weni-go-to-bottom-button-enter 0.4s ease both;
+    }
+  }
+}
+
+.weni-widget .weni-messages-list__group--with-conversation-status {
+  width: 100%;
+  max-width: unset;
+}
+@keyframes weni-go-to-bottom-button-enter {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  30% {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

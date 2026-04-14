@@ -1,0 +1,17 @@
+$fs-color-success-bkg: #E6F9EC;
+
+.weni-fs-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $fs-border-radius-pill;
+  padding: $fs-spacing-0 $fs-spacing-2;
+  font: $fs-text-weight-medium #{$fs-text-size-0}/1.33 $font-family;
+  color: $fs-color-text;
+  margin: 0 auto;
+  text-align: center;
+
+  &--success {
+    background-color: $fs-color-success-bkg;
+  }
+}

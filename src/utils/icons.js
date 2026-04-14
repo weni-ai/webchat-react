@@ -26,6 +26,10 @@ import PhotoCamera from '@material-symbols/svg-400/rounded/photo_camera.svg?reac
 import PhotoCameraFilled from '@material-symbols/svg-400/rounded/photo_camera-fill.svg?react';
 import Replay from '@material-symbols/svg-400/rounded/replay.svg?react';
 import ReplayFilled from '@material-symbols/svg-400/rounded/replay-fill.svg?react';
+import ArrowUpward from '@material-symbols/svg-400/rounded/arrow_upward.svg?react';
+import ArrowUpwardFilled from '@material-symbols/svg-400/rounded/arrow_upward-fill.svg?react';
+import ArrowDownward from '@material-symbols/svg-400/rounded/arrow_downward.svg?react';
+import ArrowDownwardFilled from '@material-symbols/svg-400/rounded/arrow_downward-fill.svg?react';
 import ArrowBack from '@material-symbols/svg-400/rounded/arrow_back.svg?react';
 import ArrowBackFilled from '@material-symbols/svg-400/rounded/arrow_back-fill.svg?react';
 import FullScreenExit from '@material-symbols/svg-400/rounded/fullscreen_exit.svg?react';
@@ -56,6 +60,17 @@ import GraphicEq from '@material-symbols/svg-400/rounded/graphic_eq.svg?react';
 import GraphicEqFilled from '@material-symbols/svg-400/rounded/graphic_eq-fill.svg?react';
 import Circle from '@material-symbols/svg-400/rounded/circle.svg?react';
 import CircleFilled from '@material-symbols/svg-400/rounded/circle-fill.svg?react';
+import AttachFile from '@material-symbols/svg-400/rounded/attach_file.svg?react';
+import AttachFileFilled from '@material-symbols/svg-400/rounded/attach_file-fill.svg?react';
+import KeyboardArrowDown from '@material-symbols/svg-400/rounded/keyboard_arrow_down.svg?react';
+import KeyboardArrowDownFilled from '@material-symbols/svg-400/rounded/keyboard_arrow_down-fill.svg?react';
+import OpenInFull from '@material-symbols/svg-400/rounded/open_in_full.svg?react';
+import OpenInFullFilled from '@material-symbols/svg-400/rounded/open_in_full-fill.svg?react';
+import CloseFullscreen from '@material-symbols/svg-400/rounded/close_fullscreen.svg?react';
+import CloseFullscreenFilled from '@material-symbols/svg-400/rounded/close_fullscreen-fill.svg?react';
+import ProgressActivity from '@material-symbols/svg-400/rounded/progress_activity.svg?react';
+import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_activity-fill.svg?react';
+import SparkleFilled from '@/assets/icons/sparkle.svg?react';
 
 export const icons = {
   send: {
@@ -113,6 +128,14 @@ export const icons = {
   replay: {
     default: Replay,
     filled: ReplayFilled,
+  },
+  arrow_upward: {
+    default: ArrowUpward,
+    filled: ArrowUpwardFilled,
+  },
+  arrow_downward: {
+    default: ArrowDownward,
+    filled: ArrowDownwardFilled,
   },
   arrow_back: {
     default: ArrowBack,
@@ -173,5 +196,29 @@ export const icons = {
   circle: {
     default: Circle,
     filled: CircleFilled,
+  },
+  attach_file: {
+    default: AttachFile,
+    filled: AttachFileFilled,
+  },
+  keyboard_arrow_down: {
+    default: KeyboardArrowDown,
+    filled: KeyboardArrowDownFilled,
+  },
+  open_in_full: {
+    default: OpenInFull,
+    filled: OpenInFullFilled,
+  },
+  close_fullscreen: {
+    default: CloseFullscreen,
+    filled: CloseFullscreenFilled,
+  },
+  progress_activity: {
+    default: ProgressActivity,
+    filled: ProgressActivityFilled,
+  },
+  sparkle: {
+    default: SparkleFilled,
+    filled: SparkleFilled,
   },
 };

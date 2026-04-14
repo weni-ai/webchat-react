@@ -1,4 +1,5 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, Fragment, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
@@ -8,16 +9,22 @@ import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
-import Avatar from '@/components/common/Avatar';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
+import { ChatPresentation } from '@/components/Chat/ChatPresentation';
+import { FSButton } from '@/components/common/FSButton';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
+import { ShowItems } from './TextComponents/ShowItems';
+import { QuickReplies } from './TextComponents/QuickReplies';
+import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
+
+const BOTTOM_SCROLL_THRESHOLD_PX = 100;
 
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
@@ -60,80 +67,96 @@ Message.propTypes = {
 
 export function MessagesList() {
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config, isVoiceModeActive, voicePartialTranscript } =
-    useChatContext();
-  const { questions, isDismissed, handleStarterClick } =
+  const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
+  const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
-  const showConversationStartersFull = questions.length > 0 && !isDismissed;
+  const listRef = useRef(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [showGoToBottom, setShowGoToBottom] = useState(false);
+  const showConversationStartersFull =
+    questions.length > 0 &&
+    !isInChatStartersDismissed &&
+    messageGroups.length === 0;
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }
 
+  const syncScrollState = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    setScrollTop(top);
+    const distanceFromBottom = el.scrollHeight - top - el.clientHeight;
+    setShowGoToBottom(distanceFromBottom > BOTTOM_SCROLL_THRESHOLD_PX);
+  }, []);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return undefined;
+    syncScrollState();
+    el.addEventListener('scroll', syncScrollState, { passive: true });
+    window.addEventListener('resize', syncScrollState);
+    return () => {
+      el.removeEventListener('scroll', syncScrollState);
+      window.removeEventListener('resize', syncScrollState);
+    };
+  }, [syncScrollState]);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messageGroups, isThinking, voicePartialTranscript]);
+    const id = requestAnimationFrame(() => syncScrollState());
+    return () => cancelAnimationFrame(id);
+  }, [
+    messageGroups,
+    isThinking,
+    voicePartialTranscript,
+    isTyping,
+    syncScrollState,
+  ]);
 
   useEffect(() => {
-    setTimeout(() => {
+    const t = setTimeout(() => {
       scrollToBottom('instant');
+      syncScrollState();
     }, 50);
-  }, [isChatOpen]);
+    return () => clearTimeout(t);
+  }, [isChatOpen, syncScrollState]);
 
   const enableComponents = (message) => {
-    const isMessageInLastGroup = messageGroups
+    const inLastGroup = messageGroups
       .at(-1)
       ?.messages.some((m) => m.id === message.id);
-    return message.direction === 'incoming' && isMessageInLastGroup;
+    return message.direction === 'incoming' && inLastGroup;
   };
 
   return (
-    <section className="weni-messages-list">
-      {messageGroups.map((group, index) => (
+    <section
+      ref={listRef}
+      className="weni-messages-list"
+      data-scroll-top={scrollTop}
+    >
+      {/* TODO: Add empty state when no messages */}
+
+      <ChatPresentation />
+
+      {messageGroups.map((group, groupIndex) => (
         <section
           className={`
             weni-messages-list__direction-group 
             weni-messages-list__direction-group--${group.direction} 
-            weni-messages-list__direction-group--${group.direction}-${config.showChatAvatar ? 'with' : 'without'}-avatar'
+            weni-messages-list__direction-group--${group.direction}-without-avatar'
+            ${group.messages.some((m) => m.type === 'conversation_status') ? 'weni-messages-list__group--with-conversation-status' : ''}
           `}
-          key={index}
+          key={
+            group.messages[0].id ??
+            `grp-${group.messages[0].timestamp}-${groupIndex}`
+          }
         >
-          {group.direction === 'incoming' && config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
+          {group.messages.map((message, messageIndex) =>
+            renderMessage(group, message, messageIndex, enableComponents),
           )}
-          {group.messages.map((message, messageIndex) => (
-            <MessageContainer
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
-              direction={group.direction}
-              type={message.type}
-              key={message.id || messageIndex}
-            >
-              <Message
-                message={message}
-                componentsEnabled={enableComponents(message)}
-              />
-
-              {message.status === 'pending' && (
-                <Icon
-                  name="schedule"
-                  size="small"
-                  color="fg-muted"
-                />
-              )}
-
-              {message.status === 'error' && (
-                <Icon
-                  name="error"
-                  size="small"
-                  color="fg-critical"
-                />
-              )}
-            </MessageContainer>
-          ))}
         </section>
       ))}
 
@@ -156,15 +179,9 @@ export function MessagesList() {
           className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
-            weni-messages-list__direction-group--incoming-${config.showChatAvatar ? 'with' : 'without'}-avatar
+            weni-messages-list__direction-group--incoming-without-avatar
           `}
         >
-          {config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
-          )}
           <MessageContainer
             className="weni-messages-list__message weni-messages-list__message--incoming"
             direction="incoming"
@@ -178,8 +195,12 @@ export function MessagesList() {
       {showConversationStartersFull && (
         <ConversationStartersFull
           questions={questions}
-          onStarterClick={handleStarterClick}
+          onStarterClick={handleFullStarterClick}
         />
+      )}
+
+      {showGoToBottom && (
+        <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
       )}
 
       <div ref={messagesEndRef} />
@@ -188,3 +209,102 @@ export function MessagesList() {
 }
 
 export default MessagesList;
+
+function GoToBottomButton({ onScrollToBottom }) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="weni-messages-list__go-to-bottom-container">
+      <FSButton
+        variant="tertiary"
+        onClick={onScrollToBottom}
+        size="large"
+        rounded
+        icon="arrow_downward"
+        aria-label={t('messages_list.scroll_to_bottom')}
+        className="weni-messages-list__go-to-bottom-button"
+      >
+        {''}
+      </FSButton>
+    </section>
+  );
+}
+
+GoToBottomButton.propTypes = {
+  onScrollToBottom: PropTypes.func.isRequired,
+};
+
+function renderMessage(group, message, messageIndex, enableComponents) {
+  const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
+
+  switch (message.type) {
+    case 'conversation_status':
+      return (
+        <section
+          className="weni-messages-list__conversation-status"
+          key={`${rowKey}-conversation-status`}
+        >
+          <FSBadge type={message.statusType}>{message.text}</FSBadge>
+        </section>
+      );
+    default:
+      return (
+        <Fragment key={`${rowKey}-body`}>
+          <MessageContainer
+            className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
+            direction={group.direction}
+            type={message.type}
+          >
+            <Message
+              message={message}
+              componentsEnabled={enableComponents(message)}
+            />
+
+            {message.status === 'pending' && (
+              <Icon
+                name="schedule"
+                size="small"
+                color="fg-muted"
+              />
+            )}
+
+            {message.status === 'error' && (
+              <Icon
+                name="error"
+                size="small"
+                color="fg-critical"
+              />
+            )}
+          </MessageContainer>
+
+          {Array.isArray(message.quick_replies) &&
+            message.quick_replies.length > 0 && (
+              <MessageContainer
+                className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--quick-replies`}
+                direction={group.direction}
+                type={message.type}
+              >
+                <QuickReplies
+                  quickReplies={message.quick_replies}
+                  disabled={!enableComponents(message)}
+                />
+              </MessageContainer>
+            )}
+
+          {message.product_list && (
+            <MessageContainer
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
+              direction={group.direction}
+              type={message.type}
+            >
+              <ShowItems
+                buttonText={message.product_list.buttonText}
+                header={message.header}
+                productList={message.product_list}
+              />
+            </MessageContainer>
+          )}
+        </Fragment>
+      );
+  }
+}

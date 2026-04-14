@@ -5,10 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { useChatContext } from '@/contexts/ChatContext';
 
 import Button from '@/components/common/Button';
+import { FSButton } from '@/components/common/FSButton';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
 import CameraRecording from '@/components/CameraRecording/CameraRecording';
 import { VoiceModeButton } from '@/components/VoiceMode';
+import { Icon } from '@/components/common/Icon';
 
 import './InputBox.scss';
 
@@ -30,11 +32,13 @@ export function InputBox({ maxLength = 5000 }) {
     isVoiceModeSupported,
     isVoiceModeActive,
     isEnteringVoiceMode,
-    voiceModeState,
-    enterVoiceMode,
     exitVoiceMode,
     config,
     mode,
+    isVoiceModePageActive,
+    voiceIntentBanner,
+    handleVoiceModeIntent,
+    handleCloseVoiceModePage,
   } = useChatContext();
 
   const [text, setText] = useState('');
@@ -110,14 +114,61 @@ export function InputBox({ maxLength = 5000 }) {
     if (cameraPermission) startCameraRecording();
   };
 
-  const handleVoiceToggle = () => {
-    if (isVoiceModeActive) {
-      exitVoiceMode();
-    } else {
-      enterVoiceMode();
-    }
-  };
+  const textAreaDefaultAttributes = useMemo(
+    () => ({
+      placeholder: inputTextFieldHint,
+      value: text,
+      onChange: (e) => setText(e.target.value),
+      onKeyDown: handleKeyPress,
+      maxLength: maxLength,
+      rows: 1,
+      disabled: isEnteringVoiceMode || mode === 'preview',
+      className: 'weni-input-box__textarea',
+    }),
+    [
+      inputTextFieldHint,
+      text,
+      setText,
+      handleKeyPress,
+      maxLength,
+      mode,
+      isEnteringVoiceMode,
+    ],
+  );
 
+  const textareaRef = useRef(null);
+
+  function handleClick(event) {
+    if (event.target.dataset.focusable !== 'true') return;
+    textareaRef.current.focus();
+  }
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = 'auto';
+
+    let height;
+
+    if (textarea.value === '') {
+      const temp = textarea.value;
+      textarea.value = textarea.placeholder;
+      height = textarea.scrollHeight;
+      textarea.style.height = height + 'px';
+      textarea.value = temp;
+    } else {
+      height = textarea.scrollHeight;
+      textarea.style.height = height + 'px';
+    }
+
+    const marginBottom =
+      textarea.getBoundingClientRect().height - textarea.scrollHeight;
+
+    if (textarea.getBoundingClientRect().height) {
+      textarea.style.marginBottom = `${marginBottom}px`;
+    }
+  }, [text]);
   const hasNoTextInput = !text.trim();
   const canDisplayCameraRecorder =
     hasNoTextInput &&
@@ -150,90 +201,130 @@ export function InputBox({ maxLength = 5000 }) {
     );
   }
 
-  return (
-    <section className="weni-input-box">
-      <section className="weni-input-box__textarea-container">
-        <textarea
-          className="weni-input-box__textarea"
-          placeholder={inputTextFieldHint}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyPress}
-          maxLength={maxLength}
-          rows={1}
-          disabled={isEnteringVoiceMode || mode === 'preview'}
-        />
-
-        {canDisplayCameraRecorder && (
-          <Button
-            onClick={handleRecordCamera}
-            disabled={hasCameraPermissionState === false}
-            aria-label="Take photo"
-            variant="tertiary"
-            icon="add_a_photo"
-            iconColor="gray-500"
-            className="weni-input-box__photo-icon"
-          />
-        )}
-      </section>
-
-      {shouldShowMediaActions && (
-        <>
-          <InputFile ref={fileInputRef} />
-          {config.showFileUploaderButton && (
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="tertiary"
-              icon="add_photo_alternate"
-              iconColor="gray-900"
-              aria-label="Attach file"
-            />
-          )}
-
-          {config.showVoiceRecordingButton && (
-            <Button
-              onClick={handleRecordAudio}
-              variant="tertiary"
-              icon="mic"
-              iconColor="gray-900"
-              disabled={hasAudioPermissionState === false}
-              aria-label="Record audio"
-            />
-          )}
-        </>
-      )}
-
-      {!hasNoTextInput && !isEnteringVoiceMode && (
-        <Button
-          onClick={handleSend}
-          variant="primary"
-          icon="send"
-          aria-label="Send message"
-        />
-      )}
-
-      {isEnteringVoiceMode && (
-        <Button
-          variant="primary"
-          onClick={exitVoiceMode}
-          className="weni-input-box__voice-cancel-btn"
-          aria-label={t('voice_mode.cancel')}
+  if (isVoiceModePageActive) {
+    return (
+      <section className="voice-mode-page">
+        <p
+          className={`voice-mode-page__intent-banner ${isVoiceModeActive ? 'voice-mode-page__intent-banner--active' : ''}`}
+          role="status"
         >
-          <span className="weni-input-box__voice-cancel-spinner" />
-          <span>{t('voice_mode.cancel')}</span>
-        </Button>
-      )}
+          {voiceIntentBanner}
+        </p>
 
-      {!isEnteringVoiceMode &&
-        showVoiceButton &&
-        (isVoiceModeActive || hasNoTextInput) && (
-          <VoiceModeButton
-            onClick={handleVoiceToggle}
-            isActive={isVoiceModeActive}
-            voiceState={voiceModeState}
-          />
-        )}
-    </section>
+        <section
+          className={`voice-mode-page__loading-indicator ${!isVoiceModeActive ? 'voice-mode-page__loading-indicator--disabled' : ''}`}
+        >
+          <section className="voice-mode-page__loading-indicator-item"></section>
+          <section className="voice-mode-page__loading-indicator-item"></section>
+
+          <section className="voice-mode-page__loading-indicator-icon">
+            <Icon
+              name="graphic_eq"
+              size="x-large"
+            />
+          </section>
+        </section>
+
+        <FSButton
+          variant="tertiary"
+          onClick={handleCloseVoiceModePage}
+          icon="close"
+          size="small"
+        >
+          {t('voice_mode.cancel')}
+        </FSButton>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <section
+        className="weni-input-box"
+        onClick={handleClick}
+        data-focusable="true"
+      >
+        <textarea
+          {...textAreaDefaultAttributes}
+          ref={textareaRef}
+        />
+
+        <section
+          className="weni-input-box__footer"
+          data-focusable="true"
+        >
+          <section className="weni-input-box__actions-left">
+            {canDisplayCameraRecorder && (
+              <Button
+                onClick={handleRecordCamera}
+                disabled={hasCameraPermissionState === false}
+                aria-label="Take photo"
+                variant="tertiary"
+                icon="photo_camera"
+                iconColor="fg-base-soft"
+                noPadding
+                className="weni-input-box__photo-icon"
+              />
+            )}
+
+            {shouldShowMediaActions && (
+              <>
+                <InputFile ref={fileInputRef} />
+
+                {config.showFileUploaderButton && (
+                  <Button
+                    aria-label="Attach file"
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="tertiary"
+                    icon="attach_file"
+                    iconColor="fg-base-soft"
+                    noPadding
+                  />
+                )}
+
+                {config.showVoiceRecordingButton && (
+                  <Button
+                    onClick={handleRecordAudio}
+                    disabled={hasAudioPermissionState === false}
+                    aria-label="Record audio"
+                    variant="tertiary"
+                    icon="mic"
+                    iconColor="fg-base-soft"
+                    noPadding
+                  />
+                )}
+              </>
+            )}
+          </section>
+
+          {isEnteringVoiceMode && (
+            <Button
+              variant="primary"
+              onClick={exitVoiceMode}
+              className="weni-input-box__voice-cancel-btn"
+              aria-label={t('voice_mode.cancel')}
+            >
+              <span className="weni-input-box__voice-cancel-spinner" />
+              <span>{t('voice_mode.cancel')}</span>
+            </Button>
+          )}
+
+          {!isEnteringVoiceMode && showVoiceButton && hasNoTextInput ? (
+            <VoiceModeButton onClick={handleVoiceModeIntent} />
+          ) : (
+            <Button
+              onClick={handleSend}
+              aria-label="Send message"
+              variant="primary"
+              icon="arrow_upward"
+              size="large"
+              rounded
+              disabled={!text.trim()}
+            />
+          )}
+        </section>
+      </section>
+    </>
   );
 }
 

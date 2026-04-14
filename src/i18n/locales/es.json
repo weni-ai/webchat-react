@@ -23,6 +23,9 @@
       "send": "Enviar"
     }
   },
+  "messages_list": {
+    "scroll_to_bottom": "Ir al final"
+  },
   "show_items": {
     "catalog_title": "Productos disponibles",
     "items_one": "producto",
@@ -41,7 +44,9 @@
     "discount": "Descuento",
     "total": "Total",
     "continue_shopping": "Continuar la compra",
-    "make_order": "Hacer pedido"
+    "make_order": "Hacer pedido",
+    "add": "Agregar",
+    "product_added_to_cart": "{{productName}} agregado al carrito"
   },
   "voice_mode": {
     "title": "Modo de voz",
@@ -50,12 +55,18 @@
     "speaking": "Hablando...",
     "processing": "Procesando...",
     "errorTitle": "Algo salió mal",
+    "intent_status_agent_speaking": "El asistente habla",
+    "intent_status_listening": "Escuchando",
+    "intent_status_transcribing": "Transcribiendo",
     "you": "Tú",
     "youSaid": "Dijiste",
     "assistant": "Asistente",
     "stop": "Detener",
     "microphonePermissionHint": "Activa el micrófono en la configuración de tu navegador para usar el modo de voz",
-    "cancel": "Cancelar",
+    "cancel": "Ir al texto",
+    "check_microphone_browser_settings": "Revisa la configuración del navegador para activar el micrófono.",
+    "connecting": "Conectando",
+    "microphone_disabled_in_browser": "El micrófono está desactivado en el navegador.",
     "aria_enter": "Entrar al modo de voz",
     "aria_exit": "Salir del modo de voz",
     "aria_listening": "Escuchando tu voz",
@@ -136,8 +147,8 @@
       "title": "En vivo"
     },
     "preview": {
-      "title": "Previsualización",
-      "input_placeholder": "Previsualización solo..."
+      "title": "Solo previsualización",
+      "input_placeholder": "Previsualización, pronto estará disponible"
     }
   }
 }

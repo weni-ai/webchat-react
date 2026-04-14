@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 
-import Button from '@/components/common/Button';
+import { FSButton } from '@/components/common/FSButton';
 import { InlineProduct } from '@/components/Product/InlineProduct';
+import { ProductCatalogItem } from '@/views/ProductCatalog';
 
 import './ShowItems.scss';
 
@@ -33,6 +34,7 @@ export function ShowItems({
         salePrice: item.sale_price,
         currency: item.currency,
         sellerId: item.seller_id,
+        productURL: item.product_url,
       })),
     }));
   }, [productList]);
@@ -42,6 +44,16 @@ export function ShowItems({
     return productGroups.reduce((acc, group) => acc + group.products.length, 0);
   }, [productGroups]);
 
+  const singleProduct = useMemo(() => {
+    if (totalItems !== 1) return null;
+    for (const group of productGroups) {
+      for (const product of group.products) {
+        return product;
+      }
+    }
+    return null;
+  }, [productGroups, totalItems]);
+
   const firstImage = useMemo(() => {
     return productGroups?.[0]?.products?.[0]?.image;
   }, [productGroups]);
@@ -50,31 +62,36 @@ export function ShowItems({
 
   return (
     <section className="weni-show-items">
-      <InlineProduct
-        image={firstImage}
-        title={catalogTitle}
-        lines={[
-          `${totalItems} ${t('show_items.items', { count: totalItems })}`,
-        ]}
-      />
-
-      <Button
-        className="weni-show-items__button"
-        key={buttonText}
-        variant="secondary"
-        disabled={disabled}
-        onClick={() =>
-          setCurrentPage({
-            view: 'product-catalog',
-            title: catalogTitle,
-            props: {
-              productGroups,
-            },
-          })
-        }
-      >
-        {buttonText}
-      </Button>
+      {singleProduct ? (
+        <ProductCatalogItem product={singleProduct} />
+      ) : (
+        <InlineProduct
+          image={firstImage}
+          title={catalogTitle}
+          lines={[
+            `${totalItems} ${t('show_items.items', { count: totalItems })}`,
+          ]}
+          button={
+            <FSButton
+              className="weni-show-items__button"
+              key={buttonText}
+              variant="primary"
+              disabled={disabled}
+              onClick={() =>
+                setCurrentPage({
+                  view: 'product-catalog',
+                  title: catalogTitle,
+                  props: {
+                    productGroups,
+                  },
+                })
+              }
+            >
+              {buttonText}
+            </FSButton>
+          }
+        />
+      )}
     </section>
   );
 }
@@ -97,6 +114,7 @@ ShowItems.propTypes = {
             image: PropTypes.string.isRequired,
             description: PropTypes.string,
             seller_id: PropTypes.string,
+            product_url: PropTypes.string,
           }),
         ).isRequired,
       }),

@@ -28,17 +28,12 @@ function WidgetContent() {
     shouldRender,
   } = useChatContext();
 
-  const {
-    questions,
-    isCompactVisible,
-    isHiding,
-    isDismissed,
-    handleStarterClick,
-  } = useConversationStarters();
+  const { questions, isCompactVisible, isHiding, handleCompactStarterClick } =
+    useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
   const isCompactStartersVisible =
-    questions.length > 0 && isCompactVisible && !isChatOpen && !isDismissed;
+    questions.length > 0 && isCompactVisible && !isChatOpen;
   const shouldShowCompactStarters = isCompactStartersVisible || isHiding;
 
   useEffect(() => {
@@ -53,15 +48,20 @@ function WidgetContent() {
 
   return (
     <aside
-      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''} ${config.embedded ? 'weni-widget--disabled-animation' : ''}`}
+      className={`
+        weni-widget
+        ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}
+        ${config.embedded ? 'weni-widget--disabled-animation' : ''}
+        ${isChatOpen ? 'weni-widget--open' : 'weni-widget--closed'}
+      `}
     >
       <Chat />
-      {!isChatFullscreenAndOpen && (
+      {!isChatFullscreenAndOpen && !isChatOpen && (
         <>
           {shouldShowCompactStarters && (
             <ConversationStartersCompact
               questions={questions}
-              onStarterClick={handleStarterClick}
+              onStarterClick={handleCompactStarterClick}
               isVisible={isCompactStartersVisible}
               isHiding={isHiding}
             />
