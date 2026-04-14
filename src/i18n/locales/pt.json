@@ -50,7 +50,10 @@
   },
   "input": {
     "attach_tooltip": "Anexar",
+    "media_audio": "Áudio",
+    "media_camera": "Câmera",
     "media_menu_region": "Opções de mídia",
+    "media_upload_file": "Enviar arquivo",
     "open_media_menu": "Abrir menu"
   },
   "voice_mode": {

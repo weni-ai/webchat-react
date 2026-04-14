@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
@@ -6,6 +6,8 @@ import { useChatContext } from '@/contexts/ChatContext';
 
 import Button from '@/components/common/Button';
 import { FSButton } from '@/components/common/FSButton';
+import { Dropdown } from '@/components/common/Dropdown';
+import { Tooltip } from '@/components/common/Tooltip';
 import { InputFile } from './InputFile';
 import AudioRecorder from './AudioRecorder';
 import CameraRecording from '@/components/CameraRecording/CameraRecording';
@@ -13,6 +15,8 @@ import { VoiceModeButton } from '@/components/VoiceMode';
 import { Icon } from '@/components/common/Icon';
 
 import './InputBox.scss';
+
+const fsColorNeutral7 = '#5C5C5C';
 
 export function InputBox({ maxLength = 5000 }) {
   const { t } = useTranslation();
@@ -237,8 +241,67 @@ export function InputBox({ maxLength = 5000 }) {
     );
   }
 
+  let availableOptions = [];
+
+  if (shouldShowMediaActions && config.showFileUploaderButton) {
+    availableOptions.push({
+      id: 'attach',
+      content: (
+        <button
+          type="button"
+          className="weni-input-box__action-item"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label={t('input.media_upload_file')}
+        >
+          <Icon name="attach_file" />
+          {t('input.media_upload_file')}
+        </button>
+      ),
+    });
+  }
+
+  if (canDisplayCameraRecorder) {
+    availableOptions.push({
+      id: 'camera',
+      content: (
+        <button
+          type="button"
+          className="weni-input-box__action-item"
+          onClick={handleRecordCamera}
+          disabled={hasCameraPermissionState === false}
+          aria-label={t('input.media_camera')}
+        >
+          <Icon name="photo_camera" />
+          {t('input.media_camera')}
+        </button>
+      ),
+    });
+  }
+
+  if (shouldShowMediaActions && config.showVoiceRecordingButton) {
+    availableOptions.push({
+      id: 'voice-record',
+      content: (
+        <button
+          type="button"
+          className="weni-input-box__action-item"
+          onClick={handleRecordAudio}
+          disabled={hasAudioPermissionState === false}
+          aria-label={t('input.media_audio')}
+        >
+          <Icon name="mic" />
+          {t('input.media_audio')}
+        </button>
+      ),
+    });
+  }
+
   return (
     <>
+      {availableOptions.some(({ id }) => id === 'attach') && (
+        <InputFile ref={fileInputRef} />
+      )}
+
       <section
         className="weni-input-box"
         onClick={handleClick}
@@ -253,49 +316,42 @@ export function InputBox({ maxLength = 5000 }) {
           className="weni-input-box__footer"
           data-focusable="true"
         >
-          <section className="weni-input-box__actions-left">
-            {canDisplayCameraRecorder && (
-              <Button
-                onClick={handleRecordCamera}
-                disabled={hasCameraPermissionState === false}
-                aria-label="Take photo"
-                variant="tertiary"
-                icon="photo_camera"
-                iconColor="fg-base-soft"
-                noPadding
-                className="weni-input-box__photo-icon"
+          {availableOptions.length > 0 && (
+            <section className="weni-input-box__media-actions">
+              <Dropdown
+                placement="left-top"
+                panelAriaLabel={t('input.media_menu_region')}
+                content={
+                  <section className="weni-input-box__dropdown-actions">
+                    {availableOptions.map(({ id, content }) => (
+                      <Fragment key={id}>{content}</Fragment>
+                    ))}
+                  </section>
+                }
+                renderTrigger={(triggerProps, { open }) => (
+                  <Tooltip
+                    label={t('input.attach_tooltip')}
+                    disabled={open}
+                  >
+                    <FSButton
+                      variant="tertiary"
+                      size="large"
+                      rounded
+                      aria-label={t('input.open_media_menu')}
+                      {...triggerProps}
+                      hoverState={open}
+                    >
+                      <Icon
+                        name="add"
+                        size="large"
+                        color={fsColorNeutral7}
+                      />
+                    </FSButton>
+                  </Tooltip>
+                )}
               />
-            )}
-
-            {shouldShowMediaActions && (
-              <>
-                <InputFile ref={fileInputRef} />
-
-                {config.showFileUploaderButton && (
-                  <Button
-                    aria-label="Attach file"
-                    onClick={() => fileInputRef.current?.click()}
-                    variant="tertiary"
-                    icon="attach_file"
-                    iconColor="fg-base-soft"
-                    noPadding
-                  />
-                )}
-
-                {config.showVoiceRecordingButton && (
-                  <Button
-                    onClick={handleRecordAudio}
-                    disabled={hasAudioPermissionState === false}
-                    aria-label="Record audio"
-                    variant="tertiary"
-                    icon="mic"
-                    iconColor="fg-base-soft"
-                    noPadding
-                  />
-                )}
-              </>
-            )}
-          </section>
+            </section>
+          )}
 
           {isEnteringVoiceMode && (
             <Button

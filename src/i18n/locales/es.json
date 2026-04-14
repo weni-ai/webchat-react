@@ -50,7 +50,10 @@
   },
   "input": {
     "attach_tooltip": "Adjuntar",
+    "media_audio": "Audio",
+    "media_camera": "Cámara",
     "media_menu_region": "Opciones de medios",
+    "media_upload_file": "Subir archivo",
     "open_media_menu": "Abrir menú"
   },
   "voice_mode": {
