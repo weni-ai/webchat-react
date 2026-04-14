@@ -1,21 +1,21 @@
 import PropTypes from 'prop-types';
 import { useState, useMemo } from 'react';
+import { Icon } from '@/components/common/Icon';
 import './Avatar.scss';
 
 /**
  * Avatar - User avatar component
  *
- * Displays user avatar with support for images and fallback initials.
+ * Displays user avatar with support for images and fallback icon.
  * Sizes match Icon component sizes for consistency.
  *
  * @example
  * <Avatar src="https://example.com/avatar.jpg" alt="John Doe" size="medium" />
- * <Avatar name="John Doe" size="large" />
+ * <Avatar size="large" />
  */
 export function Avatar({
   src = '',
   alt = '',
-  name = '',
   size = 'medium',
   shape = 'circle',
   className = '',
@@ -25,18 +25,6 @@ export function Avatar({
   const sizeValue = typeof size === 'number' ? size : size;
   const [imageError, setImageError] = useState(false);
 
-  const getInitials = () => {
-    if (name) {
-      return name
-        .split(' ')
-        .map((word) => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    return '';
-  };
-
   const handleImageError = (e) => {
     setImageError(true);
     if (onError) {
@@ -44,7 +32,6 @@ export function Avatar({
     }
   };
 
-  const displayInitials = getInitials();
   const showImage = src && !imageError;
 
   const style = useMemo(() => {
@@ -69,7 +56,7 @@ export function Avatar({
         ${className}
       `}
       role="img"
-      aria-label={alt || name || 'Avatar'}
+      aria-label={alt || 'Avatar'}
       style={style}
       {...props}
     >
@@ -81,9 +68,12 @@ export function Avatar({
           onError={handleImageError}
         />
       ) : (
-        displayInitials && (
-          <p className="weni-avatar__initials">{displayInitials}</p>
-        )
+        <Icon
+          name="rounded_x"
+          size="x-large"
+          color="weni-main-color"
+          filled
+        />
       )}
     </section>
   );
