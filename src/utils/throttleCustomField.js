@@ -7,7 +7,10 @@ const lastRunByField = new Map();
  * @param {(field: string, value: unknown) => void} setCustomField
  * @param {number} [intervalMs=10000]
  */
-export function createThrottledCustomFieldSetter(setCustomField, intervalMs = 10_000) {
+export function createThrottledCustomFieldSetter(
+  setCustomField,
+  intervalMs = 10_000,
+) {
   return (field, value) => {
     const now = Date.now();
     const last = lastRunByField.get(field) ?? 0;
