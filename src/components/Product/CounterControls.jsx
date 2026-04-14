@@ -39,7 +39,8 @@ export function CounterControls({
     requestOrderForm,
     trySyncFaststoreCart,
   } = useOrderForm();
-  const { addProductToCart, config, addConversationStatus } = useChatContext();
+  const { addProductToCart, config, addConversationStatus, setCustomField } =
+    useChatContext();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -106,6 +107,8 @@ export function CounterControls({
         seller: parsed.sellerId,
         id: parsed.skuId,
       });
+
+      setCustomField('orderform', orderFormId);
 
       addConversationStatus(
         t('cart.product_added_to_cart', {
