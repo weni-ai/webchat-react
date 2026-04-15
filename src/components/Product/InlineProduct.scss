@@ -81,6 +81,12 @@
       color: $fs-color-text-light;
       text-decoration: line-through;
     }
+
+    &:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   &--cart {

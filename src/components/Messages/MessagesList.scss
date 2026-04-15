@@ -37,14 +37,6 @@
     max-width: 100%;
   }
 
-  &__direction-group--incoming-with-avatar {
-    grid-template-columns: minmax($icon-size-5, auto) 1fr;
-  }
-
-  &__direction-group--incoming-without-avatar {
-    grid-template-columns: 1fr;
-  }
-
   > section {
     margin-top: $spacing-4;
   }
@@ -82,10 +74,6 @@
   }
 }
 
-.weni-widget .weni-messages-list__group--with-conversation-status {
-  width: 100%;
-  max-width: unset;
-}
 @keyframes weni-go-to-bottom-button-enter {
   from {
     opacity: 0;
