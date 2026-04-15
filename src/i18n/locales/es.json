@@ -46,6 +46,7 @@
     "continue_shopping": "Continuar la compra",
     "make_order": "Hacer pedido",
     "add": "Agregar",
+    "added": "Agregado",
     "product_added_to_cart": "{{productName}} agregado al carrito"
   },
   "input": {
