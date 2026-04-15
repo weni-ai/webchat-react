@@ -116,3 +116,61 @@ describe('ChatContext — connectOn: demand', () => {
     expect(ctx.service._connected).toBe(false);
   });
 });
+
+describe('ChatContext — clearCart', () => {
+  it('exposes clearCart on the context', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    expect(typeof ctx.clearCart).toBe('function');
+  });
+
+  it('resets cart to empty object when called', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setCart({ 'product-1': { quantity: 2 } });
+    });
+
+    expect(ctx.cart).toEqual({ 'product-1': { quantity: 2 } });
+
+    await act(async () => {
+      ctx.clearCart();
+    });
+
+    expect(ctx.cart).toEqual({});
+  });
+
+  it('attaches clearCart to the service instance', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    expect(typeof ctx.service.clearCart).toBe('function');
+  });
+
+  it('service.clearCart resets the cart state', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setCart({ 'product-1': { quantity: 3 } });
+    });
+
+    expect(ctx.cart).toEqual({ 'product-1': { quantity: 3 } });
+
+    await act(async () => {
+      ctx.service.clearCart();
+    });
+
+    expect(ctx.cart).toEqual({});
+  });
+});
