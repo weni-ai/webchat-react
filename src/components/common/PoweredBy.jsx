@@ -9,7 +9,7 @@ export function PoweredBy() {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <p className="weni-poweredby__text">Powered by VTEX Agentic CX</p>
+      <p className="weni-poweredby__text">Powered by VTEX CX</p>
     </a>
   );
 }

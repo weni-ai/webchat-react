@@ -48,6 +48,14 @@
     "add": "Agregar",
     "product_added_to_cart": "{{productName}} agregado al carrito"
   },
+  "input": {
+    "attach_tooltip": "Adjuntar",
+    "media_audio": "Audio",
+    "media_camera": "Cámara",
+    "media_menu_region": "Opciones de medios",
+    "media_upload_file": "Subir archivo",
+    "open_media_menu": "Abrir menú"
+  },
   "voice_mode": {
     "title": "Modo de voz",
     "listening": "Estoy escuchando, ¿cómo puedo ayudarte?",
@@ -147,7 +155,7 @@
       "title": "En vivo"
     },
     "preview": {
-      "title": "Solo previsualización",
+      "title": "Previsualización",
       "input_placeholder": "Previsualización, pronto estará disponible"
     }
   }
