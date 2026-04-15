@@ -304,6 +304,17 @@ async function clearPageHistory() {
 }
 
 /**
+ * Clear shopping cart state
+ * @returns {Promise<void>}
+ */
+async function clearCart() {
+  const service = await serviceWhenReady();
+  if (typeof service.clearCart === 'function') {
+    service.clearCart();
+  }
+}
+
+/**
  * Set session ID
  * If there's an active session, restarts it with the new ID
  * @param {string} sessionId
@@ -424,6 +435,7 @@ const WebChat = {
   addProductToCart,
   clear,
   clearPageHistory,
+  clearCart,
   setSessionId,
   setContext,
   getContext,
