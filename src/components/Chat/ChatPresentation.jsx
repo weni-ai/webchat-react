@@ -10,7 +10,6 @@ export function ChatPresentation() {
     <section className="weni-chat-presentation">
       <Avatar
         src={config.profileAvatar}
-        name={config.title}
         size={56}
       />
 

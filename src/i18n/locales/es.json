@@ -24,6 +24,7 @@
     }
   },
   "messages_list": {
+    "items_added_to_cart": "{{count}} ítems se agregaron al carrito",
     "scroll_to_bottom": "Ir al final"
   },
   "show_items": {
@@ -46,7 +47,16 @@
     "continue_shopping": "Continuar la compra",
     "make_order": "Hacer pedido",
     "add": "Agregar",
+    "added": "Agregado",
     "product_added_to_cart": "{{productName}} agregado al carrito"
+  },
+  "input": {
+    "attach_tooltip": "Adjuntar",
+    "media_audio": "Audio",
+    "media_camera": "Cámara",
+    "media_menu_region": "Opciones de medios",
+    "media_upload_file": "Subir archivo",
+    "open_media_menu": "Abrir menú"
   },
   "voice_mode": {
     "title": "Modo de voz",
@@ -147,7 +157,7 @@
       "title": "En vivo"
     },
     "preview": {
-      "title": "Solo previsualización",
+      "title": "Previsualización",
       "input_placeholder": "Previsualización, pronto estará disponible"
     }
   }

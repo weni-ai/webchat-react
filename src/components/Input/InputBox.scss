@@ -1,6 +1,40 @@
 $textarea-border-color: $border-base;
 $textarea-border-color-hover: #858585;
 
+.weni-input-box__media-actions {
+  margin-right: auto;
+}
+
+.weni-input-box__dropdown-actions {
+  display: flex;
+  flex-direction: column;
+  width: 158px;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: $fs-color-neutral-0;
+  box-shadow: $shadow-1;
+}
+
+.weni-input-box__action-item {
+  display: flex;
+  align-items: center;
+  gap: $fs-spacing-0;
+  padding: $fs-spacing-1 $fs-spacing-2;
+  background-color: transparent;
+  cursor: pointer;
+  color: $fs-color-neutral-6;
+  font: $fs-text-weight-regular #{$fs-text-size-1}/1.42857 $font-family;
+
+  &:enabled:hover {
+    background-color: $fs-color-neutral-1;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: $fs-color-neutral-4;
+  }
+}
+
 .weni-input-box {
   margin: $fs-spacing-3;
   padding: $fs-spacing-1;
@@ -58,7 +92,7 @@ $textarea-border-color-hover: #858585;
     gap: $spacing-1;
   }
 
-  .weni-input-box__actions-left {
+  .weni-input-box__actions {
     display: flex;
     align-items: center;
     gap: $spacing-1;

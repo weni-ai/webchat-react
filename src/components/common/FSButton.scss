@@ -22,7 +22,7 @@
     background-color: $fs-button-tertiary-bkg-color;
     transition: background-color 0.2s ease;
 
-    &:enabled:hover {
+    &:enabled:hover, &.weni-fs-button--hover-state {
       background-color: $fs-color-neutral-1;
     }
 

@@ -84,22 +84,22 @@ export function Launcher() {
           <>
             <button
               type="button"
-              onClick={handleChatBubbleClick}
+              onClick={handleGraphicEqClick}
               aria-label="Toggle chat"
             >
               <Icon
-                name="chat_bubble"
+                name="graphic_eq"
                 size="medium"
               />
             </button>
 
             <button
               type="button"
-              onClick={handleGraphicEqClick}
+              onClick={handleChatBubbleClick}
               aria-label="Toggle chat"
             >
               <Icon
-                name="graphic_eq"
+                name="chat_bubble"
                 size="medium"
               />
             </button>
@@ -113,9 +113,9 @@ export function Launcher() {
         ) : (
           <Icon
             className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-            name="sparkle"
+            name="rounded_x"
+            size="medium"
             filled
-            size="x-large"
           />
         )}
       </section>
