@@ -24,6 +24,7 @@
     }
   },
   "messages_list": {
+    "items_added_to_cart": "{{count}} ítems se agregaron al carrito",
     "scroll_to_bottom": "Ir al final"
   },
   "show_items": {
