@@ -607,6 +607,62 @@ describe("VoiceService", () => {
 
       expect(svc.textChunker.addText).toHaveBeenCalledWith("hello 😀 world");
     });
+
+    it("sanitizes URLs from chunk, replacing with 'link'", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.textChunker.addText.mockReturnValueOnce(
+        "Veja em https://loja.com/produto agora.",
+      );
+
+      svc.processTextChunk("Veja em https://loja.com/produto agora.");
+
+      expect(svc.ttsPlayer.speak).toHaveBeenCalledWith("Veja em link agora.");
+    });
+
+    it("sanitizes markdown bold from chunk before speaking", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.textChunker.addText.mockReturnValueOnce("Isso é **importante** aqui.");
+
+      svc.processTextChunk("Isso é **importante** aqui.");
+
+      expect(svc.ttsPlayer.speak).toHaveBeenCalledWith(
+        "Isso é importante aqui.",
+      );
+    });
+
+    it("does not speak when sanitized chunk has only punctuation", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.textChunker.addText.mockReturnValueOnce("**?**");
+
+      svc.processTextChunk("**?**");
+
+      expect(svc.ttsPlayer.speak).not.toHaveBeenCalled();
+    });
+
+    it("sanitizes flushed remaining text on isComplete", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.textChunker.addText.mockReturnValueOnce(null);
+      svc.textChunker.flush.mockReturnValueOnce("Clique **aqui** ok");
+
+      svc.processTextChunk("Clique **aqui** ok", true);
+
+      expect(svc.ttsPlayer.speak).toHaveBeenCalledWith("Clique aqui ok");
+    });
+
+    it("does not speak when flushed text sanitizes to punctuation-only", async () => {
+      svc = createInitializedService();
+      await svc.startSession();
+      svc.textChunker.addText.mockReturnValueOnce(null);
+      svc.textChunker.flush.mockReturnValueOnce("...");
+
+      svc.processTextChunk("text", true);
+
+      expect(svc.ttsPlayer.speak).not.toHaveBeenCalled();
+    });
   });
 
   // -- Transcription interruption on agent message ---------------------------
