@@ -160,6 +160,8 @@ The following methods are available via `window.WebChat`:
 - `async toggle()` – Toggles the chat window.
 - `async isOpen()` – Checks if the chat window is open.
 - `async clear()` – Clears the chat history.
+- `async clearPageHistory()` – Closes any open product/catalog views and returns to the chat.
+- `async clearCart()` – Clears the shopping cart state.
 - `async send(message, options)` – Sends a message to the chat.
 - `setSessionId(id)` - Updates the contact's session id, reloading the session if already started.
 
