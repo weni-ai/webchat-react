@@ -31,7 +31,7 @@
 
   position: relative;
 
-  padding: $spacing-3;
+  padding: $fs-spacing-3;
   animation-duration: 0.3s;
   animation-timing-function: ease-out;
   animation-fill-mode: both;
@@ -49,14 +49,15 @@
   }
 
   &--incoming {
-    background-color: $bg-soft;
-    border-radius: $border-radius-0 $border-radius $border-radius $border-radius;
+    background-color: $fs-color-neutral-0;
+    border: $fs-border-width solid $fs-border-color;
+    border-radius: $fs-border-radius $fs-border-radius-medium $fs-border-radius-medium $fs-border-radius-medium;
     animation-name: bubble-in-left;
     transform-origin: top left;
   }
 
   &--outgoing {
-    background-color: var(--weni-main-color);
+    background-color: $fs-color-main-0;
     border-radius: $border-radius $border-radius-0 $border-radius $border-radius;
     animation-name: bubble-in-right;
     transform-origin: top right;
