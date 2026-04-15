@@ -24,6 +24,7 @@
     }
   },
   "messages_list": {
+    "items_added_to_cart": "{{count}} items were added to cart",
     "scroll_to_bottom": "Go to bottom"
   },
   "show_items": {
@@ -46,6 +47,7 @@
     "continue_shopping": "Continue shopping",
     "make_order": "Make order",
     "add": "Add",
+    "added": "Added",
     "product_added_to_cart": "{{productName}} added to cart"
   },
   "input": {

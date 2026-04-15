@@ -31,6 +31,7 @@ export function CounterControls({
   sellerId: sellerIdProp,
 }) {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
   const {
@@ -65,6 +66,16 @@ export function CounterControls({
   }
 
   useEffect(() => {
+    if (!justAdded) {
+      return undefined;
+    }
+    const id = setTimeout(() => {
+      setJustAdded(false);
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [justAdded]);
+
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -97,6 +108,7 @@ export function CounterControls({
   }, [getVtexAccount, orderFormId, parsed]);
 
   async function handleAddProductToOrderForm() {
+    setJustAdded(false);
     setIsAddingProduct(true);
 
     try {
@@ -106,6 +118,8 @@ export function CounterControls({
         seller: parsed.sellerId,
         id: parsed.skuId,
       });
+
+      setJustAdded(true);
 
       addConversationStatus(
         t('cart.product_added_to_cart', {
@@ -128,14 +142,14 @@ export function CounterControls({
     return (
       <FSButton
         isLoading={isLoadingOrderForm || isAddingProduct}
-        variant="secondary"
+        variant={isAddingProduct || justAdded ? 'tertiary' : 'secondary'}
         onClick={(e) => {
           e.stopPropagation();
           handleAddProductToOrderForm();
         }}
-        icon="shopping_cart"
+        icon={justAdded ? 'check_small' : 'shopping_cart'}
       >
-        {t('cart.add')}
+        {justAdded ? t('cart.added') : t('cart.add')}
       </FSButton>
     );
   }

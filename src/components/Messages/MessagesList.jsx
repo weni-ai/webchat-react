@@ -25,6 +25,7 @@ import { FSBadge } from '../common/FSBadge';
 import './MessagesList.scss';
 
 const BOTTOM_SCROLL_THRESHOLD_PX = 100;
+const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
 
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
@@ -66,6 +67,7 @@ Message.propTypes = {
 };
 
 export function MessagesList() {
+  const { t } = useTranslation();
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
   const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
@@ -144,19 +146,15 @@ export function MessagesList() {
       {messageGroups.map((group, groupIndex) => (
         <section
           className={`
-            weni-messages-list__direction-group 
-            weni-messages-list__direction-group--${group.direction} 
-            weni-messages-list__direction-group--${group.direction}-without-avatar'
-            ${group.messages.some((m) => m.type === 'conversation_status') ? 'weni-messages-list__group--with-conversation-status' : ''}
+            weni-messages-list__direction-group
+            weni-messages-list__direction-group--${group.direction}
           `}
           key={
             group.messages[0].id ??
             `grp-${group.messages[0].timestamp}-${groupIndex}`
           }
         >
-          {group.messages.map((message, messageIndex) =>
-            renderMessage(group, message, messageIndex, enableComponents),
-          )}
+          {renderGroupMessagesWithCollapsedStatus(group, enableComponents, t)}
         </section>
       ))}
 
@@ -179,7 +177,6 @@ export function MessagesList() {
           className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
-            weni-messages-list__direction-group--incoming-without-avatar
           `}
         >
           <MessageContainer
@@ -234,18 +231,95 @@ GoToBottomButton.propTypes = {
   onScrollToBottom: PropTypes.func.isRequired,
 };
 
+/**
+ * Index right after the last consecutive `conversation_status` message starting at `start`.
+ */
+function indexAfterConversationStatusRun(messages, start) {
+  let end = start + 1;
+  while (
+    end < messages.length &&
+    messages[end].type === MESSAGE_TYPE_CONVERSATION_STATUS
+  ) {
+    end += 1;
+  }
+  return end;
+}
+
+function renderConversationStatusBadge(
+  rowKey,
+  keySuffix,
+  statusType,
+  children,
+) {
+  return (
+    <section
+      className="weni-messages-list__conversation-status"
+      key={`${rowKey}-${keySuffix}`}
+    >
+      <FSBadge type={statusType ?? 'success'}>{children}</FSBadge>
+    </section>
+  );
+}
+
+function renderCollapsedConversationStatusRun(run, startIndex, t) {
+  const first = run[0];
+  const rowKey =
+    first.id ?? `msg-${first.timestamp}-${startIndex}-status-run-${run.length}`;
+
+  return renderConversationStatusBadge(
+    rowKey,
+    'conversation-status-collapsed',
+    first.statusType,
+    t('messages_list.items_added_to_cart', { count: run.length }),
+  );
+}
+
+/**
+ * Renders one direction-group: consecutive `conversation_status` messages (2+)
+ * become a single summary badge; other types are unchanged.
+ */
+function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
+  const { messages } = group;
+  const nodes = [];
+
+  for (let index = 0; index < messages.length; ) {
+    const message = messages[index];
+
+    if (message.type !== MESSAGE_TYPE_CONVERSATION_STATUS) {
+      nodes.push(renderMessage(group, message, index, enableComponents));
+      index += 1;
+      continue;
+    }
+
+    const runEnd = indexAfterConversationStatusRun(messages, index);
+    const runLength = runEnd - index;
+    const isCollapsedRun = runLength > 1;
+
+    if (isCollapsedRun) {
+      const statusRun = messages.slice(index, runEnd);
+      nodes.push(renderCollapsedConversationStatusRun(statusRun, index, t));
+    } else {
+      nodes.push(
+        renderMessage(group, messages[index], index, enableComponents),
+      );
+    }
+
+    index = runEnd;
+  }
+
+  return nodes;
+}
+
 function renderMessage(group, message, messageIndex, enableComponents) {
   const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
 
   switch (message.type) {
-    case 'conversation_status':
-      return (
-        <section
-          className="weni-messages-list__conversation-status"
-          key={`${rowKey}-conversation-status`}
-        >
-          <FSBadge type={message.statusType}>{message.text}</FSBadge>
-        </section>
+    case MESSAGE_TYPE_CONVERSATION_STATUS:
+      return renderConversationStatusBadge(
+        rowKey,
+        'conversation-status',
+        message.statusType,
+        message.text,
       );
     default:
       return (

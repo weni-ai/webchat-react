@@ -71,6 +71,8 @@ import CloseFullscreenFilled from '@material-symbols/svg-400/rounded/close_fulls
 import ProgressActivity from '@material-symbols/svg-400/rounded/progress_activity.svg?react';
 import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_activity-fill.svg?react';
 import RoundedX from '@/assets/icons/rounded-x.svg?react';
+import CheckSmall from '@material-symbols/svg-400/rounded/check_small.svg?react';
+import CheckSmallFilled from '@material-symbols/svg-400/rounded/check_small-fill.svg?react';
 
 export const icons = {
   send: {
@@ -220,5 +222,9 @@ export const icons = {
   rounded_x: {
     default: RoundedX,
     filled: RoundedX,
+  },
+  check_small: {
+    default: CheckSmall,
+    filled: CheckSmallFilled,
   },
 };
