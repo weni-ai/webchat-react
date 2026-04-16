@@ -7,6 +7,8 @@ import {
 } from 'react';
 import PropTypes from 'prop-types';
 
+import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+
 const OrderFormContext = createContext(null);
 
 export function OrderFormProvider({ children }) {
@@ -45,13 +47,24 @@ export function OrderFormProvider({ children }) {
       });
   }, []);
 
-  const trySyncFaststoreCart = useCallback(() => {
+  const trySyncHostCart = useCallback(async () => {
+    let syncedWithFaststore = false;
     try {
       const cart = window.faststore_sdk_stores?.get?.('fs::cart');
-      if (!cart?.set || !cart?.read) return;
-      cart.set(cart.read());
+      if (cart?.set && cart?.read) {
+        cart.set(cart.read());
+        syncedWithFaststore = true;
+      }
     } catch {
-      // FastStore SDK unavailable or read/set failed — ignore
+      // FastStore SDK unavailable or read/set failed — try VTEX IO
+    }
+
+    if (syncedWithFaststore) return;
+
+    try {
+      await updateVTEXIOMinicart();
+    } catch {
+      // VTEX IO minicart bridge unavailable or failed — ignore
     }
   }, []);
 
@@ -59,7 +72,7 @@ export function OrderFormProvider({ children }) {
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
-    trySyncFaststoreCart,
+    trySyncHostCart,
   };
 
   return (
@@ -89,7 +102,7 @@ export function useOrderForm() {
     orderFormId: context?.orderFormId ?? null,
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
     requestOrderForm: context?.requestOrderForm ?? (() => {}),
-    trySyncFaststoreCart: context?.trySyncFaststoreCart ?? (() => {}),
+    trySyncHostCart: context?.trySyncHostCart ?? (() => {}),
   };
 }
 

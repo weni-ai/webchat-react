@@ -35,12 +35,8 @@ export function CounterControls({
   const [justAdded, setJustAdded] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
   const timeoutRef = useRef(null);
-  const {
-    orderFormId,
-    isLoadingOrderForm,
-    requestOrderForm,
-    trySyncFaststoreCart,
-  } = useOrderForm();
+  const { orderFormId, isLoadingOrderForm, requestOrderForm, trySyncHostCart } =
+    useOrderForm();
   const { addProductToCart, config, addConversationStatus, setCustomField } =
     useChatContext();
   const { t } = useTranslation();
@@ -137,7 +133,7 @@ export function CounterControls({
         'success',
       );
 
-      trySyncFaststoreCart();
+      void trySyncHostCart();
     } finally {
       setIsAddingProduct(false);
     }
