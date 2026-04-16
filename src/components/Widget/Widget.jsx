@@ -12,6 +12,8 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
 import { useEffect } from 'react';
 
+const VTEX_HEADER_STYLE_ID = 'vtex-cx-webchat-vtex-header-style';
+
 /**
  * Widget - Main container component
  * TODO: Add fullscreen support
@@ -74,6 +76,29 @@ function WidgetContent() {
 }
 
 export function Widget({ config, theme = null }) {
+  useEffect(() => {
+    // temporary fix only for bravtexgrocerystore account
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    if (document.getElementById(VTEX_HEADER_STYLE_ID)) {
+      return undefined;
+    }
+
+    const style = document.createElement('style');
+    style.id = VTEX_HEADER_STYLE_ID;
+    style.textContent = `.vtex-sticky-layout-0-x-container--sticky-header {
+  z-index: 997;
+}
+`;
+    document.head.appendChild(style);
+
+    return () => {
+      document.getElementById(VTEX_HEADER_STYLE_ID)?.remove();
+    };
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <ChatProvider config={config}>
