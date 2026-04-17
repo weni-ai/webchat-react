@@ -141,11 +141,6 @@ export async function updateVTEXIOMinicart() {
     const freshOrderForm = await fetchLatestOrderForm();
 
     console.log('[Minicart] Merging data to preserve catalog images...');
-    console.log(
-      'context.orderForm',
-      JSON.stringify(context.orderForm, null, 2),
-    );
-    console.log('freshOrderForm', JSON.stringify(freshOrderForm, null, 2));
 
     const mergedOrderForm = mergePreservingImages(
       context.orderForm,
