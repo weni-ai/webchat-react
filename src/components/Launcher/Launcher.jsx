@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -46,15 +46,23 @@ export function Launcher() {
     [isVoiceModePageActive, handleCloseVoiceModePage, toggleChat],
   );
 
+  const canStartVoice = useMemo(() => {
+    return (
+      isVoiceEnabledByClient &&
+      isVoiceEnabledByServer &&
+      isVoiceModeSupported &&
+      !isVoiceModeActive
+    );
+  }, [
+    isVoiceEnabledByClient,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+    isVoiceModeActive,
+  ]);
+
   const handleGraphicEqClick = useCallback(
     (e) => {
       e.stopPropagation();
-
-      const canStartVoice =
-        isVoiceEnabledByClient &&
-        isVoiceEnabledByServer &&
-        isVoiceModeSupported &&
-        !isVoiceModeActive;
 
       if (canStartVoice) {
         void runVoiceModeEntryFlow();
@@ -62,25 +70,18 @@ export function Launcher() {
 
       toggleChat();
     },
-    [
-      isChatOpen,
-      isVoiceEnabledByClient,
-      isVoiceEnabledByServer,
-      isVoiceModeSupported,
-      isVoiceModeActive,
-      runVoiceModeEntryFlow,
-    ],
+    [isChatOpen, canStartVoice, runVoiceModeEntryFlow],
   );
 
   return (
     <section className="weni-launcher__container">
       <section
-        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!isVoiceEnabledByClient ? 'weni-launcher--as-button' : ''}`}
+        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!canStartVoice ? 'weni-launcher--as-button' : ''}`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={toggleChat}
       >
-        {isHovering && isVoiceEnabledByClient ? (
+        {isHovering && canStartVoice ? (
           <>
             <button
               type="button"
