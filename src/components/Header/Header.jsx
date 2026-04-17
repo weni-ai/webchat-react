@@ -42,7 +42,10 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config } = useChatContext();
+  const { config, isInsideVTEXStore } = useChatContext();
+
+  const showCartButton = cartTotalItems > 0 && !isInsideVTEXStore;
+
   // TODO: Implement header layout
   // TODO: Add connection status indicator
 
@@ -67,7 +70,7 @@ export function Header() {
       </hgroup>
 
       <section className="weni-chat-header__actions">
-        {cartTotalItems > 0 && (
+        {showCartButton && (
           <Button
             aria-label="Cart"
             variant="primary"
