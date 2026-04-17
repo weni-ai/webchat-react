@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  Fragment,
+} from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
@@ -147,32 +154,66 @@ export function InputBox({ maxLength = 5000 }) {
     textareaRef.current.focus();
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
-    if (!textarea) return;
+    if (!textarea) return undefined;
 
-    textarea.style.height = 'auto';
+    const adjustHeight = () => {
+      const el = textareaRef.current;
+      if (!el) return;
 
-    let height;
+      el.style.height = 'auto';
 
-    if (textarea.value === '') {
-      const temp = textarea.value;
-      textarea.value = textarea.placeholder;
-      height = textarea.scrollHeight;
-      textarea.style.height = height + 'px';
-      textarea.value = temp;
-    } else {
-      height = textarea.scrollHeight;
-      textarea.style.height = height + 'px';
+      let height;
+
+      if (el.value === '') {
+        const temp = el.value;
+        el.value = el.placeholder;
+        height = el.scrollHeight;
+        el.value = temp;
+      } else {
+        height = el.scrollHeight;
+      }
+
+      if (height === 0) {
+        return;
+      }
+
+      el.style.height = `${height}px`;
+
+      const rectHeight = el.getBoundingClientRect().height;
+      const marginBottom = rectHeight - el.scrollHeight;
+
+      if (rectHeight) {
+        el.style.marginBottom = `${marginBottom}px`;
+      }
+    };
+
+    adjustHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined;
     }
 
-    const marginBottom =
-      textarea.getBoundingClientRect().height - textarea.scrollHeight;
+    const resizeObserver = new ResizeObserver(() => {
+      adjustHeight();
+    });
 
-    if (textarea.getBoundingClientRect().height) {
-      textarea.style.marginBottom = `${marginBottom}px`;
-    }
-  }, [text]);
+    resizeObserver.observe(textarea);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [
+    text,
+    inputTextFieldHint,
+    isRecording,
+    isCameraRecording,
+    isVoiceModePageActive,
+    isEnteringVoiceMode,
+    mode,
+  ]);
+
   const hasNoTextInput = !text.trim();
   const canDisplayCameraRecorder =
     hasNoTextInput &&
