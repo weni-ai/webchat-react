@@ -121,7 +121,7 @@ function mapConfig(params) {
     showMessageDate: params.showMessageDate || false,
     showHeaderAvatar: params.showHeaderAvatar !== false,
     connectingText: params.connectingText || 'Waiting for server...',
-    renderPercentage: params.renderPercentage || 100,
+    renderPercentage: params.renderPercentage ?? 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
     showCameraButton: params.showCameraButton !== false,
@@ -141,7 +141,7 @@ function mapConfig(params) {
 
     // Tooltips
     tooltipMessage: params.tooltipMessage,
-    tooltipDelay: params.tooltipDelay || 500,
+    tooltipDelay: params.tooltipDelay ?? 500,
     disableTooltips: params.disableTooltips || false,
 
     // Experimental flags

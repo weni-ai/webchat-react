@@ -15,7 +15,7 @@ export function MessageOrder({ message }) {
   }, [productItems]);
 
   const totalItems = useMemo(() => {
-    return productItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+    return productItems.reduce((acc, item) => acc + (item.quantity ?? 1), 0);
   }, [productItems]);
 
   return (
