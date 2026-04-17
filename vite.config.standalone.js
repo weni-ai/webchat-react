@@ -17,9 +17,10 @@ export default defineConfig({
   },
   css: {
     preprocessorOptions: {
-      scss: {
-        additionalData: `@use 'sass:math';@import "@/styles/variables.scss";`
-      }
+        scss: {
+          api: 'modern-compiler',
+          additionalData: `@use 'sass:math';@use "@/styles/variables.scss" as *;`
+        }
     }
   },
   define: {

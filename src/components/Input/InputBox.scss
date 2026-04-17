@@ -47,9 +47,9 @@ $textarea-border-color-hover: #858585;
   gap: $fs-spacing-0;
 
   textarea {
-    $factor: 16 / 14;
-    $resize-factor: 14 / 16;
-    $position-correction: ($factor - 1) / 2;
+    $factor: math.div(16, 14);
+    $resize-factor: math.div(14, 16);
+    $position-correction: math.div(($factor - 1), 2);
 
     $initial-font-size: 14px;
     $initial-line-height: 21px;

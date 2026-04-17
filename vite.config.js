@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@use 'sass:math';@import "@/styles/variables.scss";`
+          api: 'modern-compiler',
+          additionalData: `@use 'sass:math';@use "@/styles/variables.scss" as *;`
         }
       }
     }

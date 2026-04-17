@@ -1,4 +1,4 @@
-@import '@/styles/animations.scss';
+@use '@/styles/animations.scss' as *;
 
 .weni-widget {
   z-index: var(--fs-z-index-high, 998);

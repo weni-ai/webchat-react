@@ -1,5 +1,4 @@
-@import '@/styles/variables.scss';
-@import '@/styles/animations.scss';
+@use '@/styles/animations.scss' as *;
 
 $fs-color-danger-text: #D32420;
 
