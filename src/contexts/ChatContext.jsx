@@ -13,6 +13,7 @@ import { VoiceService } from '@/services/voice';
 import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
+import { getVtexAccount } from '@/utils/vtex';
 
 let serviceInstance = {
   fns: [],
@@ -139,6 +140,7 @@ export function ChatProvider({ children, config }) {
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
+  const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
 
   // Voice mode state
   const [isVoiceEnabledByClient] = useState(!!mergedConfig.voiceMode?.enabled);
@@ -561,6 +563,7 @@ export function ChatProvider({ children, config }) {
     cart,
     setCart,
     clearCart,
+    isInsideVTEXStore,
     mode,
     isModeVisible: showMode,
 

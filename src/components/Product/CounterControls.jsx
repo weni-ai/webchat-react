@@ -37,8 +37,13 @@ export function CounterControls({
   const timeoutRef = useRef(null);
   const { orderFormId, isLoadingOrderForm, requestOrderForm, trySyncHostCart } =
     useOrderForm();
-  const { addProductToCart, config, addConversationStatus, setCustomField } =
-    useChatContext();
+  const {
+    addProductToCart,
+    config,
+    addConversationStatus,
+    setCustomField,
+    isInsideVTEXStore,
+  } = useChatContext();
   const { t } = useTranslation();
 
   const setOrderFormCustomFieldThrottled = useMemo(
@@ -103,12 +108,12 @@ export function CounterControls({
 
   const isAbleToAddProduct = useMemo(() => {
     return !!(
-      getVtexAccount() &&
+      isInsideVTEXStore &&
       orderFormId &&
       parsed?.skuId &&
       parsed?.sellerId
     );
-  }, [getVtexAccount, orderFormId, parsed]);
+  }, [isInsideVTEXStore, orderFormId, parsed]);
 
   async function handleAddProductToOrderForm() {
     setJustAdded(false);

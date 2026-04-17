@@ -9,7 +9,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import './ProductCatalog.scss';
 
 export function ProductCatalog({ productGroups }) {
-  const { cart, setCurrentPage } = useChatContext();
+  const { cart, setCurrentPage, isInsideVTEXStore } = useChatContext();
   const { t } = useTranslation();
 
   const totalItems = useMemo(() => {
@@ -18,6 +18,8 @@ export function ProductCatalog({ productGroups }) {
       0,
     );
   }, [cart]);
+
+  const showSeeCartButton = totalItems > 0 && !isInsideVTEXStore;
 
   return (
     <section className="weni-view-product-catalog">
@@ -39,7 +41,7 @@ export function ProductCatalog({ productGroups }) {
         ))}
       </section>
 
-      {totalItems > 0 && (
+      {showSeeCartButton && (
         <footer className="weni-view-product-catalog__footer">
           <Button
             onClick={() =>
