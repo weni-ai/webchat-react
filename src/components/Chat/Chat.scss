@@ -1,5 +1,4 @@
-@import '@/styles/animations.scss';
-@import '@/styles/variables.scss';
+@use '@/styles/animations.scss' as *;
 
 .weni-chat {
   @include weni-animation(0, 0.25s, weni-expand-in);

@@ -1,5 +1,4 @@
-@import '@/styles/animations.scss';
-@import '@/styles/variables.scss';
+@use '@/styles/animations.scss' as *;
 
 .weni-launcher {
   &__container {
