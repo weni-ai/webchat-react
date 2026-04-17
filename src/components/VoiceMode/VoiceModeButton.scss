@@ -1,4 +1,4 @@
-@import '@/styles/animations.scss';
+@use '@/styles/animations.scss' as *;
 
 .weni-voice-mode-btn {
   @include weni-animation(0, 0.2s, weni-slide-in);
