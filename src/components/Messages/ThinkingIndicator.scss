@@ -1,69 +1,65 @@
 .weni-thinking-indicator {
+  $line-height: 21px;
+  
   display: flex;
   align-items: center;
   gap: $spacing-1;
+  height: $line-height;
 
   &__icon {
     transition: opacity 0.5s ease-in-out;
 
     &--in {
-      animation: thinking-fade-in 0.5s ease-in-out;
+      animation: thinking-fade-in 5s ease-in-out;
     }
 
     &--out {
       animation: thinking-fade-out 0.5s ease-in-out;
       opacity: 0;
+    }
+  }
+
+  &__text-wrapper {
+    height: $line-height;
+  }
+
+  &__text-track {
+    display: flex;
+    flex-direction: column;
+
+    &--sliding {
+      animation: thinking-push 0.5s ease-in-out forwards;
+
+      .weni-thinking-indicator__text:first-child {
+        animation: thinking-fade-out 0.5s ease-in-out forwards;
+      }
+
+      .weni-thinking-indicator__text:last-child {
+        animation: thinking-fade-in 0.5s ease-in-out forwards;
+      }
     }
   }
 
   &__text {
-    font: $font-caption-2;
-    color: $fg-base;
+    font: $fs-text-weight-regular #{$fs-text-size-1}/20px $font-family;
+    color: $fs-fg-base;
     white-space: nowrap;
-
-    transition: opacity 0.5s ease-in-out;
-
-    &--in {
-      animation: thinking-fade-in 0.5s ease-in-out;
-    }
-
-    &--out {
-      animation: thinking-fade-out 0.5s ease-in-out;
-      opacity: 0;
-    }
+    flex-shrink: 0;
   }
 }
 
-@keyframes thinking-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes thinking-push {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
 }
 
 @keyframes thinking-fade-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(4px);
-  }
+  0%, 25% { opacity: 1; }
+  75%, 100% { opacity: 0; }
 }
 
-@keyframes typing-bounce {
-  0%, 80%, 100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  40% {
-    transform: translateY(-2px);
-    opacity: 1;
-  }
+@keyframes thinking-fade-in {
+  0%, 25% { opacity: 0; }
+  75%, 100% { opacity: 1; }
 }
 
