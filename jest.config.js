@@ -8,10 +8,10 @@ module.exports = {
     '^.+\\.[jt]sx?$': 'babel-jest',
   },
   moduleNameMapper: {
+    '\\.svg(\\?react)?$': '<rootDir>/test/__mocks__/svgrMock.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|scss|sass)$': 'identity-obj-proxy',
     '\\.(png|jpg|jpeg|gif|webp)$': '<rootDir>/test/__mocks__/fileMock.js',
-    '\\.svg(\\?react)?$': '<rootDir>/test/__mocks__/svgrMock.js',
     '^marked$': '<rootDir>/test/__mocks__/marked.js',
     '^@weni/webchat-service$': '<rootDir>/test/__mocks__/@weni/webchat-service.js',
     '^react-i18next$': '<rootDir>/test/__mocks__/react-i18next.js',

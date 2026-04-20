@@ -81,9 +81,11 @@ export function InlineProduct({
         : null;
 
   const productURLObject = useMemo(() => {
-    return URL.canParse(productURL)
-      ? new URL(productURL)
-      : { origin: '', pathname: '' };
+    try {
+      return new URL(productURL);
+    } catch {
+      return { origin: '', pathname: '' };
+    }
   }, [productURL]);
 
   const canUserNavigateToProductPage = useMemo(() => {

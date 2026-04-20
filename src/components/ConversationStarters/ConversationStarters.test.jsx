@@ -88,7 +88,7 @@ describe('ConversationStarterButton', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders using Button component with weni-button class', () => {
+  it('renders using FSButton component with weni-fs-button class', () => {
     const { container } = render(
       <ConversationStarterButton
         question="Test question"
@@ -96,7 +96,7 @@ describe('ConversationStarterButton', () => {
       />,
     );
 
-    const button = container.querySelector('.weni-button');
+    const button = container.querySelector('.weni-fs-button');
     expect(button).toBeInTheDocument();
   });
 });

@@ -53,6 +53,7 @@ function setupMockContext(cartItems = {}) {
     setCart: mockSetCart,
     clearPageHistory: mockClearPageHistory,
     sendOrder: mockSendOrder,
+    config: { addToCart: false },
   });
 }
 

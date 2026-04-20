@@ -1,4 +1,4 @@
-@import '@/styles/animations.scss';
+@use '@/styles/animations.scss' as *;
 
 @include weni-keyframes(weni-dropdown-panel-rise) {
   from {
