@@ -142,6 +142,8 @@ export function ChatProvider({ children, config }) {
   const [cart, setCart] = useState({});
   const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
 
+  const [inputDraft, setInputDraft] = useState('');
+
   // Voice mode state
   const [isVoiceEnabledByClient] = useState(!!mergedConfig.voiceMode?.enabled);
   const [isVoiceEnabledByServer, setIsVoiceEnabledByServer] = useState(false);
@@ -543,6 +545,8 @@ export function ChatProvider({ children, config }) {
     cameraDevices,
 
     // UI-specific state
+    inputDraft,
+    setInputDraft,
     title,
     isChatOpen,
     setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
