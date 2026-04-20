@@ -17,6 +17,7 @@ const VTEX_HEADER_STYLE_ID = 'vtex-cx-webchat-vtex-header-style';
 const VTEX_HEADER_SELECTORS = [
   '.vtex-store-header-2-x-headerStickyRow--main-header',
   '.vtex-sticky-layout-0-x-container--sticky-header',
+  '.vtex-sticky-layout-0-x-container--header-mobile',
 ];
 
 /**
