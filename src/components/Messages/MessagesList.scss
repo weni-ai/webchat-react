@@ -37,6 +37,14 @@
     max-width: 100%;
   }
 
+  &__direction-group--typing {
+    .weni-message {
+      border-inline: none;
+      border-color: transparent;
+      padding-inline: 0;
+    }
+  }
+
   > section {
     margin-top: $spacing-4;
   }

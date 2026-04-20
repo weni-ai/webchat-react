@@ -23,6 +23,7 @@ import { QuickReplies } from './TextComponents/QuickReplies';
 import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
+import ThinkingIndicator from './ThinkingIndicator';
 
 const BOTTOM_SCROLL_THRESHOLD_PX = 100;
 const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
@@ -177,6 +178,7 @@ export function MessagesList() {
           className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
+            weni-messages-list__direction-group--typing
           `}
         >
           <MessageContainer
@@ -184,7 +186,11 @@ export function MessagesList() {
             direction="incoming"
             type="typing"
           >
-            <TypingIndicator />
+            {isThinking ? (
+              <ThinkingIndicator className="weni-message__thinking-indicator" />
+            ) : (
+              <TypingIndicator />
+            )}
           </MessageContainer>
         </section>
       )}
