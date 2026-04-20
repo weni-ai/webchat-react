@@ -1,8 +1,5 @@
 import PropTypes from 'prop-types';
 
-import ThinkingIndicator from './ThinkingIndicator';
-import { useWeniChat } from '@/hooks/useWeniChat';
-
 import './MessageContainer.scss';
 
 export function MessageContainer({ direction, children, type, className }) {
