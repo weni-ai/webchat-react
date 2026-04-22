@@ -39,9 +39,8 @@
 
   &__direction-group--typing {
     .weni-message {
-      border-inline: none;
-      border-color: transparent;
-      padding-inline: 0;
+      border: none;
+      padding: $spacing-2 0;
     }
   }
 

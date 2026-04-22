@@ -1,5 +1,5 @@
 .weni-thinking-indicator {
-  $line-height: 21px;
+  $line-height: 16px;
   
   display: flex;
   align-items: center;
@@ -41,7 +41,7 @@
   }
 
   &__text {
-    font: $fs-text-weight-regular #{$fs-text-size-1}/20px $font-family;
+    font: $fs-text-weight-regular #{$fs-text-size-0}/#{$line-height} $font-family;
     color: $fs-fg-base;
     white-space: nowrap;
     flex-shrink: 0;
