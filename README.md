@@ -92,6 +92,7 @@ The standalone initializer accepts:
 | `title` | string | — | Title displayed in the header. |
 | `subtitle` | string | — | Subtitle displayed in the header. |
 | `inputTextFieldHint` | string | 'Type a message' | Placeholder text for the input. |
+| `position` | `'bottom-right'` \| `'bottom-left'` | `'bottom-right'` | Corner where the floating widget is anchored. |
 | `embedded` | boolean | false | Embedded mode; forces fullscreen and hides close/fullscreen buttons. |
 | `showCloseButton` | boolean | true | Show close button (disabled when `embedded` is true). |
 | `showFullScreenButton` | boolean | false | Show fullscreen toggle (disabled when `embedded` is true). |

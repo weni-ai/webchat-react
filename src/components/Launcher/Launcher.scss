@@ -3,7 +3,6 @@
 .weni-launcher {
   &__container {
     position: relative;
-    margin-right: 20px;
     margin-bottom: 20px;
   }
 
@@ -82,6 +81,14 @@
     width: auto;
     border: $fs-border-width solid $fs-border-color;
   }
+}
+
+.weni-widget--bottom-right .weni-launcher__container {
+  margin-right: 20px;
+}
+
+.weni-widget--bottom-left .weni-launcher__container {
+  margin-left: 20px;
 }
 
 .weni-launcher-icon--click-open {

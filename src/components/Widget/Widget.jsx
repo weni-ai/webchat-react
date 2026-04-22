@@ -58,6 +58,7 @@ function WidgetContent() {
     <aside
       className={`
         weni-widget
+        weni-widget--${config.position}
         ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}
         ${config.embedded ? 'weni-widget--disabled-animation' : ''}
         ${isChatOpen ? 'weni-widget--open' : 'weni-widget--closed'}
