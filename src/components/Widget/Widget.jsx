@@ -14,6 +14,12 @@ import { useEffect } from 'react';
 
 const VTEX_HEADER_STYLE_ID = 'vtex-cx-webchat-vtex-header-style';
 
+const VTEX_HEADER_SELECTORS = [
+  '.vtex-store-header-2-x-headerStickyRow--main-header',
+  '.vtex-sticky-layout-0-x-container--sticky-header',
+  '.vtex-sticky-layout-0-x-container--header-mobile',
+];
+
 /**
  * Widget - Main container component
  * TODO: Add fullscreen support
@@ -88,10 +94,7 @@ export function Widget({ config, theme = null }) {
 
     const style = document.createElement('style');
     style.id = VTEX_HEADER_STYLE_ID;
-    style.textContent = `.vtex-sticky-layout-0-x-container--sticky-header {
-  z-index: 997;
-}
-`;
+    style.textContent = VTEX_HEADER_SELECTORS.join(', ') + ' { z-index: 997; }';
     document.head.appendChild(style);
 
     return () => {

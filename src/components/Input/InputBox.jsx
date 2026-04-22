@@ -50,9 +50,9 @@ export function InputBox({ maxLength = 5000 }) {
     voiceIntentBanner,
     handleVoiceModeIntent,
     handleCloseVoiceModePage,
+    inputDraft: text,
+    setInputDraft: setText,
   } = useChatContext();
-
-  const [text, setText] = useState('');
   const [hasAudioPermissionState, setHasAudioPermissionState] = useState(false);
   const [hasCameraPermissionState, setHasCameraPermissionState] =
     useState(false);
