@@ -40,6 +40,7 @@ const defaultConfig = {
   // UI settings
   title: 'Welcome',
   inputTextFieldHint: 'Type a message',
+  position: 'bottom-right',
   embedded: false,
   showCloseButton: true,
   showFullScreenButton: false,
@@ -638,6 +639,7 @@ ChatProvider.propTypes = {
     title: PropTypes.string,
     subtitle: PropTypes.string,
     inputTextFieldHint: PropTypes.string,
+    position: PropTypes.oneOf(['bottom-right', 'bottom-left']),
     embedded: PropTypes.bool,
     showCloseButton: PropTypes.bool,
     showFullScreenButton: PropTypes.bool,

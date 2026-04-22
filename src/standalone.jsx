@@ -113,6 +113,7 @@ function mapConfig(params) {
     title: params.title || 'Welcome',
     subtitle: params.subtitle,
     inputTextFieldHint: params.inputTextFieldHint || 'Type a message',
+    position: params.position || 'bottom-right',
     embedded: params.embedded || false,
     showCloseButton: params.showCloseButton !== false,
     showFullScreenButton: params.showFullScreenButton || false,
