@@ -5,7 +5,7 @@
 }
 
 .weni-typing-indicator {
-  $line-height: 16px;
+  $line-height: $fs-text-size-base;
 
   height: $line-height;
   display: flex;
