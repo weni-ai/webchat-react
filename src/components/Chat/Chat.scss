@@ -1,8 +1,6 @@
 @use '@/styles/animations.scss' as *;
 
 .weni-chat {
-  @include weni-animation(0, 0.25s, weni-expand-in);
-
   background: $white;
   box-shadow: $shadow-1;
 
@@ -14,13 +12,8 @@
   width: 400px;
   height: 600px;
   max-height: var(--vtex-cx-webchat-height, 85vh);
-  margin: 0 20px 20px 0;
 
   border-radius: $fs-border-radius-medium;
-
-  &--closing {
-    @include weni-animation(0, 0.25s, weni-expand-out);
-  }
 
   &--disabled-animation {
     animation: none;
@@ -44,6 +37,25 @@
     background-color: $gray-50;
     border-radius: $border-radius-2;
     text-align: center;
+  }
+}
+
+
+.weni-widget--bottom-right .weni-chat {
+  @include weni-animation(0, 0.25s, weni-expand-in-bottom-right);
+  margin: 0 20px 20px 0;
+
+  &--closing {
+    @include weni-animation(0, 0.25s, weni-expand-out-bottom-right);
+  }
+}
+
+.weni-widget--bottom-left .weni-chat {
+  @include weni-animation(0, 0.25s, weni-expand-in-bottom-left);
+  margin: 0 0 20px 20px;
+
+  &--closing {
+    @include weni-animation(0, 0.25s, weni-expand-out-bottom-left);
   }
 }
 

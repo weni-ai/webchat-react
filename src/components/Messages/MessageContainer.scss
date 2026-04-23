@@ -36,14 +36,6 @@
   animation-timing-function: ease-out;
   animation-fill-mode: both;
 
-  &__thinking-indicator {
-    position: absolute;
-    top: 100%;
-    left: 0;
-
-    margin-top: $spacing-1;
-  }
-
   &--image {
     padding: $spacing-2;
   }
