@@ -108,6 +108,28 @@ export function MessagesList() {
   }, [syncScrollState]);
 
   useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+
+    let lastHeight = vv.height;
+    let rafId;
+
+    const handleViewportResize = () => {
+      if (vv.height < lastHeight) {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => scrollToBottom('instant'));
+      }
+      lastHeight = vv.height;
+    };
+
+    vv.addEventListener('resize', handleViewportResize);
+    return () => {
+      vv.removeEventListener('resize', handleViewportResize);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
     const id = requestAnimationFrame(() => syncScrollState());
     return () => cancelAnimationFrame(id);
