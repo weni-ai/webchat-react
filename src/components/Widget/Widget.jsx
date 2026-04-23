@@ -18,6 +18,10 @@ const VTEX_HEADER_SELECTORS = [
   '.vtex-store-header-2-x-headerStickyRow--main-header',
   '.vtex-sticky-layout-0-x-container--sticky-header',
   '.vtex-sticky-layout-0-x-container--header-mobile',
+  '.vtex-sticky-layout-0-x-container--SiteHeader',
+  '.vtex-sticky-layout-0-x-wrapper--SiteHeader',
+  '.vtex-sticky-layout-0-x-container--desktop__sticky--header',
+  '.vtex-sticky-layout-0-x-container--header__principal',
 ];
 
 /**
