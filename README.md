@@ -9,7 +9,7 @@ Use the hosted UMD:
 ```html
 <div id="weni-webchat"></div>
 
-<script src="https://cdn.cloud.weni.ai/webchat-latest.umd.js"></script>
+<script src="https://cdn.cloud.weni.ai/v3/webchat-latest.umd.js"></script>
 <script>
   window.WebChat.init({
     selector: '#weni-webchat',
