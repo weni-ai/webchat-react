@@ -4,14 +4,13 @@
   gap: $spacing-3;
   flex-direction: column;
 
-  height: 100%;
-  overflow: hidden auto;
+  @include scrollable-container;
 
   &__content {
     display: flex;
     flex-direction: column;
     gap: $spacing-3;
-    overflow: auto;
+    @include scrollable-content;
   }
 
   &__footer {
