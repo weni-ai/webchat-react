@@ -4,14 +4,13 @@
   gap: $spacing-2;
   flex-direction: column;
 
-  height: 100%;
-  overflow: hidden auto;
+  @include scrollable-container;
 
   &__products {
     display: flex;
     flex-direction: column;
     gap: $spacing-2;
-    overflow: auto;
+    @include scrollable-content;
   }
 
   &__total-items {
