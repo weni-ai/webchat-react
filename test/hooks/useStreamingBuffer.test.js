@@ -214,7 +214,8 @@ describe('useStreamingBuffer', () => {
     it('sets exact final text (not word-tokenised) when buffering ends', () => {
       const text = 'hello   world'; // multiple spaces between words
       const { result, rerender } = renderHook(
-        ({ text: t, isStreaming }) => useStreamingBuffer({ text: t, isStreaming }),
+        ({ text: t, isStreaming }) =>
+          useStreamingBuffer({ text: t, isStreaming }),
         { initialProps: { text, isStreaming: true } },
       );
 
