@@ -17,6 +17,7 @@ import { FSButton } from '@/components/common/FSButton';
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
+import { MessagesScrollProvider } from '@/contexts/MessagesScrollContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
 import { ShowItems } from './TextComponents/ShowItems';
 import { QuickReplies } from './TextComponents/QuickReplies';
@@ -82,9 +83,15 @@ export function MessagesList() {
     !isInChatStartersDismissed &&
     messageGroups.length === 0;
 
+  const isNearBottomRef = useRef(true);
+
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }
+
+  const scrollToBottomOnReveal = useCallback(() => {
+    if (isNearBottomRef.current) scrollToBottom();
+  }, []);
 
   const syncScrollState = useCallback(() => {
     const el = listRef.current;
@@ -92,7 +99,9 @@ export function MessagesList() {
     const top = el.scrollTop;
     setScrollTop(top);
     const distanceFromBottom = el.scrollHeight - top - el.clientHeight;
-    setShowGoToBottom(distanceFromBottom > BOTTOM_SCROLL_THRESHOLD_PX);
+    const isNear = distanceFromBottom <= BOTTOM_SCROLL_THRESHOLD_PX;
+    isNearBottomRef.current = isNear;
+    setShowGoToBottom(!isNear);
   }, []);
 
   useEffect(() => {
@@ -157,79 +166,81 @@ export function MessagesList() {
   };
 
   return (
-    <section
-      ref={listRef}
-      className="weni-messages-list"
-      data-scroll-top={scrollTop}
-    >
-      {/* TODO: Add empty state when no messages */}
+    <MessagesScrollProvider onWordRevealed={scrollToBottomOnReveal}>
+      <section
+        ref={listRef}
+        className="weni-messages-list"
+        data-scroll-top={scrollTop}
+      >
+        {/* TODO: Add empty state when no messages */}
 
-      <ChatPresentation />
+        <ChatPresentation />
 
-      {messageGroups.map((group, groupIndex) => (
-        <section
-          className={`
+        {messageGroups.map((group, groupIndex) => (
+          <section
+            className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--${group.direction}
           `}
-          key={
-            group.messages[0].id ??
-            `grp-${group.messages[0].timestamp}-${groupIndex}`
-          }
-        >
-          {renderGroupMessagesWithCollapsedStatus(group, enableComponents, t)}
-        </section>
-      ))}
-
-      {isVoiceModeActive && voicePartialTranscript && (
-        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
-          <MessageContainer
-            className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
-            direction="outgoing"
-            type="text"
+            key={
+              group.messages[0].id ??
+              `grp-${group.messages[0].timestamp}-${groupIndex}`
+            }
           >
-            <section className="weni-message-text weni-message-text--outgoing">
-              {voicePartialTranscript}
-            </section>
-          </MessageContainer>
-        </section>
-      )}
+            {renderGroupMessagesWithCollapsedStatus(group, enableComponents, t)}
+          </section>
+        ))}
 
-      {(isTyping || isThinking) && (
-        <section
-          className={`
+        {isVoiceModeActive && voicePartialTranscript && (
+          <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
+            <MessageContainer
+              className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
+              direction="outgoing"
+              type="text"
+            >
+              <section className="weni-message-text weni-message-text--outgoing">
+                {voicePartialTranscript}
+              </section>
+            </MessageContainer>
+          </section>
+        )}
+
+        {(isTyping || isThinking) && (
+          <section
+            className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
             weni-messages-list__direction-group--typing
           `}
-        >
-          <MessageContainer
-            className="weni-messages-list__message weni-messages-list__message--incoming"
-            direction="incoming"
-            type="typing"
           >
-            {isThinking ? (
-              <ThinkingIndicator className="weni-message__thinking-indicator" />
-            ) : (
-              <TypingIndicator />
-            )}
-          </MessageContainer>
-        </section>
-      )}
+            <MessageContainer
+              className="weni-messages-list__message weni-messages-list__message--incoming"
+              direction="incoming"
+              type="typing"
+            >
+              {isThinking ? (
+                <ThinkingIndicator className="weni-message__thinking-indicator" />
+              ) : (
+                <TypingIndicator />
+              )}
+            </MessageContainer>
+          </section>
+        )}
 
-      {showConversationStartersFull && (
-        <ConversationStartersFull
-          questions={questions}
-          onStarterClick={handleFullStarterClick}
-        />
-      )}
+        {showConversationStartersFull && (
+          <ConversationStartersFull
+            questions={questions}
+            onStarterClick={handleFullStarterClick}
+          />
+        )}
 
-      {showGoToBottom && (
-        <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
-      )}
+        {showGoToBottom && (
+          <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
+        )}
 
-      <div ref={messagesEndRef} />
-    </section>
+        <div ref={messagesEndRef} />
+      </section>
+    </MessagesScrollProvider>
   );
 }
 
