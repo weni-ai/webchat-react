@@ -5,6 +5,7 @@ import { marked } from 'marked';
 
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
+import { useStreamingBuffer } from '@/hooks/useStreamingBuffer';
 
 import './MessageText.scss';
 
@@ -15,10 +16,15 @@ import './MessageText.scss';
  * TODO: Show message status (sent, delivered, read)
  */
 export function MessageText({ message, componentsEnabled }) {
-  const html = useMemo(() => {
-    if (!message.text) return '';
+  const { displayedText, isBuffering } = useStreamingBuffer({
+    text: message.text,
+    isStreaming: message.status === 'streaming',
+  });
 
-    const purifiedContent = DOMPurify.sanitize(message.text);
+  const html = useMemo(() => {
+    if (!displayedText && !isBuffering) return '';
+
+    const purifiedContent = DOMPurify.sanitize(displayedText);
 
     marked.use({
       breaks: true,
@@ -40,12 +46,10 @@ export function MessageText({ message, componentsEnabled }) {
         .replace(/\n•\s*/g, '\n* ')
         // Handle cases where • appears at the start of content
         .replace(/^•\s*/g, '* ') +
-      (message.status === 'streaming'
-        ? '<span class="weni-message-text__caret" />'
-        : '');
+      (isBuffering ? '<span class="weni-message-text__caret" />' : '');
 
     return marked.parse(processedContent);
-  }, [message.text, message.status]);
+  }, [displayedText, isBuffering]);
 
   return (
     <>
