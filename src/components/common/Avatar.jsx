@@ -1,40 +1,29 @@
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Icon } from '@/components/common/Icon';
 import './Avatar.scss';
 
 /**
  * Avatar - User avatar component
  *
- * Displays user avatar with support for images and fallback initials.
+ * Displays user avatar with support for images and fallback icon.
  * Sizes match Icon component sizes for consistency.
  *
  * @example
  * <Avatar src="https://example.com/avatar.jpg" alt="John Doe" size="medium" />
- * <Avatar name="John Doe" size="large" />
+ * <Avatar size="large" />
  */
 export function Avatar({
   src = '',
   alt = '',
-  name = '',
   size = 'medium',
   shape = 'circle',
   className = '',
   onError = null,
   ...props
 }) {
+  const sizeValue = typeof size === 'number' ? size : size;
   const [imageError, setImageError] = useState(false);
-
-  const getInitials = () => {
-    if (name) {
-      return name
-        .split(' ')
-        .map((word) => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    return '';
-  };
 
   const handleImageError = (e) => {
     setImageError(true);
@@ -43,20 +32,32 @@ export function Avatar({
     }
   };
 
-  const displayInitials = getInitials();
   const showImage = src && !imageError;
+
+  const style = useMemo(() => {
+    if (typeof size === 'number') {
+      return {
+        width: sizeValue,
+        height: sizeValue,
+        fontSize: sizeValue * 0.45,
+      };
+    }
+
+    return {};
+  }, [size]);
 
   return (
     <section
       className={`
         weni-avatar
-        weni-avatar--${size}
+        ${typeof size === 'string' ? `weni-avatar--${size}` : ''}
         weni-avatar--${shape}
         ${!showImage && 'weni-avatar--with-background-color'}
         ${className}
       `}
       role="img"
-      aria-label={alt || name || 'Avatar'}
+      aria-label={alt || 'Avatar'}
+      style={style}
       {...props}
     >
       {showImage ? (
@@ -67,9 +68,12 @@ export function Avatar({
           onError={handleImageError}
         />
       ) : (
-        displayInitials && (
-          <p className="weni-avatar__initials">{displayInitials}</p>
-        )
+        <Icon
+          name="rounded_x"
+          size="x-large"
+          color="weni-main-color"
+          filled
+        />
       )}
     </section>
   );
@@ -79,7 +83,10 @@ Avatar.propTypes = {
   src: PropTypes.string,
   alt: PropTypes.string,
   name: PropTypes.string,
-  size: PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']),
+  size: PropTypes.oneOfType([
+    PropTypes.oneOf(['small', 'medium', 'large', 'x-large', 'full']),
+    PropTypes.number,
+  ]),
   /** Avatar shape */
   shape: PropTypes.oneOf(['circle', 'square', 'rounded']),
   /** Additional CSS classes */

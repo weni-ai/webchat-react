@@ -1,29 +1,55 @@
 @use '@/styles/animations.scss' as *;
 
 .weni-widget {
-  z-index: 9999;
+  z-index: var(--fs-z-index-high, 998);
 
   position: fixed;
-  right: 0;
   bottom: 0;
 
-  padding: 0 $spacing-3 $spacing-3 0;
+  box-sizing: border-box;
 
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-end;  
+  justify-content: flex-end;
   gap: $spacing-3;
+
+  &--bottom-right {
+    right: 0;
+    align-items: flex-end;
+  }
+
+  &--bottom-left {
+    left: 0;
+    align-items: flex-start;
+  }
 
   @include weni-animation(0, 0.25s, weni-slide-in);
 
   &--disabled-animation {
     animation: none;
   }
+  
+  $animation-duration: 0.25s;
+
+  transition: padding-bottom $animation-duration ease-in-out, gap $animation-duration ease-in-out;
+
+  .weni-launcher__container {
+    transition: height $animation-duration ease-in-out;
+  }
+
+  &.weni-widget--open {
+    gap: 0;
+  
+    .weni-launcher__container {
+      height: 0;
+    }
+  }
 }
 
-.weni-widget--fullscreen {
-  padding: 0;
-  width: 100%;
-  height: 100%;
+@media screen and (max-width: 540px) {
+  .weni-widget {
+    .weni--hide-on-mobile {
+      display: none;
+    }
+  }
 }

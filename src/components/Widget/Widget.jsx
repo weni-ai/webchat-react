@@ -12,6 +12,18 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
 import { useEffect } from 'react';
 
+const VTEX_HEADER_STYLE_ID = 'vtex-cx-webchat-vtex-header-style';
+
+const VTEX_HEADER_SELECTORS = [
+  '.vtex-store-header-2-x-headerStickyRow--main-header',
+  '.vtex-sticky-layout-0-x-container--sticky-header',
+  '.vtex-sticky-layout-0-x-container--header-mobile',
+  '.vtex-sticky-layout-0-x-container--SiteHeader',
+  '.vtex-sticky-layout-0-x-wrapper--SiteHeader',
+  '.vtex-sticky-layout-0-x-container--desktop__sticky--header',
+  '.vtex-sticky-layout-0-x-container--header__principal',
+];
+
 /**
  * Widget - Main container component
  * TODO: Add fullscreen support
@@ -28,17 +40,12 @@ function WidgetContent() {
     shouldRender,
   } = useChatContext();
 
-  const {
-    questions,
-    isCompactVisible,
-    isHiding,
-    isDismissed,
-    handleStarterClick,
-  } = useConversationStarters();
+  const { questions, isCompactVisible, isHiding, handleCompactStarterClick } =
+    useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
   const isCompactStartersVisible =
-    questions.length > 0 && isCompactVisible && !isChatOpen && !isDismissed;
+    questions.length > 0 && isCompactVisible && !isChatOpen;
   const shouldShowCompactStarters = isCompactStartersVisible || isHiding;
 
   useEffect(() => {
@@ -53,15 +60,21 @@ function WidgetContent() {
 
   return (
     <aside
-      className={`weni-widget ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''} ${config.embedded ? 'weni-widget--disabled-animation' : ''}`}
+      className={`
+        weni-widget
+        weni-widget--${config.position}
+        ${isChatFullscreenAndOpen ? 'weni-widget--fullscreen' : ''}
+        ${config.embedded ? 'weni-widget--disabled-animation' : ''}
+        ${isChatOpen ? 'weni-widget--open' : 'weni-widget--closed'}
+      `}
     >
       <Chat />
-      {!isChatFullscreenAndOpen && (
+      {!isChatFullscreenAndOpen && !isChatOpen && (
         <>
           {shouldShowCompactStarters && (
             <ConversationStartersCompact
               questions={questions}
-              onStarterClick={handleStarterClick}
+              onStarterClick={handleCompactStarterClick}
               isVisible={isCompactStartersVisible}
               isHiding={isHiding}
             />
@@ -74,6 +87,26 @@ function WidgetContent() {
 }
 
 export function Widget({ config, theme = null }) {
+  useEffect(() => {
+    // temporary fix only for bravtexgrocerystore account
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    if (document.getElementById(VTEX_HEADER_STYLE_ID)) {
+      return undefined;
+    }
+
+    const style = document.createElement('style');
+    style.id = VTEX_HEADER_STYLE_ID;
+    style.textContent = VTEX_HEADER_SELECTORS.join(', ') + ' { z-index: 997; }';
+    document.head.appendChild(style);
+
+    return () => {
+      document.getElementById(VTEX_HEADER_STYLE_ID)?.remove();
+    };
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <ChatProvider config={config}>

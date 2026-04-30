@@ -1,51 +1,101 @@
-.weni-input-box {
-  padding: 0 $spacing-2;
+$textarea-border-color: $border-base;
+$textarea-border-color-hover: #858585;
 
+.weni-input-box__media-actions {
+  margin-right: auto;
+}
+
+.weni-input-box__dropdown-actions {
+  display: flex;
+  flex-direction: column;
+  width: 158px;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: $fs-color-neutral-0;
+  box-shadow: $shadow-1;
+}
+
+.weni-input-box__action-item {
   display: flex;
   align-items: center;
-  gap: $spacing-1;
+  gap: $fs-spacing-0;
+  padding: $fs-spacing-1 $fs-spacing-2;
+  background-color: transparent;
+  cursor: pointer;
+  color: $fs-color-neutral-6;
+  font: $fs-text-weight-regular #{$fs-text-size-1}/1.42857 $font-family;
 
-  .weni-input-box__textarea-container {
-    position: relative;
-    
-    display: flex;
-    flex: 1;
+  &:enabled:hover {
+    background-color: $fs-color-neutral-1;
   }
 
-  .weni-input-box__textarea {
-    height: 36px;
-    width: 100%;
-    padding: $spacing-2 $spacing-4;
+  &:disabled {
+    cursor: not-allowed;
+    color: $fs-color-neutral-4;
+  }
+}
 
-    border-radius: $border-radius-2;
-    outline: 1px solid $border-base;
-    font: $font-body;
-    overflow: hidden;
+.weni-input-box {
+  margin: $fs-spacing-3;
+  padding: $fs-spacing-1;
+  padding-top: $fs-spacing-3;
+  outline: 1px solid $textarea-border-color;
+  border-radius: 20px;
+  cursor: text;
+  display: flex;
+  flex-direction: column;
+  gap: $fs-spacing-0;
 
-    background-color: var(--weni-input-bg-color);
-    color: var(--weni-input-font-color);
+  textarea {
+    $factor: math.div(16, 14);
+    $resize-factor: math.div(14, 16);
+    $position-correction: math.div(($factor - 1), 2);
 
+    $initial-font-size: 14px;
+    $initial-line-height: 21px;
+
+    $font-size: $initial-font-size * $factor;
+    $line-height: $initial-line-height * $factor;
+
+    $margin-bottom: $initial-line-height - $line-height;
+
+    transform: scale($resize-factor) translateY(-$position-correction * 100%) translateX(-$position-correction * 100%);
+    font: 400 #{$font-size} / #{$line-height} $font-family;
+    width: $factor * 100%;
     resize: none;
-
-    &::placeholder {
-      color: var(--weni-input-placeholder-color);
-    }
-
-    &:focus-visible {
-      outline: 1px solid var(--weni-main-color);
-    }
-
-    &:disabled {
-      cursor: not-allowed;
-      background-color: $sl-bg-base-disabled;
-      border-color: $sl-border-base-disabled;
-    }
+    padding-inline: $fs-spacing-1 * $factor;
+    margin-bottom: $margin-bottom;
   }
 
-  .weni-input-box__photo-icon {
-    position: absolute;
-    right: 0;
-    top: 0;
+  &:has(textarea:focus-visible) {
+    outline: 1px solid $textarea-border-color-hover;
+  }
+
+  &:has(textarea:disabled) {
+    cursor: not-allowed;
+    background-color: $sl-bg-base-disabled;
+    border-color: $sl-border-base-disabled;
+  }
+
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  .weni-input-box__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $spacing-1;
+  }
+
+  .weni-input-box__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-1;
   }
 
   .weni-input-box__voice-cancel-btn {
@@ -67,4 +117,88 @@
 
 @keyframes voice-cancel-spin {
   to { transform: rotate(360deg); }
+}
+
+.voice-mode-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $fs-spacing-1;
+  padding: $fs-spacing-3;
+
+  &__intent-banner {
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
+    color: $fs-fg-base;
+    text-align: center;
+
+    &--active {
+      font-style: italic;
+    }
+  }
+
+  &__loading-indicator {
+    padding: 10px $fs-spacing-3;
+    display: flex;
+    justify-content: center;
+    transition: background-color 0.25s ease;
+
+    &-item {
+      width: 0;
+      height: 0;
+
+      &:after {
+        content: '';
+        display: block;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        opacity: 0.2;
+        background-color: var(--weni-main-color);
+        transition: background-color 0.25s ease;
+        animation: voice-mode-dot-scale 2s ease-in-out infinite;
+      }
+
+      &:nth-child(1):after {
+        animation-delay: 0ms;
+      }
+
+      &:nth-child(2):after {
+        animation-delay: 750ms;
+      }
+    }
+
+    &-icon {
+      border-radius: 50%;
+      padding: $fs-spacing-2;
+      background-color: var(--weni-main-color);
+      color: $fs-color-neutral-0;
+      z-index: 0;
+      transition: background-color 0.25s ease;
+    }
+
+    &--disabled {
+      .voice-mode-page__loading-indicator-item {
+        &:after {
+          opacity: 0.2;
+          background-color: $fs-color-neutral-4;
+        }
+      }
+
+      .voice-mode-page__loading-indicator-icon {
+        background-color: $fs-color-neutral-4;
+      }
+    }
+  }
+}
+
+@keyframes voice-mode-dot-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(calc(76px / 56px));
+  }
 }

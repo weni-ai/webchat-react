@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -18,22 +18,94 @@ import './Launcher.scss';
  * TODO: Add dinamically image url as Icon
  */
 export function Launcher() {
-  const { isChatOpen, unreadCount, toggleChat } = useWeniChat();
+  const {
+    isChatOpen,
+    unreadCount,
+    toggleChat,
+    isVoiceModePageActive,
+    handleCloseVoiceModePage,
+    runVoiceModeEntryFlow,
+    isVoiceModeActive,
+    isVoiceEnabledByClient,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+  } = useWeniChat();
 
   const { config, title, tooltipMessage, clearTooltipMessage } =
     useChatContext();
   const [isHovering, setIsHovering] = useState(false);
 
+  const handleChatBubbleClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (isVoiceModePageActive) {
+        handleCloseVoiceModePage();
+      }
+      toggleChat();
+    },
+    [isVoiceModePageActive, handleCloseVoiceModePage, toggleChat],
+  );
+
+  const canStartVoice = useMemo(() => {
+    return (
+      isVoiceEnabledByClient &&
+      isVoiceEnabledByServer &&
+      isVoiceModeSupported &&
+      !isVoiceModeActive
+    );
+  }, [
+    isVoiceEnabledByClient,
+    isVoiceEnabledByServer,
+    isVoiceModeSupported,
+    isVoiceModeActive,
+  ]);
+
+  const handleGraphicEqClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+
+      if (canStartVoice) {
+        void runVoiceModeEntryFlow();
+      }
+
+      toggleChat();
+    },
+    [isChatOpen, canStartVoice, runVoiceModeEntryFlow],
+  );
+
   return (
     <section className="weni-launcher__container">
-      <button
-        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''}`}
-        onClick={toggleChat}
+      <section
+        className={`weni-launcher ${isHovering ? 'weni-launcher--hovering' : ''} ${!isHovering ? 'weni-launcher--out-hovering' : ''} ${!canStartVoice ? 'weni-launcher--as-button' : ''}`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        aria-label="Toggle chat"
+        onClick={toggleChat}
       >
-        {config.profileAvatar && !isChatOpen ? (
+        {isHovering && canStartVoice ? (
+          <>
+            <button
+              type="button"
+              onClick={handleGraphicEqClick}
+              aria-label="Toggle chat"
+            >
+              <Icon
+                name="graphic_eq"
+                size="medium"
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleChatBubbleClick}
+              aria-label="Toggle chat"
+            >
+              <Icon
+                name="chat_bubble"
+                size="medium"
+              />
+            </button>
+          </>
+        ) : config.profileAvatar && !isChatOpen ? (
           <Avatar
             className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
             src={config.profileAvatar}
@@ -42,13 +114,12 @@ export function Launcher() {
         ) : (
           <Icon
             className={`${isChatOpen ? 'weni-launcher-icon--click-open' : 'weni-launcher-icon--click-close'}`}
-            name={isChatOpen ? 'close' : 'chat_bubble'}
+            name="rounded_x"
+            size="medium"
             filled
-            color="white"
-            size="x-large"
           />
         )}
-      </button>
+      </section>
 
       <Badge
         isVisible={config.displayUnreadCount && !isChatOpen && unreadCount > 0}

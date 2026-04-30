@@ -1,0 +1,59 @@
+.weni-fs-button {
+  display: flex;
+  align-items: center;
+  gap: $fs-spacing-0;
+  width: fit-content;
+  cursor: pointer;
+  border-radius: $fs-border-radius-pill;
+  font: $fs-text-weight-semibold #{$fs-text-size-1}/#{$fs-text-size-2} $font-family;
+
+  &--primary {
+    color: $fs-button-primary-text-color;
+    background-color: var(--weni-main-color);
+  }
+
+  &--secondary {
+    color: var(--weni-main-color);
+    background-color: $fs-color-neutral-1;
+  }
+
+  &--tertiary {
+    color: var(--weni-main-color);
+    background-color: $fs-button-tertiary-bkg-color;
+    transition: background-color 0.2s ease;
+
+    &:enabled:hover, &.weni-fs-button--hover-state {
+      background-color: $fs-color-neutral-1;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: $fs-color-disabled-text;
+    }
+  }
+
+  &--small, &--medium, &--large {
+    padding: $fs-spacing-1 $fs-spacing-3;
+  }
+
+  &--rounded {
+    padding: $fs-spacing-1;
+  }
+
+  &--small {
+    font: $fs-text-weight-semibold #{$fs-text-size-1}/#{$fs-text-size-2} $font-family;
+  }
+
+  &__loading-spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

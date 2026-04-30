@@ -1,0 +1,62 @@
+@use '@/styles/animations.scss' as *;
+
+@include weni-keyframes(weni-tooltip-bubble-rise) {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.weni-tooltip-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  pointer-events: none;
+
+  > *:not(.weni-tooltip-trigger__bubble) {
+    pointer-events: auto;
+  }
+
+  &__bubble {
+    position: absolute;
+    bottom: calc(100% + $fs-spacing-1);
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    z-index: 1;
+
+    @include weni-animation(0, 0.2s, weni-tooltip-bubble-rise);
+
+    padding: $fs-spacing-1 $fs-spacing-2;
+    border-radius: 4px;
+    background-color: $fs-fg-base;
+    color: $fs-color-neutral-0;
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.2 $font-family;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: $shadow-1;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: $fs-fg-base;
+      width: 11px;
+      height: 5px;
+      clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}

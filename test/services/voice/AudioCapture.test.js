@@ -123,9 +123,9 @@ describe("AudioCapture", () => {
 
   // -- requestPermission ----------------------------------------------------
 
-  describe("requestPermission()", () => {
+  describe("requestPermission() (static)", () => {
     it("returns true when getUserMedia succeeds", async () => {
-      const result = await capture.requestPermission();
+      const result = await AudioCapture.requestPermission();
       expect(result).toBe(true);
       const stream =
         await navigator.mediaDevices.getUserMedia.mock.results[0].value;
@@ -136,7 +136,7 @@ describe("AudioCapture", () => {
       navigator.mediaDevices.getUserMedia.mockRejectedValueOnce(
         new DOMException("denied", "NotAllowedError"),
       );
-      const result = await capture.requestPermission();
+      const result = await AudioCapture.requestPermission();
       expect(result).toBe(false);
     });
   });
@@ -146,7 +146,7 @@ describe("AudioCapture", () => {
   describe("checkPermission()", () => {
     it("returns the permission state string", async () => {
       navigator.permissions.query.mockResolvedValueOnce({ state: "denied" });
-      const result = await capture.checkPermission();
+      const result = await AudioCapture.checkPermission();
       expect(result).toBe("denied");
     });
 
@@ -154,7 +154,7 @@ describe("AudioCapture", () => {
       navigator.permissions.query.mockRejectedValueOnce(
         new Error("unsupported"),
       );
-      const result = await capture.checkPermission();
+      const result = await AudioCapture.checkPermission();
       expect(result).toBe("prompt");
     });
   });

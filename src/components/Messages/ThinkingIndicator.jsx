@@ -15,8 +15,10 @@ export function ThinkingIndicator({ className = '' }) {
   const { t } = useTranslation();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const timeoutRef = useRef(null);
   const animationTimeoutRef = useRef(null);
+  const initTimeoutRef = useRef(null);
 
   const messages = [
     {
@@ -64,6 +66,11 @@ export function ThinkingIndicator({ className = '' }) {
   };
 
   useEffect(() => {
+    initTimeoutRef.current = setTimeout(() => setIsInitializing(false), 500);
+    return () => clearTimeout(initTimeoutRef.current);
+  }, []);
+
+  useEffect(() => {
     scheduleNextMessage();
 
     return () => {
@@ -78,24 +85,40 @@ export function ThinkingIndicator({ className = '' }) {
 
   const currentMessage = messages[currentMessageIndex];
 
-  const getClassWithAnimationState = (className) => {
-    return `${className} ${isAnimatingOut ? `${className}--out` : `${className}--in`}`;
-  };
-
   return (
-    <section className={`weni-thinking-indicator ${className}`}>
-      <Icon
-        name={currentMessage.icon}
-        size="small"
-        color="fg-base"
-        className={getClassWithAnimationState('weni-thinking-indicator__icon')}
-      />
-      <p
-        className={getClassWithAnimationState('weni-thinking-indicator__text')}
-      >
-        {currentMessage.text}
-      </p>
-    </section>
+    <>
+      <section className={`weni-thinking-indicator ${className}`}>
+        <Icon
+          name="progress_activity"
+          size="small"
+          color="weni-main-color"
+          className="weni-fs-button__loading-spinner"
+        />
+
+        <div className="weni-thinking-indicator__text-wrapper">
+          <div
+            className={`weni-thinking-indicator__text-track${isAnimatingOut || isInitializing ? ' weni-thinking-indicator__text-track--sliding' : ''}`}
+          >
+            {isInitializing && (
+              <p className="weni-thinking-indicator__text">&nbsp;</p>
+            )}
+            {!isInitializing && isAnimatingOut && (
+              <p className="weni-thinking-indicator__text">
+                {currentMessage.text}
+              </p>
+            )}
+            <p
+              key={currentMessageIndex}
+              className="weni-thinking-indicator__text"
+            >
+              {isAnimatingOut
+                ? messages[currentMessageIndex + 1]?.text
+                : currentMessage.text}
+            </p>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 

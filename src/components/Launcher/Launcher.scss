@@ -3,6 +3,7 @@
 .weni-launcher {
   &__container {
     position: relative;
+    margin-bottom: 20px;
   }
 
   &__badge {
@@ -10,11 +11,10 @@
     top: -7px;
     right: -7px;
   }
-  
-  min-height: var(--launcherHeight);
-  min-width: var(--launcherWidth);
-  height: var(--launcherHeight);
-  width: var(--launcherWidth);
+
+  min-width: 48px;
+  max-width: 48px;
+  height: 48px;
 
   padding: 0;
 
@@ -22,23 +22,73 @@
   align-items: center;
   justify-content: center;
 
-  box-shadow: $shadow-1;
   border: 0;
-  border-radius: $border-radius-full;
-  background-color: var(--launcherColor);
-  
-  overflow: hidden;
+  border-radius: $fs-border-radius-pill;
+  background-color: $fs-button-tertiary-bkg-color;
+  border: $fs-border-width solid $fs-border-color;
+  color: var(--weni-main-color);
+  box-shadow: $fs-drop-shadow-colored;
 
   overflow: hidden;
   cursor: pointer;
 
-  &--hovering {
-    @include weni-animation(0, 0.25s, weni-scale-hover-in);
+  transition: max-width 0.5s ease;
+
+  button {
+    cursor: pointer;
+    display: flex;
+    padding-block: 14px;
+    position: relative;
+    background-color: transparent;
+    color: $fs-color-neutral-4;
+
+    &:hover {
+      color: var(--weni-main-color);
+    }
+
+    &:first-child {
+      border-radius: $fs-border-radius-pill 0 0 $fs-border-radius-pill;
+      padding-left: 20px;
+      padding-right: calc($fs-spacing-1 + $fs-border-width);
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0px;
+        width: $fs-border-width;
+        height: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: $fs-border-color;
+      }
+    }
+
+    &:last-child {
+      border-radius: 0 $fs-border-radius-pill $fs-border-radius-pill 0;
+      padding-left: $fs-spacing-1;
+      padding-right: 20px;
+    }
   }
 
-  &--out-hovering, &:active {
-    @include weni-animation(0, 0.25s, weni-scale-hover-out);
+  &--as-button:hover {
+    background-color: $fs-button-tertiary-bkg-color-hover;
   }
+
+  &:hover,
+  &--hovering {
+    max-width: 280px;
+    width: auto;
+    border: $fs-border-width solid $fs-border-color;
+  }
+}
+
+.weni-widget--bottom-right .weni-launcher__container {
+  margin-right: 20px;
+}
+
+.weni-widget--bottom-left .weni-launcher__container {
+  margin-left: 20px;
 }
 
 .weni-launcher-icon--click-open {

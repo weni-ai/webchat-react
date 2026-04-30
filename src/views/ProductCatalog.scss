@@ -1,17 +1,15 @@
 .weni-view-product-catalog {
-  padding: $spacing-2;
   display: flex;
-  gap: $spacing-3;
   flex-direction: column;
 
-  height: 100%;
-  overflow: hidden auto;
+  @include scrollable-container;
 
   &__products {
     display: flex;
     flex-direction: column;
-    gap: $spacing-3;
-    overflow: auto;
+    gap: $fs-spacing-3;
+    padding: $fs-spacing-3;
+    @include scrollable-content;
   }
 
   .weni-product-group {
@@ -20,7 +18,7 @@
     gap: $spacing-2;
 
     &__title {
-      font: $font-caption-2;
+      font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
       color: $fg-base;
     }
   }

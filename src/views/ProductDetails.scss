@@ -1,23 +1,23 @@
 .weni-view-product-details {
-  padding: $spacing-2;
+  padding: $fs-spacing-3;
   display: flex;
   gap: $spacing-3;
   flex-direction: column;
 
-  height: 100%;
-  overflow: hidden auto;
+  @include scrollable-container;
 
   &__content {
     display: flex;
     flex-direction: column;
     gap: $spacing-3;
-    overflow: auto;
+    @include scrollable-content;
   }
 
   &__footer {
     margin-top: auto;
     display: flex;
     gap: $spacing-3;
+    justify-content: center;
   }
 
   &__footer-button {

@@ -1,15 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const SvgStub = (props) => <svg {...props} />;
-jest.mock("@/utils/icons", () => ({
-  icons: new Proxy(
-    {},
-    {
-      get: () => ({ default: SvgStub, filled: SvgStub }),
-    },
-  ),
-}));
 
 import { VoiceModeError } from "@/components/VoiceMode/VoiceModeError";
 
