@@ -26,7 +26,11 @@ describe('MessageDocument — label', () => {
     render(
       <MessageDocument
         message={buildMessage({
-          metadata: { filename: 'report.pdf', mimeType: 'application/pdf', size: 1024 },
+          metadata: {
+            filename: 'report.pdf',
+            mimeType: 'application/pdf',
+            size: 1024,
+          },
         })}
       />,
     );
@@ -70,7 +74,10 @@ describe('MessageDocument — mimeType inference from URL', () => {
     );
 
     fireEvent.click(screen.getByRole('button'));
-    expect(open).toHaveBeenCalledWith('https://example.com/terms.pdf', '_blank');
+    expect(open).toHaveBeenCalledWith(
+      'https://example.com/terms.pdf',
+      '_blank',
+    );
 
     open.mockRestore();
   });
@@ -120,7 +127,11 @@ describe('MessageDocument — open in new tab', () => {
       <MessageDocument
         message={buildMessage({
           media: 'https://example.com/doc.pdf',
-          metadata: { filename: 'doc.pdf', mimeType: 'application/pdf', size: 0 },
+          metadata: {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: 0,
+          },
         })}
       />,
     );
@@ -155,7 +166,11 @@ describe('MessageDocument — direction styling', () => {
       <MessageDocument
         message={buildMessage({
           direction: 'outgoing',
-          metadata: { filename: 'doc.pdf', mimeType: 'application/pdf', size: 0 },
+          metadata: {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: 0,
+          },
         })}
       />,
     );
@@ -168,7 +183,11 @@ describe('MessageDocument — direction styling', () => {
     render(
       <MessageDocument
         message={buildMessage({
-          metadata: { filename: 'doc.pdf', mimeType: 'application/pdf', size: 0 },
+          metadata: {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: 0,
+          },
         })}
       />,
     );
