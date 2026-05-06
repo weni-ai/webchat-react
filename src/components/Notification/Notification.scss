@@ -24,6 +24,7 @@ $arrow-size: 12px;
   }
 
   &__content {
+    align-self: center;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
