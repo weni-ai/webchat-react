@@ -8,11 +8,18 @@ import './MessageImage.scss';
  */
 export function MessageImage({ message }) {
   return (
-    <img
-      src={message.media}
-      alt={message.caption || 'Image'}
-      className="weni-message-image"
-    />
+    <a
+      href={message.media}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="weni-message-image__link"
+    >
+      <img
+        src={message.media}
+        alt={message.caption || 'Image'}
+        className="weni-message-image"
+      />
+    </a>
   );
 }
 
