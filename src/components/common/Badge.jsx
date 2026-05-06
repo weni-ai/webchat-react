@@ -8,15 +8,7 @@ import './Badge.scss';
  * TODO: Add animations for updates
  * TODO: Support different badge colors/variants
  */
-export function Badge({
-  count,
-  max = 99,
-  variant = 'primary',
-  className,
-  isVisible,
-}) {
-  const displayCount = count > max ? `${max}+` : count;
-
+export function Badge({ count, variant = 'primary', className, isVisible }) {
   let badgeEnteringAnimationTimeout = null;
   let badgeLeavingAnimationTimeout = null;
   let badgePulseAnimationTimeout = null;
@@ -91,9 +83,7 @@ export function Badge({
       ]
         .filter(Boolean)
         .join(' ')}
-    >
-      {displayCount}
-    </span>
+    />
   );
 }
 
