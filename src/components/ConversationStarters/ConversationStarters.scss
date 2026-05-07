@@ -18,6 +18,17 @@
     @include weni-animation(0, 0.25s, weni-slide-out);
   }
 
+  &--bottom-left {
+    align-items: flex-start;
+    margin-right: 0;
+    margin-left: 20px;
+
+    .weni-starters-compact__close-button {
+      right: auto;
+      left: -$fs-spacing-3;
+    }
+  }
+
   &__close-button {
     position: absolute;
     top: -$fs-spacing-3;

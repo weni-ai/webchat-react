@@ -9,11 +9,13 @@ export function ConversationStartersCompact({
   onClose,
   isVisible,
   isHiding,
+  position,
 }) {
   if (!isVisible && !isHiding) return null;
 
   const containerClass = [
     'weni-starters-compact',
+    `weni-starters-compact--${position}`,
     isHiding && 'weni-starters-compact--hiding',
   ]
     .filter(Boolean)
@@ -50,6 +52,7 @@ ConversationStartersCompact.propTypes = {
   onClose: PropTypes.func,
   isVisible: PropTypes.bool.isRequired,
   isHiding: PropTypes.bool,
+  position: PropTypes.oneOf(['bottom-right', 'bottom-left']),
 };
 
 export function ConversationStartersFull({ questions, onStarterClick }) {

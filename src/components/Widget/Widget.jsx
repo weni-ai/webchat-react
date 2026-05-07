@@ -83,6 +83,7 @@ function WidgetContent() {
               onClose={clearStarters}
               isVisible={isCompactStartersVisible}
               isHiding={isHiding}
+              position={config.position}
             />
           )}
           <Launcher />
