@@ -9,19 +9,8 @@ import { useChatContext } from '@/contexts/ChatContext';
 import './ProductCatalog.scss';
 
 export function ProductCatalog({ productGroups }) {
-  const { cart, setCart, setCurrentPage } = useChatContext();
+  const { cart, setCurrentPage, isInsideVTEXStore } = useChatContext();
   const { t } = useTranslation();
-
-  function getCounter(productKey) {
-    return cart[productKey]?.quantity || 0;
-  }
-
-  function setCounter(productKey, product, counter) {
-    setCart((prevCart) => ({
-      ...prevCart,
-      [productKey]: { ...product, quantity: counter },
-    }));
-  }
 
   const totalItems = useMemo(() => {
     return Object.values(cart).reduce(
@@ -29,6 +18,8 @@ export function ProductCatalog({ productGroups }) {
       0,
     );
   }, [cart]);
+
+  const showSeeCartButton = totalItems > 0 && !isInsideVTEXStore;
 
   return (
     <section className="weni-view-product-catalog">
@@ -41,33 +32,16 @@ export function ProductCatalog({ productGroups }) {
             <h2 className="weni-product-group__title">{productGroup.title}</h2>
 
             {productGroup.products.map((product, productIndex) => (
-              <InlineProduct
-                variant="product"
+              <ProductCatalogItem
                 key={productIndex}
-                image={product.image}
-                title={product.title}
-                lines={[product.description]}
-                price={product.price}
-                salePrice={product.salePrice}
-                currency={product.currency}
-                counter={getCounter(product.uuid)}
-                setCounter={(counter) =>
-                  setCounter(product.uuid, product, counter)
-                }
-                onClick={() =>
-                  setCurrentPage({
-                    view: 'product-details',
-                    title: t('product_details.title'),
-                    props: { product },
-                  })
-                }
+                product={product}
               />
             ))}
           </section>
         ))}
       </section>
 
-      {totalItems > 0 && (
+      {showSeeCartButton && (
         <footer className="weni-view-product-catalog__footer">
           <Button
             onClick={() =>
@@ -87,4 +61,47 @@ export function ProductCatalog({ productGroups }) {
 
 ProductCatalog.propTypes = {
   productGroups: PropTypes.array.isRequired,
+};
+
+export function ProductCatalogItem({ product }) {
+  const { cart, setCart, setCurrentPage } = useChatContext();
+  const { t } = useTranslation();
+
+  function getCounter(productKey) {
+    return cart[productKey]?.quantity || 0;
+  }
+
+  function setCounter(productKey, product, counter) {
+    setCart((prevCart) => ({
+      ...prevCart,
+      [productKey]: { ...product, quantity: counter },
+    }));
+  }
+
+  return (
+    <InlineProduct
+      variant="product"
+      image={product.image}
+      title={product.title}
+      price={product.price}
+      salePrice={product.salePrice}
+      currency={product.currency}
+      counter={getCounter(product.uuid)}
+      setCounter={(counter) => setCounter(product.uuid, product, counter)}
+      uuid={product.uuid}
+      sellerId={product.sellerId}
+      productURL={product.productURL}
+      onClick={() =>
+        setCurrentPage({
+          view: 'product-details',
+          title: t('product_details.title'),
+          props: { product },
+        })
+      }
+    />
+  );
+}
+
+ProductCatalogItem.propTypes = {
+  product: PropTypes.object.isRequired,
 };

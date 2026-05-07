@@ -7,7 +7,8 @@ import { useMemo } from 'react';
  * This hook provides:
  * - Access to service state (messages, connection, typing)
  * - UI-specific state (chat open/closed, unread count)
- * - Computed values (sorted messages, message groups)
+ * - Computed values (sorted messages; messageGroups merge consecutive
+ *   messages with same direction and same type)
  * - Helper methods (toggleChat, sendMessage, etc.)
  *
  * All business logic is handled by WeniWebchatService.
@@ -25,8 +26,6 @@ export function useWeniChat() {
     return [...context.messages].sort((a, b) => a.timestamp - b.timestamp);
   }, [context.messages]);
 
-  // Computed: Group sequential messages by direction for better UI
-  // Service uses 'direction': 'outgoing' (user) or 'incoming' (agent/bot)
   const messageGroups = useMemo(() => {
     if (sortedMessages.length === 0) return [];
 
@@ -38,8 +37,10 @@ export function useWeniChat() {
 
     for (let i = 1; i < sortedMessages.length; i++) {
       const message = sortedMessages[i];
+      const last = currentGroup.messages[currentGroup.messages.length - 1];
+      const sameBlock = message.direction === last.direction;
 
-      if (message.direction === currentGroup.direction) {
+      if (sameBlock) {
         currentGroup.messages.push(message);
       } else {
         groups.push(currentGroup);
@@ -51,7 +52,6 @@ export function useWeniChat() {
     }
 
     groups.push(currentGroup);
-
     return groups;
   }, [sortedMessages]);
 

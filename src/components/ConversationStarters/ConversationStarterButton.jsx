@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-import Button from '@/components/common/Button';
+import { FSButton } from '../common/FSButton';
 import './ConversationStarterButton.scss';
 
 export function ConversationStarterButton({
@@ -11,14 +11,15 @@ export function ConversationStarterButton({
   const { t } = useTranslation();
 
   return (
-    <Button
+    <FSButton
       className={`weni-starter-button weni-starter-button--${variant}`}
-      variant="secondary"
+      variant="tertiary"
+      size="small"
       onClick={() => onClick(question)}
       aria-label={t('conversation_starters.aria_label', { question })}
     >
-      <p className="weni-starter-button__text">{question}</p>
-    </Button>
+      {question}
+    </FSButton>
   );
 }
 

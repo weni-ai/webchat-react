@@ -1,11 +1,17 @@
 .weni-chat-header {
-  padding: $spacing-3 $spacing-4;
-  
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
-  background-color: var(--weni-header-bg-color);
+
+  background-color: transparent;
+  padding: $spacing-2 $spacing-4;
+  border-bottom: 1px solid $sl-color-gray-1;
+
+  &__group {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+  }
 
   &__info {
     display: flex;
@@ -29,21 +35,19 @@
   }
 
   &__tag {
-    text-transform: uppercase;
     font: $font-caption-1;
-    color: var(--fg-inverted);
+    font: $fs-text-weight-medium #{$fs-text-size-1}/#{$fs-text-size-base} $font-family;
+    color: $fs-fg-base;
 
     border-radius: $border-radius-4;
     padding: $spacing-1 $spacing-3;
 
-    border: 2px solid $sl-color-gray-0;
-
     &--preview {
-      background-color: $sl-color-blue-10;
+      background-color: $sl-color-orange-3;
     }
 
     &--live {
-      background-color: $sl-color-green-10;
+      background-color: $sl-color-green-3;
     }
   }
 

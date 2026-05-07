@@ -77,12 +77,13 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.questions).toEqual([]);
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.isDismissed).toBe(false);
+      expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isHiding).toBe(false);
       expect(result.current.source).toBeNull();
       expect(result.current.fingerprint).toBeNull();
-      expect(typeof result.current.handleStarterClick).toBe('function');
+      expect(typeof result.current.handleCompactStarterClick).toBe('function');
+      expect(typeof result.current.handleFullStarterClick).toBe('function');
       expect(typeof result.current.clearStarters).toBe('function');
     });
   });
@@ -374,7 +375,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.source).toBe('manual');
       expect(result.current.fingerprint).toBeNull();
       expect(result.current.isCompactVisible).toBe(true);
-      expect(result.current.isDismissed).toBe(false);
+      expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isLoading).toBe(false);
     });
 
@@ -441,37 +442,72 @@ describe('useConversationStartersCore', () => {
     });
   });
 
-  describe('handleStarterClick when chat is open', () => {
-    it('calls sendMessage with the question', () => {
+  describe('handleFullStarterClick when chat is open', () => {
+    it('calls sendMessage, dismisses in-chat starters, removes question, keeps compact visibility flag', () => {
       ctx = buildContext({ isChatOpen: true, isConnected: true });
       useChatContext.mockReturnValue(ctx);
 
       const { result } = renderHook(() => useConversationStartersCore());
 
+      const handler = getEventHandler('starters:received');
       act(() => {
-        result.current.handleStarterClick('Q1?');
+        handler({ questions: ['Q1?', 'Q2?'] });
+      });
+
+      act(() => {
+        result.current.handleFullStarterClick('Q1?');
       });
 
       expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?');
-      expect(result.current.isDismissed).toBe(true);
-      expect(result.current.isCompactVisible).toBe(false);
+      expect(result.current.isInChatStartersDismissed).toBe(true);
+      expect(result.current.isCompactVisible).toBe(true);
+      expect(result.current.questions).toEqual(['Q2?']);
     });
   });
 
-  describe('handleStarterClick when chat is closed', () => {
-    it('calls setIsChatOpen(true) without sending message', () => {
+  describe('handleCompactStarterClick when chat is closed', () => {
+    it('opens chat, removes clicked question, hides in-chat starters row, keeps compact state for outside', () => {
       ctx = buildContext({ isChatOpen: false, isConnected: true });
       useChatContext.mockReturnValue(ctx);
 
       const { result } = renderHook(() => useConversationStartersCore());
 
+      const handler = getEventHandler('starters:received');
       act(() => {
-        result.current.handleStarterClick('Q1?');
+        handler({ questions: ['Q1?', 'Q2?', 'Q3?'] });
+      });
+
+      act(() => {
+        result.current.handleCompactStarterClick('Q1?');
       });
 
       expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
       expect(ctx.sendMessage).not.toHaveBeenCalled();
-      expect(result.current.isDismissed).toBe(true);
+      expect(result.current.isInChatStartersDismissed).toBe(true);
+      expect(result.current.isCompactVisible).toBe(true);
+      expect(result.current.questions).toEqual(['Q2?', 'Q3?']);
+    });
+
+    it('handleFullStarterClick while chat closed dismisses in-chat row (close animation)', () => {
+      ctx = buildContext({ isChatOpen: false, isConnected: true });
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const handler = getEventHandler('starters:received');
+      act(() => {
+        handler({ questions: ['Q1?', 'Q2?'] });
+      });
+
+      act(() => {
+        result.current.handleFullStarterClick('Q1?');
+      });
+
+      expect(result.current.isInChatStartersDismissed).toBe(true);
+      expect(result.current.isCompactVisible).toBe(true);
+      expect(result.current.questions).toEqual(['Q2?']);
+      expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
+      expect(ctx.sendMessage).not.toHaveBeenCalled();
     });
 
     it('sends pending starter when chat opens and connects', () => {
@@ -489,12 +525,18 @@ describe('useConversationStartersCore', () => {
         useConversationStartersCore(),
       );
 
+      const handler = getEventHandler('starters:received');
       act(() => {
-        result.current.handleStarterClick('Pending Q?');
+        handler({ questions: ['Pending Q?', 'Other Q?'] });
+      });
+
+      act(() => {
+        result.current.handleCompactStarterClick('Pending Q?');
       });
 
       expect(setIsChatOpen).toHaveBeenCalledWith(true);
       expect(sendMessage).not.toHaveBeenCalled();
+      expect(result.current.questions).toEqual(['Other Q?']);
 
       const openCtx = buildContext({
         isChatOpen: true,
@@ -527,7 +569,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.questions).toEqual([]);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
-      expect(result.current.isDismissed).toBe(false);
+      expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(mockService.clearStarters).toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('');
     });

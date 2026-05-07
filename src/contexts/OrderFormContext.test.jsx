@@ -1,0 +1,592 @@
+import {
+  render,
+  screen,
+  act,
+  waitFor,
+  renderHook,
+} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
+  updateVTEXIOMinicart: jest.fn(),
+}));
+
+import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+import {
+  OrderFormProvider,
+  useOrderFormId,
+  useIsLoadingOrderForm,
+  useOrderForm,
+} from './OrderFormContext';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function Consumer() {
+  const { orderFormId, isLoadingOrderForm, requestOrderForm, trySyncHostCart } =
+    useOrderForm();
+  return (
+    <div>
+      <span data-testid="order-form-id">{orderFormId ?? 'null'}</span>
+      <span data-testid="is-loading">{String(isLoadingOrderForm)}</span>
+      <button
+        data-testid="btn-request"
+        onClick={requestOrderForm}
+      >
+        request
+      </button>
+      <button
+        data-testid="btn-sync"
+        onClick={trySyncHostCart}
+      >
+        sync
+      </button>
+    </div>
+  );
+}
+
+function renderProvider() {
+  return render(
+    <OrderFormProvider>
+      <Consumer />
+    </OrderFormProvider>,
+  );
+}
+
+function withProvider(ui) {
+  return render(<OrderFormProvider>{ui}</OrderFormProvider>);
+}
+
+// ---------------------------------------------------------------------------
+// Setup / teardown
+// ---------------------------------------------------------------------------
+
+beforeEach(() => {
+  delete window.faststore_sdk_stores;
+  localStorage.clear();
+  updateVTEXIOMinicart.mockReset();
+  updateVTEXIOMinicart.mockResolvedValue(null);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+  delete globalThis.fetch;
+});
+
+// ---------------------------------------------------------------------------
+// OrderFormProvider — initial state
+// ---------------------------------------------------------------------------
+
+describe('OrderFormProvider — initial state', () => {
+  it('provides orderFormId as null by default', () => {
+    renderProvider();
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('null');
+  });
+
+  it('provides isLoadingOrderForm as false by default', () => {
+    renderProvider();
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
+  });
+
+  it('renders children', () => {
+    withProvider(<span data-testid="child">hello</span>);
+    expect(screen.getByTestId('child')).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestOrderForm — local ID via FastStore SDK
+// ---------------------------------------------------------------------------
+
+describe('requestOrderForm — local ID via FastStore SDK', () => {
+  function setupFastStore(id) {
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id }) }),
+    };
+  }
+
+  it('sets orderFormId from FastStore without fetching', async () => {
+    setupFastStore('fs-cart-123');
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+      'fs-cart-123',
+    );
+  });
+
+  it('does not call fetch when FastStore has a local ID', async () => {
+    setupFastStore('fs-cart-123');
+    globalThis.fetch = jest.fn();
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('does not set isLoadingOrderForm when local ID is found', async () => {
+    setupFastStore('fs-cart-123');
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestOrderForm — local ID via localStorage
+// ---------------------------------------------------------------------------
+
+describe('requestOrderForm — local ID via localStorage', () => {
+  it('sets orderFormId from localStorage without fetching', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: 'vtex-local-456' }));
+    globalThis.fetch = jest.fn();
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+      'vtex-local-456',
+    );
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('continues to fetch when localStorage JSON is invalid', async () => {
+    localStorage.setItem('orderform', 'not-valid-json{{{');
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+        'fetched-id',
+      ),
+    );
+  });
+
+  it('continues to fetch when localStorage entry has no id field', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ other: 'data' }));
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+        'fetched-id',
+      ),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestOrderForm — fetch branch
+// ---------------------------------------------------------------------------
+
+describe('requestOrderForm — fetch branch', () => {
+  it('calls fetch with /api/checkout/pub/orderForm', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'api-id' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/checkout/pub/orderForm',
+    );
+  });
+
+  it('sets orderFormId from the API response', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'api-cart-789' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+        'api-cart-789',
+      ),
+    );
+  });
+
+  it('sets isLoadingOrderForm to true while the fetch is in flight', async () => {
+    let resolveFetch;
+    globalThis.fetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('true');
+
+    // Resolve and wait for cleanup
+    await act(async () => {
+      resolveFetch({
+        ok: true,
+        json: () => Promise.resolve({ orderFormId: 'x' }),
+      });
+    });
+  });
+
+  it('sets isLoadingOrderForm back to false after a successful fetch', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'done-id' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+  });
+
+  it('does not update orderFormId when the response has no orderFormId', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('null');
+  });
+
+  it('sets isLoadingOrderForm to false after a non-ok response', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({ ok: false });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+  });
+
+  it('does not set orderFormId after a non-ok response', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({ ok: false });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('null');
+  });
+
+  it('sets isLoadingOrderForm to false after a network error', async () => {
+    globalThis.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('Network failure'));
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+  });
+
+  it('does not set orderFormId after a network error', async () => {
+    globalThis.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('Network failure'));
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('null');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// requestOrderForm — idempotent guard (fetchStartedRef)
+// ---------------------------------------------------------------------------
+
+describe('requestOrderForm — idempotent guard', () => {
+  it('calls fetch only once when requestOrderForm is invoked multiple times', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: 'once' }),
+    });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+    await userEvent.click(screen.getByTestId('btn-request'));
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent('once'),
+    );
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start a new fetch when a local ID is already stored', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: 'local-id' }));
+    globalThis.fetch = jest.fn();
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// trySyncHostCart — FastStore SDK path
+// ---------------------------------------------------------------------------
+
+describe('trySyncHostCart — FastStore SDK', () => {
+  it('calls cart.set(cart.read()) when FastStore cart is available', async () => {
+    const mockRead = jest.fn().mockReturnValue({ items: [] });
+    const mockSet = jest.fn();
+    window.faststore_sdk_stores = {
+      get: jest.fn().mockReturnValue({ set: mockSet, read: mockRead }),
+    };
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(mockRead).toHaveBeenCalledTimes(1);
+    expect(mockSet).toHaveBeenCalledWith({ items: [] });
+  });
+
+  it('does not call updateVTEXIOMinicart when FastStore sync succeeds', async () => {
+    window.faststore_sdk_stores = {
+      get: jest.fn().mockReturnValue({
+        set: jest.fn(),
+        read: jest.fn().mockReturnValue({}),
+      }),
+    };
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(updateVTEXIOMinicart).not.toHaveBeenCalled();
+  });
+
+  it('falls through to updateVTEXIOMinicart when FastStore set/read are not functions', async () => {
+    window.faststore_sdk_stores = {
+      get: jest.fn().mockReturnValue({ set: null, read: null }),
+    };
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls through to updateVTEXIOMinicart when faststore_sdk_stores is undefined', async () => {
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls through to updateVTEXIOMinicart when FastStore cart.set throws', async () => {
+    window.faststore_sdk_stores = {
+      get: jest.fn().mockReturnValue({
+        set: () => {
+          throw new Error('write failed');
+        },
+        read: jest.fn().mockReturnValue({}),
+      }),
+    };
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// trySyncHostCart — VTEX IO minicart path
+// ---------------------------------------------------------------------------
+
+describe('trySyncHostCart — VTEX IO minicart', () => {
+  it('calls updateVTEXIOMinicart when FastStore is not available', async () => {
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-sync'));
+
+    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not throw when updateVTEXIOMinicart rejects', async () => {
+    updateVTEXIOMinicart.mockRejectedValue(new Error('bridge failed'));
+    renderProvider();
+
+    await expect(
+      userEvent.click(screen.getByTestId('btn-sync')),
+    ).resolves.not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useOrderFormId
+// ---------------------------------------------------------------------------
+
+describe('useOrderFormId', () => {
+  it('returns null when used outside of OrderFormProvider', () => {
+    const { result } = renderHook(() => useOrderFormId());
+    expect(result.current).toBeNull();
+  });
+
+  it('returns the orderFormId from the provider', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: 'hook-test-id' }));
+
+    function HookConsumer() {
+      const id = useOrderFormId();
+      const { requestOrderForm } = useOrderForm();
+      return (
+        <>
+          <span data-testid="id">{id ?? 'null'}</span>
+          <button onClick={requestOrderForm}>req</button>
+        </>
+      );
+    }
+
+    render(
+      <OrderFormProvider>
+        <HookConsumer />
+      </OrderFormProvider>,
+    );
+
+    await userEvent.click(screen.getByText('req'));
+
+    expect(screen.getByTestId('id')).toHaveTextContent('hook-test-id');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useIsLoadingOrderForm
+// ---------------------------------------------------------------------------
+
+describe('useIsLoadingOrderForm', () => {
+  it('returns false when used outside of OrderFormProvider', () => {
+    const { result } = renderHook(() => useIsLoadingOrderForm());
+    expect(result.current).toBe(false);
+  });
+
+  it('returns false initially when inside the provider', () => {
+    const wrapper = ({ children }) => (
+      <OrderFormProvider>{children}</OrderFormProvider>
+    );
+    const { result } = renderHook(() => useIsLoadingOrderForm(), { wrapper });
+    expect(result.current).toBe(false);
+  });
+
+  it('returns true while a fetch is in flight', async () => {
+    let resolveFetch;
+    globalThis.fetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    function HookConsumer() {
+      const loading = useIsLoadingOrderForm();
+      const { requestOrderForm } = useOrderForm();
+      return (
+        <>
+          <span data-testid="loading">{String(loading)}</span>
+          <button onClick={requestOrderForm}>req</button>
+        </>
+      );
+    }
+
+    render(
+      <OrderFormProvider>
+        <HookConsumer />
+      </OrderFormProvider>,
+    );
+
+    await userEvent.click(screen.getByText('req'));
+
+    expect(screen.getByTestId('loading')).toHaveTextContent('true');
+
+    await act(async () => {
+      resolveFetch({
+        ok: true,
+        json: () => Promise.resolve({ orderFormId: 'x' }),
+      });
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useOrderForm
+// ---------------------------------------------------------------------------
+
+describe('useOrderForm', () => {
+  it('returns null orderFormId outside the provider', () => {
+    const { result } = renderHook(() => useOrderForm());
+    expect(result.current.orderFormId).toBeNull();
+  });
+
+  it('returns false isLoadingOrderForm outside the provider', () => {
+    const { result } = renderHook(() => useOrderForm());
+    expect(result.current.isLoadingOrderForm).toBe(false);
+  });
+
+  it('returns a no-op requestOrderForm outside the provider', () => {
+    const { result } = renderHook(() => useOrderForm());
+    expect(() => result.current.requestOrderForm()).not.toThrow();
+  });
+
+  it('returns a no-op trySyncHostCart outside the provider', () => {
+    const { result } = renderHook(() => useOrderForm());
+    expect(() => result.current.trySyncHostCart()).not.toThrow();
+  });
+
+  it('returns live values from the provider', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: 'full-shape-id' }));
+
+    const wrapper = ({ children }) => (
+      <OrderFormProvider>{children}</OrderFormProvider>
+    );
+    const { result } = renderHook(() => useOrderForm(), { wrapper });
+
+    await act(async () => {
+      result.current.requestOrderForm();
+    });
+
+    expect(result.current.orderFormId).toBe('full-shape-id');
+    expect(result.current.isLoadingOrderForm).toBe(false);
+    expect(typeof result.current.requestOrderForm).toBe('function');
+    expect(typeof result.current.trySyncHostCart).toBe('function');
+  });
+});

@@ -1,0 +1,38 @@
+@use "./variables.scss" as *;
+
+@mixin scrollbar-styles {
+  $scrollbar-thumb-width: 4px;
+  $scrollbar-padding: 4px;
+  
+  &::-webkit-scrollbar {
+    width: $scrollbar-thumb-width + $scrollbar-padding * 2;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $fs-color-neutral-5;
+    border-radius: $fs-border-radius-pill;
+    border: $scrollbar-padding solid transparent;
+    background-clip: padding-box;
+
+    &:hover {
+      background-color: $fs-color-neutral-4;
+    }
+  }
+}
+
+@mixin scrollable-container {
+  height: 100%;
+  overflow: hidden auto;
+
+  @include scrollbar-styles;
+}
+
+@mixin scrollable-content {
+  overflow: auto;
+
+  @include scrollbar-styles;
+}

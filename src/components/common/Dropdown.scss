@@ -1,0 +1,120 @@
+@use '@/styles/animations.scss' as *;
+
+@include weni-keyframes(weni-dropdown-panel-rise) {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@include weni-keyframes(weni-dropdown-panel-drop) {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@include weni-keyframes(weni-dropdown-panel-rise-left) {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@include weni-keyframes(weni-dropdown-panel-drop-left) {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.weni-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  pointer-events: none;
+
+  > *:not(.weni-dropdown__panel) {
+    pointer-events: auto;
+  }
+
+  &__panel {
+    position: absolute;
+    min-width: max-content;
+    border-radius: 4px;
+    pointer-events: auto;
+
+    &--top {
+      bottom: calc(100% + $fs-spacing-1);
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      @include weni-animation(0, 0.2s, weni-dropdown-panel-rise);
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 1;
+        transform: translateX(-50%);
+      }
+    }
+
+    &--bottom {
+      top: calc(100% + $fs-spacing-1);
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      @include weni-animation(0, 0.2s, weni-dropdown-panel-drop);
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 1;
+        transform: translateX(-50%);
+      }
+    }
+
+    &--left-top {
+      bottom: calc(100% + $fs-spacing-1);
+      left: 0;
+      transform: translateY(0);
+      @include weni-animation(0, 0.2s, weni-dropdown-panel-rise-left);
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    &--left-bottom {
+      top: calc(100% + $fs-spacing-1);
+      left: 0;
+      transform: translateY(0);
+      @include weni-animation(0, 0.2s, weni-dropdown-panel-drop-left);
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}

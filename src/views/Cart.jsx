@@ -99,6 +99,9 @@ export function Cart() {
             currency={product.currency}
             counter={product.quantity}
             setCounter={(counter) => setCounter(product.uuid, product, counter)}
+            uuid={product.uuid}
+            sellerId={product.sellerId}
+            productURL={product.productURL}
           />
         ))}
       </section>

@@ -10,7 +10,7 @@ import { CounterControls } from '@/components/Product/CounterControls';
 import { formatPriceWithCurrency } from '@/utils/currency';
 
 export function ProductDetails({ product }) {
-  const { cart, setCart, setCurrentPage } = useChatContext();
+  const { cart, setCart, setCurrentPage, isInsideVTEXStore } = useChatContext();
   const { t } = useTranslation();
 
   const quantity = useMemo(() => {
@@ -30,6 +30,11 @@ export function ProductDetails({ product }) {
       0,
     );
   }, [cart]);
+
+  const showAddToCartButton = quantity === 0 && !isInsideVTEXStore;
+  const showSeeCartButton =
+    quantity > 0 && totalItems > 0 && !isInsideVTEXStore;
+  const showCounterControls = quantity > 0 || isInsideVTEXStore;
 
   return (
     <section className="weni-view-product-details">
@@ -51,7 +56,7 @@ export function ProductDetails({ product }) {
       </section>
 
       <footer className="weni-view-product-details__footer">
-        {quantity === 0 && (
+        {showAddToCartButton && (
           <Button
             icon="add"
             onClick={() => setCounter(product.uuid, product, 1)}
@@ -60,27 +65,30 @@ export function ProductDetails({ product }) {
             {t('product_details.add_to_cart')}
           </Button>
         )}
-        {quantity > 0 && (
-          <>
-            <CounterControls
-              counter={quantity}
-              setCounter={(counter) =>
-                setCounter(product.uuid, product, counter)
-              }
-              size="medium"
-            />
-            <Button
-              className="weni-view-product-details__footer-button"
-              onClick={() =>
-                setCurrentPage({
-                  view: 'cart',
-                  title: t('cart.title'),
-                })
-              }
-            >
-              {t('cart.see_cart')} ({totalItems})
-            </Button>
-          </>
+
+        {showCounterControls && (
+          <CounterControls
+            productName={product.title}
+            counter={quantity}
+            setCounter={(counter) => setCounter(product.uuid, product, counter)}
+            size="medium"
+            uuid={product.uuid}
+            sellerId={product.sellerId}
+          />
+        )}
+
+        {showSeeCartButton && (
+          <Button
+            className="weni-view-product-details__footer-button"
+            onClick={() =>
+              setCurrentPage({
+                view: 'cart',
+                title: t('cart.title'),
+              })
+            }
+          >
+            {t('cart.see_cart')} ({totalItems})
+          </Button>
         )}
       </footer>
     </section>

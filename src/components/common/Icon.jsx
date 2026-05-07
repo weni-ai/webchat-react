@@ -24,7 +24,11 @@ export function Icon({
   ...props
 }) {
   const style = {
-    color: color ? `var(--${color})` : 'currentColor',
+    color: color.startsWith('#')
+      ? color
+      : color
+        ? `var(--${color})`
+        : 'currentColor',
   };
 
   const Icon = icons[name][filled ? 'filled' : 'default'];

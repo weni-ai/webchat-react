@@ -38,7 +38,7 @@ jobs:
         run: |
           aws s3 cp \
             dist-standalone/webchat.umd.js \
-            s3://${{ secrets.AWS_S3_BUCKET_NAME }}/webchat-latest.umd.js
+            s3://${{ secrets.AWS_S3_BUCKET_NAME }}/v3/webchat-latest.umd.js
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

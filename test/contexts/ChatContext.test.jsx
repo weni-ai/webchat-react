@@ -174,3 +174,114 @@ describe('ChatContext — clearCart', () => {
     expect(ctx.cart).toEqual({});
   });
 });
+
+describe('ChatContext — inputDraft', () => {
+  it('exposes inputDraft with initial value ""', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    expect(ctx.inputDraft).toBe('');
+  });
+
+  it('exposes setInputDraft as a function', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    expect(typeof ctx.setInputDraft).toBe('function');
+  });
+
+  it('setInputDraft updates inputDraft', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setInputDraft('hello world');
+    });
+
+    expect(ctx.inputDraft).toBe('hello world');
+  });
+
+  it('inputDraft persists after setInputDraft is called multiple times', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setInputDraft('first');
+    });
+    await act(async () => {
+      ctx.setInputDraft('second');
+    });
+
+    expect(ctx.inputDraft).toBe('second');
+  });
+
+  it('inputDraft can be cleared by setting it to ""', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setInputDraft('some text');
+    });
+    expect(ctx.inputDraft).toBe('some text');
+
+    await act(async () => {
+      ctx.setInputDraft('');
+    });
+    expect(ctx.inputDraft).toBe('');
+  });
+
+  it('inputDraft persists after isChatOpen toggle (chat close and reopen)', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setInputDraft('draft text');
+    });
+    expect(ctx.inputDraft).toBe('draft text');
+
+    await act(async () => {
+      ctx.service.setIsChatOpen(false);
+    });
+    await act(async () => {
+      ctx.service.setIsChatOpen(true);
+    });
+
+    expect(ctx.inputDraft).toBe('draft text');
+  });
+
+  it('inputDraft persists after catalog navigation (setCurrentPage + goBack)', async () => {
+    let ctx;
+    await renderWithContext({}, (c) => {
+      ctx = c;
+    });
+
+    await act(async () => {
+      ctx.setInputDraft('catalog draft');
+    });
+    expect(ctx.inputDraft).toBe('catalog draft');
+
+    await act(async () => {
+      ctx.setCurrentPage({ view: 'product-catalog', props: {} });
+    });
+    expect(ctx.currentPage?.view).toBe('product-catalog');
+
+    await act(async () => {
+      ctx.goBack();
+    });
+    expect(ctx.currentPage).toBeNull();
+
+    expect(ctx.inputDraft).toBe('catalog draft');
+  });
+});

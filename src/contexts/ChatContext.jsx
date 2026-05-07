@@ -10,8 +10,10 @@ import {
   useState,
 } from 'react';
 import { VoiceService } from '@/services/voice';
+import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
+import { getVtexAccount } from '@/utils/vtex';
 
 let serviceInstance = {
   fns: [],
@@ -38,6 +40,7 @@ const defaultConfig = {
   // UI settings
   title: 'Welcome',
   inputTextFieldHint: 'Type a message',
+  position: 'bottom-right',
   embedded: false,
   showCloseButton: true,
   showFullScreenButton: false,
@@ -61,6 +64,7 @@ const defaultConfig = {
 
   // Experimental flags
   navigateIfSameDomain: false,
+  addToCart: false,
 
   // Conversation starters
   conversationStarters: undefined,
@@ -137,6 +141,9 @@ export function ChatProvider({ children, config }) {
   const [tooltipMessage, setTooltipMessage] = useState(null);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
+  const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
+
+  const [inputDraft, setInputDraft] = useState('');
 
   // Voice mode state
   const [isVoiceEnabledByClient] = useState(!!mergedConfig.voiceMode?.enabled);
@@ -148,6 +155,8 @@ export function ChatProvider({ children, config }) {
   const [voiceError, setVoiceError] = useState(null);
   const [voiceLanguage, setVoiceLanguage] = useState('en');
   const isVoiceModeSupported = useMemo(() => VoiceService.isSupported(), []);
+  const [isVoiceModePageActive, setIsVoiceModePageActive] = useState(false);
+  const [voiceIntentBanner, setVoiceIntentBanner] = useState(null);
   const voiceServiceRef = useRef(null);
   const processedTextRef = useRef('');
   const lastProcessedVoiceMsgIdRef = useRef(null);
@@ -450,6 +459,69 @@ export function ChatProvider({ children, config }) {
     await enterVoiceMode();
   }, [exitVoiceMode, enterVoiceMode]);
 
+  useEffect(() => {
+    const updateVoiceIntentBanner = () => {
+      if (!isVoiceModeActive) return;
+      let bannerKey = 'voice_mode.intent_status_listening';
+      if (voiceModeState === 'speaking') {
+        bannerKey = 'voice_mode.intent_status_agent_speaking';
+      } else if (voiceModeState === 'processing') {
+        bannerKey = 'voice_mode.intent_status_transcribing';
+      }
+      setVoiceIntentBanner(i18n.t(bannerKey));
+    };
+
+    updateVoiceIntentBanner();
+    i18n.on('languageChanged', updateVoiceIntentBanner);
+    return () => i18n.off('languageChanged', updateVoiceIntentBanner);
+  }, [isVoiceModeActive, voiceModeState]);
+
+  const runVoiceModeEntryFlow = useCallback(async () => {
+    setIsVoiceModePageActive(true);
+
+    const permissionState = await AudioCapture.checkPermission();
+
+    if (permissionState === 'denied') {
+      setVoiceIntentBanner(i18n.t('voice_mode.microphone_disabled_in_browser'));
+      return;
+    }
+
+    if (permissionState === 'granted') {
+      setVoiceIntentBanner(i18n.t('voice_mode.connecting'));
+      enterVoiceMode();
+      return;
+    }
+
+    setVoiceIntentBanner(
+      i18n.t('voice_mode.check_microphone_browser_settings'),
+    );
+    const micGranted = await AudioCapture.requestPermission();
+    if (!micGranted) {
+      setVoiceIntentBanner(i18n.t('voice_mode.microphone_disabled_in_browser'));
+      return;
+    }
+
+    setVoiceIntentBanner(i18n.t('voice_mode.connecting'));
+    enterVoiceMode();
+  }, [enterVoiceMode]);
+
+  const handleVoiceModeIntent = useCallback(async () => {
+    if (isVoiceModeActive) {
+      exitVoiceMode();
+      setIsVoiceModePageActive(false);
+      return;
+    }
+
+    await runVoiceModeEntryFlow();
+  }, [isVoiceModeActive, exitVoiceMode, runVoiceModeEntryFlow]);
+
+  const handleCloseVoiceModePage = useCallback(() => {
+    if (isEnteringVoiceMode || isVoiceModeActive) {
+      exitVoiceMode();
+    }
+    setIsVoiceModePageActive(false);
+  }, [isEnteringVoiceMode, isVoiceModeActive, exitVoiceMode]);
+
   const value = {
     // Service instance (for advanced use cases)
     service,
@@ -474,6 +546,8 @@ export function ChatProvider({ children, config }) {
     cameraDevices,
 
     // UI-specific state
+    inputDraft,
+    setInputDraft,
     title,
     isChatOpen,
     setIsChatOpen: (isOpen) => service.setIsChatOpen(isOpen),
@@ -494,6 +568,7 @@ export function ChatProvider({ children, config }) {
     cart,
     setCart,
     clearCart,
+    isInsideVTEXStore,
     mode,
     isModeVisible: showMode,
 
@@ -509,10 +584,19 @@ export function ChatProvider({ children, config }) {
     enterVoiceMode,
     exitVoiceMode,
     retryVoiceMode,
+    isVoiceModePageActive,
+    voiceIntentBanner,
+    runVoiceModeEntryFlow,
+    handleVoiceModeIntent,
+    handleCloseVoiceModePage,
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
     sendMessage: (text) => service.sendMessage(text),
+    addProductToCart: (props) => service.addProductToCart(props),
+    setCustomField: (field, value) => service.setCustomField(field, value),
+    addConversationStatus: (text, status) =>
+      service.addConversationStatus(text, status),
     sendOrder: (productItems) => service.sendOrder(productItems),
     sendAttachment: (file) => service.sendAttachment(file),
     stopAndSendAudio,
@@ -555,6 +639,7 @@ ChatProvider.propTypes = {
     title: PropTypes.string,
     subtitle: PropTypes.string,
     inputTextFieldHint: PropTypes.string,
+    position: PropTypes.oneOf(['bottom-right', 'bottom-left']),
     embedded: PropTypes.bool,
     showCloseButton: PropTypes.bool,
     showFullScreenButton: PropTypes.bool,
@@ -588,6 +673,7 @@ ChatProvider.propTypes = {
 
     // Experimental flags
     navigateIfSameDomain: PropTypes.bool,
+    addToCart: PropTypes.bool,
 
     // Conversation starters
     conversationStarters: PropTypes.shape({

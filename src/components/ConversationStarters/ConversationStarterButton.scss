@@ -1,47 +1,4 @@
 .weni-starter-button {
-  border-radius: 9999px;
-  padding: $spacing-2 $spacing-3;
-  cursor: pointer;
-  text-align: left;
-  width: auto;
-  border: 1px solid var(--weni-main-color);
-  background-color: $white;
-  color: var(--weni-main-color);
-  transition: background-color 0.1s ease;
-
-  &:hover {
-    background-color: $gray-50;
-  }
-
-  &:active {
-    background-color: $gray-100;
-  }
-
-  &--compact {
-    padding: $spacing-1 $spacing-3;
-    max-width: var(--weni-widget-width, 360px);
-
-    .weni-starter-button__text {
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font: $font-caption-2;
-    }
-  }
-
-  &--full {
-    padding: $spacing-1 $spacing-3;
-
-    .weni-starter-button__text {
-      display: block;
-      word-break: break-word;
-      font: $font-caption-2;
-    }
-  }
-
-  &__text {
-    font: $font-body;
-    line-height: 1.4;
-  }
+  padding: calc($fs-spacing-1 - $fs-border-width) calc($fs-spacing-3 - $fs-border-width);
+  border: $fs-border-width solid $fs-border-color;
 }

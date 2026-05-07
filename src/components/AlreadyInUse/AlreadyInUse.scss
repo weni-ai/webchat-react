@@ -5,8 +5,7 @@
   flex-direction: column;
   gap: $spacing-2;
 
-  height: 100%;
-  overflow: hidden auto;
+  @include scrollable-container;
 
   text-align: center;
   align-items: center;

@@ -1,4 +1,5 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, Fragment, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
@@ -8,16 +9,25 @@ import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
 import TypingIndicator from './TypingIndicator';
-import Avatar from '@/components/common/Avatar';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
+import { ChatPresentation } from '@/components/Chat/ChatPresentation';
+import { FSButton } from '@/components/common/FSButton';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
+import { MessagesScrollProvider } from '@/contexts/MessagesScrollContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
+import { ShowItems } from './TextComponents/ShowItems';
+import { QuickReplies } from './TextComponents/QuickReplies';
+import { FSBadge } from '../common/FSBadge';
 
 import './MessagesList.scss';
+import ThinkingIndicator from './ThinkingIndicator';
+
+const BOTTOM_SCROLL_THRESHOLD_PX = 100;
+const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
 
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
@@ -59,132 +69,355 @@ Message.propTypes = {
 };
 
 export function MessagesList() {
+  const { t } = useTranslation();
   const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
-  const { config, isVoiceModeActive, voicePartialTranscript } =
-    useChatContext();
-  const { questions, isDismissed, handleStarterClick } =
+  const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
+  const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
   const messagesEndRef = useRef(null);
-  const showConversationStartersFull = questions.length > 0 && !isDismissed;
+  const listRef = useRef(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [showGoToBottom, setShowGoToBottom] = useState(false);
+  const showConversationStartersFull =
+    questions.length > 0 &&
+    !isInChatStartersDismissed &&
+    messageGroups.length === 0;
+
+  const isNearBottomRef = useRef(true);
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }
 
+  const scrollToBottomOnReveal = useCallback(() => {
+    if (isNearBottomRef.current) scrollToBottom();
+  }, []);
+
+  const syncScrollState = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    setScrollTop(top);
+    const distanceFromBottom = el.scrollHeight - top - el.clientHeight;
+    const isNear = distanceFromBottom <= BOTTOM_SCROLL_THRESHOLD_PX;
+    isNearBottomRef.current = isNear;
+    setShowGoToBottom(!isNear);
+  }, []);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return undefined;
+    syncScrollState();
+    el.addEventListener('scroll', syncScrollState, { passive: true });
+    window.addEventListener('resize', syncScrollState);
+    return () => {
+      el.removeEventListener('scroll', syncScrollState);
+      window.removeEventListener('resize', syncScrollState);
+    };
+  }, [syncScrollState]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+
+    let lastHeight = vv.height;
+    let rafId;
+
+    const handleViewportResize = () => {
+      if (vv.height < lastHeight) {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => scrollToBottom('instant'));
+      }
+      lastHeight = vv.height;
+    };
+
+    vv.addEventListener('resize', handleViewportResize);
+    return () => {
+      vv.removeEventListener('resize', handleViewportResize);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messageGroups, isThinking, voicePartialTranscript]);
+    const id = requestAnimationFrame(() => syncScrollState());
+    return () => cancelAnimationFrame(id);
+  }, [
+    messageGroups,
+    isThinking,
+    voicePartialTranscript,
+    isTyping,
+    syncScrollState,
+  ]);
 
   useEffect(() => {
-    setTimeout(() => {
+    const t = setTimeout(() => {
       scrollToBottom('instant');
+      syncScrollState();
     }, 50);
-  }, [isChatOpen]);
+    return () => clearTimeout(t);
+  }, [isChatOpen, syncScrollState]);
 
   const enableComponents = (message) => {
-    const isMessageInLastGroup = messageGroups
+    const inLastGroup = messageGroups
       .at(-1)
       ?.messages.some((m) => m.id === message.id);
-    return message.direction === 'incoming' && isMessageInLastGroup;
+    return message.direction === 'incoming' && inLastGroup;
   };
 
   return (
-    <section className="weni-messages-list">
-      {messageGroups.map((group, index) => (
-        <section
-          className={`
-            weni-messages-list__direction-group 
-            weni-messages-list__direction-group--${group.direction} 
-            weni-messages-list__direction-group--${group.direction}-${config.showChatAvatar ? 'with' : 'without'}-avatar'
+    <MessagesScrollProvider onWordRevealed={scrollToBottomOnReveal}>
+      <section
+        ref={listRef}
+        className="weni-messages-list"
+        data-scroll-top={scrollTop}
+      >
+        {/* TODO: Add empty state when no messages */}
+
+        <ChatPresentation />
+
+        {messageGroups.map((group, groupIndex) => (
+          <section
+            className={`
+            weni-messages-list__direction-group
+            weni-messages-list__direction-group--${group.direction}
           `}
-          key={index}
-        >
-          {group.direction === 'incoming' && config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
-          )}
-          {group.messages.map((message, messageIndex) => (
-            <MessageContainer
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
-              direction={group.direction}
-              type={message.type}
-              key={message.id || messageIndex}
-            >
-              <Message
-                message={message}
-                componentsEnabled={enableComponents(message)}
-              />
-
-              {message.status === 'pending' && (
-                <Icon
-                  name="schedule"
-                  size="small"
-                  color="fg-muted"
-                />
-              )}
-
-              {message.status === 'error' && (
-                <Icon
-                  name="error"
-                  size="small"
-                  color="fg-critical"
-                />
-              )}
-            </MessageContainer>
-          ))}
-        </section>
-      ))}
-
-      {isVoiceModeActive && voicePartialTranscript && (
-        <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
-          <MessageContainer
-            className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
-            direction="outgoing"
-            type="text"
+            key={
+              group.messages[0].id ??
+              `grp-${group.messages[0].timestamp}-${groupIndex}`
+            }
           >
-            <section className="weni-message-text weni-message-text--outgoing">
-              {voicePartialTranscript}
-            </section>
-          </MessageContainer>
-        </section>
-      )}
+            {renderGroupMessagesWithCollapsedStatus(group, enableComponents, t)}
+          </section>
+        ))}
 
-      {(isTyping || isThinking) && (
-        <section
-          className={`
+        {isVoiceModeActive && voicePartialTranscript && (
+          <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
+            <MessageContainer
+              className="weni-messages-list__message weni-messages-list__message--outgoing weni-messages-list__message--voice-transcribing"
+              direction="outgoing"
+              type="text"
+            >
+              <section className="weni-message-text weni-message-text--outgoing">
+                {voicePartialTranscript}
+              </section>
+            </MessageContainer>
+          </section>
+        )}
+
+        {(isTyping || isThinking) && (
+          <section
+            className={`
             weni-messages-list__direction-group
             weni-messages-list__direction-group--incoming
-            weni-messages-list__direction-group--incoming-${config.showChatAvatar ? 'with' : 'without'}-avatar
+            weni-messages-list__direction-group--typing
           `}
-        >
-          {config.showChatAvatar && (
-            <Avatar
-              src={config.profileAvatar}
-              name={config.title}
-            />
-          )}
-          <MessageContainer
-            className="weni-messages-list__message weni-messages-list__message--incoming"
-            direction="incoming"
-            type="typing"
           >
-            <TypingIndicator />
-          </MessageContainer>
-        </section>
-      )}
+            <MessageContainer
+              className="weni-messages-list__message weni-messages-list__message--incoming"
+              direction="incoming"
+              type="typing"
+            >
+              {isThinking ? (
+                <ThinkingIndicator className="weni-message__thinking-indicator" />
+              ) : (
+                <TypingIndicator />
+              )}
+            </MessageContainer>
+          </section>
+        )}
 
-      {showConversationStartersFull && (
-        <ConversationStartersFull
-          questions={questions}
-          onStarterClick={handleStarterClick}
-        />
-      )}
+        {showConversationStartersFull && (
+          <ConversationStartersFull
+            questions={questions}
+            onStarterClick={handleFullStarterClick}
+          />
+        )}
 
-      <div ref={messagesEndRef} />
-    </section>
+        {showGoToBottom && (
+          <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
+        )}
+
+        <div ref={messagesEndRef} />
+      </section>
+    </MessagesScrollProvider>
   );
 }
 
 export default MessagesList;
+
+function GoToBottomButton({ onScrollToBottom }) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="weni-messages-list__go-to-bottom-container">
+      <FSButton
+        variant="tertiary"
+        onClick={onScrollToBottom}
+        size="large"
+        rounded
+        icon="arrow_downward"
+        aria-label={t('messages_list.scroll_to_bottom')}
+        className="weni-messages-list__go-to-bottom-button"
+      >
+        {''}
+      </FSButton>
+    </section>
+  );
+}
+
+GoToBottomButton.propTypes = {
+  onScrollToBottom: PropTypes.func.isRequired,
+};
+
+/**
+ * Index right after the last consecutive `conversation_status` message starting at `start`.
+ */
+function indexAfterConversationStatusRun(messages, start) {
+  let end = start + 1;
+  while (
+    end < messages.length &&
+    messages[end].type === MESSAGE_TYPE_CONVERSATION_STATUS
+  ) {
+    end += 1;
+  }
+  return end;
+}
+
+function renderConversationStatusBadge(
+  rowKey,
+  keySuffix,
+  statusType,
+  children,
+) {
+  return (
+    <section
+      className="weni-messages-list__conversation-status"
+      key={`${rowKey}-${keySuffix}`}
+    >
+      <FSBadge type={statusType ?? 'success'}>{children}</FSBadge>
+    </section>
+  );
+}
+
+function renderCollapsedConversationStatusRun(run, startIndex, t) {
+  const first = run[0];
+  const rowKey =
+    first.id ?? `msg-${first.timestamp}-${startIndex}-status-run-${run.length}`;
+
+  return renderConversationStatusBadge(
+    rowKey,
+    'conversation-status-collapsed',
+    first.statusType,
+    t('messages_list.items_added_to_cart', { count: run.length }),
+  );
+}
+
+/**
+ * Renders one direction-group: consecutive `conversation_status` messages (2+)
+ * become a single summary badge; other types are unchanged.
+ */
+function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
+  const { messages } = group;
+  const nodes = [];
+
+  for (let index = 0; index < messages.length; ) {
+    const message = messages[index];
+
+    if (message.type !== MESSAGE_TYPE_CONVERSATION_STATUS) {
+      nodes.push(renderMessage(group, message, index, enableComponents));
+      index += 1;
+      continue;
+    }
+
+    const runEnd = indexAfterConversationStatusRun(messages, index);
+    const runLength = runEnd - index;
+    const isCollapsedRun = runLength > 1;
+
+    if (isCollapsedRun) {
+      const statusRun = messages.slice(index, runEnd);
+      nodes.push(renderCollapsedConversationStatusRun(statusRun, index, t));
+    } else {
+      nodes.push(
+        renderMessage(group, messages[index], index, enableComponents),
+      );
+    }
+
+    index = runEnd;
+  }
+
+  return nodes;
+}
+
+function renderMessage(group, message, messageIndex, enableComponents) {
+  const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
+
+  switch (message.type) {
+    case MESSAGE_TYPE_CONVERSATION_STATUS:
+      return renderConversationStatusBadge(
+        rowKey,
+        'conversation-status',
+        message.statusType,
+        message.text,
+      );
+    default:
+      return (
+        <Fragment key={`${rowKey}-body`}>
+          <MessageContainer
+            className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
+            direction={group.direction}
+            type={message.type}
+          >
+            <Message
+              message={message}
+              componentsEnabled={enableComponents(message)}
+            />
+
+            {message.status === 'pending' && (
+              <Icon
+                name="schedule"
+                size="small"
+                color="fg-muted"
+              />
+            )}
+
+            {message.status === 'error' && (
+              <Icon
+                name="error"
+                size="small"
+                color="fg-critical"
+              />
+            )}
+          </MessageContainer>
+
+          {Array.isArray(message.quick_replies) &&
+            message.quick_replies.length > 0 && (
+              <MessageContainer
+                className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--quick-replies`}
+                direction={group.direction}
+                type={message.type}
+              >
+                <QuickReplies
+                  quickReplies={message.quick_replies}
+                  disabled={!enableComponents(message)}
+                />
+              </MessageContainer>
+            )}
+
+          {message.product_list && (
+            <MessageContainer
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
+              direction={group.direction}
+              type={message.type}
+            >
+              <ShowItems
+                buttonText={message.product_list.buttonText}
+                header={message.header}
+                productList={message.product_list}
+              />
+            </MessageContainer>
+          )}
+        </Fragment>
+      );
+  }
+}

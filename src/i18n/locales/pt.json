@@ -23,6 +23,10 @@
       "send": "Enviar"
     }
   },
+  "messages_list": {
+    "items_added_to_cart": "{{count}} itens foram adicionados ao carrinho",
+    "scroll_to_bottom": "Ir ao final"
+  },
   "show_items": {
     "catalog_title": "Produtos disponíveis",
     "items_one": "item",
@@ -41,7 +45,18 @@
     "discount": "Desconto",
     "total": "Total",
     "continue_shopping": "Continuar a compra",
-    "make_order": "Fazer pedido"
+    "make_order": "Fazer pedido",
+    "add": "Adicionar",
+    "added": "Adicionado",
+    "product_added_to_cart": "{{productName}} adicionado ao carrinho"
+  },
+  "input": {
+    "attach_tooltip": "Anexar",
+    "media_audio": "Áudio",
+    "media_camera": "Câmera",
+    "media_menu_region": "Opções de mídia",
+    "media_upload_file": "Enviar arquivo",
+    "open_media_menu": "Abrir menu"
   },
   "voice_mode": {
     "title": "Modo de voz",
@@ -50,12 +65,18 @@
     "speaking": "Falando...",
     "processing": "Processando...",
     "errorTitle": "Algo deu errado",
+    "intent_status_agent_speaking": "Assistente a falar",
+    "intent_status_listening": "A ouvir",
+    "intent_status_transcribing": "A transcrever",
     "you": "Você",
     "youSaid": "Você disse",
     "assistant": "Assistente",
     "stop": "Parar",
     "microphonePermissionHint": "Ative o microfone nas configurações do navegador para usar o modo voz",
-    "cancel": "Cancelar",
+    "cancel": "Ir para texto",
+    "check_microphone_browser_settings": "Verifique as configurações do navegador para ativar o microfone.",
+    "connecting": "Conectando",
+    "microphone_disabled_in_browser": "O microfone está desativado no navegador.",
     "aria_enter": "Entrar no modo de voz",
     "aria_exit": "Sair do modo de voz",
     "aria_listening": "Ouvindo sua voz",
@@ -137,7 +158,7 @@
     },
     "preview": {
       "title": "Pré-visualização",
-      "input_placeholder": "Pré-visualização apenas..."
+      "input_placeholder": "Pré-visualização, em breve estará disponível"
     }
   }
 }

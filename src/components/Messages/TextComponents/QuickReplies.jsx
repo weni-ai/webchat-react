@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 import { useWeniChat } from '@/hooks/useWeniChat';
-import Button from '@/components/common/Button';
+import { FSButton } from '@/components/common/FSButton';
 
 import './QuickReplies.scss';
 export function QuickReplies({ quickReplies, disabled = false }) {
@@ -10,14 +10,15 @@ export function QuickReplies({ quickReplies, disabled = false }) {
   return (
     <section className="weni-quick-replies">
       {quickReplies.map((reply) => (
-        <Button
+        <FSButton
+          className="weni-quick-replies__button"
           key={reply}
-          variant="secondary"
+          variant="tertiary"
           disabled={disabled}
           onClick={() => sendMessage(reply)}
         >
           {reply}
-        </Button>
+        </FSButton>
       ))}
     </section>
   );

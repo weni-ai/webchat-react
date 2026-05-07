@@ -46,7 +46,7 @@ function extractThemeFromParams(params) {
 
     // Colors - Launcher
     launcherColor: getValue('launcherColor') || getValue('mainColor'),
-    mainColor: getValue('mainColor'),
+    mainColor: getValue('mainColor') || getValue('launcherColor'),
 
     // Colors - Input
     inputBackgroundColor: getValue('inputBackgroundColor'),
@@ -113,6 +113,7 @@ function mapConfig(params) {
     title: params.title || 'Welcome',
     subtitle: params.subtitle,
     inputTextFieldHint: params.inputTextFieldHint || 'Type a message',
+    position: params.position || 'bottom-right',
     embedded: params.embedded || false,
     showCloseButton: params.showCloseButton !== false,
     showFullScreenButton: params.showFullScreenButton || false,
@@ -146,6 +147,7 @@ function mapConfig(params) {
 
     // Experimental flags
     navigateIfSameDomain: params.navigateIfSameDomain,
+    addToCart: params.addToCart,
 
     // Callbacks
     onSocketEvent: params.onSocketEvent,
@@ -269,6 +271,20 @@ async function send(message, options = {}) {
 }
 
 /**
+ * Add product to cart
+ * @param {Object} props - Product properties
+ * @param {string} props.VTEXAccountName - VTEX account name
+ * @param {string} props.orderFormId - Order form ID
+ * @param {string} props.seller - Seller ID
+ * @param {string} props.id - Product ID
+ * @returns {Promise<void>}
+ */
+async function addProductToCart(props) {
+  const service = await serviceWhenReady();
+  await service.addProductToCart(props);
+}
+
+/**
  * Clear chat messages while keeping session and connection
  * @returns {Promise<void>}
  */
@@ -388,14 +404,16 @@ function validateStartersInput(questions) {
 }
 
 async function setConversationStarters(questions) {
-  if (!widgetInstance) return;
-
   if (!validateStartersInput(questions)) {
     if (import.meta.env.DEV) {
       console.warn(
         'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
       );
     }
+    return;
+  }
+
+  if (!widgetInstance && typeof service.emit !== 'function') {
     return;
   }
 
@@ -415,6 +433,7 @@ const WebChat = {
   close,
   toggle,
   send,
+  addProductToCart,
   clear,
   clearPageHistory,
   clearCart,

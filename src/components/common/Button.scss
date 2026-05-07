@@ -20,6 +20,14 @@
     padding: $spacing-2;
   }
 
+  &--rounded {
+    border-radius: $border-radius-full;
+  }
+
+  &--no-padding {
+    padding: 0;
+  }
+
   &--start-aligned {
     justify-content: flex-start;
   }
@@ -33,7 +41,7 @@
   }
 
   &--large {
-    padding: $spacing-3;
+    padding: $spacing-2;
   }
 
   &--small {

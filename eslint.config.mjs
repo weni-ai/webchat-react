@@ -1,10 +1,11 @@
-import { defineConfig } from "eslint/config";
-import WeniReactConfig from "@weni/eslint-config/react16.js";
-import globals from "globals";
+import { defineConfig } from 'eslint/config';
+import WeniReactConfig from '@weni/eslint-config/react16.js';
+import globals from 'globals';
 
 export default defineConfig([
-  WeniReactConfig,
+  ...WeniReactConfig,
   {
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 12,
       sourceType: 'module',
@@ -23,9 +24,9 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          'argsIgnorePattern': '^_',
-          'varsIgnorePattern': '^_',
-          'caughtErrorsIgnorePattern': '^_',
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
     },

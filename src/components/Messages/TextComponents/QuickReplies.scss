@@ -1,6 +1,10 @@
 .weni-quick-replies {
-  margin-top: $spacing-2;
-  
-  display: grid;
-  gap: $spacing-1;
+  display: flex;
+  gap: $fs-spacing-1;
+  flex-wrap: wrap;
+
+  .weni-quick-replies__button {
+    padding: calc($fs-spacing-1 - $fs-border-width) calc($fs-spacing-3 - $fs-border-width);
+    border: $fs-border-width solid $fs-border-color;
+  }
 }

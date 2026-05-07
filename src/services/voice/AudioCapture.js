@@ -48,7 +48,7 @@ export class AudioCapture {
    * Request microphone permission and return whether it was granted.
    * @returns {Promise<boolean>}
    */
-  async requestPermission() {
+  static async requestPermission() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
@@ -62,7 +62,7 @@ export class AudioCapture {
    * Query current microphone permission state without prompting.
    * @returns {Promise<PermissionState>}
    */
-  async checkPermission() {
+  static async checkPermission() {
     try {
       const status = await navigator.permissions.query({ name: 'microphone' });
       return status.state;
