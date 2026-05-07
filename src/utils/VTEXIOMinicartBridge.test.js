@@ -94,7 +94,6 @@ function mockFetchNetworkFailure() {
 beforeEach(() => {
   document.body.innerHTML = '';
   jest.spyOn(console, 'warn').mockImplementation(() => {});
-  jest.spyOn(console, 'log').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 

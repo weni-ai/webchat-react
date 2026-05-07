@@ -137,26 +137,15 @@ export async function updateVTEXIOMinicart() {
       return null;
     }
 
-    console.log('[Minicart] Fetching latest cart state from API...');
     const freshOrderForm = await fetchLatestOrderForm();
-
-    console.log('[Minicart] Merging data to preserve catalog images...');
 
     const mergedOrderForm = mergePreservingImages(
       context.orderForm,
       freshOrderForm,
     );
 
-    console.log(
-      '[Minicart] Injecting updated orderForm via native setOrderForm...',
-    );
     context.setOrderForm(mergedOrderForm);
 
-    console.log(
-      '[Minicart] Cart updated successfully —',
-      mergedOrderForm.items.length,
-      'item(s)',
-    );
     return mergedOrderForm;
   } catch (err) {
     console.error('[Minicart] Failed to update:', err);
@@ -167,9 +156,6 @@ export async function updateVTEXIOMinicart() {
 function setupMinicartBridge() {
   if (typeof window === 'undefined') return;
   window.updateMinicart = updateVTEXIOMinicart;
-  console.log(
-    '[MinicartBridge] Ready. Call window.updateMinicart() after cart changes.',
-  );
 }
 
 setupMinicartBridge();
