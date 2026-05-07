@@ -6,7 +6,7 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import Badge from '@/components/common/Badge';
 import { Icon } from '@/components/common/Icon';
 import Avatar from '@/components/common/Avatar';
-import { Tooltip } from '@/components/Tooltip/Tooltip';
+import { Notification } from '@/components/Notification/Notification';
 
 import { useChatContext } from '@/contexts/ChatContext';
 
@@ -128,10 +128,11 @@ export function Launcher() {
       />
 
       {tooltipMessage && (
-        <Tooltip
+        <Notification
           name={title}
           message={tooltipMessage}
           onClose={clearTooltipMessage}
+          onOpen={toggleChat}
         />
       )}
     </section>
