@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types';
 import { ConversationStarterButton } from './ConversationStarterButton';
 import './ConversationStarters.scss';
+import { FSButton } from '../common/FSButton';
 
 export function ConversationStartersCompact({
   questions,
   onStarterClick,
+  onClose,
   isVisible,
   isHiding,
 }) {
@@ -27,6 +29,17 @@ export function ConversationStartersCompact({
           onClick={onStarterClick}
         />
       ))}
+
+      <FSButton
+        className="weni-starters-compact__close-button"
+        onClick={onClose}
+        aria-label="Close conversation starters"
+        variant="primary"
+        size="small"
+        rounded
+        onlyIcon
+        icon="close"
+      ></FSButton>
     </section>
   );
 }
@@ -34,6 +47,7 @@ export function ConversationStartersCompact({
 ConversationStartersCompact.propTypes = {
   questions: PropTypes.arrayOf(PropTypes.string).isRequired,
   onStarterClick: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
   isVisible: PropTypes.bool.isRequired,
   isHiding: PropTypes.bool,
 };

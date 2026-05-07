@@ -40,8 +40,13 @@ function WidgetContent() {
     shouldRender,
   } = useChatContext();
 
-  const { questions, isCompactVisible, isHiding, handleCompactStarterClick } =
-    useConversationStarters();
+  const {
+    questions,
+    isCompactVisible,
+    isHiding,
+    handleCompactStarterClick,
+    clearStarters,
+  } = useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
   const isCompactStartersVisible =
@@ -75,6 +80,7 @@ function WidgetContent() {
             <ConversationStartersCompact
               questions={questions}
               onStarterClick={handleCompactStarterClick}
+              onClose={clearStarters}
               isVisible={isCompactStartersVisible}
               isHiding={isHiding}
             />
