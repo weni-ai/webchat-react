@@ -131,7 +131,7 @@ describe('Dropdown — open and close via trigger', () => {
 
 describe('Dropdown — close on outside click', () => {
   it('closes the panel when clicking outside the component', () => {
-    const { container } = renderDropdown();
+    renderDropdown();
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(screen.getByText(PANEL_CONTENT)).toBeInTheDocument();
 
