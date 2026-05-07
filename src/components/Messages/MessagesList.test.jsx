@@ -1,4 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+/* eslint-disable no-undef */
+/* eslint-disable react/prop-types */
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 // jsdom does not implement scrollIntoView — polyfill it globally for all tests
 beforeAll(() => {
@@ -117,10 +119,14 @@ jest.mock('./TextComponents/QuickReplies', () => ({
 jest.mock('./TextComponents/ShowItems', () => ({
   ShowItems: () => <div data-testid="show-items" />,
 }));
+jest.mock('@/contexts/MessagesScrollContext', () => ({
+  MessagesScrollProvider: jest.fn(({ children }) => children),
+}));
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useConversationStarters } from '@/contexts/ConversationStartersContext';
+import { MessagesScrollProvider } from '@/contexts/MessagesScrollContext';
 import { Message, MessagesList } from './MessagesList';
 
 // ---------------------------------------------------------------------------
@@ -612,5 +618,254 @@ describe('MessagesList — GoToBottomButton', () => {
     expect(
       screen.getByLabelText('messages_list.scroll_to_bottom'),
     ).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scrollToBottomOnReveal
+// ---------------------------------------------------------------------------
+
+describe('scrollToBottomOnReveal', () => {
+  function getOnWordRevealed() {
+    // MessagesScrollProvider is a jest.fn(); its most-recent call's first
+    // argument contains the onWordRevealed prop passed by MessagesList.
+    return MessagesScrollProvider.mock.calls.at(-1)[0].onWordRevealed;
+  }
+
+  function scrollListFarFromBottom(container) {
+    const list = container.querySelector('.weni-messages-list');
+    Object.defineProperty(list, 'scrollHeight', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'clientHeight', {
+      value: 500,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'scrollTop', { value: 0, configurable: true });
+    fireEvent.scroll(list);
+  }
+
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+  });
+
+  it('calls scrollIntoView when the user is near the bottom (default)', () => {
+    setupMocks();
+    render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    getOnWordRevealed()();
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledTimes(
+      1,
+    );
+  });
+
+  it('does not call scrollIntoView when the user has scrolled far from the bottom', () => {
+    setupMocks();
+    const { container } = render(<MessagesList />);
+    // Scroll away from bottom so isNearBottomRef becomes false
+    scrollListFarFromBottom(container);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    getOnWordRevealed()();
+
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// visualViewport resize effect
+// ---------------------------------------------------------------------------
+
+describe('visualViewport resize effect', () => {
+  let mockVv;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    mockVv = {
+      height: 800,
+      _listeners: {},
+      addEventListener: jest.fn((event, cb) => {
+        mockVv._listeners[event] = cb;
+      }),
+      removeEventListener: jest.fn(),
+    };
+    Object.defineProperty(window, 'visualViewport', {
+      value: mockVv,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    Object.defineProperty(window, 'visualViewport', {
+      value: null,
+      configurable: true,
+    });
+  });
+
+  it('registers a resize listener on visualViewport', () => {
+    setupMocks();
+    render(<MessagesList />);
+    expect(mockVv.addEventListener).toHaveBeenCalledWith(
+      'resize',
+      expect.any(Function),
+    );
+  });
+
+  it('calls scrollToBottom with instant behavior when the viewport shrinks', () => {
+    setupMocks();
+    render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    // Simulate soft-keyboard appearance (viewport height decreases)
+    mockVv.height = 600;
+    mockVv._listeners['resize']();
+
+    // Flush the requestAnimationFrame scheduled inside handleViewportResize
+    act(() => jest.advanceTimersByTime(17));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'instant',
+    });
+  });
+
+  it('does not scroll when the viewport height increases', () => {
+    setupMocks();
+    render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    // Simulate keyboard being dismissed (height grows — no scroll expected)
+    mockVv.height = 1000;
+    mockVv._listeners['resize']();
+
+    act(() => jest.advanceTimersByTime(17));
+
+    expect(
+      window.HTMLElement.prototype.scrollIntoView,
+    ).not.toHaveBeenCalledWith({ behavior: 'instant' });
+  });
+
+  it('removes the resize listener from visualViewport on unmount', () => {
+    setupMocks();
+    const { unmount } = render(<MessagesList />);
+    unmount();
+    expect(mockVv.removeEventListener).toHaveBeenCalledWith(
+      'resize',
+      expect.any(Function),
+    );
+  });
+
+  it('does not throw and skips the listener when visualViewport is unavailable', () => {
+    Object.defineProperty(window, 'visualViewport', {
+      value: null,
+      configurable: true,
+    });
+    setupMocks();
+    expect(() => render(<MessagesList />)).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isChatOpen scroll effect
+// ---------------------------------------------------------------------------
+
+describe('isChatOpen scroll effect', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('does not call scrollToBottom before the 50 ms delay elapses', () => {
+    setupMocks({ isChatOpen: true });
+    render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    act(() => jest.advanceTimersByTime(49));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('calls scrollToBottom with instant behavior after the 50 ms delay', () => {
+    setupMocks({ isChatOpen: true });
+    render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    act(() => jest.advanceTimersByTime(50));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'instant',
+    });
+  });
+
+  it('re-triggers the scroll when isChatOpen changes', () => {
+    setupMocks({ isChatOpen: false });
+    const { rerender } = render(<MessagesList />);
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    useWeniChat.mockReturnValue(buildWeniChatMock({ isChatOpen: true }));
+    rerender(<MessagesList />);
+
+    act(() => jest.advanceTimersByTime(50));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'instant',
+    });
+  });
+
+  it('cancels the pending timeout on unmount', () => {
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    setupMocks({ isChatOpen: true });
+    const { unmount } = render(<MessagesList />);
+    clearTimeoutSpy.mockClear();
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GoToBottomButton click
+// ---------------------------------------------------------------------------
+
+describe('GoToBottomButton click', () => {
+  function showGoToBottomButton(container) {
+    const list = container.querySelector('.weni-messages-list');
+    Object.defineProperty(list, 'scrollHeight', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'clientHeight', {
+      value: 500,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'scrollTop', { value: 0, configurable: true });
+    fireEvent.scroll(list);
+  }
+
+  it('clicking the button calls scrollIntoView with smooth behavior', () => {
+    setupMocks();
+    const { container } = render(<MessagesList />);
+    showGoToBottomButton(container);
+
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+    fireEvent.click(screen.getByLabelText('messages_list.scroll_to_bottom'));
+
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'smooth',
+    });
   });
 });
