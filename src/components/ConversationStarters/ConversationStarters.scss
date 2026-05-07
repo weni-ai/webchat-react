@@ -17,7 +17,47 @@
   &--hiding {
     @include weni-animation(0, 0.25s, weni-slide-out);
   }
+
+  &--bottom-left {
+    align-items: flex-start;
+    margin-right: 0;
+    margin-left: 20px;
+
+    .weni-starters-compact__close-button {
+      right: auto;
+      left: -$fs-spacing-3;
+    }
+  }
+
+  &__close-button {
+    position: absolute;
+    top: -$fs-spacing-3;
+    right: -$fs-spacing-3;
+
+    background-color: $fs-color-neutral-3;
+    border: $fs-border-width solid #F5F5F5;
+
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      background-color: var(--weni-main-color);
+    }
+  }
+
+  &:hover {
+    .weni-starters-compact__close-button {
+      opacity: 1;
+    }
+  }
 }
+
+@media screen and (max-width: 540px) {
+  .weni-starters-compact__close-button {
+    opacity: 1;
+  }
+}
+
 
 .weni-starters-full {
   display: flex;

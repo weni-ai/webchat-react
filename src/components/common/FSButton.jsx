@@ -14,8 +14,11 @@ export function FSButton({
   disabled = false,
   rounded = false,
   hoverState = false,
+  onlyIcon = false,
   ...props
 }) {
+  const iconSize = onlyIcon ? 'medium' : size;
+
   const IconComponent = useMemo(() => {
     if (isLoading) {
       return (
@@ -31,7 +34,7 @@ export function FSButton({
       return (
         <Icon
           name={icon}
-          size={size}
+          size={iconSize}
         />
       );
     }
@@ -41,7 +44,7 @@ export function FSButton({
 
   return (
     <button
-      className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} weni-fs-button--${rounded ? 'rounded' : ''} ${hoverState ? 'weni-fs-button--hover-state' : ''} ${className}`}
+      className={`weni-fs-button weni-fs-button--${variant} weni-fs-button--${size} weni-fs-button--${rounded ? 'rounded' : ''} ${hoverState ? 'weni-fs-button--hover-state' : ''} ${onlyIcon ? 'weni-fs-button--only-icon' : ''} ${className}`}
       disabled={isLoading || disabled}
       {...props}
     >
@@ -62,4 +65,5 @@ FSButton.propTypes = {
   className: PropTypes.string,
   rounded: PropTypes.bool,
   hoverState: PropTypes.bool,
+  onlyIcon: PropTypes.bool,
 };

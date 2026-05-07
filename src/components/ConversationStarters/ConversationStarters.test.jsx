@@ -179,6 +179,122 @@ describe('ConversationStartersCompact', () => {
   });
 });
 
+describe('ConversationStartersCompact — close button', () => {
+  it('renders the close button with the correct aria-label', () => {
+    render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        onClose={jest.fn()}
+        isVisible={true}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Close conversation starters' }),
+    ).toBeInTheDocument();
+  });
+
+  it('calls onClose when the close button is clicked', () => {
+    const onClose = jest.fn();
+    render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        onClose={onClose}
+        isVisible={true}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Close conversation starters' }),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not crash when onClose is not provided and the close button is clicked', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        isVisible={true}
+      />,
+    );
+
+    expect(() =>
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Close conversation starters' }),
+      ),
+    ).not.toThrow();
+    console.error.mockRestore();
+  });
+
+  it('does not call onStarterClick when the close button is clicked', () => {
+    const onStarterClick = jest.fn();
+    render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={onStarterClick}
+        onClose={jest.fn()}
+        isVisible={true}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Close conversation starters' }),
+    );
+    expect(onStarterClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('ConversationStartersCompact — position variant', () => {
+  it('adds the bottom-right modifier class when position is "bottom-right"', () => {
+    const { container } = render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        isVisible={true}
+        position="bottom-right"
+      />,
+    );
+
+    expect(
+      container.querySelector('.weni-starters-compact--bottom-right'),
+    ).toBeInTheDocument();
+  });
+
+  it('adds the bottom-left modifier class when position is "bottom-left"', () => {
+    const { container } = render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        isVisible={true}
+        position="bottom-left"
+      />,
+    );
+
+    expect(
+      container.querySelector('.weni-starters-compact--bottom-left'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not add a bottom-left class when position is "bottom-right"', () => {
+    const { container } = render(
+      <ConversationStartersCompact
+        questions={mockQuestions}
+        onStarterClick={jest.fn()}
+        isVisible={true}
+        position="bottom-right"
+      />,
+    );
+
+    expect(
+      container.querySelector('.weni-starters-compact--bottom-left'),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('ConversationStartersFull', () => {
   it('renders all questions as full buttons', () => {
     render(
