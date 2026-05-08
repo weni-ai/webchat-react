@@ -23,6 +23,10 @@
       "send": "Send"
     }
   },
+  "messages_list": {
+    "items_added_to_cart": "{{count}} items were added to cart",
+    "scroll_to_bottom": "Go to bottom"
+  },
   "show_items": {
     "catalog_title": "Available products",
     "items_one": "item",
@@ -41,7 +45,18 @@
     "discount": "Discount",
     "total": "Total",
     "continue_shopping": "Continue shopping",
-    "make_order": "Place order"
+    "make_order": "Place order",
+    "add": "Add",
+    "added": "Added",
+    "product_added_to_cart": "{{productName}} added to cart"
+  },
+  "input": {
+    "attach_tooltip": "Attach",
+    "media_audio": "Audio",
+    "media_camera": "Camera",
+    "media_menu_region": "Media options",
+    "media_upload_file": "Upload file",
+    "open_media_menu": "Open menu"
   },
   "voice_mode": {
     "title": "Voice mode",
@@ -50,12 +65,18 @@
     "speaking": "Speaking...",
     "processing": "Processing...",
     "errorTitle": "An error occurred",
+    "intent_status_agent_speaking": "Agent speaking",
+    "intent_status_listening": "Listening",
+    "intent_status_transcribing": "Transcribing",
     "you": "You",
     "youSaid": "You said",
     "assistant": "Assistant",
     "stop": "Stop",
     "microphonePermissionHint": "Enable the microphone in the browser settings to use voice mode",
     "cancel": "Cancel",
+    "check_microphone_browser_settings": "Check your browser settings to enable the microphone.",
+    "connecting": "Connecting",
+    "microphone_disabled_in_browser": "The microphone is currently disabled in your browser.",
     "aria_enter": "Start voice mode",
     "aria_exit": "Stop voice mode",
     "aria_listening": "Listening to your voice",
