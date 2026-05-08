@@ -4,28 +4,24 @@
       "processing": "Processing information",
       "connecting": "Connecting ideas",
       "refining": "Refining details",
-      "structuring": "Structuring response",
+      "structuring": "Structuring reply",
       "almost": "Almost ready, just a moment"
     }
   },
   "already_in_use": {
-    "title": "You are already logged into another session",
-    "description": "Click “Use here” to use chat in this session",
+    "title": "You're already logged in on another session",
+    "description": "Click \"Use here\" to use the chat in this session",
     "actions": {
       "close": "Close",
       "use_here": "Use here"
     }
   },
   "list_message": {
-    "instruction": "Tap to select an item",
+    "instruction": "Click to select an item",
     "actions": {
       "back": "Back",
       "send": "Send"
     }
-  },
-  "messages_list": {
-    "items_added_to_cart": "{{count}} items were added to cart",
-    "scroll_to_bottom": "Go to bottom"
   },
   "show_items": {
     "catalog_title": "Available products",
@@ -38,93 +34,76 @@
   },
   "cart": {
     "title": "Cart",
-    "see_cart": "See cart",
+    "see_cart": "View cart",
     "empty": "Your cart is empty",
-    "empty_description": "Add items to your cart by accessing the available products list",
+    "empty_description": "Add items to your cart by accessing the available product list",
     "subtotal": "Subtotal",
     "discount": "Discount",
     "total": "Total",
     "continue_shopping": "Continue shopping",
-    "make_order": "Make order",
-    "add": "Add",
-    "added": "Added",
-    "product_added_to_cart": "{{productName}} added to cart"
-  },
-  "input": {
-    "attach_tooltip": "Attach",
-    "media_audio": "Audio",
-    "media_camera": "Camera",
-    "media_menu_region": "Media options",
-    "media_upload_file": "Upload file",
-    "open_media_menu": "Open menu"
+    "make_order": "Place order"
   },
   "voice_mode": {
     "title": "Voice mode",
-    "listening": "I'm listening, how can I help you?",
-    "microphoneHint": "The microphone is on, you can speak whenever you're ready.",
+    "listening": "I'm listening. How can I help?",
+    "microphoneHint": "The microphone is on. You can speak whenever you want.",
     "speaking": "Speaking...",
     "processing": "Processing...",
-    "errorTitle": "Something went wrong",
-    "intent_status_agent_speaking": "Agent speaking",
-    "intent_status_listening": "Listening",
-    "intent_status_transcribing": "Transcribing",
+    "errorTitle": "An error occurred",
     "you": "You",
     "youSaid": "You said",
     "assistant": "Assistant",
     "stop": "Stop",
-    "microphonePermissionHint": "Enable microphone in your browser settings to use voice mode",
-    "cancel": "Go to text",
-    "check_microphone_browser_settings": "Check your browser settings to enable the microphone.",
-    "connecting": "Connecting",
-    "microphone_disabled_in_browser": "The microphone is currently disabled in your browser.",
-    "aria_enter": "Enter voice mode",
-    "aria_exit": "Exit voice mode",
-    "aria_listening": "Listening for your voice",
+    "microphonePermissionHint": "Enable the microphone in the browser settings to use voice mode",
+    "cancel": "Cancel",
+    "aria_enter": "Start voice mode",
+    "aria_exit": "Stop voice mode",
+    "aria_listening": "Listening to your voice",
     "aria_speaking": "Playing audio response",
     "aria_processing": "Processing your speech",
     "aria_indicator": "Voice mode indicator",
     "errors": {
       "retry": "Try again",
-      "dismiss": "Dismiss",
+      "dismiss": "Close",
       "MICROPHONE_PERMISSION_DENIED": {
         "message": "Microphone access was denied",
-        "suggestion": "Please allow microphone access in your browser settings"
+        "suggestion": "Allow microphone access in your browser settings"
       },
       "MICROPHONE_NOT_FOUND": {
-        "message": "No microphone was found",
-        "suggestion": "Please connect a microphone and try again"
+        "message": "No microphones were found",
+        "suggestion": "Connect a microphone and try again"
       },
       "BROWSER_NOT_SUPPORTED": {
-        "message": "Your browser does not support voice mode",
-        "suggestion": "Please use Chrome, Firefox, Safari or Edge"
+        "message": "Your browser doesn't support voice mode",
+        "suggestion": "Please use Chrome, Firefox, Safari, or Edge"
       },
       "STT_CONNECTION_FAILED": {
-        "message": "Could not connect to the speech recognition service",
+        "message": "Couldn't connect to the speech recognition service",
         "suggestion": "Check your connection and try again"
       },
       "STT_AUTH_FAILED": {
-        "message": "ElevenLabs authentication failed",
+        "message": "Authentication with ElevenLabs failed",
         "suggestion": "Check the API key and plan permissions"
       },
       "STT_TRANSCRIPTION_FAILED": {
-        "message": "Speech recognition failed",
-        "suggestion": "Please try speaking again"
+        "message": "Voice recognition failed",
+        "suggestion": "Try speaking again"
       },
       "TTS_CONNECTION_FAILED": {
-        "message": "Could not connect to the text-to-speech service",
+        "message": "Couldn't connect to the speech synthesis service",
         "suggestion": "Check your connection and try again"
       },
       "TTS_AUTH_FAILED": {
-        "message": "Text-to-speech authentication failed",
+        "message": "Authentication with the speech synthesis service failed",
         "suggestion": "Reconnecting..."
       },
       "TTS_GENERATION_FAILED": {
-        "message": "Could not generate speech",
+        "message": "Couldn't generate speech",
         "suggestion": "The response will be shown as text"
       },
       "NETWORK_ERROR": {
         "message": "Network connection lost",
-        "suggestion": "Please check your internet connection"
+        "suggestion": "Check your internet connection"
       },
       "TOKEN_EXPIRED": {
         "message": "Authentication expired",
@@ -132,19 +111,19 @@
       },
       "RATE_LIMITED": {
         "message": "Too many requests",
-        "suggestion": "Please wait a moment and try again"
+        "suggestion": "Wait a moment and try again"
       },
       "SESSION_TIMEOUT": {
-        "message": "Voice session reached maximum duration",
-        "suggestion": "Please start a new session"
+        "message": "The voice session has reached the maximum time",
+        "suggestion": "Start a new session"
       },
       "SESSION_IDLE_TIMEOUT": {
-        "message": "Session ended due to inactivity",
+        "message": "The session ended due to inactivity",
         "suggestion": "Say something to start a new session"
       },
       "UNKNOWN_ERROR": {
         "message": "An unexpected error occurred",
-        "suggestion": "Please try again"
+        "suggestion": "Try again"
       }
     }
   },
@@ -157,8 +136,8 @@
       "title": "Live"
     },
     "preview": {
-      "title": "Preview only",
-      "input_placeholder": "Preview mode, test will be available soon"
+      "title": "Preview",
+      "input_placeholder": "Preview only"
     }
   }
 }
