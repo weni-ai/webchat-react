@@ -145,10 +145,9 @@ export function CounterControls({
   }
 
   if (
-    (config.addToCart &&
-      isAbleToAddProduct &&
-      (isLoadingOrderForm || orderFormId)) ||
-    true
+    config.addToCart &&
+    isAbleToAddProduct &&
+    (isLoadingOrderForm || orderFormId)
   ) {
     return (
       <FSButton
