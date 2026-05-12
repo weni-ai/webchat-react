@@ -145,9 +145,10 @@ export function CounterControls({
   }
 
   if (
-    config.addToCart &&
-    isAbleToAddProduct &&
-    (isLoadingOrderForm || orderFormId)
+    (config.addToCart &&
+      isAbleToAddProduct &&
+      (isLoadingOrderForm || orderFormId)) ||
+    true
   ) {
     return (
       <FSButton
@@ -158,6 +159,7 @@ export function CounterControls({
           handleAddProductToOrderForm();
         }}
         icon={justAdded ? 'check_small' : 'shopping_cart'}
+        className={className}
       >
         {justAdded ? t('cart.added') : t('cart.add')}
       </FSButton>
