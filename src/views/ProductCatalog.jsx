@@ -63,7 +63,7 @@ ProductCatalog.propTypes = {
   productGroups: PropTypes.array.isRequired,
 };
 
-export function ProductCatalogItem({ product }) {
+export function ProductCatalogItem({ product, inConversation = false }) {
   const { cart, setCart, setCurrentPage } = useChatContext();
   const { t } = useTranslation();
 
@@ -80,7 +80,7 @@ export function ProductCatalogItem({ product }) {
 
   return (
     <InlineProduct
-      variant="product"
+      variant={inConversation ? 'product-in-conversation' : 'product'}
       image={product.image}
       title={product.title}
       price={product.price}
@@ -104,4 +104,5 @@ export function ProductCatalogItem({ product }) {
 
 ProductCatalogItem.propTypes = {
   product: PropTypes.object.isRequired,
+  inConversation: PropTypes.bool,
 };

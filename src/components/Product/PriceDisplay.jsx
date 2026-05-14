@@ -18,15 +18,15 @@ export function PriceDisplay({ price, salePrice, currency, priceModifier }) {
 
   return (
     <section className="weni-inline-product__price-container">
-      {formattedSalePrice && (
-        <span className="weni-inline-product__price weni-inline-product__price--sale">
-          {formattedSalePrice}
-        </span>
-      )}
-
       {formattedPrice && (
         <span className={getPriceClassName(salePrice, priceModifier)}>
           {formattedPrice}
+        </span>
+      )}
+
+      {formattedSalePrice && (
+        <span className="weni-inline-product__price weni-inline-product__price--sale">
+          {formattedSalePrice}
         </span>
       )}
     </section>

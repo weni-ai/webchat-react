@@ -61,10 +61,10 @@
   }
 
   &__price-container {
-    margin-top: 2px;
+    margin-top: $fs-spacing-0;
     display: flex;
     flex-direction: row;
-    gap: $fs-spacing-1;
+    gap: $fs-spacing-0;
     align-items: center;
   }
 
@@ -91,6 +91,39 @@
 
   &--cart {
     border: 1px solid $border-soft;
+  }
+
+  &--product-in-conversation {
+    display: grid;
+    grid-template-areas: "image content" "image controls";
+    grid-template-columns: 112px 1fr;
+
+    .weni-inline-product__image-container {
+      grid-area: image;
+      width: 112px;
+      height: 124px;
+      justify-content: flex-end;
+    }
+
+    .weni-inline-product__content {
+      grid-area: content;
+      align-self: self-end;
+      width: unset;
+    }
+
+    .weni-inline-product__image {
+      width: 100px;
+    }
+    
+    .weni-inline-product__counter-controls {
+      align-self: self-start;
+      grid-area: controls;
+
+      &.weni-fs-button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   }
 }
 
