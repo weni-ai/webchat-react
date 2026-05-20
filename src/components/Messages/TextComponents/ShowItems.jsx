@@ -63,7 +63,10 @@ export function ShowItems({
   return (
     <section className="weni-show-items">
       {singleProduct ? (
-        <ProductCatalogItem product={singleProduct} />
+        <ProductCatalogItem
+          product={singleProduct}
+          inConversation
+        />
       ) : (
         <InlineProduct
           image={firstImage}

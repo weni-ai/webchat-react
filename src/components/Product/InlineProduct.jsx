@@ -10,15 +10,21 @@ const CONTENT_SLOT = 'content';
 const TRAILING_SLOT = 'trailing';
 
 // Strategy pattern to handle layouts for different variants
+const PRODUCT_LAYOUT = {
+  priceSlot: CONTENT_SLOT,
+  counterSlot: TRAILING_SLOT,
+  priceModifier: 'product',
+  counterProps: {
+    hideWhenNotInteracted: true,
+    className: 'weni-inline-product__counter-controls',
+  },
+};
+
 const VARIANT_LAYOUT = {
   catalog: {},
+  'product-in-conversation': PRODUCT_LAYOUT,
   order: {},
-  product: {
-    priceSlot: CONTENT_SLOT,
-    counterSlot: TRAILING_SLOT,
-    priceModifier: 'product',
-    counterProps: { hideWhenNotInteracted: true },
-  },
+  product: PRODUCT_LAYOUT,
   cart: {
     priceSlot: TRAILING_SLOT,
     counterSlot: CONTENT_SLOT,
@@ -142,7 +148,13 @@ export function InlineProduct({
 }
 
 InlineProduct.propTypes = {
-  variant: PropTypes.oneOf(['catalog', 'cart', 'product', 'order']),
+  variant: PropTypes.oneOf([
+    'catalog',
+    'cart',
+    'product',
+    'product-in-conversation',
+    'order',
+  ]),
   image: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   lines: PropTypes.array,

@@ -158,6 +158,7 @@ export function CounterControls({
           handleAddProductToOrderForm();
         }}
         icon={justAdded ? 'check_small' : 'shopping_cart'}
+        className={className}
       >
         {justAdded ? t('cart.added') : t('cart.add')}
       </FSButton>
