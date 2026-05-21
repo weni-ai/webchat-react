@@ -21,6 +21,10 @@ export function getVtexAccount() {
   return window.__RUNTIME__?.account || window.VTEX_METADATA?.account;
 }
 
+export function isFastStoreHost() {
+  return typeof window.faststore_sdk_stores?.get === 'function';
+}
+
 export function isValidProductData(data) {
   return Boolean(data?.productName && (data.description || data.brand));
 }
