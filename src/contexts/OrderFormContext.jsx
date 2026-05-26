@@ -7,7 +7,10 @@ import {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+import {
+  updateVTEXIOMinicart,
+  getReliableOrderFormId,
+} from '@/utils/VTEXIOMinicartBridge';
 import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 
 const OrderFormContext = createContext(null);
@@ -144,15 +147,10 @@ function getLocalOrderFormId() {
   }
 
   try {
-    const VTEXIOOrderFormId =
-      localStorage.getItem('orderform') &&
-      JSON.parse(localStorage.getItem('orderform')).id;
-
-    if (VTEXIOOrderFormId) {
-      return VTEXIOOrderFormId;
-    }
+    const vtexIOOrderFormId = getReliableOrderFormId();
+    if (vtexIOOrderFormId) return vtexIOOrderFormId;
   } catch {
-    // continue
+    // bridge unavailable or threw — fall through
   }
 
   return null;
