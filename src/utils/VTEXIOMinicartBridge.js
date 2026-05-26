@@ -178,8 +178,7 @@ export async function getStableOrderFormId({
   let lastChangeAt = Date.now();
 
   while (Date.now() - start < timeoutMs) {
-    const currentId =
-      getOrderFormIdFromApollo() || getOrderFormIdFromContext();
+    const currentId = getOrderFormIdFromApollo() || getOrderFormIdFromContext();
 
     if (currentId && currentId !== lastId) {
       lastId = currentId;
