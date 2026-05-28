@@ -9,13 +9,17 @@ import userEvent from '@testing-library/user-event';
 
 jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
   updateVTEXIOMinicart: jest.fn(),
+  getReliableOrderFormId: jest.fn(),
 }));
 
 jest.mock('@/utils/faststoreBootstrap', () => ({
   bootstrapOrderFormId: jest.fn(),
 }));
 
-import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+import {
+  updateVTEXIOMinicart,
+  getReliableOrderFormId,
+} from '@/utils/VTEXIOMinicartBridge';
 import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 import {
   OrderFormProvider,
@@ -73,6 +77,8 @@ beforeEach(() => {
   updateVTEXIOMinicart.mockReset();
   updateVTEXIOMinicart.mockResolvedValue(null);
   bootstrapOrderFormId.mockReset();
+  getReliableOrderFormId.mockReset();
+  getReliableOrderFormId.mockReturnValue(null);
 });
 
 afterEach(() => {
@@ -144,12 +150,12 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
 });
 
 // ---------------------------------------------------------------------------
-// requestOrderForm — local ID via localStorage
+// requestOrderForm — local ID via VTEX IO bridge (getReliableOrderFormId)
 // ---------------------------------------------------------------------------
 
-describe('requestOrderForm — local ID via localStorage', () => {
-  it('sets orderFormId from localStorage without fetching', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'vtex-local-456' }));
+describe('requestOrderForm — local ID via VTEX IO bridge', () => {
+  it('sets orderFormId from the bridge without fetching', async () => {
+    getReliableOrderFormId.mockReturnValue('vtex-local-456');
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -161,8 +167,10 @@ describe('requestOrderForm — local ID via localStorage', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('continues to fetch when localStorage JSON is invalid', async () => {
-    localStorage.setItem('orderform', 'not-valid-json{{{');
+  it('continues to fetch when the bridge throws', async () => {
+    getReliableOrderFormId.mockImplementation(() => {
+      throw new Error('bridge unavailable');
+    });
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
@@ -178,8 +186,8 @@ describe('requestOrderForm — local ID via localStorage', () => {
     );
   });
 
-  it('continues to fetch when localStorage entry has no id field', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ other: 'data' }));
+  it('continues to fetch when the bridge returns null', async () => {
+    getReliableOrderFormId.mockReturnValue(null);
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
@@ -357,7 +365,7 @@ describe('requestOrderForm — idempotent guard', () => {
   });
 
   it('does not start a new fetch when a local ID is already stored', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'local-id' }));
+    getReliableOrderFormId.mockReturnValue('local-id');
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -471,7 +479,7 @@ describe('useOrderFormId', () => {
   });
 
   it('returns the orderFormId from the provider', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'hook-test-id' }));
+    getReliableOrderFormId.mockReturnValue('hook-test-id');
 
     function HookConsumer() {
       const id = useOrderFormId();
@@ -586,7 +594,7 @@ describe('useOrderForm', () => {
   });
 
   it('returns live values from the provider', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'full-shape-id' }));
+    getReliableOrderFormId.mockReturnValue('full-shape-id');
 
     const wrapper = ({ children }) => (
       <OrderFormProvider>{children}</OrderFormProvider>

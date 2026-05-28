@@ -1,4 +1,16 @@
-import { updateVTEXIOMinicart } from './VTEXIOMinicartBridge';
+import {
+  updateVTEXIOMinicart,
+  getReliableOrderFormId,
+  getStableOrderFormId,
+  getOrderFormIdFromApollo,
+  getOrderFormIdFromContext,
+  getOrderFormIdFromStorage,
+  findNativeOrderFormContext,
+} from './VTEXIOMinicartBridge';
+
+const VALID_ID_A = 'a1b2c3d4e5f607080900112233445566';
+const VALID_ID_B = '0123456789abcdef0123456789abcdef';
+const VALID_ID_C = 'fedcba9876543210fedcba9876543210';
 
 const ORDER_FORM_REFRESH_URL =
   '/api/checkout/pub/orderForm?allowedOutdatedData=false';
@@ -67,6 +79,37 @@ function mountElementWithFiber(fiber, className = 'vtex-minicart-2-x-wrap') {
   el[FIBER_KEY] = fiber;
   document.body.appendChild(el);
   return el;
+}
+
+/**
+ * Builds a fiber whose memoizedProps.children[0]._owner.stateNode.apolloClient
+ * shape mimics the path getOrderFormIdFromApollo walks.
+ */
+function fiberWithApolloOrderFormId(orderFormId) {
+  return {
+    memoizedProps: {
+      children: [
+        {
+          _owner: {
+            stateNode: {
+              apolloClient: {
+                cache: {
+                  data: {
+                    data: {
+                      'OrderForm:current': { orderFormId },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+    memoizedState: null,
+    dependencies: null,
+    return: null,
+  };
 }
 
 function mockFetchOk(orderForm) {
@@ -579,5 +622,238 @@ describe('mergePreservingImages', () => {
     // New item: mock imageUrls built from fresh imageUrl
     expect(newItem.imageUrls.at1x).toBe('fresh-new.jpg');
     expect(newItem.imageUrl).toBe('fresh-new.jpg');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateVTEXIOMinicart — accepts an optional fresh orderForm (skip fetch)
+// ---------------------------------------------------------------------------
+
+describe('updateVTEXIOMinicart — caller-supplied orderForm', () => {
+  it('skips fetch when a fresh orderForm is passed as argument', async () => {
+    const context = buildContext();
+    mountElementWithFiber(memoizedPropsValueFiber(context));
+    globalThis.fetch = jest.fn();
+
+    const caller = buildFreshOrderForm([{ id: 'x', imageUrl: 'a.jpg' }]);
+    const result = await updateVTEXIOMinicart(caller);
+
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(context.setOrderForm).toHaveBeenCalledTimes(1);
+    expect(result.items[0].id).toBe('x');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrderFormIdFromApollo
+// ---------------------------------------------------------------------------
+
+describe('getOrderFormIdFromApollo', () => {
+  it('reads a valid hex orderFormId from the Apollo cache', () => {
+    mountElementWithFiber(fiberWithApolloOrderFormId(VALID_ID_A));
+    expect(getOrderFormIdFromApollo()).toBe(VALID_ID_A);
+  });
+
+  it('rejects an Apollo orderFormId that fails the hex regex', () => {
+    mountElementWithFiber(fiberWithApolloOrderFormId('not-a-hex-id'));
+    expect(getOrderFormIdFromApollo()).toBeNull();
+  });
+
+  it('returns null when the Apollo client is missing', () => {
+    mountElementWithFiber(memoizedPropsValueFiber({ setOrderForm: jest.fn() }));
+    expect(getOrderFormIdFromApollo()).toBeNull();
+  });
+
+  it('returns null when no OrderForm:* key is present in the cache', () => {
+    mountElementWithFiber({
+      memoizedProps: {
+        children: [
+          {
+            _owner: {
+              stateNode: {
+                apolloClient: { cache: { data: { data: { Foo: { id: 1 } } } } },
+              },
+            },
+          },
+        ],
+      },
+      memoizedState: null,
+      dependencies: null,
+      return: null,
+    });
+    expect(getOrderFormIdFromApollo()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrderFormIdFromContext
+// ---------------------------------------------------------------------------
+
+describe('getOrderFormIdFromContext', () => {
+  it('reads a valid hex orderFormId from orderForm.orderFormId', () => {
+    const context = buildContext({
+      orderForm: { items: [], orderFormId: VALID_ID_B },
+    });
+    mountElementWithFiber(memoizedPropsValueFiber(context));
+    expect(getOrderFormIdFromContext()).toBe(VALID_ID_B);
+  });
+
+  it('falls back to orderForm.id when orderFormId is missing', () => {
+    const context = buildContext({
+      orderForm: { items: [], id: VALID_ID_B },
+    });
+    mountElementWithFiber(memoizedPropsValueFiber(context));
+    expect(getOrderFormIdFromContext()).toBe(VALID_ID_B);
+  });
+
+  it('rejects context id that fails the hex regex', () => {
+    const context = buildContext({
+      orderForm: { items: [], orderFormId: 'short-id' },
+    });
+    mountElementWithFiber(memoizedPropsValueFiber(context));
+    expect(getOrderFormIdFromContext()).toBeNull();
+  });
+
+  it('returns null when no context is found in the fiber tree', () => {
+    mountElementWithFiber({
+      memoizedProps: null,
+      memoizedState: null,
+      dependencies: null,
+      return: null,
+    });
+    expect(getOrderFormIdFromContext()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getOrderFormIdFromStorage
+// ---------------------------------------------------------------------------
+
+describe('getOrderFormIdFromStorage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('reads a valid hex orderFormId from localStorage', () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_A }));
+    expect(getOrderFormIdFromStorage()).toBe(VALID_ID_A);
+  });
+
+  it('reads from the orderFormId field when present', () => {
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ orderFormId: VALID_ID_B }),
+    );
+    expect(getOrderFormIdFromStorage()).toBe(VALID_ID_B);
+  });
+
+  it('rejects an invalid (non-hex) value', () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: 'vtex-local-456' }));
+    expect(getOrderFormIdFromStorage()).toBeNull();
+  });
+
+  it('returns null when localStorage JSON is malformed', () => {
+    localStorage.setItem('orderform', 'not-valid-json{{{');
+    expect(getOrderFormIdFromStorage()).toBeNull();
+  });
+
+  it('returns null when there is no orderform entry', () => {
+    expect(getOrderFormIdFromStorage()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getReliableOrderFormId
+// ---------------------------------------------------------------------------
+
+describe('getReliableOrderFormId', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('prefers Apollo over Context and Storage', () => {
+    mountElementWithFiber(fiberWithApolloOrderFormId(VALID_ID_A));
+    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
+    expect(getReliableOrderFormId()).toBe(VALID_ID_A);
+  });
+
+  it('falls back to Context when Apollo is unavailable', () => {
+    const context = buildContext({
+      orderForm: { items: [], orderFormId: VALID_ID_B },
+    });
+    mountElementWithFiber(memoizedPropsValueFiber(context));
+    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
+    expect(getReliableOrderFormId()).toBe(VALID_ID_B);
+  });
+
+  it('falls back to Storage when neither Apollo nor Context have an id', () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
+    expect(getReliableOrderFormId()).toBe(VALID_ID_C);
+  });
+
+  it('returns null when every source is empty or invalid', () => {
+    expect(getReliableOrderFormId()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getStableOrderFormId
+// ---------------------------------------------------------------------------
+
+describe('getStableOrderFormId', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('resolves once the same id has been stable for the configured window', async () => {
+    mountElementWithFiber(fiberWithApolloOrderFormId(VALID_ID_A));
+    const result = await getStableOrderFormId({
+      timeoutMs: 1000,
+      stabilityWindowMs: 100,
+      pollIntervalMs: 20,
+    });
+    expect(result).toBe(VALID_ID_A);
+  });
+
+  it('falls back to localStorage when neither Apollo nor Context have an id and the timeout expires', async () => {
+    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
+    const result = await getStableOrderFormId({
+      timeoutMs: 150,
+      stabilityWindowMs: 50,
+      pollIntervalMs: 20,
+    });
+    expect(result).toBe(VALID_ID_C);
+  });
+
+  it('rejects when no source ever yields an id', async () => {
+    await expect(
+      getStableOrderFormId({
+        timeoutMs: 150,
+        stabilityWindowMs: 50,
+        pollIntervalMs: 20,
+      }),
+    ).rejects.toThrow('stable orderFormId');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setupMinicartBridge — additional window globals
+// ---------------------------------------------------------------------------
+
+describe('setupMinicartBridge — exposes orderForm helpers on window', () => {
+  it('exposes findNativeOrderFormContext on window', () => {
+    expect(window.findNativeOrderFormContext).toBe(findNativeOrderFormContext);
+  });
+
+  it('exposes getReliableOrderFormId on window', () => {
+    expect(window.getReliableOrderFormId).toBe(getReliableOrderFormId);
+  });
+
+  it('exposes getStableOrderFormId on window', () => {
+    expect(window.getStableOrderFormId).toBe(getStableOrderFormId);
+  });
+
+  it('exposes getOrderFormIdFromApollo on window', () => {
+    expect(window.getOrderFormIdFromApollo).toBe(getOrderFormIdFromApollo);
   });
 });
