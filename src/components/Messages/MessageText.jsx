@@ -116,6 +116,22 @@ MessageText.propTypes = {
         }),
       ).isRequired,
     }),
+    product_carousel: PropTypes.shape({
+      product_items: PropTypes.arrayOf(
+        PropTypes.shape({
+          product_retailer_id: PropTypes.string.isRequired,
+          name: PropTypes.string.isRequired,
+          price: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+            .isRequired,
+          image: PropTypes.string.isRequired,
+          sale_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          currency: PropTypes.string,
+          description: PropTypes.string,
+          seller_id: PropTypes.string,
+          product_url: PropTypes.string,
+        }),
+      ).isRequired,
+    }),
   }).isRequired,
   componentsEnabled: PropTypes.bool,
 };
