@@ -1,11 +1,69 @@
 .weni-product-carousel {
+  position: relative;
+}
+
+.weni-product-carousel__track {
   display: flex;
   gap: $fs-spacing-1;
   overflow-x: auto;
   padding-bottom: $fs-spacing-1;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 
   @include scrollable-container;
+}
+
+.weni-product-carousel__nav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 $fs-spacing-0;
+  pointer-events: none;
+  z-index: 1;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 46px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, $bg-base, transparent);
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, $bg-base, transparent);
+  }
+
+  &--can-scroll-left::before {
+    opacity: 1;
+  }
+
+  &--can-scroll-right::after {
+    opacity: 1;
+  }
+}
+
+.weni-product-carousel__nav-button {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  box-shadow: $shadow-1;
+
+  &--hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 .weni-product-carousel-card {

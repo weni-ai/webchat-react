@@ -64,6 +64,10 @@ import AttachFile from '@material-symbols/svg-400/rounded/attach_file.svg?react'
 import AttachFileFilled from '@material-symbols/svg-400/rounded/attach_file-fill.svg?react';
 import KeyboardArrowDown from '@material-symbols/svg-400/rounded/keyboard_arrow_down.svg?react';
 import KeyboardArrowDownFilled from '@material-symbols/svg-400/rounded/keyboard_arrow_down-fill.svg?react';
+import KeyboardArrowLeft from '@material-symbols/svg-400/rounded/keyboard_arrow_left.svg?react';
+import KeyboardArrowLeftFilled from '@material-symbols/svg-400/rounded/keyboard_arrow_left-fill.svg?react';
+import KeyboardArrowRight from '@material-symbols/svg-400/rounded/keyboard_arrow_right.svg?react';
+import KeyboardArrowRightFilled from '@material-symbols/svg-400/rounded/keyboard_arrow_right-fill.svg?react';
 import OpenInFull from '@material-symbols/svg-400/rounded/open_in_full.svg?react';
 import OpenInFullFilled from '@material-symbols/svg-400/rounded/open_in_full-fill.svg?react';
 import CloseFullscreen from '@material-symbols/svg-400/rounded/close_fullscreen.svg?react';
@@ -206,6 +210,14 @@ export const icons = {
   keyboard_arrow_down: {
     default: KeyboardArrowDown,
     filled: KeyboardArrowDownFilled,
+  },
+  keyboard_arrow_left: {
+    default: KeyboardArrowLeft,
+    filled: KeyboardArrowLeftFilled,
+  },
+  keyboard_arrow_right: {
+    default: KeyboardArrowRight,
+    filled: KeyboardArrowRightFilled,
   },
   open_in_full: {
     default: OpenInFull,

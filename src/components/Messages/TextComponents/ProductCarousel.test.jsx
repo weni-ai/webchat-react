@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -31,6 +31,18 @@ jest.mock('@/components/Product/CounterControls', () => ({
 jest.mock('@/components/Product/PriceDisplay', () => ({
   PriceDisplay: ({ price, currency }) => (
     <span data-testid="price-display">{`${currency}:${price}`}</span>
+  ),
+}));
+
+jest.mock('@/components/common/FSButton', () => ({
+  FSButton: ({ onClick, disabled, 'aria-label': ariaLabel, className }) => (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      className={className}
+      disabled={disabled}
+      onClick={onClick}
+    />
   ),
 }));
 
@@ -103,5 +115,45 @@ describe('ProductCarousel', () => {
     screen.getAllByRole('article').forEach((card) => {
       expect(card).toHaveClass('weni-product-carousel-card--disabled');
     });
+  });
+
+  it('shows nav buttons when the track overflows and scrolls on click', () => {
+    render(<ProductCarousel productItems={productItems} />);
+
+    const track = screen.getByTestId('product-carousel-track');
+    const scrollBy = jest.fn();
+    track.scrollBy = scrollBy;
+
+    Object.defineProperty(track, 'scrollWidth', {
+      configurable: true,
+      value: 600,
+    });
+    Object.defineProperty(track, 'clientWidth', {
+      configurable: true,
+      value: 300,
+    });
+    Object.defineProperty(track, 'scrollLeft', {
+      configurable: true,
+      writable: true,
+      value: 0,
+    });
+
+    fireEvent(window, new Event('resize'));
+
+    expect(screen.getByTestId('product-carousel-nav')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'product_carousel.scroll_right' }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'product_carousel.scroll_left' }),
+    ).toBeDisabled();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'product_carousel.scroll_right' }),
+    );
+
+    expect(scrollBy).toHaveBeenCalledWith(
+      expect.objectContaining({ left: expect.any(Number), behavior: 'smooth' }),
+    );
   });
 });
