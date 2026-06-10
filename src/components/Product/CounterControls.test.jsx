@@ -16,6 +16,7 @@ jest.mock('@/contexts/ChatContext', () => ({
 
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(() => 'mystore'),
+  isFastStoreHost: jest.fn(() => false),
 }));
 
 jest.mock('@/utils/throttleCustomField', () => ({
@@ -82,6 +83,7 @@ jest.mock('../common/FSButton', () => ({
 
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { useChatContext } from '@/contexts/ChatContext';
+import { isFastStoreHost } from '@/utils/vtex';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -93,6 +95,7 @@ function buildOrderForm(overrides = {}) {
     isLoadingOrderForm: false,
     requestOrderForm: jest.fn(),
     trySyncHostCart: jest.fn(),
+    bootstrapFastStoreOrderForm: jest.fn(() => Promise.resolve('bootstrapped')),
     ...overrides,
   };
 }
@@ -125,6 +128,7 @@ beforeEach(() => {
   jest.useFakeTimers();
   useOrderForm.mockReturnValue(buildOrderForm());
   useChatContext.mockReturnValue(buildChatContext());
+  isFastStoreHost.mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -524,5 +528,153 @@ describe('CounterControls — add-to-cart FSButton', () => {
     expect(btn).toBeInTheDocument();
     expect(btn).toHaveAttribute('data-loading', 'true');
     expect(btn).toBeDisabled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FastStore add-to-cart — bootstrap flow
+// ---------------------------------------------------------------------------
+
+describe('CounterControls — FastStore add-to-cart', () => {
+  let addProductToCart;
+  let addConversationStatus;
+  let trySyncHostCart;
+  let bootstrapFastStoreOrderForm;
+
+  beforeEach(() => {
+    isFastStoreHost.mockReturnValue(true);
+    addProductToCart = jest.fn(() => Promise.resolve());
+    addConversationStatus = jest.fn();
+    trySyncHostCart = jest.fn(() => Promise.resolve());
+    bootstrapFastStoreOrderForm = jest.fn(() => Promise.resolve('boot-123'));
+
+    useOrderForm.mockReturnValue(
+      buildOrderForm({
+        orderFormId: null,
+        trySyncHostCart,
+        bootstrapFastStoreOrderForm,
+      }),
+    );
+    useChatContext.mockReturnValue(
+      buildChatContext({
+        config: { addToCart: true },
+        isInsideVTEXStore: true,
+        addProductToCart,
+        addConversationStatus,
+      }),
+    );
+  });
+
+  it('renders the FSButton without orderFormId when on FastStore', () => {
+    renderCounter({ uuid: 'sku1#seller1' });
+    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
+  });
+
+  it('still falls back to counter when not on FastStore and orderFormId is absent', () => {
+    isFastStoreHost.mockReturnValue(false);
+    renderCounter({ uuid: 'sku1#seller1' });
+    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-add')).toBeInTheDocument();
+  });
+
+  it('calls bootstrap on click and then addProductToCart with the bootstrapped id', async () => {
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(bootstrapFastStoreOrderForm).toHaveBeenCalledWith({
+      skuId: 'sku1',
+      sellerId: 'seller1',
+    });
+    expect(addProductToCart).toHaveBeenCalledWith({
+      VTEXAccountName: 'mystore',
+      orderFormId: 'boot-123',
+      seller: 'seller1',
+      id: 'sku1',
+    });
+  });
+
+  it('calls trySyncHostCart and shows success status after a successful bootstrap + add', async () => {
+    renderCounter({ uuid: 'sku1#seller1', productName: 'Cool Shoe' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(trySyncHostCart).toHaveBeenCalledTimes(1);
+    expect(addConversationStatus).toHaveBeenCalledWith(
+      expect.stringContaining('added to cart'),
+      'success',
+    );
+  });
+
+  it('does not call addProductToCart when bootstrap fails', async () => {
+    bootstrapFastStoreOrderForm.mockRejectedValue(new Error('timeout'));
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(addProductToCart).not.toHaveBeenCalled();
+    expect(trySyncHostCart).not.toHaveBeenCalled();
+  });
+
+  it('degrades to the +/- counter when bootstrap fails', async () => {
+    bootstrapFastStoreOrderForm.mockRejectedValue(new Error('timeout'));
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-add')).toBeInTheDocument();
+  });
+
+  it('skips bootstrap when orderFormId is already present on FastStore', async () => {
+    useOrderForm.mockReturnValue(
+      buildOrderForm({
+        orderFormId: 'cached-id',
+        trySyncHostCart,
+        bootstrapFastStoreOrderForm,
+      }),
+    );
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(bootstrapFastStoreOrderForm).not.toHaveBeenCalled();
+    expect(addProductToCart).toHaveBeenCalledWith(
+      expect.objectContaining({ orderFormId: 'cached-id' }),
+    );
+  });
+
+  it('disables the FSButton while bootstrap is in flight', async () => {
+    let resolveBoot;
+    bootstrapFastStoreOrderForm.mockReturnValue(
+      new Promise((resolve) => {
+        resolveBoot = resolve;
+      }),
+    );
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    act(() => {
+      fireEvent.click(screen.getByTestId('fs-button'));
+    });
+
+    expect(screen.getByTestId('fs-button')).toBeDisabled();
+
+    await act(async () => {
+      resolveBoot('boot-123');
+    });
+
+    expect(screen.getByTestId('fs-button')).not.toBeDisabled();
   });
 });

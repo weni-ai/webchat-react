@@ -7,7 +7,11 @@ import {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+import {
+  updateVTEXIOMinicart,
+  getReliableOrderFormId,
+} from '@/utils/VTEXIOMinicartBridge';
+import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 
 const OrderFormContext = createContext(null);
 
@@ -15,6 +19,7 @@ export function OrderFormProvider({ children }) {
   const [isLoadingOrderForm, setIsLoadingOrderForm] = useState(false);
   const [orderFormId, setOrderFormId] = useState(null);
   const fetchStartedRef = useRef(false);
+  const bootstrapPromiseRef = useRef(null);
 
   const requestOrderForm = useCallback(() => {
     if (fetchStartedRef.current) return;
@@ -47,6 +52,28 @@ export function OrderFormProvider({ children }) {
       });
   }, []);
 
+  const bootstrapFastStoreOrderForm = useCallback(
+    ({ skuId, sellerId } = {}) => {
+      if (orderFormId) return Promise.resolve(orderFormId);
+      if (bootstrapPromiseRef.current) return bootstrapPromiseRef.current;
+
+      const promise = bootstrapOrderFormId({ skuId, sellerId })
+        .then((id) => {
+          setOrderFormId(id);
+          bootstrapPromiseRef.current = null;
+          return id;
+        })
+        .catch((error) => {
+          bootstrapPromiseRef.current = null;
+          throw error;
+        });
+
+      bootstrapPromiseRef.current = promise;
+      return promise;
+    },
+    [orderFormId],
+  );
+
   const trySyncHostCart = useCallback(async () => {
     let syncedWithFaststore = false;
     try {
@@ -73,6 +100,7 @@ export function OrderFormProvider({ children }) {
     isLoadingOrderForm,
     requestOrderForm,
     trySyncHostCart,
+    bootstrapFastStoreOrderForm,
   };
 
   return (
@@ -103,6 +131,9 @@ export function useOrderForm() {
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
     requestOrderForm: context?.requestOrderForm ?? (() => {}),
     trySyncHostCart: context?.trySyncHostCart ?? (() => {}),
+    bootstrapFastStoreOrderForm:
+      context?.bootstrapFastStoreOrderForm ??
+      (() => Promise.reject(new Error('OrderFormProvider missing'))),
   };
 }
 
@@ -116,15 +147,10 @@ function getLocalOrderFormId() {
   }
 
   try {
-    const VTEXIOOrderFormId =
-      localStorage.getItem('orderform') &&
-      JSON.parse(localStorage.getItem('orderform')).id;
-
-    if (VTEXIOOrderFormId) {
-      return VTEXIOOrderFormId;
-    }
+    const vtexIOOrderFormId = getReliableOrderFormId();
+    if (vtexIOOrderFormId) return vtexIOOrderFormId;
   } catch {
-    // continue
+    // bridge unavailable or threw — fall through
   }
 
   return null;

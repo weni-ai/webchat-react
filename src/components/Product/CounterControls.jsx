@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
 import { useOrderForm } from '@/contexts/OrderFormContext';
-import { getVtexAccount } from '@/utils/vtex';
+import { getVtexAccount, isFastStoreHost } from '@/utils/vtex';
 import { createThrottledCustomFieldSetter } from '@/utils/throttleCustomField';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useTranslation } from 'react-i18next';
@@ -34,9 +34,16 @@ export function CounterControls({
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
+  const [bootstrapFailed, setBootstrapFailed] = useState(false);
   const timeoutRef = useRef(null);
-  const { orderFormId, isLoadingOrderForm, requestOrderForm, trySyncHostCart } =
-    useOrderForm();
+  const {
+    orderFormId,
+    isLoadingOrderForm,
+    requestOrderForm,
+    trySyncHostCart,
+    bootstrapFastStoreOrderForm,
+  } = useOrderForm();
+  const isFastStore = useMemo(() => isFastStoreHost(), []);
   const {
     addProductToCart,
     config,
@@ -109,22 +116,36 @@ export function CounterControls({
   const isAbleToAddProduct = useMemo(() => {
     return !!(
       isInsideVTEXStore &&
-      orderFormId &&
       parsed?.skuId &&
-      parsed?.sellerId
+      parsed?.sellerId &&
+      (orderFormId || isFastStore)
     );
-  }, [isInsideVTEXStore, orderFormId, parsed]);
+  }, [isInsideVTEXStore, orderFormId, parsed, isFastStore]);
 
   async function handleAddProductToOrderForm() {
     setJustAdded(false);
     setIsAddingProduct(true);
 
     try {
-      setOrderFormCustomFieldThrottled('orderform', orderFormId);
+      let effectiveOrderFormId = orderFormId;
+
+      if (!effectiveOrderFormId && isFastStore) {
+        try {
+          effectiveOrderFormId = await bootstrapFastStoreOrderForm({
+            skuId: parsed.skuId,
+            sellerId: parsed.sellerId,
+          });
+        } catch {
+          setBootstrapFailed(true);
+          return;
+        }
+      }
+
+      setOrderFormCustomFieldThrottled('orderform', effectiveOrderFormId);
 
       await addProductToCart({
         VTEXAccountName: getVtexAccount(),
-        orderFormId: orderFormId,
+        orderFormId: effectiveOrderFormId,
         seller: parsed.sellerId,
         id: parsed.skuId,
       });
@@ -147,7 +168,8 @@ export function CounterControls({
   if (
     config.addToCart &&
     isAbleToAddProduct &&
-    (isLoadingOrderForm || orderFormId)
+    !bootstrapFailed &&
+    (isLoadingOrderForm || orderFormId || isFastStore)
   ) {
     return (
       <FSButton

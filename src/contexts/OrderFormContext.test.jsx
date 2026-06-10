@@ -9,9 +9,18 @@ import userEvent from '@testing-library/user-event';
 
 jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
   updateVTEXIOMinicart: jest.fn(),
+  getReliableOrderFormId: jest.fn(),
 }));
 
-import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
+jest.mock('@/utils/faststoreBootstrap', () => ({
+  bootstrapOrderFormId: jest.fn(),
+}));
+
+import {
+  updateVTEXIOMinicart,
+  getReliableOrderFormId,
+} from '@/utils/VTEXIOMinicartBridge';
+import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 import {
   OrderFormProvider,
   useOrderFormId,
@@ -67,6 +76,9 @@ beforeEach(() => {
   localStorage.clear();
   updateVTEXIOMinicart.mockReset();
   updateVTEXIOMinicart.mockResolvedValue(null);
+  bootstrapOrderFormId.mockReset();
+  getReliableOrderFormId.mockReset();
+  getReliableOrderFormId.mockReturnValue(null);
 });
 
 afterEach(() => {
@@ -138,12 +150,12 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
 });
 
 // ---------------------------------------------------------------------------
-// requestOrderForm — local ID via localStorage
+// requestOrderForm — local ID via VTEX IO bridge (getReliableOrderFormId)
 // ---------------------------------------------------------------------------
 
-describe('requestOrderForm — local ID via localStorage', () => {
-  it('sets orderFormId from localStorage without fetching', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'vtex-local-456' }));
+describe('requestOrderForm — local ID via VTEX IO bridge', () => {
+  it('sets orderFormId from the bridge without fetching', async () => {
+    getReliableOrderFormId.mockReturnValue('vtex-local-456');
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -155,8 +167,10 @@ describe('requestOrderForm — local ID via localStorage', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('continues to fetch when localStorage JSON is invalid', async () => {
-    localStorage.setItem('orderform', 'not-valid-json{{{');
+  it('continues to fetch when the bridge throws', async () => {
+    getReliableOrderFormId.mockImplementation(() => {
+      throw new Error('bridge unavailable');
+    });
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
@@ -172,8 +186,8 @@ describe('requestOrderForm — local ID via localStorage', () => {
     );
   });
 
-  it('continues to fetch when localStorage entry has no id field', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ other: 'data' }));
+  it('continues to fetch when the bridge returns null', async () => {
+    getReliableOrderFormId.mockReturnValue(null);
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
@@ -351,7 +365,7 @@ describe('requestOrderForm — idempotent guard', () => {
   });
 
   it('does not start a new fetch when a local ID is already stored', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'local-id' }));
+    getReliableOrderFormId.mockReturnValue('local-id');
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -465,7 +479,7 @@ describe('useOrderFormId', () => {
   });
 
   it('returns the orderFormId from the provider', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'hook-test-id' }));
+    getReliableOrderFormId.mockReturnValue('hook-test-id');
 
     function HookConsumer() {
       const id = useOrderFormId();
@@ -572,8 +586,15 @@ describe('useOrderForm', () => {
     expect(() => result.current.trySyncHostCart()).not.toThrow();
   });
 
+  it('returns a rejecting bootstrapFastStoreOrderForm outside the provider', async () => {
+    const { result } = renderHook(() => useOrderForm());
+    await expect(result.current.bootstrapFastStoreOrderForm()).rejects.toThrow(
+      'OrderFormProvider missing',
+    );
+  });
+
   it('returns live values from the provider', async () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'full-shape-id' }));
+    getReliableOrderFormId.mockReturnValue('full-shape-id');
 
     const wrapper = ({ children }) => (
       <OrderFormProvider>{children}</OrderFormProvider>
@@ -588,5 +609,141 @@ describe('useOrderForm', () => {
     expect(result.current.isLoadingOrderForm).toBe(false);
     expect(typeof result.current.requestOrderForm).toBe('function');
     expect(typeof result.current.trySyncHostCart).toBe('function');
+    expect(typeof result.current.bootstrapFastStoreOrderForm).toBe('function');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// bootstrapFastStoreOrderForm
+// ---------------------------------------------------------------------------
+
+describe('bootstrapFastStoreOrderForm', () => {
+  function renderWithProvider() {
+    const wrapper = ({ children }) => (
+      <OrderFormProvider>{children}</OrderFormProvider>
+    );
+    return renderHook(() => useOrderForm(), { wrapper });
+  }
+
+  it('resolves with the cached orderFormId without calling the SDK bootstrap', async () => {
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id: 'cached-from-sdk' }) }),
+    };
+
+    const { result } = renderWithProvider();
+
+    await act(async () => {
+      result.current.requestOrderForm();
+    });
+    expect(result.current.orderFormId).toBe('cached-from-sdk');
+
+    let resolved;
+    await act(async () => {
+      resolved = await result.current.bootstrapFastStoreOrderForm({
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+
+    expect(resolved).toBe('cached-from-sdk');
+    expect(bootstrapOrderFormId).not.toHaveBeenCalled();
+  });
+
+  it('calls the SDK bootstrap and caches the resolved id in context state', async () => {
+    bootstrapOrderFormId.mockResolvedValue('new-boot-id');
+    const { result } = renderWithProvider();
+
+    let resolved;
+    await act(async () => {
+      resolved = await result.current.bootstrapFastStoreOrderForm({
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+
+    expect(bootstrapOrderFormId).toHaveBeenCalledWith({
+      skuId: 'sku1',
+      sellerId: 'seller1',
+    });
+    expect(resolved).toBe('new-boot-id');
+    expect(result.current.orderFormId).toBe('new-boot-id');
+  });
+
+  it('does not mutate context state on bootstrap failure and propagates the error', async () => {
+    bootstrapOrderFormId.mockRejectedValue(new Error('orderFormId timeout'));
+    const { result } = renderWithProvider();
+
+    await act(async () => {
+      await expect(
+        result.current.bootstrapFastStoreOrderForm({
+          skuId: 'sku1',
+          sellerId: 'seller1',
+        }),
+      ).rejects.toThrow('orderFormId timeout');
+    });
+
+    expect(result.current.orderFormId).toBeNull();
+  });
+
+  it('dedupes concurrent calls into a single SDK bootstrap', async () => {
+    let resolveBoot;
+    bootstrapOrderFormId.mockReturnValue(
+      new Promise((resolve) => {
+        resolveBoot = resolve;
+      }),
+    );
+
+    const { result } = renderWithProvider();
+
+    let firstResolved;
+    let secondResolved;
+
+    await act(async () => {
+      const first = result.current.bootstrapFastStoreOrderForm({
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+      const second = result.current.bootstrapFastStoreOrderForm({
+        skuId: 'sku2',
+        sellerId: 'seller2',
+      });
+      resolveBoot('shared-id');
+      [firstResolved, secondResolved] = await Promise.all([first, second]);
+    });
+
+    expect(bootstrapOrderFormId).toHaveBeenCalledTimes(1);
+    expect(firstResolved).toBe('shared-id');
+    expect(secondResolved).toBe('shared-id');
+    expect(result.current.orderFormId).toBe('shared-id');
+  });
+
+  it('allows a fresh bootstrap after a previous failure clears the dedup ref', async () => {
+    bootstrapOrderFormId.mockRejectedValueOnce(
+      new Error('orderFormId timeout'),
+    );
+    const { result } = renderWithProvider();
+
+    await act(async () => {
+      await expect(
+        result.current.bootstrapFastStoreOrderForm({
+          skuId: 'sku1',
+          sellerId: 'seller1',
+        }),
+      ).rejects.toThrow('orderFormId timeout');
+    });
+
+    bootstrapOrderFormId.mockResolvedValueOnce('retry-id');
+
+    let resolved;
+    await act(async () => {
+      resolved = await result.current.bootstrapFastStoreOrderForm({
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+
+    expect(bootstrapOrderFormId).toHaveBeenCalledTimes(2);
+    expect(resolved).toBe('retry-id');
+    expect(result.current.orderFormId).toBe('retry-id');
   });
 });

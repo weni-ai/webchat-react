@@ -108,7 +108,9 @@
     .weni-inline-product__content {
       grid-area: content;
       align-self: self-end;
-      width: unset;
+      width: auto;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .weni-inline-product__image {
