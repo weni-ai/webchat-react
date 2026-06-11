@@ -23,6 +23,10 @@
       "send": "Send"
     }
   },
+  "message_audio": {
+    "aria_pause": "Pause audio",
+    "aria_play": "Play audio"
+  },
   "messages_list": {
     "items_added_to_cart": "{{count}} items were added to cart",
     "scroll_to_bottom": "Go to bottom"
