@@ -37,4 +37,13 @@ export default defineConfig([
       },
     },
   },
+  {
+    files: ['src/standalone.jsx'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        process: 'readonly',
+      },
+    },
+  },
 ]);
