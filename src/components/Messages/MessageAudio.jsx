@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 import Button from '@/components/common/Button';
@@ -16,6 +17,7 @@ import './MessageAudio.scss';
  * - Time display
  */
 export function MessageAudio({ message }) {
+  const { t } = useTranslation();
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -128,7 +130,11 @@ export function MessageAudio({ message }) {
         iconFilled
         variant="tertiary"
         size="small"
-        aria-label={isPlaying ? 'Pausar áudio' : 'Reproduzir áudio'}
+        aria-label={
+          isPlaying
+            ? t('message_audio.aria_pause')
+            : t('message_audio.aria_play')
+        }
       />
 
       <input
