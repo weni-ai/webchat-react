@@ -7,7 +7,7 @@ import {
   resolveProductData,
   normalizeForContext,
   buildProductContextString,
-  getSelectedSkuIdFromLdJson,
+  getSelectedSkuId,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
@@ -120,7 +120,7 @@ export function useConversationStartersCore() {
 
     requestStarters(result.productData);
 
-    const selectedSkuId = getSelectedSkuIdFromLdJson();
+    const selectedSkuId = getSelectedSkuId();
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
