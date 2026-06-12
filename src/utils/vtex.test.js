@@ -15,6 +15,9 @@ import {
   extractProductData,
   buildProductContextString,
   getSelectedSkuIdFromLdJson,
+  getSelectedSkuIdFromVtexState,
+  getSelectedSkuIdFromDom,
+  getSelectedSkuId,
 } from './vtex';
 
 function mockPathname(value) {
@@ -29,8 +32,12 @@ beforeEach(() => {
   delete window.__RUNTIME__;
   delete window.VTEX_METADATA;
   delete window.__NEXT_DATA__;
+  delete window.__STATE__;
   document
     .querySelectorAll('script[type="application/ld+json"]')
+    .forEach((el) => el.remove());
+  document
+    .querySelectorAll('[data-sku], meta[property="product:sku"]')
     .forEach((el) => el.remove());
   Object.defineProperty(window, 'location', {
     value: {
@@ -1412,6 +1419,107 @@ describe('getSelectedSkuIdFromLdJson', () => {
       },
     });
     expect(getSelectedSkuIdFromLdJson()).toBeNull();
+  });
+});
+
+describe('getSelectedSkuIdFromVtexState', () => {
+  it('returns itemId from the first product item in __STATE__', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: {
+        'product({"slug":"cool-shoe"})': { id: 'Product:1' },
+      },
+      'Product:1': {
+        items: [{ id: 'Item:13' }],
+      },
+      'Item:13': {
+        itemId: '13',
+      },
+    };
+
+    expect(getSelectedSkuIdFromVtexState()).toBe('13');
+  });
+
+  it('returns null when ROOT_QUERY has no product key', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: {
+        'search({"query":"shoe"})': { id: 'Search:1' },
+      },
+    };
+
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when __STATE__ is missing', () => {
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+});
+
+describe('getSelectedSkuIdFromDom', () => {
+  it('returns data-sku from the first matching element', () => {
+    document.body.innerHTML =
+      '<button data-sku="13" data-seller="1">Buy</button>';
+
+    expect(getSelectedSkuIdFromDom()).toBe('13');
+  });
+
+  it('falls back to meta[property="product:sku"] when data-sku is absent', () => {
+    document.body.innerHTML =
+      '<meta property="product:sku" content="34" data-react-helmet="true">';
+
+    expect(getSelectedSkuIdFromDom()).toBe('34');
+  });
+
+  it('prefers data-sku over meta product:sku when both are present', () => {
+    document.body.innerHTML = `
+      <meta property="product:sku" content="34">
+      <button data-sku="13" data-seller="1">Buy</button>
+    `;
+
+    expect(getSelectedSkuIdFromDom()).toBe('13');
+  });
+
+  it('returns null when no DOM SKU markers exist', () => {
+    expect(getSelectedSkuIdFromDom()).toBeNull();
+  });
+});
+
+describe('getSelectedSkuId', () => {
+  it('prefers ld+json sku over fallbacks', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      sku: '12345',
+      brand: 'Apple',
+    });
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"ipad"})': { id: 'Product:1' } },
+      'Product:1': { items: [{ id: 'Item:99' }] },
+      'Item:99': { itemId: '99' },
+    };
+    document.body.innerHTML = '<button data-sku="13">Buy</button>';
+
+    expect(getSelectedSkuId()).toBe('12345');
+  });
+
+  it('falls back to __STATE__ when ld+json has no sku', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"cool-shoe"})': { id: 'Product:1' } },
+      'Product:1': { items: [{ id: 'Item:13' }] },
+      'Item:13': { itemId: '13' },
+    };
+
+    expect(getSelectedSkuId()).toBe('13');
+  });
+
+  it('falls back to DOM markers when ld+json and __STATE__ are unavailable', () => {
+    document.body.innerHTML =
+      '<meta property="product:sku" content="34" data-react-helmet="true">';
+
+    expect(getSelectedSkuId()).toBe('34');
+  });
+
+  it('returns null when no SKU source is available', () => {
+    expect(getSelectedSkuId()).toBeNull();
   });
 });
 
