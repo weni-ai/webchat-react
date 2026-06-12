@@ -2,6 +2,7 @@ import { render, act, renderHook } from '@testing-library/react';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 import { getVtexAccount } from '@/utils/vtex';
+import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import i18n from '@/i18n';
 import { VoiceService } from '@/services/voice';
 import { AudioCapture } from '@/services/voice/AudioCapture';
@@ -12,6 +13,10 @@ jest.mock('@/experimental/navigateIfSameDomain', () => ({
 
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(() => null),
+}));
+
+jest.mock('@/utils/vtexCustomFields', () => ({
+  startVtexCustomFieldsSync: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('@/services/voice', () => {
@@ -802,6 +807,28 @@ describe('ChatContext — UI helpers', () => {
 
     await renderWithContext({});
     expect(ctx.isInsideVTEXStore).toBe(true);
+  });
+
+  it('starts VTEX custom fields sync when inside a VTEX store', async () => {
+    getVtexAccount.mockReturnValue('storeaccount');
+
+    await renderWithContext({});
+
+    expect(startVtexCustomFieldsSync).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        isCancelled: expect.any(Function),
+      }),
+    );
+  });
+
+  it('does not start VTEX custom fields sync outside a VTEX store', async () => {
+    getVtexAccount.mockReturnValue(null);
+    startVtexCustomFieldsSync.mockClear();
+
+    await renderWithContext({});
+
+    expect(startVtexCustomFieldsSync).not.toHaveBeenCalled();
   });
 });
 

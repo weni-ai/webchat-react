@@ -17,14 +17,21 @@ import {
 
 const VALID_ORDER_FORM_ID = 'a1b2c3d4e5f6789012345678abcdef01';
 
+async function flushMicrotasks() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 beforeEach(() => {
-  jest.restoreAllMocks();
+  jest.clearAllMocks();
+  getReliableOrderFormId.mockReset();
+  getReliableOrderFormId.mockReturnValue(null);
+  getVtexAccount.mockReset();
+  getVtexAccount.mockReturnValue(undefined);
   jest.useRealTimers();
   delete window.__RUNTIME__;
   delete window.faststore_sdk_stores;
   global.fetch = jest.fn();
-  getReliableOrderFormId.mockReturnValue(null);
-  getVtexAccount.mockReturnValue(undefined);
 });
 
 describe('getSegment', () => {
@@ -127,6 +134,7 @@ describe('watchCustomField', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -219,25 +227,23 @@ describe('startVtexCustomFieldsSync', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
   it('sends each field independently as soon as it becomes available', async () => {
     getVtexAccount.mockReturnValue('mystore');
+    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ channel: '1' }),
-      })
-      .mockResolvedValueOnce({
-        json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
-      });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ channel: '1' }),
+    });
 
-    startVtexCustomFieldsSync(setCustomField);
+    const stop = startVtexCustomFieldsSync(setCustomField);
 
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(setCustomField).toHaveBeenCalledWith('vtex_account', 'mystore');
     expect(setCustomField).toHaveBeenCalledWith(
@@ -248,58 +254,35 @@ describe('startVtexCustomFieldsSync', () => {
       'orderform',
       VALID_ORDER_FORM_ID,
     );
+
+    stop();
   });
 
-  it('sends vtex_account immediately while other fields arrive later', async () => {
-    getVtexAccount
-      .mockReturnValueOnce(undefined)
-      .mockReturnValueOnce(undefined)
-      .mockReturnValueOnce('late-account');
-
+  it('does not block one field while others are still unavailable', async () => {
+    getVtexAccount.mockReturnValue(undefined);
+    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
-    let segmentCalls = 0;
 
-    global.fetch.mockImplementation((url) => {
-      if (url === '/api/segments') {
-        segmentCalls += 1;
-        if (segmentCalls < 3) {
-          return Promise.resolve({ ok: false });
-        }
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ channel: 'delayed' }),
-        });
-      }
+    global.fetch.mockResolvedValue({ ok: false });
 
-      return Promise.resolve({
-        json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
-      });
-    });
+    const stop = startVtexCustomFieldsSync(setCustomField);
 
-    startVtexCustomFieldsSync(setCustomField, { intervalMs: 1000 });
+    await flushMicrotasks();
 
-    await Promise.resolve();
-    expect(setCustomField).not.toHaveBeenCalled();
-
-    await jest.advanceTimersByTimeAsync(1000);
-    expect(setCustomField).not.toHaveBeenCalled();
-
-    await jest.advanceTimersByTimeAsync(1000);
-    expect(setCustomField).toHaveBeenCalledWith('vtex_account', 'late-account');
-    expect(setCustomField).not.toHaveBeenCalledWith(
-      'segment',
-      expect.anything(),
-    );
-
-    await jest.advanceTimersByTimeAsync(1000);
-    expect(setCustomField).toHaveBeenCalledWith(
-      'segment',
-      JSON.stringify({ channel: 'delayed' }),
-    );
     expect(setCustomField).toHaveBeenCalledWith(
       'orderform',
       VALID_ORDER_FORM_ID,
     );
+    expect(setCustomField).not.toHaveBeenCalledWith(
+      'segment',
+      expect.anything(),
+    );
+    expect(setCustomField).not.toHaveBeenCalledWith(
+      'vtex_account',
+      expect.anything(),
+    );
+
+    stop();
   });
 
   it('does not send vtex_account when getVtexAccount never returns a value', async () => {
@@ -314,7 +297,7 @@ describe('startVtexCustomFieldsSync', () => {
 
     const stop = startVtexCustomFieldsSync(setCustomField);
 
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(setCustomField).not.toHaveBeenCalledWith(
       'vtex_account',

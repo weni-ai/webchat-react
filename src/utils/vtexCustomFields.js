@@ -108,9 +108,11 @@ export function watchCustomField({
 
 export function startVtexCustomFieldsSync(
   setCustomField,
-  { isCancelled = () => false } = {},
+  { isCancelled: externalIsCancelled = () => false } = {},
 ) {
   const timeouts = [];
+  let stopped = false;
+  const isCancelled = () => stopped || externalIsCancelled();
 
   const watchers = [
     { resolve: () => getVtexAccount(), field: 'vtex_account' },
@@ -129,6 +131,7 @@ export function startVtexCustomFieldsSync(
   }
 
   return function stop() {
+    stopped = true;
     timeouts.forEach(clearTimeout);
     timeouts.length = 0;
   };
