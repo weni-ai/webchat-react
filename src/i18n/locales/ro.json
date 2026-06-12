@@ -1,0 +1,144 @@
+{
+    "thinking": {
+      "messages": {
+        "processing": "Procesare informații",
+        "connecting": "Conectare idei",
+        "refining": "Rafinare detalii",
+        "structuring": "Structurare răspuns",
+        "almost": "Aproape gata, doar un moment"
+      }
+    },
+    "already_in_use": {
+      "title": "Ești deja autentificat într-o altă sesiune",
+      "description": "Fă click pe „Utilizează aici” pentru a utiliza chatul în această sesiune",
+      "actions": {
+        "close": "Închidere",
+        "use_here": "Utilizează aici"
+      }
+    },
+    "list_message": {
+      "instruction": "Fă click pentru a selecta un element",
+      "actions": {
+        "back": "Înapoi",
+        "send": "Trimite"
+      }
+    },
+    "show_items": {
+      "catalog_title": "Produse disponibile",
+      "items_one": "articol",
+      "items_other": "articole"
+    },
+    "product_details": {
+      "title": "Detalii",
+      "add_to_cart": "Adaugă în coș"
+    },
+    "cart": {
+      "title": "Coș",
+      "see_cart": "Vizualizează coșul",
+      "empty": "Coșul tău de cumpărături este gol",
+      "empty_description": "Adaugă articole  în coș accesând lista de produse disponibile",
+      "subtotal": "Subtotal",
+      "discount": "Reducere",
+      "total": "Total",
+      "continue_shopping": "Continuă cumpărăturile",
+      "make_order": "Plasare comandă"
+    },
+    "voice_mode": {
+      "title": "Mod voce",
+      "listening": "Te ascult. Cu ce te pot ajuta?",
+      "microphoneHint": "Microfonul este pornit. Poți vorbi oricând.",
+      "speaking": "Vorbește...",
+      "processing": "Se procesează...",
+      "errorTitle": "A intervenit o eroare",
+      "you": "Tu",
+      "youSaid": "Ai spus",
+      "assistant": "Asistent",
+      "stop": "Stop",
+      "microphonePermissionHint": "Activează microfonul în setările browserului pentru a folosi modul voce",
+      "cancel": "Anulează",
+      "aria_enter": "Pornește modul voce",
+      "aria_exit": "Oprește modul voce",
+      "aria_listening": "Ascultarea vocii tale",
+      "aria_speaking": "Redare răspuns audio",
+      "aria_processing": "Se procesează mesajul tău vocal",
+      "aria_indicator": "Indicator mod voce",
+      "errors": {
+        "retry": "Încearcă din nou",
+        "dismiss": "Închidere",
+        "MICROPHONE_PERMISSION_DENIED": {
+          "message": "Accesul la microfon a fost refuzat",
+          "suggestion": "Permite accesul la microfon în setările browserului tău"
+        },
+        "MICROPHONE_NOT_FOUND": {
+          "message": "Nu au fost găsite microfoane",
+          "suggestion": "Conectează un microfon și încearcă din nou"
+        },
+        "BROWSER_NOT_SUPPORTED": {
+          "message": "Browserul tău nu suportă modul voce",
+          "suggestion": "Folosește Chrome, Firefox, Safari sau Edge"
+        },
+        "STT_CONNECTION_FAILED": {
+          "message": "Conexiunea la serviciul de recunoaștere vocală nu a reușit",
+          "suggestion": "Verifică conexiunea și încearcă din nou"
+        },
+        "STT_AUTH_FAILED": {
+          "message": "Autentificarea cu ElevenLabs nu a reușit",
+          "suggestion": "Verifică cheia API și permisiunile planului"
+        },
+        "STT_TRANSCRIPTION_FAILED": {
+          "message": "Recunoaștere vocală nereușită",
+          "suggestion": "Încearcă să vorbești din nou"
+        },
+        "TTS_CONNECTION_FAILED": {
+          "message": "Nu s-a putut conecta la serviciul de sinteză vocală",
+          "suggestion": "Verifică conexiunea și încearcă din nou"
+        },
+        "TTS_AUTH_FAILED": {
+          "message": "Autentificarea cu serviciul de sinteză vocală nu a reușit",
+          "suggestion": "Reconectare..."
+        },
+        "TTS_GENERATION_FAILED": {
+          "message": "Nu s-a putut genera vorbirea",
+          "suggestion": "Răspunsul va fi afișat ca text"
+        },
+        "NETWORK_ERROR": {
+          "message": "Conexiune rețea pierdută",
+          "suggestion": "Verifică conexiunea la internet"
+        },
+        "TOKEN_EXPIRED": {
+          "message": "Autentificarea a expirat",
+          "suggestion": "Reconectare..."
+        },
+        "RATE_LIMITED": {
+          "message": "Prea multe solicitări",
+          "suggestion": "Așteaptă câteva momente și încearcă din nou"
+        },
+        "SESSION_TIMEOUT": {
+          "message": "Sesiunea vocală a atins timpul maxim autorizat",
+          "suggestion": "Începe o sesiune nouă"
+        },
+        "SESSION_IDLE_TIMEOUT": {
+          "message": "Sesiunea s-a încheiat din cauza inactivității",
+          "suggestion": "Spune ceva pentru a începe o sesiune nouă"
+        },
+        "UNKNOWN_ERROR": {
+          "message": "A apărut o eroare neașteptată",
+          "suggestion": "Încercă din nou"
+        }
+      }
+    },
+    "conversation_starters": {
+      "aria_label": "Întrebare sugerată: {{question}}",
+      "send_question": "Trimite întrebarea"
+    },
+    "mode": {
+      "live": {
+        "title": "Live"
+      },
+      "preview": {
+        "title": "Previzualizează",
+        "input_placeholder": "Doar previzualizare"
+      }
+    }
+  }
+  

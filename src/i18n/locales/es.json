@@ -5,21 +5,21 @@
       "connecting": "Conectando ideas",
       "refining": "Refinando detalles",
       "structuring": "Estructurando respuesta",
-      "almost": "Casi listo, solo un momento"
+      "almost": "Casi listo, un momento"
     }
   },
   "already_in_use": {
-    "title": "Ya estás conectado a otra sesión",
-    "description": "Haz clic en “Usar aquí” para usar el chat en esta sesión",
+    "title": "Ya has iniciado sesión en otra sesión",
+    "description": "Haz clic en \"Usar aquí\" para continuar el chat en esta sesión",
     "actions": {
       "close": "Cerrar",
       "use_here": "Usar aquí"
     }
   },
   "list_message": {
-    "instruction": "Toque para selecionar un item",
+    "instruction": "Haz clic para seleccionar un ítem",
     "actions": {
-      "back": "Voltar",
+      "back": "Atrás",
       "send": "Enviar"
     }
   },
@@ -33,8 +33,8 @@
   },
   "show_items": {
     "catalog_title": "Productos disponibles",
-    "items_one": "producto",
-    "items_other": "productos"
+    "items_one": "ítem",
+    "items_other": "ítems"
   },
   "product_details": {
     "title": "Detalles",
@@ -48,12 +48,12 @@
     "title": "Carrito",
     "see_cart": "Ver carrito",
     "empty": "Tu carrito está vacío",
-    "empty_description": "Agrega productos a tu carrito accediendo a la lista de productos disponibles",
+    "empty_description": "Agrega ítems a tu carrito accediendo a la lista de productos disponibles",
     "subtotal": "Subtotal",
     "discount": "Descuento",
     "total": "Total",
-    "continue_shopping": "Continuar la compra",
-    "make_order": "Hacer pedido",
+    "continue_shopping": "Continuar comprando",
+    "make_order": "Realizar pedido",
     "add": "Agregar",
     "added": "Agregado",
     "product_added_to_cart": "{{productName}} agregado al carrito"
@@ -68,71 +68,71 @@
   },
   "voice_mode": {
     "title": "Modo de voz",
-    "listening": "Estoy escuchando, ¿cómo puedo ayudarte?",
-    "microphoneHint": "El micrófono está encendido, puedes hablar cuando quieras.",
+    "listening": "Estoy escuchando. ¿Cómo puedo ayudarte?",
+    "microphoneHint": "El micrófono está activado. Puedes hablar cuando quieras.",
     "speaking": "Hablando...",
     "processing": "Procesando...",
-    "errorTitle": "Algo salió mal",
+    "errorTitle": "Se produjo un error",
     "intent_status_agent_speaking": "El asistente habla",
     "intent_status_listening": "Escuchando",
     "intent_status_transcribing": "Transcribiendo",
     "you": "Tú",
-    "youSaid": "Dijiste",
+    "youSaid": "Has dicho",
     "assistant": "Asistente",
     "stop": "Detener",
-    "microphonePermissionHint": "Activa el micrófono en la configuración de tu navegador para usar el modo de voz",
-    "cancel": "Ir al texto",
+    "microphonePermissionHint": "Activa el micrófono en la configuración del navegador para usar el modo de voz",
+    "cancel": "Cancelar",
     "check_microphone_browser_settings": "Revisa la configuración del navegador para activar el micrófono.",
     "connecting": "Conectando",
     "microphone_disabled_in_browser": "El micrófono está desactivado en el navegador.",
-    "aria_enter": "Entrar al modo de voz",
-    "aria_exit": "Salir del modo de voz",
+    "aria_enter": "Iniciar modo de voz",
+    "aria_exit": "Detener modo de voz",
     "aria_listening": "Escuchando tu voz",
     "aria_speaking": "Reproduciendo respuesta de audio",
     "aria_processing": "Procesando tu voz",
-    "aria_indicator": "Indicador del modo de voz",
+    "aria_indicator": "Indicador de modo de voz",
     "errors": {
-      "retry": "Intentar de nuevo",
+      "retry": "Reintentar",
       "dismiss": "Cerrar",
       "MICROPHONE_PERMISSION_DENIED": {
-        "message": "El acceso al micrófono fue denegado",
-        "suggestion": "Por favor, permite el acceso al micrófono en la configuración del navegador"
+        "message": "Se denegó el acceso al micrófono",
+        "suggestion": "Permite el acceso al micrófono en la configuración de tu navegador"
       },
       "MICROPHONE_NOT_FOUND": {
-        "message": "No se encontró ningún micrófono",
-        "suggestion": "Por favor, conecta un micrófono e inténtalo de nuevo"
+        "message": "No se encontraron micrófonos",
+        "suggestion": "Conecta un micrófono y vuelve a intentarlo"
       },
       "BROWSER_NOT_SUPPORTED": {
-        "message": "Tu navegador no soporta el modo de voz",
-        "suggestion": "Por favor, usa Chrome, Firefox, Safari o Edge"
+        "message": "Tu navegador no es compatible con el modo de voz",
+        "suggestion": "Utiliza Chrome, Firefox, Safari o Edge"
       },
       "STT_CONNECTION_FAILED": {
         "message": "No se pudo conectar al servicio de reconocimiento de voz",
-        "suggestion": "Verifica tu conexión e inténtalo de nuevo"
+        "suggestion": "Verifica tu conexión y vuelve a intentarlo"
       },
       "STT_AUTH_FAILED": {
         "message": "La autenticación con ElevenLabs falló",
-        "suggestion": "Verifica la API key y los permisos del plan"
+        "suggestion": "Verifica la clave de API y los permisos del plan"
       },
       "STT_TRANSCRIPTION_FAILED": {
         "message": "El reconocimiento de voz falló",
-        "suggestion": "Por favor, intenta hablar de nuevo"
+        "suggestion": "Intenta hablar de nuevo"
       },
       "TTS_CONNECTION_FAILED": {
-        "message": "No se pudo conectar al servicio de síntesis de voz",
-        "suggestion": "Verifica tu conexión e inténtalo de nuevo"
+        "message": "No se pudo conectar con el servicio de síntesis de voz",
+        "suggestion": "Verifica tu conexión y vuelve a intentarlo"
       },
       "TTS_AUTH_FAILED": {
         "message": "La autenticación con el servicio de síntesis de voz falló",
         "suggestion": "Reconectando..."
       },
       "TTS_GENERATION_FAILED": {
-        "message": "No se pudo generar el habla",
+        "message": "No se pudo generar la voz",
         "suggestion": "La respuesta se mostrará como texto"
       },
       "NETWORK_ERROR": {
         "message": "Se perdió la conexión de red",
-        "suggestion": "Por favor, verifica tu conexión a internet"
+        "suggestion": "Verifica tu conexión a internet"
       },
       "TOKEN_EXPIRED": {
         "message": "La autenticación expiró",
@@ -140,19 +140,19 @@
       },
       "RATE_LIMITED": {
         "message": "Demasiadas solicitudes",
-        "suggestion": "Por favor, espera un momento e inténtalo de nuevo"
+        "suggestion": "Espera un momento y vuelve a intentarlo"
       },
       "SESSION_TIMEOUT": {
-        "message": "La sesión de voz alcanzó la duración máxima",
-        "suggestion": "Por favor, inicia una nueva sesión"
+        "message": "La sesión de voz alcanzó el tiempo máximo",
+        "suggestion": "Inicia una nueva sesión"
       },
       "SESSION_IDLE_TIMEOUT": {
-        "message": "La sesión finalizó por inactividad",
+        "message": "La sesión terminó por inactividad",
         "suggestion": "Di algo para iniciar una nueva sesión"
       },
       "UNKNOWN_ERROR": {
-        "message": "Ocurrió un error inesperado",
-        "suggestion": "Por favor, inténtalo de nuevo"
+        "message": "Se produjo un error inesperado",
+        "suggestion": "Reintentar"
       }
     }
   },
@@ -165,8 +165,8 @@
       "title": "En vivo"
     },
     "preview": {
-      "title": "Previsualización",
-      "input_placeholder": "Previsualización, pronto estará disponible"
+      "title": "Vista previa",
+      "input_placeholder": "Solo vista previa"
     }
   }
 }

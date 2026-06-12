@@ -10,14 +10,14 @@
   },
   "already_in_use": {
     "title": "Você já está logado em outra sessão",
-    "description": "Clique em “Usar aqui” para usar o chat nesta sessão",
+    "description": "Clique em \"Usar aqui\" para usar o chat nesta sessão",
     "actions": {
       "close": "Fechar",
       "use_here": "Usar aqui"
     }
   },
   "list_message": {
-    "instruction": "Toque para selecionar um item",
+    "instruction": "Clique para selecionar um item",
     "actions": {
       "back": "Voltar",
       "send": "Enviar"
@@ -52,8 +52,8 @@
     "subtotal": "Subtotal",
     "discount": "Desconto",
     "total": "Total",
-    "continue_shopping": "Continuar a compra",
-    "make_order": "Fazer pedido",
+    "continue_shopping": "Continuar comprando",
+    "make_order": "Realizar pedido",
     "add": "Adicionar",
     "added": "Adicionado",
     "product_added_to_cart": "{{productName}} adicionado ao carrinho"
@@ -68,8 +68,8 @@
   },
   "voice_mode": {
     "title": "Modo de voz",
-    "listening": "Estou ouvindo, como posso ajudar?",
-    "microphoneHint": "O microfone está ligado, você pode falar quando quiser.",
+    "listening": "Estou ouvindo. Como posso ajudar?",
+    "microphoneHint": "O microfone está ligado. Você pode falar quando quiser.",
     "speaking": "Falando...",
     "processing": "Processando...",
     "errorTitle": "Algo deu errado",
@@ -80,8 +80,8 @@
     "youSaid": "Você disse",
     "assistant": "Assistente",
     "stop": "Parar",
-    "microphonePermissionHint": "Ative o microfone nas configurações do navegador para usar o modo voz",
-    "cancel": "Ir para texto",
+    "microphonePermissionHint": "Ative o microfone nas configurações do navegador para usar o modo de voz",
+    "cancel": "Cancelar",
     "check_microphone_browser_settings": "Verifique as configurações do navegador para ativar o microfone.",
     "connecting": "Conectando",
     "microphone_disabled_in_browser": "O microfone está desativado no navegador.",
@@ -96,43 +96,43 @@
       "dismiss": "Fechar",
       "MICROPHONE_PERMISSION_DENIED": {
         "message": "O acesso ao microfone foi negado",
-        "suggestion": "Por favor, permita o acesso ao microfone nas configurações do navegador"
+        "suggestion": "Permita o acesso ao microfone nas configurações do navegador"
       },
       "MICROPHONE_NOT_FOUND": {
-        "message": "Nenhum microfone foi encontrado",
-        "suggestion": "Por favor, conecte um microfone e tente novamente"
+        "message": "Nenhum microfone encontrado",
+        "suggestion": "Conecte um microfone e tente novamente"
       },
       "BROWSER_NOT_SUPPORTED": {
         "message": "Seu navegador não suporta o modo de voz",
-        "suggestion": "Por favor, use Chrome, Firefox, Safari ou Edge"
+        "suggestion": "Use Chrome, Firefox, Safari ou Edge"
       },
       "STT_CONNECTION_FAILED": {
         "message": "Não foi possível conectar ao serviço de reconhecimento de voz",
         "suggestion": "Verifique sua conexão e tente novamente"
       },
       "STT_AUTH_FAILED": {
-        "message": "Autenticação com ElevenLabs falhou",
-        "suggestion": "Verifique a API key e as permissões do plano"
+        "message": "A autenticação com ElevenLabs falhou",
+        "suggestion": "Verifique a chave de API e as permissões do plano"
       },
       "STT_TRANSCRIPTION_FAILED": {
         "message": "O reconhecimento de voz falhou",
-        "suggestion": "Por favor, tente falar novamente"
+        "suggestion": "Tente falar novamente"
       },
       "TTS_CONNECTION_FAILED": {
         "message": "Não foi possível conectar ao serviço de síntese de voz",
         "suggestion": "Verifique sua conexão e tente novamente"
       },
       "TTS_AUTH_FAILED": {
-        "message": "Autenticação com o serviço de síntese de voz falhou",
+        "message": "A autenticação com o serviço de síntese de voz falhou",
         "suggestion": "Reconectando..."
       },
       "TTS_GENERATION_FAILED": {
         "message": "Não foi possível gerar a fala",
-        "suggestion": "A resposta será mostrada como texto"
+        "suggestion": "A resposta será exibida como texto"
       },
       "NETWORK_ERROR": {
         "message": "Conexão de rede perdida",
-        "suggestion": "Por favor, verifique sua conexão com a internet"
+        "suggestion": "Verifique sua conexão com a internet"
       },
       "TOKEN_EXPIRED": {
         "message": "A autenticação expirou",
@@ -140,11 +140,11 @@
       },
       "RATE_LIMITED": {
         "message": "Muitas solicitações",
-        "suggestion": "Por favor, aguarde um momento e tente novamente"
+        "suggestion": "Aguarde um momento e tente novamente"
       },
       "SESSION_TIMEOUT": {
         "message": "A sessão de voz atingiu o tempo máximo",
-        "suggestion": "Por favor, inicie uma nova sessão"
+        "suggestion": "Inicie uma nova sessão"
       },
       "SESSION_IDLE_TIMEOUT": {
         "message": "A sessão foi encerrada por inatividade",
@@ -152,7 +152,7 @@
       },
       "UNKNOWN_ERROR": {
         "message": "Ocorreu um erro inesperado",
-        "suggestion": "Por favor, tente novamente"
+        "suggestion": "Tente novamente"
       }
     }
   },
@@ -166,7 +166,7 @@
     },
     "preview": {
       "title": "Pré-visualização",
-      "input_placeholder": "Pré-visualização, em breve estará disponível"
+      "input_placeholder": "Somente pré-visualização"
     }
   }
 }
