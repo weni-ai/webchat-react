@@ -119,6 +119,14 @@ jest.mock('./TextComponents/QuickReplies', () => ({
 jest.mock('./TextComponents/ShowItems', () => ({
   ShowItems: () => <div data-testid="show-items" />,
 }));
+jest.mock('./TextComponents/ProductCarousel', () => ({
+  ProductCarousel: ({ disabled }) => (
+    <div
+      data-testid="product-carousel"
+      data-disabled={String(disabled)}
+    />
+  ),
+}));
 jest.mock('@/contexts/MessagesScrollContext', () => ({
   MessagesScrollProvider: jest.fn(({ children }) => children),
 }));
@@ -516,6 +524,85 @@ describe('MessagesList — product list', () => {
     });
     render(<MessagesList />);
     expect(screen.queryByTestId('show-items')).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MessagesList — product carousel
+// ---------------------------------------------------------------------------
+
+describe('MessagesList — product carousel', () => {
+  const carouselItems = {
+    text: 'Veja estes produtos',
+    product_items: [
+      {
+        product_retailer_id: '1276545',
+        seller_id: '1',
+        name: 'Nike Air Zoom Plus Pegasus',
+        price: 53.99,
+        image: 'https://example.com/shoe.jpg',
+      },
+    ],
+  };
+
+  it('renders ProductCarousel when message has product_carousel items', () => {
+    const message = buildMessage({
+      id: 'pc-msg',
+      product_carousel: carouselItems,
+    });
+    setupMocks({ messageGroups: [buildGroup([message], 'incoming')] });
+    render(<MessagesList />);
+    expect(screen.getByTestId('product-carousel')).toBeInTheDocument();
+  });
+
+  it('does not render ProductCarousel when product_carousel is absent', () => {
+    setupMocks({
+      messageGroups: [buildGroup([buildMessage({ id: 'x' })], 'incoming')],
+    });
+    render(<MessagesList />);
+    expect(screen.queryByTestId('product-carousel')).not.toBeInTheDocument();
+  });
+
+  it('does not render ProductCarousel when product_items is empty', () => {
+    const message = buildMessage({
+      id: 'pc-empty',
+      product_carousel: { product_items: [] },
+    });
+    setupMocks({ messageGroups: [buildGroup([message], 'incoming')] });
+    render(<MessagesList />);
+    expect(screen.queryByTestId('product-carousel')).not.toBeInTheDocument();
+  });
+
+  it('passes disabled=true when message is not in the last group', () => {
+    const oldMessage = buildMessage({
+      id: 'pc-old',
+      product_carousel: carouselItems,
+    });
+    const newMessage = buildMessage({ id: 'pc-new', text: 'Latest' });
+    setupMocks({
+      messageGroups: [
+        buildGroup([oldMessage], 'incoming'),
+        buildGroup([newMessage], 'incoming'),
+      ],
+    });
+    render(<MessagesList />);
+    expect(screen.getByTestId('product-carousel')).toHaveAttribute(
+      'data-disabled',
+      'true',
+    );
+  });
+
+  it('passes disabled=false when message is in the last incoming group', () => {
+    const message = buildMessage({
+      id: 'pc-msg',
+      product_carousel: carouselItems,
+    });
+    setupMocks({ messageGroups: [buildGroup([message], 'incoming')] });
+    render(<MessagesList />);
+    expect(screen.getByTestId('product-carousel')).toHaveAttribute(
+      'data-disabled',
+      'false',
+    );
   });
 });
 

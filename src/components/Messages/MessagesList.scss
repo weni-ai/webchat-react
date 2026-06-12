@@ -22,7 +22,8 @@
     }
   }
 
-  &__message--product-list {
+  &__message--product-list,
+  &__message--product-carousel {
     border: none;
     padding: 0;
     width: 100%;
