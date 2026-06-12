@@ -89,9 +89,7 @@ describe('ProductCarousel', () => {
     expect(
       screen.getByText('A long long long long long product text'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('Brooks Ghost 16 Weatherized'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Brooks Ghost 16 Weatherized')).toBeInTheDocument();
   });
 
   it('passes uuid and sellerId to CounterControls', () => {

@@ -60,9 +60,7 @@ export function ProductCarouselCard({ product, disabled = false }) {
       <CounterControls
         productName={product.title}
         counter={getCounter(product.uuid)}
-        setCounter={(counter) =>
-          setCounter(product.uuid, product, counter)
-        }
+        setCounter={(counter) => setCounter(product.uuid, product, counter)}
         uuid={product.uuid}
         sellerId={product.sellerId}
         className="weni-product-carousel-card__add-button"
