@@ -533,6 +533,7 @@ describe('MessagesList — product list', () => {
 
 describe('MessagesList — product carousel', () => {
   const carouselItems = {
+    text: 'Veja estes produtos',
     product_items: [
       {
         product_retailer_id: '1276545',

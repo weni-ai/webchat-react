@@ -117,6 +117,7 @@ MessageText.propTypes = {
       ).isRequired,
     }),
     product_carousel: PropTypes.shape({
+      text: PropTypes.string,
       product_items: PropTypes.arrayOf(
         PropTypes.shape({
           product_retailer_id: PropTypes.string.isRequired,
@@ -130,7 +131,7 @@ MessageText.propTypes = {
           seller_id: PropTypes.string,
           product_url: PropTypes.string,
         }),
-      ).isRequired,
+      ),
     }),
   }).isRequired,
   componentsEnabled: PropTypes.bool,
