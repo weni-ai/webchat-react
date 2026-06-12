@@ -30,46 +30,6 @@ import ThinkingIndicator from './ThinkingIndicator';
 const BOTTOM_SCROLL_THRESHOLD_PX = 100;
 const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
 
-/** Dev-only: set to false to hide the inline product carousel mock. */
-const MOCK_PRODUCT_CAROUSEL_ENABLED = process.env.NODE_ENV === 'development';
-
-const MOCK_PRODUCT_CAROUSEL = {
-  product_items: [
-    {
-      product_retailer_id: '1276545',
-      seller_id: '1',
-      name: 'Nike Air Zoom Plus Pegasus',
-      price: 53.99,
-      image:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2JFyVMUGB2hCmAhFXOdCydqzgsCHd2BAzEA&s',
-    },
-    {
-      product_retailer_id: '9876543',
-      seller_id: '1',
-      name: 'Brooks Ghost 16 Weatherized',
-      price: 299,
-      image:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2JFyVMUGB2hCmAhFXOdCydqzgsCHd2BAzEA&s',
-    },
-    {
-      product_retailer_id: '5551234',
-      seller_id: '1',
-      name: 'A long long long long long product text',
-      price: 149.9,
-      image:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2JFyVMUGB2hCmAhFXOdCydqzgsCHd2BAzEA&s',
-    },
-    {
-      product_retailer_id: '55512346',
-      seller_id: '1',
-      name: 'A long long long long long product text',
-      price: 149.9,
-      image:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2JFyVMUGB2hCmAhFXOdCydqzgsCHd2BAzEA&s',
-    },
-  ],
-};
-
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
     case 'text':
@@ -232,9 +192,6 @@ export function MessagesList() {
           </section>
         ))}
 
-        {MOCK_PRODUCT_CAROUSEL_ENABLED &&
-          renderMockProductCarousel(MOCK_PRODUCT_CAROUSEL)}
-
         {isVoiceModeActive && voicePartialTranscript && (
           <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
             <MessageContainer
@@ -391,46 +348,6 @@ function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
   }
 
   return nodes;
-}
-
-function renderMockProductCarousel(productCarousel) {
-  const mockMessage = {
-    id: 'mock-product-carousel',
-    type: 'text',
-    text: 'Mock: product carousel (dev only)',
-    timestamp: 0,
-    direction: 'incoming',
-    status: 'delivered',
-  };
-
-  return (
-    <section
-      className="weni-messages-list__direction-group weni-messages-list__direction-group--incoming"
-      data-testid="mock-product-carousel"
-    >
-      <MessageContainer
-        className="weni-messages-list__message weni-messages-list__message--incoming"
-        direction="incoming"
-        type="text"
-      >
-        <MessageText
-          message={mockMessage}
-          componentsEnabled
-        />
-      </MessageContainer>
-
-      <MessageContainer
-        className="weni-messages-list__message weni-messages-list__message--incoming weni-messages-list__message--product-carousel"
-        direction="incoming"
-        type="text"
-      >
-        <ProductCarousel
-          productItems={productCarousel.product_items}
-          disabled={false}
-        />
-      </MessageContainer>
-    </section>
-  );
 }
 
 function renderMessage(group, message, messageIndex, enableComponents) {
