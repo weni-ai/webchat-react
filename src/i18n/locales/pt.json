@@ -40,6 +40,10 @@
     "title": "Detalhes",
     "add_to_cart": "Adicionar ao carrinho"
   },
+  "product_carousel": {
+    "scroll_left": "Rolar para a esquerda",
+    "scroll_right": "Rolar para a direita"
+  },
   "cart": {
     "title": "Carrinho",
     "see_cart": "Ver carrinho",

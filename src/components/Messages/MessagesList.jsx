@@ -20,6 +20,7 @@ import { useConversationStarters } from '@/contexts/ConversationStartersContext'
 import { MessagesScrollProvider } from '@/contexts/MessagesScrollContext';
 import { ConversationStartersFull } from '@/components/ConversationStarters/ConversationStarters';
 import { ShowItems } from './TextComponents/ShowItems';
+import { ProductCarousel } from './TextComponents/ProductCarousel';
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { FSBadge } from '../common/FSBadge';
 
@@ -414,6 +415,19 @@ function renderMessage(group, message, messageIndex, enableComponents) {
                 buttonText={message.product_list.buttonText}
                 header={message.header}
                 productList={message.product_list}
+              />
+            </MessageContainer>
+          )}
+
+          {message.product_carousel?.product_items?.length > 0 && (
+            <MessageContainer
+              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-carousel`}
+              direction={group.direction}
+              type={message.type}
+            >
+              <ProductCarousel
+                productItems={message.product_carousel.product_items}
+                disabled={!enableComponents(message)}
               />
             </MessageContainer>
           )}
