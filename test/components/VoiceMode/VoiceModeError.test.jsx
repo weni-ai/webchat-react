@@ -82,13 +82,13 @@ describe("VoiceModeError", () => {
   it("calls onDismiss when dismiss button is clicked", async () => {
     const onDismiss = jest.fn();
     render(<VoiceModeError error={baseError} onDismiss={onDismiss} />);
-    await userEvent.click(screen.getByText("Dismiss"));
+    await userEvent.click(screen.getByText("Close"));
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
-  it('renders default title "Something went wrong"', () => {
+  it('renders default title "An error occurred"', () => {
     render(<VoiceModeError error={baseError} onDismiss={jest.fn()} />);
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByText("An error occurred")).toBeInTheDocument();
   });
 
   it("custom texts override defaults", () => {

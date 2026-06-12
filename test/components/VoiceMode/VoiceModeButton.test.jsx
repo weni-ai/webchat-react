@@ -5,15 +5,15 @@ import userEvent from "@testing-library/user-event";
 import { VoiceModeButton } from "@/components/VoiceMode/VoiceModeButton";
 
 describe("VoiceModeButton", () => {
-  it('renders button with aria-label "Enter voice mode"', () => {
+  it('renders button with aria-label "Start voice mode"', () => {
     render(<VoiceModeButton onClick={jest.fn()} />);
-    expect(screen.getByLabelText("Enter voice mode")).toBeInTheDocument();
+    expect(screen.getByLabelText("Start voice mode")).toBeInTheDocument();
   });
 
   it("click calls onClick handler", async () => {
     const onClick = jest.fn();
     render(<VoiceModeButton onClick={onClick} />);
-    await userEvent.click(screen.getByLabelText("Enter voice mode"));
+    await userEvent.click(screen.getByLabelText("Start voice mode"));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
