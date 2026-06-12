@@ -405,7 +405,7 @@ function validateStartersInput(questions) {
 
 async function setConversationStarters(questions) {
   if (!validateStartersInput(questions)) {
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.warn(
         'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
       );

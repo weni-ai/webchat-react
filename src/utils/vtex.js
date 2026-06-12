@@ -296,6 +296,59 @@ export function getSelectedSkuIdFromLdJson() {
   return product.sku || null;
 }
 
+export function getSelectedSkuIdFromVtexState() {
+  try {
+    const state = window.__STATE__;
+    if (!state || typeof state !== 'object') return null;
+
+    const rootQuery = state.ROOT_QUERY;
+    if (!rootQuery || typeof rootQuery !== 'object') return null;
+
+    const productKey = Object.keys(rootQuery).find((key) =>
+      key.startsWith('product('),
+    );
+    if (!productKey) return null;
+
+    const productRef = rootQuery[productKey]?.id;
+    if (!productRef) return null;
+
+    const itemRef = state[productRef]?.items?.[0]?.id;
+    if (!itemRef) return null;
+
+    const itemId = state[itemRef]?.itemId;
+    return itemId != null && itemId !== '' ? String(itemId) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getSelectedSkuIdFromDom() {
+  try {
+    const dataSku = document
+      .querySelector('[data-sku]')
+      ?.getAttribute('data-sku');
+    if (dataSku?.trim()) return dataSku.trim();
+
+    const metaSku = document
+      .querySelector('meta[property="product:sku"]')
+      ?.getAttribute('content');
+    if (metaSku?.trim()) return metaSku.trim();
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export function getSelectedSkuId() {
+  return (
+    getSelectedSkuIdFromLdJson() ||
+    getSelectedSkuIdFromVtexState() ||
+    getSelectedSkuIdFromDom() ||
+    null
+  );
+}
+
 export async function resolveProductData(slug, account) {
   const nextResult = extractFromNextData(slug);
   if (nextResult) {

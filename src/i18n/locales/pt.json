@@ -23,6 +23,10 @@
       "send": "Enviar"
     }
   },
+  "message_audio": {
+    "aria_pause": "Pausar áudio",
+    "aria_play": "Reproduzir áudio"
+  },
   "messages_list": {
     "items_added_to_cart": "{{count}} itens foram adicionados ao carrinho",
     "scroll_to_bottom": "Ir ao final"

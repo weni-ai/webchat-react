@@ -8,7 +8,7 @@ import {
   resolveProductData,
   normalizeForContext,
   buildProductContextString,
-  getSelectedSkuIdFromLdJson,
+  getSelectedSkuId,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
@@ -23,7 +23,7 @@ jest.mock('@/utils/vtex', () => ({
   resolveProductData: jest.fn(),
   normalizeForContext: jest.fn(),
   buildProductContextString: jest.fn(),
-  getSelectedSkuIdFromLdJson: jest.fn(),
+  getSelectedSkuId: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -139,7 +139,7 @@ describe('useConversationStartersCore', () => {
       });
       normalizeForContext.mockReturnValue(fakeRawProduct);
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
-      getSelectedSkuIdFromLdJson.mockReturnValue('SKU-001');
+      getSelectedSkuId.mockReturnValue('SKU-001');
     });
 
     it('resolves product data and calls getStarters on a PDP page', async () => {
@@ -151,7 +151,7 @@ describe('useConversationStartersCore', () => {
       expect(extractSlugFromUrl).toHaveBeenCalled();
       expect(resolveProductData).toHaveBeenCalledWith('cool-shoe', 'mystore');
       expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
-      expect(getSelectedSkuIdFromLdJson).toHaveBeenCalled();
+      expect(getSelectedSkuId).toHaveBeenCalled();
       expect(normalizeForContext).toHaveBeenCalledWith(
         fakeRawProduct,
         'ld+json',
@@ -163,8 +163,8 @@ describe('useConversationStartersCore', () => {
       expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
     });
 
-    it('passes null selectedSkuId when ld+json has no SKU', async () => {
-      getSelectedSkuIdFromLdJson.mockReturnValue(null);
+    it('passes null selectedSkuId when no SKU source is available', async () => {
+      getSelectedSkuId.mockReturnValue(null);
 
       await act(async () => {
         renderHook(() => useConversationStartersCore());
