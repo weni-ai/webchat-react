@@ -31,25 +31,25 @@ beforeEach(() => {
   jest.useRealTimers();
   delete window.__RUNTIME__;
   delete window.faststore_sdk_stores;
-  global.fetch = jest.fn();
+  globalThis.fetch = jest.fn();
 });
 
 describe('getSegment', () => {
   it('returns stringified response from /api/segments when ok', async () => {
     const segment = { channel: '1', priceTables: ['default'] };
-    global.fetch.mockResolvedValue({
+    globalThis.fetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(segment),
     });
 
     const result = await getSegment();
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/segments');
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/segments');
     expect(result).toBe(JSON.stringify(segment));
   });
 
   it('falls back to FastStore session store when /api/segments fails', async () => {
-    global.fetch.mockRejectedValue(new Error('network error'));
+    globalThis.fetch.mockRejectedValue(new Error('network error'));
     const fastStoreSegment = { channel: 'fs-channel' };
     window.faststore_sdk_stores = {
       get: jest.fn(() => ({
@@ -63,7 +63,7 @@ describe('getSegment', () => {
   });
 
   it('falls back to __RUNTIME__.segmentToken when earlier sources fail', async () => {
-    global.fetch.mockResolvedValue({ ok: false });
+    globalThis.fetch.mockResolvedValue({ ok: false });
     const decoded = '{"regionId":"BR"}';
     window.__RUNTIME__ = {
       segmentToken: btoa(decoded),
@@ -75,7 +75,7 @@ describe('getSegment', () => {
   });
 
   it('returns null when no source provides segment data', async () => {
-    global.fetch.mockResolvedValue({ ok: false });
+    globalThis.fetch.mockResolvedValue({ ok: false });
 
     const result = await getSegment();
 
@@ -94,7 +94,7 @@ describe('getValidOrderFormId', () => {
     const result = await getValidOrderFormId();
 
     expect(result).toBe(VALID_ORDER_FORM_ID);
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('returns id from getReliableOrderFormId when FastStore cart is absent', async () => {
@@ -103,22 +103,24 @@ describe('getValidOrderFormId', () => {
     const result = await getValidOrderFormId();
 
     expect(result).toBe(VALID_ORDER_FORM_ID);
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('fetches /api/checkout/pub/orderForm when local sources are absent', async () => {
-    global.fetch.mockResolvedValue({
+    globalThis.fetch.mockResolvedValue({
       json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
     });
 
     const result = await getValidOrderFormId();
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/checkout/pub/orderForm');
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/checkout/pub/orderForm',
+    );
     expect(result).toBe(VALID_ORDER_FORM_ID);
   });
 
   it('returns null when resolved id is not a valid 32-hex string', async () => {
-    global.fetch.mockResolvedValue({
+    globalThis.fetch.mockResolvedValue({
       json: () => Promise.resolve({ orderFormId: 'invalid-id' }),
     });
 
@@ -236,7 +238,7 @@ describe('startVtexCustomFieldsSync', () => {
     getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    global.fetch.mockResolvedValue({
+    globalThis.fetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ channel: '1' }),
     });
@@ -263,7 +265,7 @@ describe('startVtexCustomFieldsSync', () => {
     getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    global.fetch.mockResolvedValue({ ok: false });
+    globalThis.fetch.mockResolvedValue({ ok: false });
 
     const stop = startVtexCustomFieldsSync(setCustomField);
 
@@ -289,7 +291,7 @@ describe('startVtexCustomFieldsSync', () => {
     getVtexAccount.mockReturnValue(undefined);
     const setCustomField = jest.fn();
 
-    global.fetch.mockResolvedValue({
+    globalThis.fetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ channel: '1' }),
     });
@@ -318,7 +320,7 @@ describe('startVtexCustomFieldsSync', () => {
   it('stop clears pending timeouts', async () => {
     getVtexAccount.mockReturnValue(undefined);
     const setCustomField = jest.fn();
-    global.fetch.mockResolvedValue({ ok: false });
+    globalThis.fetch.mockResolvedValue({ ok: false });
 
     const stop = startVtexCustomFieldsSync(setCustomField);
     await Promise.resolve();
