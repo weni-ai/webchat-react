@@ -83,11 +83,15 @@ export function watchCustomField({
   isCancelled = () => false,
   onTimeoutScheduled,
 }) {
+
   async function poll() {
     if (isCancelled()) return;
 
     try {
       const value = await resolve();
+
+      // Add cancellation check after async operation
+      if (isCancelled()) return;
 
       if (value) {
         setCustomField(field, value);
@@ -96,6 +100,7 @@ export function watchCustomField({
     } catch {
       // continue polling on resolver errors
     }
+
 
     if (isCancelled()) return;
 
