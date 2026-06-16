@@ -17,6 +17,7 @@ import {
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
+  getSelectedSkuIdFromUrl,
   getSelectedSkuId,
 } from './vtex';
 
@@ -1483,7 +1484,40 @@ describe('getSelectedSkuIdFromDom', () => {
   });
 });
 
+describe('getSelectedSkuIdFromUrl', () => {
+  it('returns skuId from query string', () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, search: '?skuId=4788' },
+    });
+    expect(getSelectedSkuIdFromUrl()).toBe('4788');
+  });
+
+  it('returns null when skuId is absent', () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, search: '' },
+    });
+    expect(getSelectedSkuIdFromUrl()).toBeNull();
+  });
+});
+
 describe('getSelectedSkuId', () => {
+  it('prefers URL skuId over ld+json and fallbacks', () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, search: '?skuId=4788' },
+    });
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      sku: '12345',
+      brand: 'Apple',
+    });
+
+    expect(getSelectedSkuId()).toBe('4788');
+  });
+
   it('prefers ld+json sku over fallbacks', () => {
     injectLdJson({
       '@type': 'Product',

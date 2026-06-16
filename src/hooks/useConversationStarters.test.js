@@ -750,9 +750,101 @@ describe('useConversationStartersCore', () => {
         jest.advanceTimersByTime(300);
       });
 
-      expect(mockService.clearStarters).toHaveBeenCalledTimes(1);
-      expect(mockService.setContext).toHaveBeenCalledWith('');
+      expect(mockService.clearStarters).not.toHaveBeenCalled();
       jest.useRealTimers();
+    });
+
+    it('skips navigation reset when pathname is unchanged', () => {
+      jest.useFakeTimers();
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { ...window.location, pathname: '/product/p' },
+      });
+
+      renderHook(() => useConversationStartersCore());
+      mockService.clearStarters.mockClear();
+
+      const onNavigate = createNavigationMonitor.mock.calls[0][0];
+
+      act(() => {
+        onNavigate();
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300 + 200);
+      });
+
+      expect(mockService.clearStarters).not.toHaveBeenCalled();
+      jest.useRealTimers();
+    });
+
+    it('clears starters when pathname changes after navigation', () => {
+      jest.useFakeTimers();
+      let pathname = '/product-a/p';
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          get pathname() {
+            return pathname;
+          },
+        },
+      });
+
+      isVtexPdpPage.mockReturnValue(true);
+      extractSlugFromUrl.mockReturnValue('product-a');
+      getVtexAccount.mockReturnValue('store');
+      resolveProductData.mockResolvedValue({
+        productData: { account: 'store', linkText: 'product-a' },
+        rawProduct: { productName: 'A' },
+        source: 'ld+json',
+      });
+      normalizeForContext.mockReturnValue({ productName: 'A', properties: [] });
+      buildProductContextString.mockReturnValue('ctx');
+
+      renderHook(() => useConversationStartersCore());
+      mockService.clearStarters.mockClear();
+
+      pathname = '/product-b/p';
+      extractSlugFromUrl.mockReturnValue('product-b');
+
+      const onNavigate = createNavigationMonitor.mock.calls[0][0];
+
+      act(() => {
+        onNavigate();
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300 + 200);
+      });
+
+      expect(mockService.clearStarters).toHaveBeenCalledTimes(1);
+      jest.useRealTimers();
+    });
+  });
+
+  describe('Compact visibility on chat close', () => {
+    it('shows compact starters when chat closes and questions exist', () => {
+      ctx = buildContext({ isChatOpen: true, isConnected: true });
+      useChatContext.mockReturnValue(ctx);
+
+      const { result, rerender } = renderHook(() =>
+        useConversationStartersCore(),
+      );
+
+      const handler = getEventHandler('starters:received');
+      act(() => {
+        handler({ questions: ['Q1?', 'Q2?'] });
+      });
+
+      expect(result.current.isCompactVisible).toBe(true);
+
+      ctx = buildContext({ isChatOpen: false, isConnected: true });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      expect(result.current.isCompactVisible).toBe(true);
+      expect(result.current.questions).toEqual(['Q1?', 'Q2?']);
     });
   });
 

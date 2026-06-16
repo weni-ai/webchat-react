@@ -14,6 +14,7 @@ import { createNavigationMonitor } from '@/utils/navigationMonitor';
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
 const NAVIGATION_DEBOUNCE_MS = 300;
+const NAVIGATION_URL_SETTLE_MS = 200;
 
 export function useConversationStartersCore() {
   const {
@@ -36,14 +37,20 @@ export function useConversationStartersCore() {
 
   const pendingStarterRef = useRef(null);
   const currentFingerprintRef = useRef(null);
+  const sourceRef = useRef(source);
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
   const navigationDebounceRef = useRef(null);
+  const navigationRetryRef = useRef(null);
+  const lastHandledPathnameRef = useRef(null);
+  const fetchGenerationRef = useRef(0);
   const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
-  isConnectedRef.current = isConnected;
+  const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
 
-  const isPdpEnabled = config?.conversationStarters?.pdp === true;
+  sourceRef.current = source;
+  isConnectedRef.current = isConnected;
+  isPdpEnabledRef.current = config?.conversationStarters?.pdp === true;
 
   const clearMobileTimer = useCallback(() => {
     if (mobileTimerRef.current) {
@@ -100,7 +107,7 @@ export function useConversationStartersCore() {
   );
 
   const detectAndFetchPdp = useCallback(async () => {
-    if (!isPdpEnabled || !isVtexPdpPage()) return;
+    if (!isPdpEnabledRef.current || !isVtexPdpPage()) return;
 
     const slug = extractSlugFromUrl();
     if (!slug) return;
@@ -109,6 +116,7 @@ export function useConversationStartersCore() {
     if (!account) return;
 
     const newFingerprint = `${account}:${slug}`;
+    const generation = ++fetchGenerationRef.current;
 
     currentFingerprintRef.current = newFingerprint;
     setFingerprint(newFingerprint);
@@ -116,10 +124,14 @@ export function useConversationStartersCore() {
     setSource('pdp');
 
     const result = await resolveProductData(slug, account);
+    if (generation !== fetchGenerationRef.current) return;
+
     if (!result) {
       setIsLoading(false);
       return;
     }
+
+    if (currentFingerprintRef.current !== newFingerprint) return;
 
     requestStarters(result.productData);
 
@@ -129,7 +141,42 @@ export function useConversationStartersCore() {
     if (contextString && service) {
       service.setContext(contextString);
     }
-  }, [isPdpEnabled, requestStarters, service]);
+  }, [requestStarters, service]);
+
+  const applyNavigationChange = useCallback(() => {
+    const pathname = window.location.pathname;
+    if (pathname === lastHandledPathnameRef.current) {
+      return false;
+    }
+
+    lastHandledPathnameRef.current = pathname;
+    fetchGenerationRef.current += 1;
+
+    if (!service) return true;
+
+    service.clearStarters();
+    service.setContext('');
+    resetStartersState();
+
+    if (isPdpEnabledRef.current) {
+      detectAndFetchPdp();
+    }
+
+    return true;
+  }, [detectAndFetchPdp, resetStartersState, service]);
+
+  const scheduleNavigationHandling = useCallback(() => {
+    clearTimeout(navigationDebounceRef.current);
+    clearTimeout(navigationRetryRef.current);
+
+    navigationDebounceRef.current = setTimeout(() => {
+      applyNavigationChange();
+
+      navigationRetryRef.current = setTimeout(() => {
+        applyNavigationChange();
+      }, NAVIGATION_URL_SETTLE_MS);
+    }, NAVIGATION_DEBOUNCE_MS);
+  }, [applyNavigationChange]);
 
   const removeQuestionFromList = useCallback((question) => {
     setQuestions((prev) => {
@@ -201,20 +248,23 @@ export function useConversationStartersCore() {
   useEffect(() => {
     const wasOpen = prevIsChatOpenRef.current;
     prevIsChatOpenRef.current = isChatOpen;
-    if (wasOpen && !isChatOpen && questions.length > 0 && isCompactVisible) {
+
+    if (wasOpen && !isChatOpen && questions.length > 0) {
+      setIsCompactVisible(true);
+      setIsHiding(false);
       startMobileAutoHide();
     }
-  }, [isChatOpen, questions.length, isCompactVisible, startMobileAutoHide]);
+  }, [isChatOpen, questions.length, startMobileAutoHide]);
 
   useEffect(() => {
     if (!service) return;
 
     const handleStartersReceived = (data) => {
       const hasValidFingerprint = currentFingerprintRef.current;
-      const shouldAcceptPdpResponse = source === 'pdp' && hasValidFingerprint;
-      const shouldAcceptNonPdpResponse = source !== 'pdp';
+      const isPdpSource = sourceRef.current === 'pdp';
+      const shouldAccept = !isPdpSource || hasValidFingerprint;
 
-      if (shouldAcceptPdpResponse || shouldAcceptNonPdpResponse) {
+      if (shouldAccept) {
         setQuestions(data.questions?.slice(0, 3) || []);
         setIsCompactVisible(true);
         setIsInChatStartersDismissed(false);
@@ -265,33 +315,30 @@ export function useConversationStartersCore() {
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
     };
-  }, [service, source, startMobileAutoHide]);
+  }, [service, isConnected, startMobileAutoHide]);
 
   useEffect(() => {
     if (!service) return;
 
+    lastHandledPathnameRef.current = window.location.pathname;
     detectAndFetchPdp();
 
-    const monitor = createNavigationMonitor(() => {
-      clearTimeout(navigationDebounceRef.current);
-      navigationDebounceRef.current = setTimeout(() => {
-        service.clearStarters();
-        service.setContext('');
-        resetStartersState();
-        if (isPdpEnabled) {
-          detectAndFetchPdp();
-        }
-      }, NAVIGATION_DEBOUNCE_MS);
-    });
+    const monitor = createNavigationMonitor(scheduleNavigationHandling);
 
     monitor.start();
 
     return () => {
       monitor.stop();
       clearTimeout(navigationDebounceRef.current);
+      clearTimeout(navigationRetryRef.current);
       clearMobileTimer();
     };
-  }, [service]);
+  }, [
+    service,
+    detectAndFetchPdp,
+    scheduleNavigationHandling,
+    clearMobileTimer,
+  ]);
 
   return {
     questions,

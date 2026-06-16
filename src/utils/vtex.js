@@ -340,8 +340,20 @@ export function getSelectedSkuIdFromDom() {
   return null;
 }
 
+export function getSelectedSkuIdFromUrl() {
+  try {
+    const skuId = new URLSearchParams(window.location.search).get('skuId');
+    if (skuId?.trim()) return skuId.trim();
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function getSelectedSkuId() {
   return (
+    getSelectedSkuIdFromUrl() ||
     getSelectedSkuIdFromLdJson() ||
     getSelectedSkuIdFromVtexState() ||
     getSelectedSkuIdFromDom() ||
