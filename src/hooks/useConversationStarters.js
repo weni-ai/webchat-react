@@ -88,12 +88,15 @@ export function useConversationStartersCore() {
           service.getStarters(productData);
         } else {
           deferredProductDataRef.current = productData;
+          if (config?.connectOn === 'demand') {
+            service.connect();
+          }
         }
       } catch {
         setIsLoading(false);
       }
     },
-    [service],
+    [service, config?.connectOn],
   );
 
   const detectAndFetchPdp = useCallback(async () => {

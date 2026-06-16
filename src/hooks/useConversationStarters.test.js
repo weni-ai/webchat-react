@@ -37,6 +37,7 @@ const mockService = {
   off: jest.fn(),
   emit: jest.fn(),
   isConnected: jest.fn(() => true),
+  connect: jest.fn(),
   getStarters: jest.fn(),
   clearStarters: jest.fn(),
   setContext: jest.fn(),
@@ -438,6 +439,66 @@ describe('useConversationStartersCore', () => {
         connectedHandler();
       });
 
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('connectOn: demand on PDP', () => {
+    const pdpMocks = () => {
+      isVtexPdpPage.mockReturnValue(true);
+      extractSlugFromUrl.mockReturnValue('shoe');
+      getVtexAccount.mockReturnValue('store');
+      resolveProductData.mockResolvedValue({
+        productData: { account: 'store', linkText: 'shoe' },
+        rawProduct: { productName: 'Shoe' },
+        source: 'next-data',
+      });
+      normalizeForContext.mockReturnValue({
+        productName: 'Shoe',
+        properties: [],
+        items: [],
+      });
+      buildProductContextString.mockReturnValue('ctx');
+    };
+
+    it('calls service.connect() when deferred on a PDP with connectOn demand', async () => {
+      pdpMocks();
+      useChatContext.mockReturnValue(
+        buildContext({
+          isConnected: false,
+          isChatOpen: false,
+          config: {
+            connectOn: 'demand',
+            conversationStarters: { pdp: true },
+          },
+        }),
+      );
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.connect).toHaveBeenCalled();
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+
+    it('does not call service.connect() when connectOn is mount', async () => {
+      pdpMocks();
+      useChatContext.mockReturnValue(
+        buildContext({
+          isConnected: false,
+          config: {
+            connectOn: 'mount',
+            conversationStarters: { pdp: true },
+          },
+        }),
+      );
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.connect).not.toHaveBeenCalled();
       expect(mockService.getStarters).not.toHaveBeenCalled();
     });
   });
