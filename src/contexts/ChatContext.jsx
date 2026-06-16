@@ -14,6 +14,7 @@ import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 import { getVtexAccount } from '@/utils/vtex';
+import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 
 let serviceInstance = {
   fns: [],
@@ -338,6 +339,21 @@ export function ChatProvider({ children, config }) {
       service.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isInsideVTEXStore) return undefined;
+
+    let cancelled = false;
+    const stop = startVtexCustomFieldsSync(
+      (field, value) => service.setCustomField(field, value),
+      { isCancelled: () => cancelled },
+    );
+
+    return () => {
+      cancelled = true;
+      stop();
+    };
+  }, [isInsideVTEXStore, service]);
 
   useEffect(() => {
     if (isChatOpen && mergedConfig.connectOn === 'demand') {
