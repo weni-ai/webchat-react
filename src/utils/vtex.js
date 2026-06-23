@@ -17,6 +17,10 @@ export function extractSlugFromUrl() {
   return segments[pIndex - 1];
 }
 
+export function extractProductPathFromUrl() {
+  return window.location.pathname;
+}
+
 export function getVtexAccount() {
   return window.__RUNTIME__?.account || window.VTEX_METADATA?.account;
 }
@@ -361,11 +365,18 @@ export function getSelectedSkuId() {
   );
 }
 
+function attachProductPath(productData) {
+  return {
+    ...productData,
+    productPath: extractProductPathFromUrl(),
+  };
+}
+
 export async function resolveProductData(slug, account) {
   const nextResult = extractFromNextData(slug);
   if (nextResult) {
     return {
-      productData: { ...nextResult.productData, account },
+      productData: attachProductPath({ ...nextResult.productData, account }),
       rawProduct: nextResult.rawProduct,
       source: 'next-data',
     };
@@ -376,7 +387,9 @@ export async function resolveProductData(slug, account) {
     if (response?.products) {
       const product = selectProduct(response.products, slug);
       if (product) {
-        const productData = extractProductData(product, account);
+        const productData = attachProductPath(
+          extractProductData(product, account),
+        );
         return {
           productData,
           rawProduct: product,
@@ -391,7 +404,7 @@ export async function resolveProductData(slug, account) {
   const ldResult = extractFromLdJson(slug);
   if (ldResult) {
     return {
-      productData: { ...ldResult.productData, account },
+      productData: attachProductPath({ ...ldResult.productData, account }),
       rawProduct: ldResult.rawProduct,
       source: 'ld+json',
     };
