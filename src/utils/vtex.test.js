@@ -1,6 +1,7 @@
 import {
   isVtexPdpPage,
   extractSlugFromUrl,
+  extractProductPathFromUrl,
   getVtexAccount,
   isValidProductData,
   findProductInLdJson,
@@ -96,6 +97,18 @@ describe('extractSlugFromUrl', () => {
   it('returns null for empty pathname', () => {
     mockPathname('/');
     expect(extractSlugFromUrl()).toBeNull();
+  });
+});
+
+describe('extractProductPathFromUrl', () => {
+  it('returns the full pathname', () => {
+    mockPathname('/en/ipad-10th-gen/p');
+    expect(extractProductPathFromUrl()).toBe('/en/ipad-10th-gen/p');
+  });
+
+  it('returns pathname without query string', () => {
+    mockPathname('/pt/product-slug/p');
+    expect(extractProductPathFromUrl()).toBe('/pt/product-slug/p');
   });
 });
 
@@ -1057,6 +1070,7 @@ describe('resolveProductData', () => {
   beforeEach(() => {
     originalFetch = globalThis.fetch;
     globalThis.fetch = jest.fn();
+    mockPathname('/en/surface/p');
   });
 
   afterEach(() => {
@@ -1085,6 +1099,7 @@ describe('resolveProductData', () => {
     expect(result.source).toBe('next-data');
     expect(result.productData.account).toBe('store');
     expect(result.productData.productName).toBe('Surface');
+    expect(result.productData.productPath).toBe('/en/surface/p');
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 

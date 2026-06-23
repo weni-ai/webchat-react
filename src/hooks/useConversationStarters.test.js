@@ -4,6 +4,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import {
   isVtexPdpPage,
   extractSlugFromUrl,
+  extractProductPathFromUrl,
   getVtexAccount,
   resolveProductData,
   normalizeForContext,
@@ -19,6 +20,7 @@ jest.mock('@/contexts/ChatContext', () => ({
 jest.mock('@/utils/vtex', () => ({
   isVtexPdpPage: jest.fn(),
   extractSlugFromUrl: jest.fn(),
+  extractProductPathFromUrl: jest.fn(),
   getVtexAccount: jest.fn(),
   resolveProductData: jest.fn(),
   normalizeForContext: jest.fn(),
@@ -123,6 +125,7 @@ describe('useConversationStartersCore', () => {
     const fakeProductData = {
       account: 'mystore',
       linkText: 'cool-shoe',
+      productPath: '/en/cool-shoe/p',
       productName: 'Cool Shoe',
       description: 'A shoe',
       brand: 'Brand',
@@ -132,6 +135,7 @@ describe('useConversationStartersCore', () => {
     beforeEach(() => {
       isVtexPdpPage.mockReturnValue(true);
       extractSlugFromUrl.mockReturnValue('cool-shoe');
+      extractProductPathFromUrl.mockReturnValue('/en/cool-shoe/p');
       getVtexAccount.mockReturnValue('mystore');
       resolveProductData.mockResolvedValue({
         productData: fakeProductData,
@@ -185,7 +189,7 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(hookResult.current.source).toBe('pdp');
-      expect(hookResult.current.fingerprint).toBe('mystore:cool-shoe');
+      expect(hookResult.current.fingerprint).toBe('mystore:/en/cool-shoe/p');
     });
 
     it('stops loading when resolveProductData returns null', async () => {

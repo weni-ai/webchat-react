@@ -3,6 +3,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import {
   isVtexPdpPage,
   extractSlugFromUrl,
+  extractProductPathFromUrl,
   getVtexAccount,
   resolveProductData,
   normalizeForContext,
@@ -115,7 +116,8 @@ export function useConversationStartersCore() {
     const account = getVtexAccount();
     if (!account) return;
 
-    const newFingerprint = `${account}:${slug}`;
+    const productPath = extractProductPathFromUrl();
+    const newFingerprint = `${account}:${productPath || slug}`;
     const generation = ++fetchGenerationRef.current;
 
     currentFingerprintRef.current = newFingerprint;
