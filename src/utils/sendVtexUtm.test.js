@@ -23,9 +23,7 @@ describe('sendVtexUtm', () => {
     jest.clearAllMocks();
     resetSentUtmSources();
     getVtexAccount.mockReturnValue('mystore');
-    getValidOrderFormId.mockResolvedValue(
-      'abc123def456abc123def456abc123de',
-    );
+    getValidOrderFormId.mockResolvedValue('abc123def456abc123def456abc123de');
   });
 
   it('exports UTM source constants', () => {
