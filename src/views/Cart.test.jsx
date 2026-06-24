@@ -39,6 +39,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 import { useChatContext } from '@/contexts/ChatContext';
+import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 function setupMockContext(cartItems = {}) {
   mockSetCart.mockReset();
@@ -48,13 +49,18 @@ function setupMockContext(cartItems = {}) {
   // Allow setCart to be called with a function
   mockSetCart.mockImplementation(() => {});
 
+  const mockSendUtm = jest.fn();
+
   useChatContext.mockReturnValue({
     cart: cartItems,
     setCart: mockSetCart,
     clearPageHistory: mockClearPageHistory,
     sendOrder: mockSendOrder,
+    sendUtm: mockSendUtm,
     config: { addToCart: false },
   });
+
+  return { mockSendUtm };
 }
 
 const makeProduct = (overrides = {}) => ({
@@ -253,6 +259,9 @@ describe('Cart', () => {
     });
 
     it('calls sendOrder and clears cart when make order is clicked', () => {
+      const { mockSendUtm } = setupMockContext({
+        'prod-1': makeProduct({ price: '50.00' }),
+      });
       render(<Cart />);
 
       fireEvent.click(screen.getByText('Make Order'));
@@ -268,6 +277,7 @@ describe('Cart', () => {
           quantity: 1,
         }),
       ]);
+      expect(mockSendUtm).toHaveBeenCalledWith(UTM_SOURCES.CART);
       expect(mockSetCart).toHaveBeenCalledWith({});
       expect(mockClearPageHistory).toHaveBeenCalledTimes(1);
     });

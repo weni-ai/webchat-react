@@ -11,6 +11,7 @@ import {
   getSelectedSkuId,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
+import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
@@ -193,8 +194,9 @@ export function useConversationStartersCore() {
       clearMobileTimer();
       removeQuestionFromList(question);
       setIsInChatStartersDismissed(true);
+      void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
       if (isChatOpen) {
-        sendMessage(question);
+        sendMessage(question, { skipUtm: true });
       } else {
         pendingStarterRef.current = question;
         setIsChatOpen(true);
@@ -203,6 +205,7 @@ export function useConversationStartersCore() {
     [
       isChatOpen,
       sendMessage,
+      service,
       setIsChatOpen,
       clearMobileTimer,
       removeQuestionFromList,
@@ -242,10 +245,11 @@ export function useConversationStartersCore() {
     if (!isChatOpen || !pendingStarterRef.current) return;
 
     if (isConnected) {
-      sendMessage(pendingStarterRef.current);
+      void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
+      sendMessage(pendingStarterRef.current, { skipUtm: true });
       pendingStarterRef.current = null;
     }
-  }, [isChatOpen, isConnected, sendMessage]);
+  }, [isChatOpen, isConnected, sendMessage, service]);
 
   useEffect(() => {
     const wasOpen = prevIsChatOpenRef.current;

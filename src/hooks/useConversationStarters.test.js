@@ -12,6 +12,7 @@ import {
   getSelectedSkuId,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
+import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -30,6 +31,15 @@ jest.mock('@/utils/vtex', () => ({
 
 jest.mock('@/utils/navigationMonitor', () => ({
   createNavigationMonitor: jest.fn(),
+}));
+
+jest.mock('@/utils/sendVtexUtm', () => ({
+  sendVtexUtm: jest.fn(),
+  UTM_SOURCES: {
+    CONV_STARTER: 'cx_shopping_assistant_conv_starter',
+    ASSISTANT: 'cx_shopping_assistant',
+    CART: 'cx_shopping_assistant_cart',
+  },
 }));
 
 const mockMonitor = { start: jest.fn(), stop: jest.fn() };
@@ -523,7 +533,12 @@ describe('useConversationStartersCore', () => {
         result.current.handleFullStarterClick('Q1?');
       });
 
-      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?');
+      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?', { skipUtm: true });
+      expect(sendVtexUtm).toHaveBeenCalledWith(
+        mockService,
+        UTM_SOURCES.CONV_STARTER,
+        { silent: true },
+      );
       expect(result.current.isInChatStartersDismissed).toBe(true);
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.questions).toEqual(['Q2?']);
@@ -613,7 +628,12 @@ describe('useConversationStartersCore', () => {
 
       rerender();
 
-      expect(sendMessage).toHaveBeenCalledWith('Pending Q?');
+      expect(sendMessage).toHaveBeenCalledWith('Pending Q?', { skipUtm: true });
+      expect(sendVtexUtm).toHaveBeenCalledWith(
+        mockService,
+        UTM_SOURCES.CONV_STARTER,
+        { silent: true },
+      );
     });
   });
 
