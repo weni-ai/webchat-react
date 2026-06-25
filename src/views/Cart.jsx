@@ -4,12 +4,14 @@ import { InlineProduct } from '@/components/Product/InlineProduct';
 import { useMemo } from 'react';
 import { EmptyCart } from './EmptyCart';
 import { formatPriceWithCurrency } from '@/utils/currency';
+import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 import './Cart.scss';
 import { t } from 'i18next';
 
 export function Cart() {
-  const { cart, setCart, clearPageHistory, sendOrder } = useChatContext();
+  const { cart, setCart, clearPageHistory, sendOrder, sendUtm } =
+    useChatContext();
 
   const items = useMemo(() => {
     return Object.values(cart).filter((product) => product.quantity > 0);
@@ -73,6 +75,7 @@ export function Cart() {
     }));
 
     sendOrder(productItems);
+    void sendUtm(UTM_SOURCES.CART);
     setCart({});
     clearPageHistory();
   }

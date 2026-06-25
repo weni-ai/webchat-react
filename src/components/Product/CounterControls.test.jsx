@@ -84,6 +84,7 @@ jest.mock('../common/FSButton', () => ({
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import { isFastStoreHost } from '@/utils/vtex';
+import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -106,6 +107,7 @@ function buildChatContext(overrides = {}) {
     config: { addToCart: false },
     addConversationStatus: jest.fn(),
     setCustomField: jest.fn(),
+    sendUtm: jest.fn(),
     isInsideVTEXStore: false,
     ...overrides,
   };
@@ -366,11 +368,13 @@ describe('CounterControls — add-to-cart FSButton', () => {
   let addProductToCart;
   let addConversationStatus;
   let trySyncHostCart;
+  let sendUtm;
 
   beforeEach(() => {
     addProductToCart = jest.fn(() => Promise.resolve());
     addConversationStatus = jest.fn();
     trySyncHostCart = jest.fn(() => Promise.resolve());
+    sendUtm = jest.fn();
 
     useOrderForm.mockReturnValue(
       buildOrderForm({ orderFormId: 'order-123', trySyncHostCart }),
@@ -381,6 +385,7 @@ describe('CounterControls — add-to-cart FSButton', () => {
         isInsideVTEXStore: true,
         addProductToCart,
         addConversationStatus,
+        sendUtm,
       }),
     );
   });
@@ -423,6 +428,7 @@ describe('CounterControls — add-to-cart FSButton', () => {
       seller: 'seller1',
       id: 'sku1',
     });
+    expect(sendUtm).toHaveBeenCalledWith(UTM_SOURCES.CART);
   });
 
   it('shows "Added" label and check_small icon after a successful add', async () => {

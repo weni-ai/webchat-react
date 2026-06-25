@@ -881,7 +881,7 @@ describe('ChatContext — service proxies', () => {
     ctx.switchToNextCameraDevice();
 
     expect(spies.connect).toHaveBeenCalled();
-    expect(spies.sendMessage).toHaveBeenCalledWith('hello');
+    expect(spies.sendMessage).toHaveBeenCalledWith('hello', undefined);
     expect(spies.addProductToCart).toHaveBeenCalledWith({ sku: '1' });
     expect(spies.setCustomField).toHaveBeenCalledWith('name', 'Ana');
     expect(spies.addConversationStatus).toHaveBeenCalledWith('done', 'success');
