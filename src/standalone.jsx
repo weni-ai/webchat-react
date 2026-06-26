@@ -9,6 +9,7 @@ import ReactDOM from 'react-dom/client';
 
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
+import { sendVtexUtm } from '@/utils/sendVtexUtm';
 import './styles/index.scss';
 import './i18n';
 import i18n from './i18n';
@@ -285,6 +286,17 @@ async function addProductToCart(props) {
 }
 
 /**
+ * Send UTM attribution to the VTEX orderForm
+ * @param {string} utm_source
+ * @param {{ silent?: boolean, once?: boolean }} [options]
+ * @returns {Promise<void>}
+ */
+async function sendUtm(utm_source, options = {}) {
+  const svc = await serviceWhenReady();
+  return sendVtexUtm(svc, utm_source, options);
+}
+
+/**
  * Clear chat messages while keeping session and connection
  * @returns {Promise<void>}
  */
@@ -434,6 +446,7 @@ const WebChat = {
   toggle,
   send,
   addProductToCart,
+  sendUtm,
   clear,
   clearPageHistory,
   clearCart,

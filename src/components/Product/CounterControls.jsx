@@ -5,6 +5,7 @@ import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { getVtexAccount, isFastStoreHost } from '@/utils/vtex';
+import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 import { createThrottledCustomFieldSetter } from '@/utils/throttleCustomField';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useTranslation } from 'react-i18next';
@@ -50,6 +51,7 @@ export function CounterControls({
     addConversationStatus,
     setCustomField,
     isInsideVTEXStore,
+    sendUtm,
   } = useChatContext();
   const { t } = useTranslation();
 
@@ -149,6 +151,8 @@ export function CounterControls({
         seller: parsed.sellerId,
         id: parsed.skuId,
       });
+
+      void sendUtm(UTM_SOURCES.CART);
 
       setJustAdded(true);
 

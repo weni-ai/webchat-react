@@ -15,6 +15,7 @@ import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 import { getVtexAccount } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
+import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 let serviceInstance = {
   fns: [],
@@ -608,8 +609,15 @@ export function ChatProvider({ children, config }) {
 
     // Service methods (proxied for convenience)
     connect: () => service.connect(),
-    sendMessage: (text) => service.sendMessage(text),
+    sendMessage: (text, options) => {
+      service.sendMessage(text, options);
+      if (isInsideVTEXStore && !options?.skipUtm) {
+        void sendVtexUtm(service, UTM_SOURCES.ASSISTANT, { silent: true });
+      }
+    },
     addProductToCart: (props) => service.addProductToCart(props),
+    sendUtm: (utm_source, options) =>
+      sendVtexUtm(service, utm_source, { silent: true, ...options }),
     setCustomField: (field, value) => service.setCustomField(field, value),
     addConversationStatus: (text, status) =>
       service.addConversationStatus(text, status),
