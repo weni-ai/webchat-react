@@ -22,6 +22,8 @@ const VTEX_HEADER_SELECTORS = [
   '.vtex-sticky-layout-0-x-wrapper--SiteHeader',
   '.vtex-sticky-layout-0-x-container--desktop__sticky--header',
   '.vtex-sticky-layout-0-x-container--header__principal',
+  '.vtex-sticky-layout-0-x-container--mobile__header--sticky',
+  '.vtex-sticky-layout-0-x-container--desktop__header--sticky',
 ];
 
 /**
