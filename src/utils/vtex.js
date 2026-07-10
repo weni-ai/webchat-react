@@ -478,7 +478,7 @@ export function buildProductContextString(product, selectedSkuId) {
   const lines = [
     `Product: ${product.productName || 'N/A'}`,
     `Brand: ${product.brand || 'N/A'}`,
-    `Product ID: ${product.productId || 'N/A'}`,
+    `SKU ID: ${product.productId || 'N/A'}`,
   ];
 
   if (description) {
