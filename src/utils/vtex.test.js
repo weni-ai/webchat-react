@@ -382,7 +382,7 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: iPad');
     expect(result).toContain('Brand: Apple');
-    expect(result).toContain('Product ID: 123');
+    expect(result).toContain('SKU ID: 123');
     expect(result).toContain('Description: A great tablet');
     expect(result).toContain('Attributes: Color: Silver');
   });
@@ -522,7 +522,7 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
-    expect(result).toContain('Product ID: N/A');
+    expect(result).toContain('SKU ID: N/A');
   });
 });
 
