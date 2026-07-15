@@ -297,12 +297,18 @@ async function sendUtm(utm_source, options = {}) {
 }
 
 /**
- * Clear chat messages while keeping session and connection
+ * Clear chat messages, product/catalog views, and widget cart while keeping session and connection
  * @returns {Promise<void>}
  */
 async function clear() {
   const service = await serviceWhenReady();
   service.clearMessages();
+  if (typeof service.clearPageHistory === 'function') {
+    service.clearPageHistory();
+  }
+  if (typeof service.clearCart === 'function') {
+    service.clearCart();
+  }
 }
 
 /**
