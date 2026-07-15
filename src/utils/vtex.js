@@ -156,6 +156,10 @@ export function extractFromNextData(slug) {
   }
 }
 
+function isInStock(availability) {
+  return typeof availability === 'string' && availability.includes('InStock');
+}
+
 function normalizeLdJsonForContext(raw) {
   const items = [];
   const variants = raw.hasVariant || [];
@@ -173,10 +177,7 @@ function normalizeLdJsonForContext(raw) {
               {
                 commertialOffer: {
                   Price: variantOffer.price ?? 0,
-                  AvailableQuantity:
-                    variantOffer.availability === 'https://schema.org/InStock'
-                      ? 1
-                      : 0,
+                  AvailableQuantity: isInStock(variantOffer.availability) ? 1 : 0,
                 },
               },
             ]
@@ -193,8 +194,7 @@ function normalizeLdJsonForContext(raw) {
         {
           commertialOffer: {
             Price: offers[0].price ?? 0,
-            AvailableQuantity:
-              offers[0].availability === 'https://schema.org/InStock' ? 1 : 0,
+            AvailableQuantity: isInStock(offers[0].availability) ? 1 : 0,
           },
         },
       ],
@@ -237,7 +237,7 @@ function normalizeNextDataForContext(raw) {
               {
                 commertialOffer: {
                   Price: currentOffer.price ?? 0,
-                  AvailableQuantity: currentOffer.quantity ?? 0,
+                  AvailableQuantity: currentOffer.quantity,
                 },
               },
             ]
@@ -255,7 +255,7 @@ function normalizeNextDataForContext(raw) {
         {
           commertialOffer: {
             Price: currentOffer.price ?? 0,
-            AvailableQuantity: currentOffer.quantity ?? 0,
+            AvailableQuantity: currentOffer.quantity,
           },
         },
       ],
@@ -453,10 +453,17 @@ export function extractProductData(product, account) {
   };
 }
 
+function formatStockStatus(availableQuantity) {
+  if (availableQuantity == null) {
+    return 'Could not determine stock';
+  }
+  return availableQuantity > 0 ? 'Available' : 'Unavailable';
+}
+
 function formatSkuLine(item) {
   const offer = item.sellers?.[0]?.commertialOffer;
   const price = offer?.Price ?? 'N/A';
-  const available = offer?.AvailableQuantity > 0 ? 'Available' : 'Unavailable';
+  const stockStatus = formatStockStatus(offer?.AvailableQuantity);
   const name = item.nameComplete || item.name || 'N/A';
   const skuId = item.itemId || 'N/A';
 
@@ -466,7 +473,7 @@ function formatSkuLine(item) {
   const variationsStr =
     variationParts.length > 0 ? ` (${variationParts.join(', ')})` : '';
 
-  return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${available}`;
+  return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${stockStatus}`;
 }
 
 export function buildProductContextString(product, selectedSkuId) {
