@@ -177,7 +177,9 @@ function normalizeLdJsonForContext(raw) {
               {
                 commertialOffer: {
                   Price: variantOffer.price ?? 0,
-                  AvailableQuantity: isInStock(variantOffer.availability) ? 1 : 0,
+                  AvailableQuantity: isInStock(variantOffer.availability)
+                    ? 1
+                    : 0,
                 },
               },
             ]
