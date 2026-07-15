@@ -298,9 +298,19 @@ describe('WebChat service helpers', () => {
     );
   });
 
-  it('clear clears messages on the service', async () => {
+  it('clear clears messages, page history, and cart', async () => {
     await WebChat.clear();
 
+    expect(service.clearMessages).toHaveBeenCalled();
+    expect(service.clearPageHistory).toHaveBeenCalled();
+    expect(service.clearCart).toHaveBeenCalled();
+  });
+
+  it('clear is a no-op for missing page history and cart helpers', async () => {
+    delete service.clearPageHistory;
+    delete service.clearCart;
+
+    await expect(WebChat.clear()).resolves.toBeUndefined();
     expect(service.clearMessages).toHaveBeenCalled();
   });
 
