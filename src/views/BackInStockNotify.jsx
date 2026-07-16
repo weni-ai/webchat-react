@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import Button from '@/components/common/Button';
 import { FSButton } from '@/components/common/FSButton';
 import { useChatContext } from '@/contexts/ChatContext';
 
@@ -97,9 +96,7 @@ export function BackInStockNotify({ productName = '' }) {
         </section>
 
         <footer className="weni-view-back-in-stock__footer">
-          <FSButton type="submit">
-            {t('back_in_stock.notify_me')}
-          </FSButton>
+          <FSButton type="submit">{t('back_in_stock.notify_me')}</FSButton>
         </footer>
       </form>
     </section>

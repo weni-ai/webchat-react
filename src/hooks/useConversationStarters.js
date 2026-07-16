@@ -339,13 +339,7 @@ export function useConversationStartersCore() {
       sendMessage(pendingStarterRef.current, { skipUtm: true });
       pendingStarterRef.current = null;
     }
-  }, [
-    isChatOpen,
-    isConnected,
-    sendMessage,
-    service,
-    openBackInStockPage,
-  ]);
+  }, [isChatOpen, isConnected, sendMessage, service, openBackInStockPage]);
 
   useEffect(() => {
     const wasOpen = prevIsChatOpenRef.current;

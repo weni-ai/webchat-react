@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { render, screen } from '@testing-library/react';
 import { Chat } from './Chat';
 
@@ -13,36 +14,76 @@ jest.mock('@/contexts/OrderFormContext', () => ({
   OrderFormProvider: ({ children }) => children,
 }));
 
-jest.mock('@/components/Header/Header', () => () => (
-  <div data-testid="header" />
-));
-jest.mock('@/components/Messages/MessagesList', () => () => (
-  <div data-testid="messages-list" />
-));
-jest.mock('@/components/Input/InputBox', () => () => (
-  <div data-testid="input-box" />
-));
-jest.mock('@/components/common/PoweredBy', () => () => null);
-jest.mock('@/components/AlreadyInUse/AlreadyInUse', () => () => (
-  <div data-testid="already-in-use" />
-));
+jest.mock('@/components/Header/Header', () => {
+  function MockHeader() {
+    return <div data-testid="header" />;
+  }
+  return MockHeader;
+});
+
+jest.mock('@/components/Messages/MessagesList', () => {
+  function MockMessagesList() {
+    return <div data-testid="messages-list" />;
+  }
+  return MockMessagesList;
+});
+
+jest.mock('@/components/Input/InputBox', () => {
+  function MockInputBox() {
+    return <div data-testid="input-box" />;
+  }
+  return MockInputBox;
+});
+
+jest.mock('@/components/common/PoweredBy', () => {
+  function MockPoweredBy() {
+    return null;
+  }
+  return MockPoweredBy;
+});
+
+jest.mock('@/components/AlreadyInUse/AlreadyInUse', () => {
+  function MockAlreadyInUse() {
+    return <div data-testid="already-in-use" />;
+  }
+  return MockAlreadyInUse;
+});
+
 jest.mock('@/views/ListMessage', () => ({
-  ListMessage: () => <div data-testid="list-message" />,
+  ListMessage: function MockListMessage() {
+    return <div data-testid="list-message" />;
+  },
 }));
+
 jest.mock('@/views/ProductCatalog', () => ({
-  ProductCatalog: () => <div data-testid="product-catalog" />,
+  ProductCatalog: function MockProductCatalog() {
+    return <div data-testid="product-catalog" />;
+  },
 }));
+
 jest.mock('@/views/ProductDetails', () => ({
-  ProductDetails: () => <div data-testid="product-details" />,
+  ProductDetails: function MockProductDetails() {
+    return <div data-testid="product-details" />;
+  },
 }));
+
 jest.mock('@/views/Cart', () => ({
-  Cart: () => <div data-testid="cart" />,
+  Cart: function MockCart() {
+    return <div data-testid="cart" />;
+  },
 }));
-jest.mock('@/views/BackInStockNotify', () => ({
-  BackInStockNotify: ({ productName }) => (
-    <div data-testid="back-in-stock-notify">{productName}</div>
-  ),
-}));
+
+jest.mock('@/views/BackInStockNotify', () => {
+  function MockBackInStockNotify({ productName }) {
+    return <div data-testid="back-in-stock-notify">{productName}</div>;
+  }
+
+  MockBackInStockNotify.propTypes = {
+    productName: PropTypes.string,
+  };
+
+  return { BackInStockNotify: MockBackInStockNotify };
+});
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 
