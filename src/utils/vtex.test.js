@@ -483,6 +483,91 @@ describe('buildProductContextString', () => {
     expect(result).toContain('SKU 42:');
   });
 
+  it('marks selected SKU as Unavailable only when AvailableQuantity is 0', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Unavailable');
+    expect(result).not.toContain('Could not determine stock');
+  });
+
+  it('marks selected SKU as Available when AvailableQuantity is greater than 0', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 99999 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Available');
+    expect(result).not.toContain('Unavailable');
+    expect(result).not.toContain('Could not determine stock');
+  });
+
+  it('reports unknown stock when AvailableQuantity is missing', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [{ commertialOffer: { Price: 1234.9 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Could not determine stock');
+    expect(result).not.toContain('Unavailable');
+  });
+
+  it('reports unknown stock when selected SKU has no sellers', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Could not determine stock');
+    expect(result).not.toContain('Unavailable');
+  });
+
   it('does not truncate description', () => {
     const longDesc = 'A'.repeat(500);
     const product = {
@@ -1949,10 +2034,43 @@ describe('real-world VTEX page data', () => {
     expect(normalized.items).toHaveLength(1);
     expect(normalized.items[0].itemId).toBe('000326125867');
     expect(normalized.items[0].sellers[0].commertialOffer.Price).toBe(2296.8);
+    expect(
+      normalized.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(1);
 
     const ctx = buildProductContextString(normalized, '000326125867');
     expect(ctx).toContain('Selected SKU:');
     expect(ctx).toContain('SKU 000326125867:');
     expect(ctx).toContain('Price: 2296.8');
+    expect(ctx).toContain('Available');
+  });
+
+  it('StoreFramework (Electrolux): ld+json http InStock availability', () => {
+    const ldJsonRaw = {
+      '@type': 'Product',
+      name: 'Purificador Electrolux com Compressor, Água Quente e Painel Digital Cinza (PH41X)',
+      brand: { name: 'Electrolux' },
+      description: 'Purificador de Água Cinza com Refrigeração e Água Quente',
+      sku: '02003801',
+      offers: {
+        offers: [
+          {
+            price: 1234.9,
+            availability: 'http://schema.org/InStock',
+            sku: '02003801',
+          },
+        ],
+      },
+    };
+
+    const normalized = normalizeForContext(ldJsonRaw, 'ld+json');
+    expect(
+      normalized.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(1);
+
+    const ctx = buildProductContextString(normalized, '02003801');
+    expect(ctx).toContain('Available');
+    expect(ctx).not.toContain('Unavailable');
+    expect(ctx).not.toContain('Could not determine stock');
   });
 });
