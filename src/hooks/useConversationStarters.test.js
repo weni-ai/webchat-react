@@ -1,18 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useConversationStartersCore } from '@/hooks/useConversationStarters';
 import { useChatContext } from '@/contexts/ChatContext';
-import {
-  isVtexPdpPage,
-  extractSlugFromUrl,
-  extractProductPathFromUrl,
-  getVtexAccount,
-  resolveProductData,
-  normalizeForContext,
-  buildProductContextString,
-  getSelectedSkuId,
-} from '@/utils/vtex';
-import { createNavigationMonitor } from '@/utils/navigationMonitor';
-import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -27,6 +15,7 @@ jest.mock('@/utils/vtex', () => ({
   normalizeForContext: jest.fn(),
   buildProductContextString: jest.fn(),
   getSelectedSkuId: jest.fn(),
+  isSelectedSkuAvailable: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -41,6 +30,20 @@ jest.mock('@/utils/sendVtexUtm', () => ({
     CART: 'cx_shopping_assistant_cart',
   },
 }));
+
+import {
+  isVtexPdpPage,
+  extractSlugFromUrl,
+  extractProductPathFromUrl,
+  getVtexAccount,
+  resolveProductData,
+  normalizeForContext,
+  buildProductContextString,
+  getSelectedSkuId,
+  isSelectedSkuAvailable,
+} from '@/utils/vtex';
+import { createNavigationMonitor } from '@/utils/navigationMonitor';
+import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 const mockMonitor = { start: jest.fn(), stop: jest.fn() };
 
@@ -63,8 +66,19 @@ function buildContext(overrides = {}) {
     sendMessage: jest.fn(),
     config: { conversationStarters: { pdp: true } },
     setIsChatOpen: jest.fn(),
+    setCurrentPage: jest.fn(),
     ...overrides,
   };
+}
+
+function buildUnavailableNotifyContext(overrides = {}) {
+  return buildContext({
+    config: {
+      conversationStarters: { pdp: true },
+      unavailableProductNotify: true,
+    },
+    ...overrides,
+  });
 }
 
 function getEventHandler(eventName) {
@@ -78,6 +92,7 @@ describe('useConversationStartersCore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     isVtexPdpPage.mockReturnValue(false);
+    isSelectedSkuAvailable.mockReturnValue(true);
     createNavigationMonitor.mockReturnValue(mockMonitor);
     window.matchMedia = jest.fn().mockReturnValue({ matches: false });
     ctx = buildContext();
@@ -869,6 +884,182 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.questions).toEqual(['Q1?', 'Q2?']);
+    });
+  });
+
+  describe('back-in-stock notify', () => {
+    const fakeProductData = {
+      account: 'mystore',
+      linkText: 'cool-shoe',
+      productName: 'Cool Shoe',
+      description: 'A cool shoe',
+      brand: 'Nike',
+      attributes: {},
+    };
+    const fakeRawProduct = { productName: 'Cool Shoe', items: [] };
+    const unavailableNormalized = {
+      productName: 'Cool Shoe',
+      items: [
+        {
+          itemId: 'SKU-001',
+          sellers: [{ commertialOffer: { AvailableQuantity: 0 } }],
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      isVtexPdpPage.mockReturnValue(true);
+      extractSlugFromUrl.mockReturnValue('cool-shoe');
+      extractProductPathFromUrl.mockReturnValue('/en/cool-shoe/p');
+      getVtexAccount.mockReturnValue('mystore');
+      resolveProductData.mockResolvedValue({
+        productData: fakeProductData,
+        rawProduct: fakeRawProduct,
+        source: 'ld+json',
+      });
+      normalizeForContext.mockReturnValue(unavailableNormalized);
+      buildProductContextString.mockReturnValue('Product: Cool Shoe');
+      getSelectedSkuId.mockReturnValue('SKU-001');
+      ctx = buildUnavailableNotifyContext();
+      useChatContext.mockReturnValue(ctx);
+    });
+
+    it('skips getStarters and shows notify CTA when SKU is unavailable', async () => {
+      isSelectedSkuAvailable.mockReturnValue(false);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
+      expect(hookResult.current.isBackInStockNotify).toBe(true);
+      expect(hookResult.current.productName).toBe('Cool Shoe');
+      expect(hookResult.current.questions).toEqual([
+        'Notify me when back in stock',
+      ]);
+      expect(hookResult.current.isCompactVisible).toBe(true);
+      expect(hookResult.current.isLoading).toBe(false);
+    });
+
+    it('requests starters when feature is disabled even if SKU is unavailable', async () => {
+      isSelectedSkuAvailable.mockReturnValue(false);
+      ctx = buildContext({
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: false,
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
+      expect(hookResult.current.isBackInStockNotify).toBe(false);
+    });
+
+    it('still requests starters when SKU is available', async () => {
+      isSelectedSkuAvailable.mockReturnValue(true);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
+    });
+
+    it('opens back-in-stock page on CTA click when chat is open', async () => {
+      isSelectedSkuAvailable.mockReturnValue(false);
+      ctx = buildUnavailableNotifyContext({ isChatOpen: true });
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      act(() => {
+        hookResult.current.handleFullStarterClick(
+          'Notify me when back in stock',
+        );
+      });
+
+      expect(ctx.sendMessage).not.toHaveBeenCalled();
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'back-in-stock-notify',
+        title: "Get notified when it's back in stock",
+        props: { productName: 'Cool Shoe' },
+      });
+      expect(hookResult.current.isInChatStartersDismissed).toBe(true);
+    });
+
+    it('opens chat then page when CTA is clicked while chat is closed', async () => {
+      isSelectedSkuAvailable.mockReturnValue(false);
+
+      let hookResult;
+      let rerender;
+      await act(async () => {
+        const rendered = renderHook(() => useConversationStartersCore());
+        hookResult = rendered.result;
+        rerender = rendered.rerender;
+      });
+
+      act(() => {
+        hookResult.current.handleFullStarterClick(
+          'Notify me when back in stock',
+        );
+      });
+
+      expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
+      expect(ctx.setCurrentPage).not.toHaveBeenCalled();
+
+      ctx = buildUnavailableNotifyContext({
+        isChatOpen: true,
+        setCurrentPage: ctx.setCurrentPage,
+      });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'back-in-stock-notify',
+        title: "Get notified when it's back in stock",
+        props: { productName: 'Cool Shoe' },
+      });
+    });
+
+    it('forces notify mode on starters:simulate-unavailable', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-unavailable');
+      expect(handler).toBeDefined();
+
+      act(() => {
+        handler({ productName: 'Oculus Quest' });
+      });
+
+      expect(result.current.isBackInStockNotify).toBe(true);
+      expect(result.current.productName).toBe('Oculus Quest');
+      expect(result.current.questions).toEqual([
+        'Notify me when back in stock',
+      ]);
+      expect(result.current.isCompactVisible).toBe(true);
+    });
+
+    it('uses Sample Product when simulate payload has no name', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-unavailable');
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.productName).toBe('Sample Product');
     });
   });
 

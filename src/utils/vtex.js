@@ -478,6 +478,33 @@ function formatSkuLine(item) {
   return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${stockStatus}`;
 }
 
+function findSelectedSkuItem(product, selectedSkuId) {
+  if (!product || selectedSkuId == null || selectedSkuId === '') return null;
+  const items = product.items || [];
+  return (
+    items.find(
+      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
+    ) || null
+  );
+}
+
+/**
+ * Whether the selected SKU is available for sale.
+ * Returns true when AvailableQuantity > 0, false when === 0,
+ * and true (treat as available) when quantity is unknown/unmatched
+ * to avoid false-positive "notify me" prompts.
+ */
+export function isSelectedSkuAvailable(product, selectedSkuId) {
+  const matched = findSelectedSkuItem(product, selectedSkuId);
+  if (!matched) return true;
+
+  const availableQuantity =
+    matched.sellers?.[0]?.commertialOffer?.AvailableQuantity;
+  if (availableQuantity == null) return true;
+
+  return availableQuantity > 0;
+}
+
 export function buildProductContextString(product, selectedSkuId) {
   if (!product) return null;
 
@@ -500,15 +527,10 @@ export function buildProductContextString(product, selectedSkuId) {
     lines.push(`Attributes: ${parts.join(' | ')}`);
   }
 
-  if (selectedSkuId) {
-    const items = product.items || [];
-    const matched = items.find(
-      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
-    );
-    if (matched) {
-      lines.push('\nSelected SKU:');
-      lines.push(formatSkuLine(matched));
-    }
+  const matched = findSelectedSkuItem(product, selectedSkuId);
+  if (matched) {
+    lines.push('\nSelected SKU:');
+    lines.push(formatSkuLine(matched));
   }
 
   return lines.join('\n');

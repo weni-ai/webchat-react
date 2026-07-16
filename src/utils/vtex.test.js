@@ -15,6 +15,7 @@ import {
   filterInternalProperties,
   extractProductData,
   buildProductContextString,
+  isSelectedSkuAvailable,
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
@@ -608,6 +609,67 @@ describe('buildProductContextString', () => {
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
     expect(result).toContain('SKU ID: N/A');
+  });
+});
+
+describe('isSelectedSkuAvailable', () => {
+  it('returns false when AvailableQuantity is 0', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(false);
+  });
+
+  it('returns true when AvailableQuantity is greater than 0', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 5 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(true);
+  });
+
+  it('returns true when AvailableQuantity is missing', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [{ commertialOffer: { Price: 1234.9 } }],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(true);
+  });
+
+  it('returns true when selected SKU is unmatched', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '999')).toBe(true);
+  });
+
+  it('returns true when product or selectedSkuId is missing', () => {
+    expect(isSelectedSkuAvailable(null, '1')).toBe(true);
+    expect(isSelectedSkuAvailable({ items: [] }, null)).toBe(true);
   });
 });
 
