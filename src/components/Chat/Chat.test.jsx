@@ -1,6 +1,7 @@
-import PropTypes from 'prop-types';
 import { render, screen } from '@testing-library/react';
 import { Chat } from './Chat';
+
+/* eslint-disable react/prop-types -- jest.mock factories use stub components */
 
 jest.mock('@/hooks/useVtexCxVisualViewportCssVars', () => ({
   useVtexCxVisualViewportCssVars: jest.fn(),
@@ -77,10 +78,6 @@ jest.mock('@/views/BackInStockNotify', () => {
   function MockBackInStockNotify({ productName }) {
     return <div data-testid="back-in-stock-notify">{productName}</div>;
   }
-
-  MockBackInStockNotify.propTypes = {
-    productName: PropTypes.string,
-  };
 
   return { BackInStockNotify: MockBackInStockNotify };
 });
