@@ -156,6 +156,18 @@
       }
     }
   },
+  "back_in_stock": {
+    "form_description": "Te avisaremos por WhatsApp en cuanto {{productName}} vuelva a estar en stock",
+    "form_title": "Recibe aviso de reposición",
+    "name_label": "Nombre",
+    "notify_me": "Avísame",
+    "notify_me_cta": "Avísame cuando vuelva a estar en stock",
+    "show_similar_products": "Ver productos similares",
+    "success_description": "Te avisaremos por WhatsApp cuando {{productName}} vuelva a estar en stock",
+    "success_title": "Listo",
+    "wait_prompt": "Mientras esperas, mira productos similares",
+    "whatsapp_label": "Número de WhatsApp"
+  },
   "conversation_starters": {
     "aria_label": "Pregunta sugerida: {{question}}",
     "send_question": "Enviar pregunta"

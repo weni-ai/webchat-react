@@ -73,6 +73,7 @@ const defaultConfig = {
 
   mode: 'live',
   showMode: false,
+  unavailableProductNotify: false,
   showChatAvatar: true,
 };
 
@@ -703,6 +704,10 @@ ChatProvider.propTypes = {
     conversationStarters: PropTypes.shape({
       pdp: PropTypes.bool,
     }),
+
+    mode: PropTypes.oneOf(['live', 'preview']),
+    showMode: PropTypes.bool,
+    unavailableProductNotify: PropTypes.bool,
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),

@@ -126,6 +126,7 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage ?? 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
+    unavailableProductNotify: params.unavailableProductNotify || false,
     showCameraButton: params.showCameraButton !== false,
     showVoiceRecordingButton: params.showVoiceRecordingButton !== false,
     showFileUploaderButton: params.showFileUploaderButton !== false,
@@ -415,6 +416,18 @@ async function simulateMessageSent(message) {
   service.simulateMessageSent(message);
 }
 
+/**
+ * Simulate an unavailable product (back-in-stock notify bubble)
+ * @param {string} [productName]
+ * @returns {Promise<void>}
+ */
+async function simulateUnavailableProduct(productName) {
+  const svc = await serviceWhenReady();
+  svc.emit('starters:simulate-unavailable', {
+    productName: productName || 'Sample Product',
+  });
+}
+
 function validateStartersInput(questions) {
   if (!Array.isArray(questions)) return false;
   if (questions.length < 1 || questions.length > 3) return false;
@@ -466,6 +479,7 @@ const WebChat = {
   reload,
   simulateMessageReceived,
   simulateMessageSent,
+  simulateUnavailableProduct,
   changeLanguage,
 };
 

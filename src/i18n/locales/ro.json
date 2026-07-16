@@ -127,6 +127,18 @@
         }
       }
     },
+    "back_in_stock": {
+      "form_description": "Te anunțăm pe WhatsApp imediat ce {{productName}} revine în stoc",
+      "form_title": "Primește notificare de restocare",
+      "name_label": "Nume",
+      "notify_me": "Anunță-mă",
+      "notify_me_cta": "Anunță-mă când revine în stoc",
+      "show_similar_products": "Arată produse similare",
+      "success_description": "Te anunțăm pe WhatsApp când {{productName}} revine în stoc",
+      "success_title": "Totul este pregătit",
+      "wait_prompt": "Între timp, vezi produse similare",
+      "whatsapp_label": "Număr WhatsApp"
+    },
     "conversation_starters": {
       "aria_label": "Întrebare sugerată: {{question}}",
       "send_question": "Trimite întrebarea"

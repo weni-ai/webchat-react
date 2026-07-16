@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChatContext } from '@/contexts/ChatContext';
 import {
   isVtexPdpPage,
@@ -9,6 +10,7 @@ import {
   normalizeForContext,
   buildProductContextString,
   getSelectedSkuId,
+  isSelectedSkuAvailable,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -19,6 +21,7 @@ const NAVIGATION_DEBOUNCE_MS = 300;
 const NAVIGATION_URL_SETTLE_MS = 200;
 
 export function useConversationStartersCore() {
+  const { t } = useTranslation();
   const {
     service,
     isChatOpen,
@@ -26,6 +29,7 @@ export function useConversationStartersCore() {
     sendMessage,
     config,
     setIsChatOpen,
+    setCurrentPage,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -36,10 +40,15 @@ export function useConversationStartersCore() {
   const [isHiding, setIsHiding] = useState(false);
   const [isInChatStartersDismissed, setIsInChatStartersDismissed] =
     useState(false);
+  const [isBackInStockNotify, setIsBackInStockNotify] = useState(false);
+  const [productName, setProductName] = useState('');
 
   const pendingStarterRef = useRef(null);
+  const pendingBackInStockRef = useRef(false);
   const currentFingerprintRef = useRef(null);
   const sourceRef = useRef(source);
+  const isBackInStockNotifyRef = useRef(isBackInStockNotify);
+  const productNameRef = useRef(productName);
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
   const navigationDebounceRef = useRef(null);
@@ -49,10 +58,17 @@ export function useConversationStartersCore() {
   const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
   const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
+  const isUnavailableNotifyEnabledRef = useRef(
+    config?.unavailableProductNotify === true,
+  );
 
   sourceRef.current = source;
+  isBackInStockNotifyRef.current = isBackInStockNotify;
+  productNameRef.current = productName;
   isConnectedRef.current = isConnected;
   isPdpEnabledRef.current = config?.conversationStarters?.pdp === true;
+  isUnavailableNotifyEnabledRef.current =
+    config?.unavailableProductNotify === true;
 
   const clearMobileTimer = useCallback(() => {
     if (mobileTimerRef.current) {
@@ -83,10 +99,39 @@ export function useConversationStartersCore() {
     setIsCompactVisible(false);
     setIsHiding(false);
     setIsInChatStartersDismissed(false);
+    setIsBackInStockNotify(false);
+    setProductName('');
     clearMobileTimer();
     currentFingerprintRef.current = null;
     deferredProductDataRef.current = null;
+    pendingBackInStockRef.current = false;
   }, [clearMobileTimer]);
+
+  const showBackInStockNotify = useCallback(
+    (name) => {
+      const resolvedName = name || '';
+      setProductName(resolvedName);
+      setIsBackInStockNotify(true);
+      setQuestions([t('back_in_stock.notify_me_cta')]);
+      setIsCompactVisible(true);
+      setIsInChatStartersDismissed(false);
+      setIsLoading(false);
+      startMobileAutoHide();
+    },
+    [startMobileAutoHide, t],
+  );
+
+  const openBackInStockPage = useCallback(
+    (name) => {
+      if (!setCurrentPage) return;
+      setCurrentPage({
+        view: 'back-in-stock-notify',
+        title: t('back_in_stock.form_title'),
+        props: { productName: name || productNameRef.current || '' },
+      });
+    },
+    [setCurrentPage, t],
+  );
 
   const requestStarters = useCallback(
     (productData) => {
@@ -136,15 +181,26 @@ export function useConversationStartersCore() {
 
     if (currentFingerprintRef.current !== newFingerprint) return;
 
-    requestStarters(result.productData);
-
     const selectedSkuId = getSelectedSkuId();
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
       service.setContext(contextString);
     }
-  }, [requestStarters, service]);
+
+    const resolvedProductName =
+      normalized?.productName || result.productData?.productName || '';
+
+    if (
+      isUnavailableNotifyEnabledRef.current &&
+      !isSelectedSkuAvailable(normalized, selectedSkuId)
+    ) {
+      showBackInStockNotify(resolvedProductName);
+      return;
+    }
+
+    requestStarters(result.productData);
+  }, [requestStarters, service, showBackInStockNotify]);
 
   const applyNavigationChange = useCallback(() => {
     const pathname = window.location.pathname;
@@ -189,8 +245,27 @@ export function useConversationStartersCore() {
     });
   }, []);
 
+  const handleBackInStockClick = useCallback(() => {
+    clearMobileTimer();
+    setIsInChatStartersDismissed(true);
+    setIsCompactVisible(false);
+    setQuestions([]);
+
+    if (isChatOpen) {
+      openBackInStockPage(productNameRef.current);
+    } else {
+      pendingBackInStockRef.current = true;
+      setIsChatOpen(true);
+    }
+  }, [clearMobileTimer, isChatOpen, openBackInStockPage, setIsChatOpen]);
+
   const handleFullStarterClick = useCallback(
     (question) => {
+      if (isBackInStockNotifyRef.current) {
+        handleBackInStockClick();
+        return;
+      }
+
       clearMobileTimer();
       removeQuestionFromList(question);
       setIsInChatStartersDismissed(true);
@@ -209,11 +284,17 @@ export function useConversationStartersCore() {
       setIsChatOpen,
       clearMobileTimer,
       removeQuestionFromList,
+      handleBackInStockClick,
     ],
   );
 
   const handleCompactStarterClick = useCallback(
     (question) => {
+      if (isBackInStockNotifyRef.current) {
+        handleBackInStockClick();
+        return;
+      }
+
       clearMobileTimer();
       if (isChatOpen) {
         handleFullStarterClick(question);
@@ -230,6 +311,7 @@ export function useConversationStartersCore() {
       setIsChatOpen,
       clearMobileTimer,
       removeQuestionFromList,
+      handleBackInStockClick,
     ],
   );
 
@@ -242,14 +324,22 @@ export function useConversationStartersCore() {
   }, [resetStartersState, service]);
 
   useEffect(() => {
-    if (!isChatOpen || !pendingStarterRef.current) return;
+    if (!isChatOpen) return;
+
+    if (pendingBackInStockRef.current) {
+      pendingBackInStockRef.current = false;
+      openBackInStockPage(productNameRef.current);
+      return;
+    }
+
+    if (!pendingStarterRef.current) return;
 
     if (isConnected) {
       void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
       sendMessage(pendingStarterRef.current, { skipUtm: true });
       pendingStarterRef.current = null;
     }
-  }, [isChatOpen, isConnected, sendMessage, service]);
+  }, [isChatOpen, isConnected, sendMessage, service, openBackInStockPage]);
 
   useEffect(() => {
     const wasOpen = prevIsChatOpenRef.current;
@@ -271,6 +361,7 @@ export function useConversationStartersCore() {
       const shouldAccept = !isPdpSource || hasValidFingerprint;
 
       if (shouldAccept) {
+        setIsBackInStockNotify(false);
         setQuestions(data.questions?.slice(0, 3) || []);
         setIsCompactVisible(true);
         setIsInChatStartersDismissed(false);
@@ -296,6 +387,8 @@ export function useConversationStartersCore() {
     };
 
     const handleManualStarters = (manualQuestions) => {
+      setIsBackInStockNotify(false);
+      setProductName('');
       setQuestions(manualQuestions.slice(0, 3));
       setSource('manual');
       setFingerprint(null);
@@ -306,10 +399,22 @@ export function useConversationStartersCore() {
       startMobileAutoHide();
     };
 
+    const handleSimulateUnavailable = (payload = {}) => {
+      const name =
+        typeof payload?.productName === 'string' && payload.productName.trim()
+          ? payload.productName.trim()
+          : 'Sample Product';
+      setSource('manual');
+      setFingerprint(null);
+      currentFingerprintRef.current = null;
+      showBackInStockNotify(name);
+    };
+
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
+    service.on('starters:simulate-unavailable', handleSimulateUnavailable);
 
     if (isConnected) {
       handleConnected();
@@ -320,8 +425,9 @@ export function useConversationStartersCore() {
       service.off('starters:error', handleStartersError);
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
+      service.off('starters:simulate-unavailable', handleSimulateUnavailable);
     };
-  }, [service, isConnected, startMobileAutoHide]);
+  }, [service, isConnected, startMobileAutoHide, showBackInStockNotify]);
 
   useEffect(() => {
     if (!service) return;
@@ -354,6 +460,8 @@ export function useConversationStartersCore() {
     isCompactVisible,
     isHiding,
     isInChatStartersDismissed,
+    isBackInStockNotify,
+    productName,
     handleCompactStarterClick,
     handleFullStarterClick,
     clearStarters,

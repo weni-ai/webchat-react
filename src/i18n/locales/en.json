@@ -156,6 +156,18 @@
       }
     }
   },
+  "back_in_stock": {
+    "form_description": "We'll message you on WhatsApp the moment the {{productName}} is back in stock.",
+    "form_title": "Get notified when it's back in stock",
+    "name_label": "Name",
+    "notify_me": "Notify me",
+    "notify_me_cta": "Notify me when back in stock",
+    "show_similar_products": "Show me similar products",
+    "success_description": "I'll message you on WhatsApp when {{productName}} is back in stock.",
+    "success_title": "You're all set!",
+    "wait_prompt": "While you wait, want to see similar products?",
+    "whatsapp_label": "WhatsApp number"
+  },
   "conversation_starters": {
     "aria_label": "Suggested question: {{question}}",
     "send_question": "Send question"
