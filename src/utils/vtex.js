@@ -462,12 +462,30 @@ function formatStockStatus(availableQuantity) {
   return availableQuantity > 0 ? 'Available' : 'Unavailable';
 }
 
+/**
+ * Strip leading zeros from numeric IDs (e.g. "000326125867" → "326125867").
+ * Non-numeric IDs are left unchanged so alphanumeric SKUs stay intact.
+ */
+export function stripLeadingZeros(id) {
+  if (id == null || id === '') return id;
+  const str = String(id);
+  if (!/^\d+$/.test(str)) return str;
+  const stripped = str.replace(/^0+/, '');
+  return stripped === '' ? '0' : stripped;
+}
+
+function skuIdsMatch(a, b) {
+  if (a == null || b == null) return false;
+  if (String(a) === String(b)) return true;
+  return stripLeadingZeros(a) === stripLeadingZeros(b);
+}
+
 function formatSkuLine(item) {
   const offer = item.sellers?.[0]?.commertialOffer;
   const price = offer?.Price ?? 'N/A';
   const stockStatus = formatStockStatus(offer?.AvailableQuantity);
   const name = item.nameComplete || item.name || 'N/A';
-  const skuId = item.itemId || 'N/A';
+  const skuId = item.itemId != null ? stripLeadingZeros(item.itemId) : 'N/A';
 
   const variationParts = (item.variations || []).map(
     (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
@@ -483,11 +501,15 @@ export function buildProductContextString(product, selectedSkuId) {
 
   const description = product.description || '';
   const attributes = filterInternalProperties(product.properties || []);
+  const productId =
+    product.productId != null && product.productId !== ''
+      ? stripLeadingZeros(product.productId)
+      : 'N/A';
 
   const lines = [
     `Product: ${product.productName || 'N/A'}`,
     `Brand: ${product.brand || 'N/A'}`,
-    `SKU ID: ${product.productId || 'N/A'}`,
+    `SKU ID: ${productId}`,
   ];
 
   if (description) {
@@ -503,7 +525,7 @@ export function buildProductContextString(product, selectedSkuId) {
   if (selectedSkuId) {
     const items = product.items || [];
     const matched = items.find(
-      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
+      (item) => item.itemId && skuIdsMatch(item.itemId, selectedSkuId),
     );
     if (matched) {
       lines.push('\nSelected SKU:');
