@@ -15,6 +15,7 @@ import {
   filterInternalProperties,
   extractProductData,
   buildProductContextString,
+  stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
@@ -365,9 +366,103 @@ describe('extractProductData', () => {
   });
 });
 
+describe('stripLeadingZeros', () => {
+  it('strips leading zeros from numeric IDs', () => {
+    expect(stripLeadingZeros('000326125867')).toBe('326125867');
+    expect(stripLeadingZeros('02003801')).toBe('2003801');
+    expect(stripLeadingZeros('005413344')).toBe('5413344');
+  });
+
+  it('leaves IDs without leading zeros unchanged', () => {
+    expect(stripLeadingZeros('123')).toBe('123');
+    expect(stripLeadingZeros('5413344')).toBe('5413344');
+  });
+
+  it('preserves alphanumeric IDs', () => {
+    expect(stripLeadingZeros('SKU-001')).toBe('SKU-001');
+    expect(stripLeadingZeros('00ABC')).toBe('00ABC');
+  });
+
+  it('keeps a single zero when the value is all zeros', () => {
+    expect(stripLeadingZeros('0')).toBe('0');
+    expect(stripLeadingZeros('000')).toBe('0');
+  });
+
+  it('handles null, empty, and numeric inputs', () => {
+    expect(stripLeadingZeros(null)).toBeNull();
+    expect(stripLeadingZeros('')).toBe('');
+    expect(stripLeadingZeros(42)).toBe('42');
+    expect(stripLeadingZeros(2003801)).toBe('2003801');
+  });
+});
+
 describe('buildProductContextString', () => {
   it('returns null for null product', () => {
     expect(buildProductContextString(null)).toBeNull();
+  });
+
+  it('strips leading zeros from productId and selected SKU in context', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '005413344',
+      properties: [],
+      items: [
+        {
+          itemId: '000326125867',
+          name: 'TV 85',
+          sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '000326125867');
+    expect(result).toContain('SKU ID: 5413344');
+    expect(result).toContain('SKU 326125867:');
+    expect(result).not.toContain('005413344');
+    expect(result).not.toContain('000326125867');
+  });
+
+  it('matches selected SKU when leading zeros differ between sources', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 1 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '2003801');
+    expect(result).toContain('Selected SKU:');
+    expect(result).toContain('SKU 2003801:');
+  });
+
+  it('preserves alphanumeric SKUs that are not purely numeric', () => {
+    const product = {
+      productName: 'Shoe',
+      brand: 'Brand',
+      productId: 'SKU-001',
+      properties: [],
+      items: [
+        {
+          itemId: 'SKU-00A',
+          name: 'Shoe Red',
+          sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, 'SKU-00A');
+    expect(result).toContain('SKU ID: SKU-001');
+    expect(result).toContain('SKU SKU-00A:');
   });
 
   it('builds context with basic product fields', () => {
@@ -2040,7 +2135,7 @@ describe('real-world VTEX page data', () => {
 
     const ctx = buildProductContextString(normalized, '000326125867');
     expect(ctx).toContain('Selected SKU:');
-    expect(ctx).toContain('SKU 000326125867:');
+    expect(ctx).toContain('SKU 326125867:');
     expect(ctx).toContain('Price: 2296.8');
     expect(ctx).toContain('Available');
   });
