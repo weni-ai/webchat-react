@@ -160,7 +160,7 @@ The following methods are available via `window.WebChat`:
 - `async close()` – Closes the chat window.
 - `async toggle()` – Toggles the chat window.
 - `async isOpen()` – Checks if the chat window is open.
-- `async clear()` – Clears the chat history.
+- `async clear()` – Clears the chat history, closes any open product/catalog views, and clears the widget cart.
 - `async clearPageHistory()` – Closes any open product/catalog views and returns to the chat.
 - `async clearCart()` – Clears the shopping cart state.
 - `async send(message, options)` – Sends a message to the chat.

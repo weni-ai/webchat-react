@@ -156,6 +156,10 @@ export function extractFromNextData(slug) {
   }
 }
 
+function isInStock(availability) {
+  return typeof availability === 'string' && availability.includes('InStock');
+}
+
 function normalizeLdJsonForContext(raw) {
   const items = [];
   const variants = raw.hasVariant || [];
@@ -173,10 +177,9 @@ function normalizeLdJsonForContext(raw) {
               {
                 commertialOffer: {
                   Price: variantOffer.price ?? 0,
-                  AvailableQuantity:
-                    variantOffer.availability === 'https://schema.org/InStock'
-                      ? 1
-                      : 0,
+                  AvailableQuantity: isInStock(variantOffer.availability)
+                    ? 1
+                    : 0,
                 },
               },
             ]
@@ -193,8 +196,7 @@ function normalizeLdJsonForContext(raw) {
         {
           commertialOffer: {
             Price: offers[0].price ?? 0,
-            AvailableQuantity:
-              offers[0].availability === 'https://schema.org/InStock' ? 1 : 0,
+            AvailableQuantity: isInStock(offers[0].availability) ? 1 : 0,
           },
         },
       ],
@@ -237,7 +239,7 @@ function normalizeNextDataForContext(raw) {
               {
                 commertialOffer: {
                   Price: currentOffer.price ?? 0,
-                  AvailableQuantity: currentOffer.quantity ?? 0,
+                  AvailableQuantity: currentOffer.quantity,
                 },
               },
             ]
@@ -255,7 +257,7 @@ function normalizeNextDataForContext(raw) {
         {
           commertialOffer: {
             Price: currentOffer.price ?? 0,
-            AvailableQuantity: currentOffer.quantity ?? 0,
+            AvailableQuantity: currentOffer.quantity,
           },
         },
       ],
@@ -453,12 +455,37 @@ export function extractProductData(product, account) {
   };
 }
 
+function formatStockStatus(availableQuantity) {
+  if (availableQuantity == null) {
+    return 'Could not determine stock';
+  }
+  return availableQuantity > 0 ? 'Available' : 'Unavailable';
+}
+
+/**
+ * Strip leading zeros from numeric IDs (e.g. "000326125867" → "326125867").
+ * Non-numeric IDs are left unchanged so alphanumeric SKUs stay intact.
+ */
+export function stripLeadingZeros(id) {
+  if (id == null || id === '') return id;
+  const str = String(id);
+  if (!/^\d+$/.test(str)) return str;
+  const stripped = str.replace(/^0+/, '');
+  return stripped === '' ? '0' : stripped;
+}
+
+function skuIdsMatch(a, b) {
+  if (a == null || b == null) return false;
+  if (String(a) === String(b)) return true;
+  return stripLeadingZeros(a) === stripLeadingZeros(b);
+}
+
 function formatSkuLine(item) {
   const offer = item.sellers?.[0]?.commertialOffer;
   const price = offer?.Price ?? 'N/A';
-  const available = offer?.AvailableQuantity > 0 ? 'Available' : 'Unavailable';
+  const stockStatus = formatStockStatus(offer?.AvailableQuantity);
   const name = item.nameComplete || item.name || 'N/A';
-  const skuId = item.itemId || 'N/A';
+  const skuId = item.itemId != null ? stripLeadingZeros(item.itemId) : 'N/A';
 
   const variationParts = (item.variations || []).map(
     (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
@@ -466,7 +493,7 @@ function formatSkuLine(item) {
   const variationsStr =
     variationParts.length > 0 ? ` (${variationParts.join(', ')})` : '';
 
-  return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${available}`;
+  return `- SKU ${skuId}: ${name}${variationsStr} | Price: ${price} | ${stockStatus}`;
 }
 
 export function buildProductContextString(product, selectedSkuId) {
@@ -474,11 +501,15 @@ export function buildProductContextString(product, selectedSkuId) {
 
   const description = product.description || '';
   const attributes = filterInternalProperties(product.properties || []);
+  const productId =
+    product.productId != null && product.productId !== ''
+      ? stripLeadingZeros(product.productId)
+      : 'N/A';
 
   const lines = [
     `Product: ${product.productName || 'N/A'}`,
     `Brand: ${product.brand || 'N/A'}`,
-    `Product ID: ${product.productId || 'N/A'}`,
+    `SKU ID: ${productId}`,
   ];
 
   if (description) {
@@ -494,7 +525,7 @@ export function buildProductContextString(product, selectedSkuId) {
   if (selectedSkuId) {
     const items = product.items || [];
     const matched = items.find(
-      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
+      (item) => item.itemId && skuIdsMatch(item.itemId, selectedSkuId),
     );
     if (matched) {
       lines.push('\nSelected SKU:');

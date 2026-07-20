@@ -15,6 +15,7 @@ import {
   filterInternalProperties,
   extractProductData,
   buildProductContextString,
+  stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
@@ -365,9 +366,103 @@ describe('extractProductData', () => {
   });
 });
 
+describe('stripLeadingZeros', () => {
+  it('strips leading zeros from numeric IDs', () => {
+    expect(stripLeadingZeros('000326125867')).toBe('326125867');
+    expect(stripLeadingZeros('02003801')).toBe('2003801');
+    expect(stripLeadingZeros('005413344')).toBe('5413344');
+  });
+
+  it('leaves IDs without leading zeros unchanged', () => {
+    expect(stripLeadingZeros('123')).toBe('123');
+    expect(stripLeadingZeros('5413344')).toBe('5413344');
+  });
+
+  it('preserves alphanumeric IDs', () => {
+    expect(stripLeadingZeros('SKU-001')).toBe('SKU-001');
+    expect(stripLeadingZeros('00ABC')).toBe('00ABC');
+  });
+
+  it('keeps a single zero when the value is all zeros', () => {
+    expect(stripLeadingZeros('0')).toBe('0');
+    expect(stripLeadingZeros('000')).toBe('0');
+  });
+
+  it('handles null, empty, and numeric inputs', () => {
+    expect(stripLeadingZeros(null)).toBeNull();
+    expect(stripLeadingZeros('')).toBe('');
+    expect(stripLeadingZeros(42)).toBe('42');
+    expect(stripLeadingZeros(2003801)).toBe('2003801');
+  });
+});
+
 describe('buildProductContextString', () => {
   it('returns null for null product', () => {
     expect(buildProductContextString(null)).toBeNull();
+  });
+
+  it('strips leading zeros from productId and selected SKU in context', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '005413344',
+      properties: [],
+      items: [
+        {
+          itemId: '000326125867',
+          name: 'TV 85',
+          sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '000326125867');
+    expect(result).toContain('SKU ID: 5413344');
+    expect(result).toContain('SKU 326125867:');
+    expect(result).not.toContain('005413344');
+    expect(result).not.toContain('000326125867');
+  });
+
+  it('matches selected SKU when leading zeros differ between sources', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 1 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '2003801');
+    expect(result).toContain('Selected SKU:');
+    expect(result).toContain('SKU 2003801:');
+  });
+
+  it('preserves alphanumeric SKUs that are not purely numeric', () => {
+    const product = {
+      productName: 'Shoe',
+      brand: 'Brand',
+      productId: 'SKU-001',
+      properties: [],
+      items: [
+        {
+          itemId: 'SKU-00A',
+          name: 'Shoe Red',
+          sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, 'SKU-00A');
+    expect(result).toContain('SKU ID: SKU-001');
+    expect(result).toContain('SKU SKU-00A:');
   });
 
   it('builds context with basic product fields', () => {
@@ -382,7 +477,7 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: iPad');
     expect(result).toContain('Brand: Apple');
-    expect(result).toContain('Product ID: 123');
+    expect(result).toContain('SKU ID: 123');
     expect(result).toContain('Description: A great tablet');
     expect(result).toContain('Attributes: Color: Silver');
   });
@@ -483,6 +578,91 @@ describe('buildProductContextString', () => {
     expect(result).toContain('SKU 42:');
   });
 
+  it('marks selected SKU as Unavailable only when AvailableQuantity is 0', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Unavailable');
+    expect(result).not.toContain('Could not determine stock');
+  });
+
+  it('marks selected SKU as Available when AvailableQuantity is greater than 0', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 99999 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Available');
+    expect(result).not.toContain('Unavailable');
+    expect(result).not.toContain('Could not determine stock');
+  });
+
+  it('reports unknown stock when AvailableQuantity is missing', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [{ commertialOffer: { Price: 1234.9 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Could not determine stock');
+    expect(result).not.toContain('Unavailable');
+  });
+
+  it('reports unknown stock when selected SKU has no sellers', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '02003801');
+    expect(result).toContain('Could not determine stock');
+    expect(result).not.toContain('Unavailable');
+  });
+
   it('does not truncate description', () => {
     const longDesc = 'A'.repeat(500);
     const product = {
@@ -522,7 +702,7 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
-    expect(result).toContain('Product ID: N/A');
+    expect(result).toContain('SKU ID: N/A');
   });
 });
 
@@ -1949,10 +2129,43 @@ describe('real-world VTEX page data', () => {
     expect(normalized.items).toHaveLength(1);
     expect(normalized.items[0].itemId).toBe('000326125867');
     expect(normalized.items[0].sellers[0].commertialOffer.Price).toBe(2296.8);
+    expect(
+      normalized.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(1);
 
     const ctx = buildProductContextString(normalized, '000326125867');
     expect(ctx).toContain('Selected SKU:');
-    expect(ctx).toContain('SKU 000326125867:');
+    expect(ctx).toContain('SKU 326125867:');
     expect(ctx).toContain('Price: 2296.8');
+    expect(ctx).toContain('Available');
+  });
+
+  it('StoreFramework (Electrolux): ld+json http InStock availability', () => {
+    const ldJsonRaw = {
+      '@type': 'Product',
+      name: 'Purificador Electrolux com Compressor, Água Quente e Painel Digital Cinza (PH41X)',
+      brand: { name: 'Electrolux' },
+      description: 'Purificador de Água Cinza com Refrigeração e Água Quente',
+      sku: '02003801',
+      offers: {
+        offers: [
+          {
+            price: 1234.9,
+            availability: 'http://schema.org/InStock',
+            sku: '02003801',
+          },
+        ],
+      },
+    };
+
+    const normalized = normalizeForContext(ldJsonRaw, 'ld+json');
+    expect(
+      normalized.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(1);
+
+    const ctx = buildProductContextString(normalized, '02003801');
+    expect(ctx).toContain('Available');
+    expect(ctx).not.toContain('Unavailable');
+    expect(ctx).not.toContain('Could not determine stock');
   });
 });
