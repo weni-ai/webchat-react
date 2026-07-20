@@ -80,15 +80,16 @@ export function ShowItems({
               key={buttonText}
               variant="primary"
               disabled={disabled}
-              onClick={() =>
+              onClick={(e) => {
+                e.stopPropagation();
                 setCurrentPage({
                   view: 'product-catalog',
                   title: catalogTitle,
                   props: {
                     productGroups,
                   },
-                })
-              }
+                });
+              }}
             >
               {buttonText}
             </FSButton>
