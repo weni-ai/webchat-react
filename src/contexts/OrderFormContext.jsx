@@ -395,8 +395,7 @@ export function useOrderForm() {
       (() => Promise.reject(new Error('OrderFormProvider missing'))),
     pendingCartItems: context?.pendingCartItems ?? {},
     setPendingCartItem: context?.setPendingCartItem ?? (() => {}),
-    updatePendingCartQuantity:
-      context?.updatePendingCartQuantity ?? (() => {}),
+    updatePendingCartQuantity: context?.updatePendingCartQuantity ?? (() => {}),
     removePendingCartItem: context?.removePendingCartItem ?? (() => {}),
     clearPendingCartItems: context?.clearPendingCartItems ?? (() => {}),
     sendProductsToCart:

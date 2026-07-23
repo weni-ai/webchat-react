@@ -41,9 +41,7 @@ export function PendingQuantityControls({
   }
 
   return (
-    <section
-      className={`weni-fs-product-quantity-controls ${className}`}
-    >
+    <section className={`weni-fs-product-quantity-controls ${className}`}>
       <FSButton
         variant="tertiary"
         icon="minus"
