@@ -1704,7 +1704,10 @@ describe('getSkuIdFromRawProduct', () => {
 
   it('returns first itemId for intelligent-search source', () => {
     expect(
-      getSkuIdFromRawProduct({ items: [{ itemId: '99' }] }, 'intelligent-search'),
+      getSkuIdFromRawProduct(
+        { items: [{ itemId: '99' }] },
+        'intelligent-search',
+      ),
     ).toBe('99');
   });
 
