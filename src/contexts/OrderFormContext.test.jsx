@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 
 jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
   updateVTEXIOMinicart: jest.fn(),
@@ -27,7 +28,7 @@ jest.mock('@/utils/throttleCustomField', () => ({
 }));
 
 jest.mock('@/contexts/ChatContext', () => {
-  const React = require('react');
+  const React = jest.requireActual('react');
   const ChatContext = React.createContext(null);
   return {
     __esModule: true,
@@ -1036,6 +1037,10 @@ describe('pending cart items', () => {
         </>
       );
     }
+
+    FlushCatalogConsumer.propTypes = {
+      onGoConversation: PropTypes.func.isRequired,
+    };
 
     function Root() {
       const [chatValue, setChatValue] = useState(
