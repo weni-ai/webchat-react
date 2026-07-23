@@ -10,6 +10,7 @@ import {
   normalizeForContext,
   buildProductContextString,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -27,6 +28,7 @@ jest.mock('@/utils/vtex', () => ({
   normalizeForContext: jest.fn(),
   buildProductContextString: jest.fn(),
   getSelectedSkuId: jest.fn(),
+  getSkuIdFromRawProduct: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -155,6 +157,7 @@ describe('useConversationStartersCore', () => {
       normalizeForContext.mockReturnValue(fakeRawProduct);
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
       getSelectedSkuId.mockReturnValue('SKU-001');
+      getSkuIdFromRawProduct.mockReturnValue(null);
     });
 
     it('resolves product data and calls getStarters on a PDP page', async () => {
@@ -180,6 +183,7 @@ describe('useConversationStartersCore', () => {
 
     it('passes null selectedSkuId when no SKU source is available', async () => {
       getSelectedSkuId.mockReturnValue(null);
+      getSkuIdFromRawProduct.mockReturnValue(null);
 
       await act(async () => {
         renderHook(() => useConversationStartersCore());
@@ -188,6 +192,24 @@ describe('useConversationStartersCore', () => {
       expect(buildProductContextString).toHaveBeenCalledWith(
         fakeRawProduct,
         null,
+      );
+    });
+
+    it('falls back to raw product SKU when getSelectedSkuId returns null', async () => {
+      getSelectedSkuId.mockReturnValue(null);
+      getSkuIdFromRawProduct.mockReturnValue('000310122646');
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(getSkuIdFromRawProduct).toHaveBeenCalledWith(
+        fakeRawProduct,
+        'ld+json',
+      );
+      expect(buildProductContextString).toHaveBeenCalledWith(
+        fakeRawProduct,
+        '000310122646',
       );
     });
 
