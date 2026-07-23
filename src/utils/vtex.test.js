@@ -17,11 +17,13 @@ import {
   buildProductContextString,
   stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
+  getSelectedSkuIdFromNextData,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
   getProductIdFromDom,
   getSelectedSkuIdFromUrl,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
 } from './vtex';
 
 function mockPathname(value) {
@@ -1649,6 +1651,70 @@ describe('getSelectedSkuIdFromLdJson', () => {
     });
     expect(getSelectedSkuIdFromLdJson()).toBeNull();
   });
+
+  it('skips ProductGroup without sku and uses later Product with sku', () => {
+    injectLdJson({ '@type': 'ProductGroup', name: 'Group', brand: 'B' });
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      sku: '000310122646',
+      brand: 'Apple',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('000310122646');
+  });
+});
+
+describe('getSelectedSkuIdFromNextData', () => {
+  it('returns sku from __NEXT_DATA__ product', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: {
+            product: { name: 'P', sku: '000310122646' },
+          },
+        },
+      },
+    };
+    expect(getSelectedSkuIdFromNextData()).toBe('000310122646');
+  });
+
+  it('returns null when __NEXT_DATA__ has no sku', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: { product: { name: 'P', id: '7' } },
+        },
+      },
+    };
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+  });
+
+  it('returns null when __NEXT_DATA__ is missing', () => {
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+  });
+});
+
+describe('getSkuIdFromRawProduct', () => {
+  it('returns sku for next-data and ld+json sources', () => {
+    expect(getSkuIdFromRawProduct({ sku: '37' }, 'next-data')).toBe('37');
+    expect(getSkuIdFromRawProduct({ sku: '37' }, 'ld+json')).toBe('37');
+  });
+
+  it('returns first itemId for intelligent-search source', () => {
+    expect(
+      getSkuIdFromRawProduct(
+        { items: [{ itemId: '99' }] },
+        'intelligent-search',
+      ),
+    ).toBe('99');
+  });
+
+  it('returns null when sku is missing', () => {
+    expect(getSkuIdFromRawProduct({ id: '1' }, 'next-data')).toBeNull();
+    expect(getSkuIdFromRawProduct(null, 'ld+json')).toBeNull();
+  });
 });
 
 describe('getSelectedSkuIdFromVtexState', () => {
@@ -1774,6 +1840,19 @@ describe('getSelectedSkuId', () => {
     document.body.innerHTML = '<button data-sku="13">Buy</button>';
 
     expect(getSelectedSkuId()).toBe('12345');
+  });
+
+  it('falls back to __NEXT_DATA__ sku when ld+json has no sku', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: { product: { name: 'P', sku: '000310122646' } },
+        },
+      },
+    };
+
+    expect(getSelectedSkuId()).toBe('000310122646');
   });
 
   it('falls back to __STATE__ when ld+json has no sku', () => {

@@ -9,6 +9,7 @@ import {
   normalizeForContext,
   buildProductContextString,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -138,7 +139,9 @@ export function useConversationStartersCore() {
 
     requestStarters(result.productData);
 
-    const selectedSkuId = getSelectedSkuId();
+    const selectedSkuId =
+      getSelectedSkuId() ||
+      getSkuIdFromRawProduct(result.rawProduct, result.source);
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
