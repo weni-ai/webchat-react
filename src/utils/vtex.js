@@ -511,10 +511,9 @@ export function buildProductContextString(product, selectedSkuId) {
   const attributes = filterInternalProperties(product.properties || []);
   const productIdFromDom = getProductIdFromDom();
   const rawProductId =
-    productIdFromDom ||
     (product.productId != null && product.productId !== ''
       ? product.productId
-      : null);
+      : null) || productIdFromDom;
   const productId =
     rawProductId != null ? stripLeadingZeros(rawProductId) : 'N/A';
   const skuId =

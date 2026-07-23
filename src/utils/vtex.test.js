@@ -710,7 +710,7 @@ describe('buildProductContextString', () => {
     expect(result).toContain('SKU ID: N/A');
   });
 
-  it('prefers data-sku from DOM as Product ID over product.productId', () => {
+  it('prefers product.productId as Product ID over data-sku from DOM', () => {
     document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
     const product = {
       productName: 'TV',
@@ -720,9 +720,22 @@ describe('buildProductContextString', () => {
       items: [],
     };
     const result = buildProductContextString(product, '000310122646');
+    expect(result).toContain('Product ID: 999');
+    expect(result).toContain('SKU ID: 310122646');
+    expect(result).not.toContain('Product ID: 5413344');
+  });
+
+  it('falls back to data-sku from DOM when product.productId is missing', () => {
+    document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product, '000310122646');
     expect(result).toContain('Product ID: 5413344');
     expect(result).toContain('SKU ID: 310122646');
-    expect(result).not.toContain('Product ID: 999');
   });
 });
 
