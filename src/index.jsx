@@ -9,6 +9,29 @@ import './i18n';
 import WebChat from './standalone.jsx';
 window.WebChat = WebChat;
 
+// Local stubs so CounterControls add-to-cart / pending quantity UI is eligible in dev
+window.__RUNTIME__ = { account: 'devstore' };
+window.faststore_sdk_stores = {
+  get: (key) => {
+    if (key !== 'fs::cart') return undefined;
+    return {
+      read: () => ({ id: 'dev-order-form-id', items: [] }),
+      set: () => {},
+    };
+  },
+};
+
+const DEMO_PRODUCT = {
+  product_retailer_id: '1276545',
+  seller_id: '1',
+  name: 'Nike Air Zoom Pegasus',
+  description: 'Running shoe for everyday training',
+  price: 599.9,
+  sale_price: 499.9,
+  currency: 'BRL',
+  image: 'https://picsum.photos/seed/weni-product/200',
+};
+
 const config = {
   // socketUrl: 'wss://websocket.weni.ai',
   // channelUuid: 'your-channel-uuid-here', // Replace with your actual channel UUID
@@ -23,6 +46,7 @@ const config = {
   // TODO: Add more config options as they become available
   startFullScreen: false,
   showFullScreenButton: true,
+  addToCart: true,
 };
 
 // Custom theme (optional)
@@ -147,6 +171,107 @@ function App() {
             }}
           >
             Set New Session ID
+          </button>
+          <button
+            id="simulate-product-conversation"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'message',
+                message: {
+                  text: 'Found a product for you',
+                  interactive: {
+                    type: 'product_list',
+                    header: { text: 'Suggested product' },
+                    action: {
+                      name: 'View catalog',
+                      sections: [
+                        {
+                          title: 'Running',
+                          product_items: [DEMO_PRODUCT],
+                        },
+                      ],
+                    },
+                  },
+                },
+              });
+            }}
+          >
+            Simulate product (conversation)
+          </button>
+          <button
+            id="simulate-product-carousel"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'message',
+                message: {
+                  text: 'Check these products',
+                  interactive: {
+                    type: 'product_carousel',
+                    action: {
+                      product_items: [
+                        DEMO_PRODUCT,
+                        {
+                          ...DEMO_PRODUCT,
+                          product_retailer_id: '9876543',
+                          seller_id: '1',
+                          name: 'Brooks Ghost 16',
+                          price: 899.9,
+                          sale_price: undefined,
+                          image:
+                            'https://picsum.photos/seed/weni-product-2/200',
+                        },
+                      ],
+                    },
+                  },
+                },
+              });
+            }}
+          >
+            Simulate product carousel
+          </button>
+          <button
+            id="simulate-product-catalog"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'message',
+                message: {
+                  text: 'Browse the catalog',
+                  interactive: {
+                    type: 'product_list',
+                    header: { text: 'Catalog' },
+                    action: {
+                      name: 'View catalog',
+                      sections: [
+                        {
+                          title: 'Running',
+                          product_items: [
+                            DEMO_PRODUCT,
+                            {
+                              ...DEMO_PRODUCT,
+                              product_retailer_id: '9876543',
+                              seller_id: '1',
+                              name: 'Brooks Ghost 16',
+                              price: 899.9,
+                              sale_price: undefined,
+                              image:
+                                'https://picsum.photos/seed/weni-product-2/200',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              });
+            }}
+          >
+            Simulate product catalog
           </button>
         </section>
       </div>

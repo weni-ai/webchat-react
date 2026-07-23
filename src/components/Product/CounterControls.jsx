@@ -3,10 +3,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
+import { PendingQuantityControls } from './PendingQuantityControls';
 import { useOrderForm } from '@/contexts/OrderFormContext';
-import { getVtexAccount, isFastStoreHost } from '@/utils/vtex';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
-import { createThrottledCustomFieldSetter } from '@/utils/throttleCustomField';
+import { isFastStoreHost } from '@/utils/vtex';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useTranslation } from 'react-i18next';
 
@@ -32,33 +31,18 @@ export function CounterControls({
   uuid,
   sellerId: sellerIdProp,
 }) {
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
-  const [justAdded, setJustAdded] = useState(false);
   const [wasCounterInteracted, setWasCounterInteracted] = useState(false);
-  const [bootstrapFailed, setBootstrapFailed] = useState(false);
   const timeoutRef = useRef(null);
   const {
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
-    trySyncHostCart,
-    bootstrapFastStoreOrderForm,
+    pendingCartItems,
+    setPendingCartItem,
   } = useOrderForm();
   const isFastStore = useMemo(() => isFastStoreHost(), []);
-  const {
-    addProductToCart,
-    config,
-    addConversationStatus,
-    setCustomField,
-    isInsideVTEXStore,
-    sendUtm,
-  } = useChatContext();
+  const { config, isInsideVTEXStore } = useChatContext();
   const { t } = useTranslation();
-
-  const setOrderFormCustomFieldThrottled = useMemo(
-    () => createThrottledCustomFieldSetter(setCustomField, 10_000),
-    [setCustomField],
-  );
 
   useEffect(() => {
     requestOrderForm();
@@ -83,16 +67,6 @@ export function CounterControls({
   }
 
   useEffect(() => {
-    if (!justAdded) {
-      return undefined;
-    }
-    const id = setTimeout(() => {
-      setJustAdded(false);
-    }, 2000);
-    return () => clearTimeout(id);
-  }, [justAdded]);
-
-  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -115,6 +89,16 @@ export function CounterControls({
     [uuid, sellerIdProp],
   );
 
+  const pendingKey = useMemo(() => {
+    if (uuid) return uuid;
+    if (parsed?.skuId && parsed?.sellerId) {
+      return `${parsed.skuId}#${parsed.sellerId}`;
+    }
+    return null;
+  }, [uuid, parsed]);
+
+  const pendingItem = pendingKey ? pendingCartItems[pendingKey] : null;
+
   const isAbleToAddProduct = useMemo(() => {
     return !!(
       isInsideVTEXStore &&
@@ -124,69 +108,44 @@ export function CounterControls({
     );
   }, [isInsideVTEXStore, orderFormId, parsed, isFastStore]);
 
-  async function handleAddProductToOrderForm() {
-    setJustAdded(false);
-    setIsAddingProduct(true);
+  function handleStageProduct(e) {
+    e.stopPropagation();
+    if (!pendingKey || !parsed) return;
 
-    try {
-      let effectiveOrderFormId = orderFormId;
-
-      if (!effectiveOrderFormId && isFastStore) {
-        try {
-          effectiveOrderFormId = await bootstrapFastStoreOrderForm({
-            skuId: parsed.skuId,
-            sellerId: parsed.sellerId,
-          });
-        } catch {
-          setBootstrapFailed(true);
-          return;
-        }
-      }
-
-      setOrderFormCustomFieldThrottled('orderform', effectiveOrderFormId);
-
-      await addProductToCart({
-        VTEXAccountName: getVtexAccount(),
-        orderFormId: effectiveOrderFormId,
-        seller: parsed.sellerId,
-        id: parsed.skuId,
-      });
-
-      void sendUtm(UTM_SOURCES.CART);
-
-      setJustAdded(true);
-
-      addConversationStatus(
-        t('cart.product_added_to_cart', {
-          productName: productName ?? '',
-        }),
-        'success',
-      );
-
-      void trySyncHostCart();
-    } finally {
-      setIsAddingProduct(false);
-    }
+    setPendingCartItem({
+      key: pendingKey,
+      skuId: parsed.skuId,
+      sellerId: parsed.sellerId,
+      quantity: 1,
+      productName,
+    });
   }
 
   if (
     config.addToCart &&
     isAbleToAddProduct &&
-    !bootstrapFailed &&
     (isLoadingOrderForm || orderFormId || isFastStore)
   ) {
+    if (pendingItem) {
+      return (
+        <PendingQuantityControls
+          pendingKey={pendingKey}
+          quantity={pendingItem.quantity}
+          size={size}
+          className={className}
+        />
+      );
+    }
+
     return (
       <FSButton
-        isLoading={isLoadingOrderForm || isAddingProduct}
-        variant={isAddingProduct || justAdded ? 'tertiary' : 'secondary'}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleAddProductToOrderForm();
-        }}
-        icon={justAdded ? 'check_small' : 'shopping_cart'}
+        isLoading={isLoadingOrderForm}
+        variant="secondary"
+        onClick={handleStageProduct}
+        icon="shopping_cart"
         className={className}
       >
-        {justAdded ? t('cart.added') : t('cart.add')}
+        {t('cart.add')}
       </FSButton>
     );
   }

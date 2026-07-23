@@ -84,7 +84,6 @@ jest.mock('../common/FSButton', () => ({
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { useChatContext } from '@/contexts/ChatContext';
 import { isFastStoreHost } from '@/utils/vtex';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -97,6 +96,12 @@ function buildOrderForm(overrides = {}) {
     requestOrderForm: jest.fn(),
     trySyncHostCart: jest.fn(),
     bootstrapFastStoreOrderForm: jest.fn(() => Promise.resolve('bootstrapped')),
+    pendingCartItems: {},
+    setPendingCartItem: jest.fn(),
+    updatePendingCartQuantity: jest.fn(),
+    removePendingCartItem: jest.fn(),
+    clearPendingCartItems: jest.fn(),
+    sendProductsToCart: jest.fn(() => Promise.resolve()),
     ...overrides,
   };
 }
@@ -361,31 +366,28 @@ describe('CounterControls — uuid parsing and add-to-cart eligibility', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Add-to-cart mode — FSButton rendering and interactions
+// Add-to-cart mode — FSButton stages pending quantity
 // ---------------------------------------------------------------------------
 
 describe('CounterControls — add-to-cart FSButton', () => {
-  let addProductToCart;
-  let addConversationStatus;
-  let trySyncHostCart;
-  let sendUtm;
+  let setPendingCartItem;
+  let updatePendingCartQuantity;
 
   beforeEach(() => {
-    addProductToCart = jest.fn(() => Promise.resolve());
-    addConversationStatus = jest.fn();
-    trySyncHostCart = jest.fn(() => Promise.resolve());
-    sendUtm = jest.fn();
+    setPendingCartItem = jest.fn();
+    updatePendingCartQuantity = jest.fn();
 
     useOrderForm.mockReturnValue(
-      buildOrderForm({ orderFormId: 'order-123', trySyncHostCart }),
+      buildOrderForm({
+        orderFormId: 'order-123',
+        setPendingCartItem,
+        updatePendingCartQuantity,
+      }),
     );
     useChatContext.mockReturnValue(
       buildChatContext({
         config: { addToCart: true },
         isInsideVTEXStore: true,
-        addProductToCart,
-        addConversationStatus,
-        sendUtm,
       }),
     );
   });
@@ -405,7 +407,12 @@ describe('CounterControls — add-to-cart FSButton', () => {
 
   it('shows loading spinner while the order form is loading', () => {
     useOrderForm.mockReturnValue(
-      buildOrderForm({ orderFormId: 'order-123', isLoadingOrderForm: true }),
+      buildOrderForm({
+        orderFormId: 'order-123',
+        isLoadingOrderForm: true,
+        setPendingCartItem,
+        updatePendingCartQuantity,
+      }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
     expect(screen.getByTestId('fs-button')).toHaveAttribute(
@@ -415,98 +422,30 @@ describe('CounterControls — add-to-cart FSButton', () => {
     expect(screen.getByTestId('fs-button')).toBeDisabled();
   });
 
-  it('calls addProductToCart with the correct arguments on click', async () => {
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(addProductToCart).toHaveBeenCalledWith({
-      VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
-      seller: 'seller1',
-      id: 'sku1',
-    });
-    expect(sendUtm).toHaveBeenCalledWith(UTM_SOURCES.CART);
-  });
-
-  it('shows "Added" label and check_small icon after a successful add', async () => {
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(screen.getByTestId('fs-button')).toHaveTextContent('Added');
-    expect(screen.getByTestId('fs-button')).toHaveAttribute(
-      'data-icon',
-      'check_small',
-    );
-  });
-
-  it('reverts to "Add" after 2s following a successful add', async () => {
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(screen.getByTestId('fs-button')).toHaveTextContent('Added');
-
-    act(() => {
-      jest.advanceTimersByTime(2000);
-    });
-
-    expect(screen.getByTestId('fs-button')).toHaveTextContent('Add');
-  });
-
-  it('calls addConversationStatus with a success message after adding', async () => {
-    renderCounter({ uuid: 'sku1#seller1', productName: 'Cool Shoe' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(addConversationStatus).toHaveBeenCalledWith(
-      expect.stringContaining('added to cart'),
-      'success',
-    );
-  });
-
-  it('calls trySyncHostCart after a successful add', async () => {
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(trySyncHostCart).toHaveBeenCalledTimes(1);
-  });
-
-  it('is disabled while addProductToCart is in flight', async () => {
-    let resolveAdd;
-    addProductToCart.mockReturnValue(
-      new Promise((resolve) => {
-        resolveAdd = resolve;
+  it('stages the product in the pending store on click without calling addProductToCart', () => {
+    const addProductToCart = jest.fn();
+    useChatContext.mockReturnValue(
+      buildChatContext({
+        config: { addToCart: true },
+        isInsideVTEXStore: true,
+        addProductToCart,
       }),
     );
-    renderCounter({ uuid: 'sku1#seller1' });
+    renderCounter({ uuid: 'sku1#seller1', productName: 'Cool Shoe' });
 
-    act(() => {
-      fireEvent.click(screen.getByTestId('fs-button'));
+    fireEvent.click(screen.getByTestId('fs-button'));
+
+    expect(setPendingCartItem).toHaveBeenCalledWith({
+      key: 'sku1#seller1',
+      skuId: 'sku1',
+      sellerId: 'seller1',
+      quantity: 1,
+      productName: 'Cool Shoe',
     });
-
-    expect(screen.getByTestId('fs-button')).toBeDisabled();
-
-    await act(async () => {
-      resolveAdd();
-    });
-
-    expect(screen.getByTestId('fs-button')).not.toBeDisabled();
+    expect(addProductToCart).not.toHaveBeenCalled();
   });
 
-  it('stops event propagation on FSButton click', async () => {
+  it('stops event propagation on FSButton click', () => {
     const parentClick = jest.fn();
     render(
       <div onClick={parentClick}>
@@ -518,16 +457,19 @@ describe('CounterControls — add-to-cart FSButton', () => {
       </div>,
     );
 
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
+    fireEvent.click(screen.getByTestId('fs-button'));
 
     expect(parentClick).not.toHaveBeenCalled();
   });
 
   it('renders the FSButton in a loading state when isLoadingOrderForm is true', () => {
     useOrderForm.mockReturnValue(
-      buildOrderForm({ orderFormId: 'order-123', isLoadingOrderForm: true }),
+      buildOrderForm({
+        orderFormId: 'order-123',
+        isLoadingOrderForm: true,
+        setPendingCartItem,
+        updatePendingCartQuantity,
+      }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
     const btn = screen.getByTestId('fs-button');
@@ -538,35 +480,119 @@ describe('CounterControls — add-to-cart FSButton', () => {
 });
 
 // ---------------------------------------------------------------------------
-// FastStore add-to-cart — bootstrap flow
+// Add-to-cart mode — pending quantity counter
 // ---------------------------------------------------------------------------
 
-describe('CounterControls — FastStore add-to-cart', () => {
-  let addProductToCart;
-  let addConversationStatus;
-  let trySyncHostCart;
-  let bootstrapFastStoreOrderForm;
+describe('CounterControls — pending quantity counter', () => {
+  let updatePendingCartQuantity;
 
   beforeEach(() => {
-    isFastStoreHost.mockReturnValue(true);
-    addProductToCart = jest.fn(() => Promise.resolve());
-    addConversationStatus = jest.fn();
-    trySyncHostCart = jest.fn(() => Promise.resolve());
-    bootstrapFastStoreOrderForm = jest.fn(() => Promise.resolve('boot-123'));
+    updatePendingCartQuantity = jest.fn();
 
     useOrderForm.mockReturnValue(
       buildOrderForm({
-        orderFormId: null,
-        trySyncHostCart,
-        bootstrapFastStoreOrderForm,
+        orderFormId: 'order-123',
+        pendingCartItems: {
+          'sku1#seller1': {
+            skuId: 'sku1',
+            sellerId: 'seller1',
+            quantity: 2,
+            productName: 'Cool Shoe',
+            origin: 'conversation',
+          },
+        },
+        updatePendingCartQuantity,
       }),
     );
     useChatContext.mockReturnValue(
       buildChatContext({
         config: { addToCart: true },
         isInsideVTEXStore: true,
-        addProductToCart,
-        addConversationStatus,
+      }),
+    );
+  });
+
+  it('renders minus, input, and plus instead of the FSButton when pending', () => {
+    const { container } = renderCounter({ uuid: 'sku1#seller1' });
+
+    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('btn-minus')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-add')).toBeInTheDocument();
+    expect(
+      container.querySelector('.weni-product-quantity-controls__input'),
+    ).toHaveValue(2);
+  });
+
+  it('increments pending quantity via updatePendingCartQuantity', () => {
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    fireEvent.click(screen.getByTestId('btn-add'));
+
+    expect(updatePendingCartQuantity).toHaveBeenCalledWith('sku1#seller1', 3);
+  });
+
+  it('decrements pending quantity via updatePendingCartQuantity', () => {
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    fireEvent.click(screen.getByTestId('btn-minus'));
+
+    expect(updatePendingCartQuantity).toHaveBeenCalledWith('sku1#seller1', 1);
+  });
+
+  it('disables the minus button when quantity is 0', () => {
+    useOrderForm.mockReturnValue(
+      buildOrderForm({
+        orderFormId: 'order-123',
+        pendingCartItems: {
+          'sku1#seller1': {
+            skuId: 'sku1',
+            sellerId: 'seller1',
+            quantity: 0,
+            productName: 'Cool Shoe',
+            origin: 'conversation',
+          },
+        },
+        updatePendingCartQuantity,
+      }),
+    );
+    renderCounter({ uuid: 'sku1#seller1' });
+
+    expect(screen.getByTestId('btn-minus')).toBeDisabled();
+  });
+
+  it('updates pending quantity when the input changes', () => {
+    const { container } = renderCounter({ uuid: 'sku1#seller1' });
+    const input = container.querySelector(
+      '.weni-product-quantity-controls__input',
+    );
+
+    fireEvent.change(input, { target: { value: '5' } });
+
+    expect(updatePendingCartQuantity).toHaveBeenCalledWith('sku1#seller1', 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FastStore add-to-cart — stage without orderFormId
+// ---------------------------------------------------------------------------
+
+describe('CounterControls — FastStore add-to-cart', () => {
+  let setPendingCartItem;
+
+  beforeEach(() => {
+    isFastStoreHost.mockReturnValue(true);
+    setPendingCartItem = jest.fn();
+
+    useOrderForm.mockReturnValue(
+      buildOrderForm({
+        orderFormId: null,
+        setPendingCartItem,
+      }),
+    );
+    useChatContext.mockReturnValue(
+      buildChatContext({
+        config: { addToCart: true },
+        isInsideVTEXStore: true,
       }),
     );
   });
@@ -583,104 +609,27 @@ describe('CounterControls — FastStore add-to-cart', () => {
     expect(screen.getByTestId('btn-add')).toBeInTheDocument();
   });
 
-  it('calls bootstrap on click and then addProductToCart with the bootstrapped id', async () => {
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(bootstrapFastStoreOrderForm).toHaveBeenCalledWith({
-      skuId: 'sku1',
-      sellerId: 'seller1',
-    });
-    expect(addProductToCart).toHaveBeenCalledWith({
-      VTEXAccountName: 'mystore',
-      orderFormId: 'boot-123',
-      seller: 'seller1',
-      id: 'sku1',
-    });
-  });
-
-  it('calls trySyncHostCart and shows success status after a successful bootstrap + add', async () => {
-    renderCounter({ uuid: 'sku1#seller1', productName: 'Cool Shoe' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(trySyncHostCart).toHaveBeenCalledTimes(1);
-    expect(addConversationStatus).toHaveBeenCalledWith(
-      expect.stringContaining('added to cart'),
-      'success',
-    );
-  });
-
-  it('does not call addProductToCart when bootstrap fails', async () => {
-    bootstrapFastStoreOrderForm.mockRejectedValue(new Error('timeout'));
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(addProductToCart).not.toHaveBeenCalled();
-    expect(trySyncHostCart).not.toHaveBeenCalled();
-  });
-
-  it('degrades to the +/- counter when bootstrap fails', async () => {
-    bootstrapFastStoreOrderForm.mockRejectedValue(new Error('timeout'));
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
-    expect(screen.getByTestId('btn-add')).toBeInTheDocument();
-  });
-
-  it('skips bootstrap when orderFormId is already present on FastStore', async () => {
+  it('stages the product on click without bootstrapping immediately', () => {
+    const bootstrapFastStoreOrderForm = jest.fn();
     useOrderForm.mockReturnValue(
       buildOrderForm({
-        orderFormId: 'cached-id',
-        trySyncHostCart,
+        orderFormId: null,
+        setPendingCartItem,
         bootstrapFastStoreOrderForm,
       }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
 
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
+    fireEvent.click(screen.getByTestId('fs-button'));
 
-    expect(bootstrapFastStoreOrderForm).not.toHaveBeenCalled();
-    expect(addProductToCart).toHaveBeenCalledWith(
-      expect.objectContaining({ orderFormId: 'cached-id' }),
-    );
-  });
-
-  it('disables the FSButton while bootstrap is in flight', async () => {
-    let resolveBoot;
-    bootstrapFastStoreOrderForm.mockReturnValue(
-      new Promise((resolve) => {
-        resolveBoot = resolve;
+    expect(setPendingCartItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
       }),
     );
-    renderCounter({ uuid: 'sku1#seller1' });
-
-    act(() => {
-      fireEvent.click(screen.getByTestId('fs-button'));
-    });
-
-    expect(screen.getByTestId('fs-button')).toBeDisabled();
-
-    await act(async () => {
-      resolveBoot('boot-123');
-    });
-
-    expect(screen.getByTestId('fs-button')).not.toBeDisabled();
+    expect(bootstrapFastStoreOrderForm).not.toHaveBeenCalled();
   });
 });
