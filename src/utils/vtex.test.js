@@ -19,6 +19,7 @@ import {
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
+  getProductIdFromDom,
   getSelectedSkuIdFromUrl,
   getSelectedSkuId,
 } from './vtex';
@@ -417,7 +418,8 @@ describe('buildProductContextString', () => {
       ],
     };
     const result = buildProductContextString(product, '000326125867');
-    expect(result).toContain('SKU ID: 5413344');
+    expect(result).toContain('Product ID: 5413344');
+    expect(result).toContain('SKU ID: 326125867');
     expect(result).toContain('SKU 326125867:');
     expect(result).not.toContain('005413344');
     expect(result).not.toContain('000326125867');
@@ -461,7 +463,8 @@ describe('buildProductContextString', () => {
       ],
     };
     const result = buildProductContextString(product, 'SKU-00A');
-    expect(result).toContain('SKU ID: SKU-001');
+    expect(result).toContain('Product ID: SKU-001');
+    expect(result).toContain('SKU ID: SKU-00A');
     expect(result).toContain('SKU SKU-00A:');
   });
 
@@ -477,7 +480,8 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: iPad');
     expect(result).toContain('Brand: Apple');
-    expect(result).toContain('SKU ID: 123');
+    expect(result).toContain('Product ID: 123');
+    expect(result).toContain('SKU ID: N/A');
     expect(result).toContain('Description: A great tablet');
     expect(result).toContain('Attributes: Color: Silver');
   });
@@ -702,7 +706,36 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
+    expect(result).toContain('Product ID: N/A');
     expect(result).toContain('SKU ID: N/A');
+  });
+
+  it('prefers product.productId as Product ID over data-sku from DOM', () => {
+    document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '999',
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product, '000310122646');
+    expect(result).toContain('Product ID: 999');
+    expect(result).toContain('SKU ID: 310122646');
+    expect(result).not.toContain('Product ID: 5413344');
+  });
+
+  it('falls back to data-sku from DOM when product.productId is missing', () => {
+    document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product, '000310122646');
+    expect(result).toContain('Product ID: 5413344');
+    expect(result).toContain('SKU ID: 310122646');
   });
 });
 
@@ -1650,28 +1683,41 @@ describe('getSelectedSkuIdFromVtexState', () => {
   });
 });
 
-describe('getSelectedSkuIdFromDom', () => {
+describe('getProductIdFromDom', () => {
   it('returns data-sku from the first matching element', () => {
     document.body.innerHTML =
       '<button data-sku="13" data-seller="1">Buy</button>';
 
-    expect(getSelectedSkuIdFromDom()).toBe('13');
+    expect(getProductIdFromDom()).toBe('13');
   });
 
-  it('falls back to meta[property="product:sku"] when data-sku is absent', () => {
+  it('returns null when no data-sku marker exists', () => {
+    expect(getProductIdFromDom()).toBeNull();
+  });
+});
+
+describe('getSelectedSkuIdFromDom', () => {
+  it('returns null when only data-sku is present (product id, not sku)', () => {
+    document.body.innerHTML =
+      '<button data-sku="13" data-seller="1">Buy</button>';
+
+    expect(getSelectedSkuIdFromDom()).toBeNull();
+  });
+
+  it('returns meta[property="product:sku"] content', () => {
     document.body.innerHTML =
       '<meta property="product:sku" content="34" data-react-helmet="true">';
 
     expect(getSelectedSkuIdFromDom()).toBe('34');
   });
 
-  it('prefers data-sku over meta product:sku when both are present', () => {
+  it('uses meta product:sku even when data-sku is also present', () => {
     document.body.innerHTML = `
       <meta property="product:sku" content="34">
       <button data-sku="13" data-seller="1">Buy</button>
     `;
 
-    expect(getSelectedSkuIdFromDom()).toBe('13');
+    expect(getSelectedSkuIdFromDom()).toBe('34');
   });
 
   it('returns null when no DOM SKU markers exist', () => {
@@ -1745,6 +1791,12 @@ describe('getSelectedSkuId', () => {
       '<meta property="product:sku" content="34" data-react-helmet="true">';
 
     expect(getSelectedSkuId()).toBe('34');
+  });
+
+  it('does not treat data-sku as SKU ID', () => {
+    document.body.innerHTML = '<button data-sku="13">Buy</button>';
+
+    expect(getSelectedSkuId()).toBeNull();
   });
 
   it('returns null when no SKU source is available', () => {

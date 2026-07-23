@@ -328,13 +328,21 @@ export function getSelectedSkuIdFromVtexState() {
   }
 }
 
-export function getSelectedSkuIdFromDom() {
+export function getProductIdFromDom() {
   try {
     const dataSku = document
       .querySelector('[data-sku]')
       ?.getAttribute('data-sku');
     if (dataSku?.trim()) return dataSku.trim();
+  } catch {
+    return null;
+  }
 
+  return null;
+}
+
+export function getSelectedSkuIdFromDom() {
+  try {
     const metaSku = document
       .querySelector('meta[property="product:sku"]')
       ?.getAttribute('content');
@@ -501,15 +509,23 @@ export function buildProductContextString(product, selectedSkuId) {
 
   const description = product.description || '';
   const attributes = filterInternalProperties(product.properties || []);
+  const productIdFromDom = getProductIdFromDom();
+  const rawProductId =
+    (product.productId != null && product.productId !== ''
+      ? product.productId
+      : null) || productIdFromDom;
   const productId =
-    product.productId != null && product.productId !== ''
-      ? stripLeadingZeros(product.productId)
+    rawProductId != null ? stripLeadingZeros(rawProductId) : 'N/A';
+  const skuId =
+    selectedSkuId != null && selectedSkuId !== ''
+      ? stripLeadingZeros(selectedSkuId)
       : 'N/A';
 
   const lines = [
     `Product: ${product.productName || 'N/A'}`,
     `Brand: ${product.brand || 'N/A'}`,
-    `SKU ID: ${productId}`,
+    `Product ID: ${productId}`,
+    `SKU ID: ${skuId}`,
   ];
 
   if (description) {
