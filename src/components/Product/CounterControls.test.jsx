@@ -338,13 +338,17 @@ describe('CounterControls — uuid parsing and add-to-cart eligibility', () => {
 
   it('renders the counter section when uuid is plain and sellerId prop is absent', () => {
     renderCounter({ uuid: 'sku1' });
-    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('btn-add')).toBeInTheDocument();
   });
 
   it('renders the counter section when uuid is null', () => {
     renderCounter({ uuid: null });
-    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders the counter section when isInsideVTEXStore is false', () => {
@@ -355,13 +359,17 @@ describe('CounterControls — uuid parsing and add-to-cart eligibility', () => {
       }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
   });
 
   it('renders the counter section when orderFormId is absent', () => {
     useOrderForm.mockReturnValue(buildOrderForm({ orderFormId: null }));
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -394,7 +402,9 @@ describe('CounterControls — add-to-cart FSButton', () => {
 
   it('renders "Add" label by default', () => {
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button-shopping_cart')).toHaveTextContent('Add');
+    expect(screen.getByTestId('fs-button-shopping_cart')).toHaveTextContent(
+      'Add',
+    );
   });
 
   it('renders the shopping_cart icon by default', () => {
@@ -607,7 +617,9 @@ describe('CounterControls — FastStore add-to-cart', () => {
   it('still falls back to counter when not on FastStore and orderFormId is absent', () => {
     isFastStoreHost.mockReturnValue(false);
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('btn-add')).toBeInTheDocument();
   });
 
