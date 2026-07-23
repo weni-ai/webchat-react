@@ -1093,6 +1093,9 @@ describe('pending cart items', () => {
   });
 
   it('clears the pending store as soon as sendProductsToCart is called even if add fails', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const addProductToCart = jest.fn(() =>
       Promise.reject(new Error('timeout')),
     );
@@ -1122,6 +1125,7 @@ describe('pending cart items', () => {
 
     expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
     expect(addProductToCart).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 
   it('bootstraps FastStore orderFormId when sending without a cached id', async () => {

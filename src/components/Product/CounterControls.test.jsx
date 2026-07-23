@@ -49,7 +49,7 @@ jest.mock('@/components/common/FSButton', () => ({
   FSButton: ({ children, onClick, isLoading, disabled, icon, variant }) => (
     <button
       type="button"
-      data-testid="fs-button"
+      data-testid={icon ? `fs-button-${icon}` : 'fs-button'}
       data-icon={icon}
       data-variant={variant}
       data-loading={String(isLoading)}
@@ -65,7 +65,7 @@ jest.mock('../common/FSButton', () => ({
   FSButton: ({ children, onClick, isLoading, disabled, icon, variant }) => (
     <button
       type="button"
-      data-testid="fs-button"
+      data-testid={icon ? `fs-button-${icon}` : 'fs-button'}
       data-icon={icon}
       data-variant={variant}
       data-loading={String(isLoading)}
@@ -328,23 +328,23 @@ describe('CounterControls — uuid parsing and add-to-cart eligibility', () => {
 
   it('renders the FSButton when uuid contains skuId#sellerId', () => {
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
+    expect(screen.getByTestId('fs-button-shopping_cart')).toBeInTheDocument();
   });
 
   it('renders the FSButton when uuid is plain skuId and sellerId prop is supplied', () => {
     renderCounter({ uuid: 'sku1', sellerId: 'seller1' });
-    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
+    expect(screen.getByTestId('fs-button-shopping_cart')).toBeInTheDocument();
   });
 
   it('renders the counter section when uuid is plain and sellerId prop is absent', () => {
     renderCounter({ uuid: 'sku1' });
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
     expect(screen.getByTestId('btn-add')).toBeInTheDocument();
   });
 
   it('renders the counter section when uuid is null', () => {
     renderCounter({ uuid: null });
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
   });
 
   it('renders the counter section when isInsideVTEXStore is false', () => {
@@ -355,13 +355,13 @@ describe('CounterControls — uuid parsing and add-to-cart eligibility', () => {
       }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
   });
 
   it('renders the counter section when orderFormId is absent', () => {
     useOrderForm.mockReturnValue(buildOrderForm({ orderFormId: null }));
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
   });
 });
 
@@ -394,12 +394,12 @@ describe('CounterControls — add-to-cart FSButton', () => {
 
   it('renders "Add" label by default', () => {
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button')).toHaveTextContent('Add');
+    expect(screen.getByTestId('fs-button-shopping_cart')).toHaveTextContent('Add');
   });
 
   it('renders the shopping_cart icon by default', () => {
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button')).toHaveAttribute(
+    expect(screen.getByTestId('fs-button-shopping_cart')).toHaveAttribute(
       'data-icon',
       'shopping_cart',
     );
@@ -415,11 +415,11 @@ describe('CounterControls — add-to-cart FSButton', () => {
       }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button')).toHaveAttribute(
+    expect(screen.getByTestId('fs-button-shopping_cart')).toHaveAttribute(
       'data-loading',
       'true',
     );
-    expect(screen.getByTestId('fs-button')).toBeDisabled();
+    expect(screen.getByTestId('fs-button-shopping_cart')).toBeDisabled();
   });
 
   it('stages the product in the pending store on click without calling addProductToCart', () => {
@@ -433,7 +433,7 @@ describe('CounterControls — add-to-cart FSButton', () => {
     );
     renderCounter({ uuid: 'sku1#seller1', productName: 'Cool Shoe' });
 
-    fireEvent.click(screen.getByTestId('fs-button'));
+    fireEvent.click(screen.getByTestId('fs-button-shopping_cart'));
 
     expect(setPendingCartItem).toHaveBeenCalledWith({
       key: 'sku1#seller1',
@@ -457,7 +457,7 @@ describe('CounterControls — add-to-cart FSButton', () => {
       </div>,
     );
 
-    fireEvent.click(screen.getByTestId('fs-button'));
+    fireEvent.click(screen.getByTestId('fs-button-shopping_cart'));
 
     expect(parentClick).not.toHaveBeenCalled();
   });
@@ -472,7 +472,7 @@ describe('CounterControls — add-to-cart FSButton', () => {
       }),
     );
     renderCounter({ uuid: 'sku1#seller1' });
-    const btn = screen.getByTestId('fs-button');
+    const btn = screen.getByTestId('fs-button-shopping_cart');
     expect(btn).toBeInTheDocument();
     expect(btn).toHaveAttribute('data-loading', 'true');
     expect(btn).toBeDisabled();
@@ -512,12 +512,14 @@ describe('CounterControls — pending quantity counter', () => {
     );
   });
 
-  it('renders minus, input, and plus instead of the FSButton when pending', () => {
+  it('renders minus, input, and plus instead of the Add button when pending', () => {
     const { container } = renderCounter({ uuid: 'sku1#seller1' });
 
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
-    expect(screen.getByTestId('btn-minus')).toBeInTheDocument();
-    expect(screen.getByTestId('btn-add')).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('fs-button-shopping_cart'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('fs-button-minus')).toBeInTheDocument();
+    expect(screen.getByTestId('fs-button-add')).toBeInTheDocument();
     expect(
       container.querySelector('.weni-product-quantity-controls__input'),
     ).toHaveValue(2);
@@ -526,7 +528,7 @@ describe('CounterControls — pending quantity counter', () => {
   it('increments pending quantity via updatePendingCartQuantity', () => {
     renderCounter({ uuid: 'sku1#seller1' });
 
-    fireEvent.click(screen.getByTestId('btn-add'));
+    fireEvent.click(screen.getByTestId('fs-button-add'));
 
     expect(updatePendingCartQuantity).toHaveBeenCalledWith('sku1#seller1', 3);
   });
@@ -534,7 +536,7 @@ describe('CounterControls — pending quantity counter', () => {
   it('decrements pending quantity via updatePendingCartQuantity', () => {
     renderCounter({ uuid: 'sku1#seller1' });
 
-    fireEvent.click(screen.getByTestId('btn-minus'));
+    fireEvent.click(screen.getByTestId('fs-button-minus'));
 
     expect(updatePendingCartQuantity).toHaveBeenCalledWith('sku1#seller1', 1);
   });
@@ -557,7 +559,7 @@ describe('CounterControls — pending quantity counter', () => {
     );
     renderCounter({ uuid: 'sku1#seller1' });
 
-    expect(screen.getByTestId('btn-minus')).toBeDisabled();
+    expect(screen.getByTestId('fs-button-minus')).toBeDisabled();
   });
 
   it('updates pending quantity when the input changes', () => {
@@ -599,13 +601,13 @@ describe('CounterControls — FastStore add-to-cart', () => {
 
   it('renders the FSButton without orderFormId when on FastStore', () => {
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.getByTestId('fs-button')).toBeInTheDocument();
+    expect(screen.getByTestId('fs-button-shopping_cart')).toBeInTheDocument();
   });
 
   it('still falls back to counter when not on FastStore and orderFormId is absent', () => {
     isFastStoreHost.mockReturnValue(false);
     renderCounter({ uuid: 'sku1#seller1' });
-    expect(screen.queryByTestId('fs-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('fs-button-shopping_cart')).not.toBeInTheDocument();
     expect(screen.getByTestId('btn-add')).toBeInTheDocument();
   });
 
@@ -620,7 +622,7 @@ describe('CounterControls — FastStore add-to-cart', () => {
     );
     renderCounter({ uuid: 'sku1#seller1' });
 
-    fireEvent.click(screen.getByTestId('fs-button'));
+    fireEvent.click(screen.getByTestId('fs-button-shopping_cart'));
 
     expect(setPendingCartItem).toHaveBeenCalledWith(
       expect.objectContaining({
