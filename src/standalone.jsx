@@ -439,6 +439,15 @@ async function setConversationStarters(questions) {
   svc.emit('starters:set-manual', questions);
 }
 
+async function clearConversationStarters() {
+  if (!widgetInstance && typeof service.emit !== 'function') {
+    return;
+  }
+
+  const svc = await serviceWhenReady();
+  svc.emit('starters:clear');
+}
+
 function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
@@ -461,6 +470,7 @@ const WebChat = {
   getContext,
   setCustomField,
   setConversationStarters,
+  clearConversationStarters,
   isOpen,
   isVisible,
   reload,

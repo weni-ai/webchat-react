@@ -448,6 +448,25 @@ describe('WebChat.setConversationStarters', () => {
   });
 });
 
+describe('WebChat.clearConversationStarters', () => {
+  it('returns early when the widget is not mounted and service.emit is unavailable', async () => {
+    delete service.emit;
+
+    await WebChat.clearConversationStarters();
+
+    expect(service.emit).toBeUndefined();
+  });
+
+  it('emits starters:clear after init', async () => {
+    setupContainer();
+    WebChat.init(baseParams);
+
+    await WebChat.clearConversationStarters();
+
+    expect(service.emit).toHaveBeenCalledWith('starters:clear');
+  });
+});
+
 describe('WebChat utility methods', () => {
   it('isVisible warns that it is not implemented', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
