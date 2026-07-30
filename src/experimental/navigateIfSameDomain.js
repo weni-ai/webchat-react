@@ -1,8 +1,17 @@
 import { marked } from 'marked';
+
+import { MESSAGE_STATUS } from '@/utils/constants';
+
 import { isExperimentalEnabled } from './index';
 
 export function navigateIfSameDomain(message, enabledByConfig = false) {
   if (!isExperimentalEnabled('navigateIfSameDomain', enabledByConfig)) {
+    return;
+  }
+
+  // Streamed messages arrive in chunks, so a partial URL can already match the
+  // host and would navigate to a truncated path. Only the finalized text is safe.
+  if (message.status === MESSAGE_STATUS.STREAMING) {
     return;
   }
 

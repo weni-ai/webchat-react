@@ -76,14 +76,24 @@ class WeniWebchatService {
 
   sendAttachment(_file) {}
 
+  /**
+   * Mirrors @weni/webchat-service: after MessageProcessor, emits MESSAGE_RECEIVED
+   * with a normalized Message object ({ id, type, text, direction, status, ... }),
+   * not a bare string.
+   */
   simulateMessageReceived(payload) {
-    const text = payload?.message?.text ?? '';
-    this.state.messages.push({
-      direction: 'incoming',
-      message: { text },
+    const text = payload?.message?.text ?? payload?.text ?? '';
+    const message = {
+      id: payload?.id || payload?.message?.messageId || `sim_${Date.now()}`,
+      type: 'text',
+      text,
       timestamp: Date.now(),
-    });
-    this.emit('message:received', text);
+      direction: 'incoming',
+      status: 'delivered',
+      persisted: true,
+    };
+    this.state.messages.push(message);
+    this.emit('message:received', message);
     this.emit('state:changed', this.getState());
   }
 
@@ -127,5 +137,41 @@ class WeniWebchatService {
     return {};
   }
 }
+
+// Mirrors the real package, which exposes the constants both as static
+// properties on the class and as named module exports.
+WeniWebchatService.CONNECTION_STATUS = {
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  DISCONNECTED: 'disconnected',
+  RECONNECTING: 'reconnecting',
+  ERROR: 'error',
+};
+
+WeniWebchatService.MESSAGE_TYPES = {
+  TEXT: 'text',
+  IMAGE: 'image',
+  VIDEO: 'video',
+  AUDIO: 'audio',
+  FILE: 'file',
+  LOCATION: 'location',
+  INTERACTIVE: 'interactive',
+  CONVERSATION_STATUS: 'conversation_status',
+  TYPING: 'typing',
+};
+
+WeniWebchatService.MESSAGE_DIRECTIONS = {
+  INCOMING: 'incoming',
+  OUTGOING: 'outgoing',
+};
+
+WeniWebchatService.MESSAGE_STATUS = {
+  PENDING: 'pending',
+  SENT: 'sent',
+  DELIVERED: 'delivered',
+  READ: 'read',
+  STREAMING: 'streaming',
+  ERROR: 'error',
+};
 
 module.exports = WeniWebchatService;
