@@ -591,7 +591,9 @@ describe('ChatContext — message:received', () => {
     });
 
     expect(ctx.unreadCount).toBe(1);
-    expect(ctx.tooltipMessage).toBe('new message');
+    expect(ctx.tooltipMessage).toEqual(
+      expect.objectContaining({ text: 'new message' }),
+    );
   });
 
   it('does not increment unreadCount when chat is open', async () => {
@@ -630,7 +632,42 @@ describe('ChatContext — message:received', () => {
     });
 
     expect(navigateIfSameDomain).toHaveBeenCalledWith(
-      'https://example.test/page',
+      expect.objectContaining({ text: 'https://example.test/page' }),
+      true,
+    );
+  });
+
+  it('calls navigateIfSameDomain when a streamed message is finalized with text', async () => {
+    // Real service: first delta emits message:received with text:'' (streaming);
+    // later deltas / stream_end emit message:updated with the full text.
+    // Navigation must run on the finalized text, not only on the empty receive.
+    await renderWithContext({ navigateIfSameDomain: true });
+
+    const checkoutUrl =
+      'https://example.test/checkout/?orderFormId=6f09bf60f8b346cdb3d31ed4f5e1014f&sc=1';
+    const fullText = `Você pode concluir por aqui:\n${checkoutUrl}`;
+
+    await act(async () => {
+      ctx.service.emit('message:received', {
+        id: 'stream-1',
+        type: 'text',
+        text: '',
+        status: 'streaming',
+        direction: 'incoming',
+      });
+    });
+
+    navigateIfSameDomain.mockClear();
+
+    await act(async () => {
+      ctx.service.emit('message:updated', 'stream-1', {
+        text: fullText,
+        status: 'delivered',
+      });
+    });
+
+    expect(navigateIfSameDomain).toHaveBeenCalledWith(
+      expect.objectContaining({ text: fullText }),
       true,
     );
   });
@@ -784,7 +821,9 @@ describe('ChatContext — UI helpers', () => {
         message: { text: 'tooltip' },
       });
     });
-    expect(ctx.tooltipMessage).toBe('tooltip');
+    expect(ctx.tooltipMessage).toEqual(
+      expect.objectContaining({ text: 'tooltip' }),
+    );
 
     await act(async () => {
       ctx.clearTooltipMessage();
