@@ -83,7 +83,9 @@ export function Badge({ count, variant = 'primary', className, isVisible }) {
       ]
         .filter(Boolean)
         .join(' ')}
-    />
+    >
+      <span className="weni-badge__count">{count}</span>
+    </span>
   );
 }
 
