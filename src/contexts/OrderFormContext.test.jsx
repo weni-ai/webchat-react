@@ -910,9 +910,13 @@ describe('pending cart items', () => {
     expect(addProductToCart).toHaveBeenCalledWith({
       VTEXAccountName: 'mystore',
       orderFormId: 'order-123',
-      seller: 'seller1',
-      id: 'sku1',
-      quantity: 3,
+      items: [
+        {
+          id: 'sku1',
+          seller: 'seller1',
+          quantity: 3,
+        },
+      ],
     });
     expect(sendUtm).toHaveBeenCalledWith(UTM_SOURCES.CART);
     expect(addConversationStatus).toHaveBeenCalledWith(
@@ -920,6 +924,60 @@ describe('pending cart items', () => {
       'success',
     );
     expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
+
+    jest.useRealTimers();
+  });
+
+  it('sends multiple pending items in a single addProductToCart call', async () => {
+    jest.useFakeTimers();
+    const addProductToCart = jest.fn(() => Promise.resolve());
+    const addConversationStatus = jest.fn();
+    const chat = buildChatValue({
+      addProductToCart,
+      addConversationStatus,
+    });
+
+    getReliableOrderFormId.mockReturnValue('order-123');
+    const { result } = renderWithChat(chat);
+
+    act(() => {
+      result.current.requestOrderForm();
+    });
+
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 2,
+        productName: 'Banana',
+      });
+      result.current.setPendingCartItem({
+        key: 'sku2#seller1',
+        skuId: 'sku2',
+        sellerId: 'seller1',
+        quantity: 1,
+        productName: 'Apple',
+      });
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
+    });
+
+    expect(addProductToCart).toHaveBeenCalledTimes(1);
+    expect(addProductToCart).toHaveBeenCalledWith({
+      VTEXAccountName: 'mystore',
+      orderFormId: 'order-123',
+      items: [
+        { id: 'sku1', seller: 'seller1', quantity: 2 },
+        { id: 'sku2', seller: 'seller1', quantity: 1 },
+      ],
+    });
+    expect(addConversationStatus).toHaveBeenCalledWith(
+      expect.stringMatching(/3.*added to cart|items were added/i),
+      'success',
+    );
 
     jest.useRealTimers();
   });
@@ -1081,9 +1139,13 @@ describe('pending cart items', () => {
       expect(addProductToCart).toHaveBeenCalledWith({
         VTEXAccountName: 'mystore',
         orderFormId: 'order-123',
-        seller: 'seller1',
-        id: 'sku1',
-        quantity: 2,
+        items: [
+          {
+            id: 'sku1',
+            seller: 'seller1',
+            quantity: 2,
+          },
+        ],
       });
     });
 
@@ -1157,7 +1219,13 @@ describe('pending cart items', () => {
     expect(addProductToCart).toHaveBeenCalledWith(
       expect.objectContaining({
         orderFormId: 'boot-123',
-        quantity: 1,
+        items: [
+          expect.objectContaining({
+            id: 'sku1',
+            seller: 'seller1',
+            quantity: 1,
+          }),
+        ],
       }),
     );
 

@@ -272,12 +272,14 @@ async function send(message, options = {}) {
 }
 
 /**
- * Add product to cart
+ * Add product(s) to cart
  * @param {Object} props - Product properties
  * @param {string} props.VTEXAccountName - VTEX account name
  * @param {string} props.orderFormId - Order form ID
- * @param {string} props.seller - Seller ID
- * @param {string} props.id - Product ID
+ * @param {Array<{ id: string, seller: string, quantity?: number }>} [props.items] - Items to add
+ * @param {string} [props.seller] - Seller ID (legacy single-item API)
+ * @param {string} [props.id] - Product ID (legacy single-item API)
+ * @param {number} [props.quantity] - Quantity (legacy single-item API)
  * @returns {Promise<void>}
  */
 async function addProductToCart(props) {

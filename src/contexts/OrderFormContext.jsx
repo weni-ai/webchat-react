@@ -193,6 +193,7 @@ export function OrderFormProvider({ children }) {
         toProcess.forEach(({ key }) => {
           delete next[key];
         });
+        pendingCartItemsRef.current = next;
         return next;
       });
 
@@ -200,63 +201,60 @@ export function OrderFormProvider({ children }) {
       if (!positives.length) return;
 
       const isFastStore = isFastStoreHost();
-      const addedItems = [];
 
-      for (const { item } of positives) {
-        try {
-          let effectiveOrderFormId = orderFormIdRef.current;
+      try {
+        let effectiveOrderFormId = orderFormIdRef.current;
 
-          if (!effectiveOrderFormId && isFastStore) {
-            effectiveOrderFormId = await bootstrapFastStoreOrderForm({
-              skuId: item.skuId,
-              sellerId: item.sellerId,
-            });
-          }
-
-          if (!effectiveOrderFormId) {
-            continue;
-          }
-
-          setOrderFormCustomFieldThrottled('orderform', effectiveOrderFormId);
-
-          await addProductToCart({
-            VTEXAccountName: getVtexAccount(),
-            orderFormId: effectiveOrderFormId,
-            seller: item.sellerId,
-            id: item.skuId,
-            quantity: item.quantity,
+        if (!effectiveOrderFormId && isFastStore) {
+          const first = positives[0].item;
+          effectiveOrderFormId = await bootstrapFastStoreOrderForm({
+            skuId: first.skuId,
+            sellerId: first.sellerId,
           });
-
-          void chat?.sendUtm?.(UTM_SOURCES.CART);
-
-          addedItems.push(item);
-        } catch (error) {
-          console.error('Failed to add pending product to cart', error);
         }
-      }
 
-      if (!addedItems.length) return;
+        if (!effectiveOrderFormId) {
+          return;
+        }
 
-      const totalQuantity = addedItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0,
-      );
+        setOrderFormCustomFieldThrottled('orderform', effectiveOrderFormId);
 
-      if (totalQuantity === 1 && addedItems.length === 1) {
-        chat?.addConversationStatus?.(
-          t('cart.product_added_to_cart', {
-            productName: addedItems[0].productName ?? '',
-          }),
-          'success',
+        await addProductToCart({
+          VTEXAccountName: getVtexAccount(),
+          orderFormId: effectiveOrderFormId,
+          items: positives.map(({ item }) => ({
+            id: item.skuId,
+            seller: item.sellerId,
+            quantity: item.quantity,
+          })),
+        });
+
+        void chat?.sendUtm?.(UTM_SOURCES.CART);
+
+        const addedItems = positives.map(({ item }) => item);
+        const totalQuantity = addedItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0,
         );
-      } else if (totalQuantity > 0) {
-        chat?.addConversationStatus?.(
-          t('messages_list.items_added_to_cart', { count: totalQuantity }),
-          'success',
-        );
-      }
 
-      void trySyncHostCart();
+        if (totalQuantity === 1 && addedItems.length === 1) {
+          chat?.addConversationStatus?.(
+            t('cart.product_added_to_cart', {
+              productName: addedItems[0].productName ?? '',
+            }),
+            'success',
+          );
+        } else if (totalQuantity > 0) {
+          chat?.addConversationStatus?.(
+            t('messages_list.items_added_to_cart', { count: totalQuantity }),
+            'success',
+          );
+        }
+
+        void trySyncHostCart();
+      } catch (error) {
+        console.error('Failed to add pending product to cart', error);
+      }
     },
     [
       chat,
@@ -273,7 +271,14 @@ export function OrderFormProvider({ children }) {
       clearDebounceTimer(key);
       debounceTimersRef.current[key] = setTimeout(() => {
         delete debounceTimersRef.current[key];
-        void sendProductsToCart([key]);
+
+        const conversationKeys = Object.entries(pendingCartItemsRef.current)
+          .filter(([, item]) => item.origin === 'conversation')
+          .map(([itemKey]) => itemKey);
+
+        if (conversationKeys.length) {
+          void sendProductsToCart(conversationKeys);
+        }
       }, PENDING_CART_DEBOUNCE_MS);
     },
     [clearDebounceTimer, sendProductsToCart],
