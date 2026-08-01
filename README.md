@@ -97,7 +97,7 @@ The standalone initializer accepts:
 | `showCloseButton` | boolean | true | Show close button (disabled when `embedded` is true). |
 | `showFullScreenButton` | boolean | false | Show fullscreen toggle (disabled when `embedded` is true). |
 | `startFullScreen` | boolean | false | Start opened and fullscreen (forced true when `embedded` is true). |
-| `displayUnreadCount` | boolean | false | Show the unread message count badge in the launcher if the chat is closed. |
+| `displayUnreadCount` | boolean | false | Show the unread message indicator (dot) in the launcher if the chat is closed. The count is in the DOM (`.weni-badge__count`) but hidden with `display: none`; override CSS to show it. |
 | `showMessageDate` | boolean \| function | false | Show date on messages; can be a formatter function. |
 | `showHeaderAvatar` | boolean | true | Show avatar in the header. |
 | `profileAvatar` | string (URL) | — | Avatar image used on the launcher/header. |

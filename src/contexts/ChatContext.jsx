@@ -373,10 +373,19 @@ export function ChatProvider({ children, config }) {
       navigateIfSameDomain(message, mergedConfig.navigateIfSameDomain);
     };
 
+    const handleMessageUpdated = (messageId, updates) => {
+      navigateIfSameDomain(
+        { id: messageId, ...updates },
+        mergedConfig.navigateIfSameDomain,
+      );
+    };
+
     service.on('message:received', handleMessageReceived);
+    service.on('message:updated', handleMessageUpdated);
 
     return () => {
       service.off('message:received', handleMessageReceived);
+      service.off('message:updated', handleMessageUpdated);
     };
   }, [isChatOpen]);
 

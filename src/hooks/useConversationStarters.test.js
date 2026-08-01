@@ -429,6 +429,32 @@ describe('useConversationStartersCore', () => {
     });
   });
 
+  describe('starters:clear event', () => {
+    it('resets state and calls service.clearStarters and setContext', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const setManual = getEventHandler('starters:set-manual');
+      act(() => {
+        setManual(['Manual Q1?', 'Manual Q2?']);
+      });
+
+      expect(result.current.questions).toHaveLength(2);
+
+      const clearHandler = getEventHandler('starters:clear');
+      expect(clearHandler).toBeDefined();
+
+      act(() => {
+        clearHandler();
+      });
+
+      expect(result.current.questions).toEqual([]);
+      expect(result.current.source).toBeNull();
+      expect(result.current.isCompactVisible).toBe(false);
+      expect(mockService.clearStarters).toHaveBeenCalled();
+      expect(mockService.setContext).toHaveBeenCalledWith('');
+    });
+  });
+
   describe('connected event with deferred product data', () => {
     it('sends deferred product data on connected event', async () => {
       useChatContext.mockReturnValue(buildContext({ isConnected: false }));
@@ -759,6 +785,10 @@ describe('useConversationStartersCore', () => {
       );
       expect(mockService.off).toHaveBeenCalledWith(
         'starters:set-manual',
+        expect.any(Function),
+      );
+      expect(mockService.off).toHaveBeenCalledWith(
+        'starters:clear',
         expect.any(Function),
       );
     });

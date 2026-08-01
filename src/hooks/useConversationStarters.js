@@ -309,10 +309,17 @@ export function useConversationStartersCore() {
       startMobileAutoHide();
     };
 
+    const handleStartersClear = () => {
+      resetStartersState();
+      service.clearStarters();
+      service.setContext('');
+    };
+
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
+    service.on('starters:clear', handleStartersClear);
 
     if (isConnected) {
       handleConnected();
@@ -323,8 +330,9 @@ export function useConversationStartersCore() {
       service.off('starters:error', handleStartersError);
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
+      service.off('starters:clear', handleStartersClear);
     };
-  }, [service, isConnected, startMobileAutoHide]);
+  }, [service, isConnected, startMobileAutoHide, resetStartersState]);
 
   useEffect(() => {
     if (!service) return;
