@@ -249,7 +249,10 @@ export function ChatProvider({ children, config }) {
           }
         }
 
-        if (mergedConfig.startFullScreen) {
+        if (isCheckoutPage()) {
+          service.setIsChatOpen(false);
+          setIsChatOpen(false);
+        } else if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
           setIsChatOpen(service.getSession()?.isChatOpen || false);
@@ -324,7 +327,13 @@ export function ChatProvider({ children, config }) {
       service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));
     }
 
-    service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
+    service.on('chat:open:changed', (isOpen) => {
+      if (isOpen && isCheckoutPage()) {
+        service.setIsChatOpen(false);
+        return;
+      }
+      setIsChatOpen(isOpen);
+    });
 
     service.clearPageHistory = clearPageHistory;
     service.clearCart = clearCart;
@@ -359,9 +368,8 @@ export function ChatProvider({ children, config }) {
 
   useEffect(() => {
     const closeChatOnCheckout = () => {
-      if (isCheckoutPage() && isChatOpenRef.current) {
-        service.setIsChatOpen(false);
-      }
+      if (!isCheckoutPage()) return;
+      service.setIsChatOpen(false);
     };
 
     closeChatOnCheckout();
