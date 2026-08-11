@@ -13,9 +13,10 @@ import { VoiceService } from '@/services/voice';
 import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount } from '@/utils/vtex';
+import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
+import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
 let serviceInstance = {
   fns: [],
@@ -355,6 +356,21 @@ export function ChatProvider({ children, config }) {
       stop();
     };
   }, [isInsideVTEXStore, service]);
+
+  useEffect(() => {
+    const closeChatOnCheckout = () => {
+      if (isCheckoutPage() && isChatOpenRef.current) {
+        service.setIsChatOpen(false);
+      }
+    };
+
+    closeChatOnCheckout();
+
+    const monitor = createNavigationMonitor(closeChatOnCheckout);
+    monitor.start();
+
+    return () => monitor.stop();
+  }, [service]);
 
   useEffect(() => {
     if (isChatOpen && mergedConfig.connectOn === 'demand') {
