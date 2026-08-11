@@ -13,6 +13,7 @@ jest.mock('@/experimental/navigateIfSameDomain', () => ({
 
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(() => null),
+  isCheckoutPage: jest.fn(() => false),
 }));
 
 jest.mock('@/utils/vtexCustomFields', () => ({
