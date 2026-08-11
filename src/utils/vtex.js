@@ -10,6 +10,10 @@ export function isVtexPdpPage() {
   return /\/[^/]+\/p\/?$/.test(window.location.pathname);
 }
 
+export function isCheckoutPage() {
+  return window.location.pathname.includes('/checkout/');
+}
+
 export function extractSlugFromUrl() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const pIndex = segments.indexOf('p');

@@ -1,5 +1,6 @@
 import {
   isVtexPdpPage,
+  isCheckoutPage,
   extractSlugFromUrl,
   extractProductPathFromUrl,
   getVtexAccount,
@@ -74,6 +75,27 @@ describe('isVtexPdpPage', () => {
   ])('returns false for non-PDP URL %s', (path, expected) => {
     mockPathname(path);
     expect(isVtexPdpPage()).toBe(expected);
+  });
+});
+
+describe('isCheckoutPage', () => {
+  it.each([
+    ['/checkout/', true],
+    ['/checkout/cart', true],
+    ['/store/checkout/order', true],
+  ])('returns true for checkout URL %s', (path, expected) => {
+    mockPathname(path);
+    expect(isCheckoutPage()).toBe(expected);
+  });
+
+  it.each([
+    ['/checkout', false],
+    ['/category/smartphones', false],
+    ['/', false],
+    ['/product/p', false],
+  ])('returns false for non-checkout URL %s', (path, expected) => {
+    mockPathname(path);
+    expect(isCheckoutPage()).toBe(expected);
   });
 });
 

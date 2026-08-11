@@ -44,7 +44,8 @@ export function Header() {
 
   const { config, isInsideVTEXStore } = useChatContext();
 
-  const showCartButton = cartTotalItems > 0 && !isInsideVTEXStore;
+  const showCartButton =
+    cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
 
   // TODO: Implement header layout
   // TODO: Add connection status indicator
