@@ -9,6 +9,7 @@ import {
   normalizeForContext,
   buildProductContextString,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -138,7 +139,9 @@ export function useConversationStartersCore() {
 
     requestStarters(result.productData);
 
-    const selectedSkuId = getSelectedSkuId();
+    const selectedSkuId =
+      getSelectedSkuId() ||
+      getSkuIdFromRawProduct(result.rawProduct, result.source);
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
@@ -306,10 +309,17 @@ export function useConversationStartersCore() {
       startMobileAutoHide();
     };
 
+    const handleStartersClear = () => {
+      resetStartersState();
+      service.clearStarters();
+      service.setContext('');
+    };
+
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
+    service.on('starters:clear', handleStartersClear);
 
     if (isConnected) {
       handleConnected();
@@ -320,8 +330,9 @@ export function useConversationStartersCore() {
       service.off('starters:error', handleStartersError);
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
+      service.off('starters:clear', handleStartersClear);
     };
-  }, [service, isConnected, startMobileAutoHide]);
+  }, [service, isConnected, startMobileAutoHide, resetStartersState]);
 
   useEffect(() => {
     if (!service) return;

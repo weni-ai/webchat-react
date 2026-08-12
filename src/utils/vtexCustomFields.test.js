@@ -10,7 +10,9 @@ import { getReliableOrderFormId } from '@/utils/VTEXIOMinicartBridge';
 import { getVtexAccount } from '@/utils/vtex';
 import {
   getSegment,
+  getSessionToken,
   getValidOrderFormId,
+  watchChangingCustomField,
   watchCustomField,
   startVtexCustomFieldsSync,
 } from './vtexCustomFields';
@@ -130,6 +132,33 @@ describe('getValidOrderFormId', () => {
   });
 });
 
+describe('getSessionToken', () => {
+  it('POSTs to /api/sessions and returns sessionToken', async () => {
+    globalThis.fetch.mockResolvedValue({
+      json: () => Promise.resolve({ sessionToken: 'token-abc' }),
+    });
+
+    const result = await getSessionToken();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    expect(result).toBe('token-abc');
+  });
+
+  it('returns null when response has no sessionToken', async () => {
+    globalThis.fetch.mockResolvedValue({
+      json: () => Promise.resolve({}),
+    });
+
+    const result = await getSessionToken();
+
+    expect(result).toBeNull();
+  });
+});
+
 describe('watchCustomField', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -223,6 +252,111 @@ describe('watchCustomField', () => {
   });
 });
 
+describe('watchChangingCustomField', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('sends the field when the resolver returns a value', async () => {
+    const setCustomField = jest.fn();
+    const resolve = jest.fn().mockResolvedValue('token-1');
+
+    watchChangingCustomField({
+      resolve,
+      field: 'session',
+      setCustomField,
+      intervalMs: 20_000,
+    });
+
+    await flushMicrotasks();
+
+    expect(setCustomField).toHaveBeenCalledWith('session', 'token-1');
+  });
+
+  it('keeps polling and only sends again when the value changes', async () => {
+    const setCustomField = jest.fn();
+    const resolve = jest
+      .fn()
+      .mockResolvedValueOnce('token-1')
+      .mockResolvedValueOnce('token-1')
+      .mockResolvedValueOnce('token-2');
+
+    watchChangingCustomField({
+      resolve,
+      field: 'session',
+      setCustomField,
+      intervalMs: 20_000,
+    });
+
+    await flushMicrotasks();
+    expect(setCustomField).toHaveBeenCalledTimes(1);
+    expect(setCustomField).toHaveBeenCalledWith('session', 'token-1');
+
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(setCustomField).toHaveBeenCalledTimes(1);
+
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(setCustomField).toHaveBeenCalledTimes(2);
+    expect(setCustomField).toHaveBeenLastCalledWith('session', 'token-2');
+    expect(resolve).toHaveBeenCalledTimes(3);
+  });
+
+  it('respects isCancelled and does not schedule further polls', async () => {
+    const setCustomField = jest.fn();
+    const resolve = jest.fn().mockResolvedValue('token-1');
+    let cancelled = false;
+
+    watchChangingCustomField({
+      resolve,
+      field: 'session',
+      setCustomField,
+      intervalMs: 20_000,
+      isCancelled: () => cancelled,
+    });
+
+    await flushMicrotasks();
+    cancelled = true;
+    await jest.advanceTimersByTimeAsync(60_000);
+
+    expect(setCustomField).toHaveBeenCalledTimes(1);
+    expect(resolve).toHaveBeenCalledTimes(1);
+  });
+});
+
+function mockFetchByUrl({ segment, sessionToken, orderFormId } = {}) {
+  globalThis.fetch.mockImplementation((url) => {
+    if (url === '/api/segments') {
+      if (segment == null) {
+        return Promise.resolve({ ok: false });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(segment),
+      });
+    }
+
+    if (url === '/api/sessions') {
+      return Promise.resolve({
+        json: () => Promise.resolve({ sessionToken: sessionToken ?? null }),
+      });
+    }
+
+    if (url === '/api/checkout/pub/orderForm') {
+      return Promise.resolve({
+        json: () => Promise.resolve({ orderFormId }),
+      });
+    }
+
+    return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+  });
+}
+
 describe('startVtexCustomFieldsSync', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -238,9 +372,9 @@ describe('startVtexCustomFieldsSync', () => {
     getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    globalThis.fetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ channel: '1' }),
+    mockFetchByUrl({
+      segment: { channel: '1' },
+      sessionToken: 'session-token-1',
     });
 
     const stop = startVtexCustomFieldsSync(setCustomField);
@@ -256,6 +390,7 @@ describe('startVtexCustomFieldsSync', () => {
       'orderform',
       VALID_ORDER_FORM_ID,
     );
+    expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-1');
 
     stop();
   });
@@ -265,7 +400,7 @@ describe('startVtexCustomFieldsSync', () => {
     getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    globalThis.fetch.mockResolvedValue({ ok: false });
+    mockFetchByUrl();
 
     const stop = startVtexCustomFieldsSync(setCustomField);
 
@@ -283,6 +418,10 @@ describe('startVtexCustomFieldsSync', () => {
       'vtex_account',
       expect.anything(),
     );
+    expect(setCustomField).not.toHaveBeenCalledWith(
+      'session',
+      expect.anything(),
+    );
 
     stop();
   });
@@ -291,9 +430,9 @@ describe('startVtexCustomFieldsSync', () => {
     getVtexAccount.mockReturnValue(undefined);
     const setCustomField = jest.fn();
 
-    globalThis.fetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ channel: '1' }),
+    mockFetchByUrl({
+      segment: { channel: '1' },
+      sessionToken: 'session-token-1',
     });
     getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
 
@@ -313,6 +452,49 @@ describe('startVtexCustomFieldsSync', () => {
       'orderform',
       VALID_ORDER_FORM_ID,
     );
+    expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-1');
+
+    stop();
+  });
+
+  it('re-sends session when the token changes on later polls', async () => {
+    getVtexAccount.mockReturnValue(undefined);
+    getReliableOrderFormId.mockReturnValue(null);
+    const setCustomField = jest.fn();
+
+    globalThis.fetch.mockImplementation((url) => {
+      if (url === '/api/segments') {
+        return Promise.resolve({ ok: false });
+      }
+
+      if (url === '/api/sessions') {
+        const callCount = globalThis.fetch.mock.calls.filter(
+          ([requestedUrl]) => requestedUrl === '/api/sessions',
+        ).length;
+        const sessionToken =
+          callCount <= 1 ? 'session-token-1' : 'session-token-2';
+
+        return Promise.resolve({
+          json: () => Promise.resolve({ sessionToken }),
+        });
+      }
+
+      if (url === '/api/checkout/pub/orderForm') {
+        return Promise.resolve({
+          json: () => Promise.resolve({ orderFormId: null }),
+        });
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+    });
+
+    const stop = startVtexCustomFieldsSync(setCustomField);
+
+    await flushMicrotasks();
+    expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-1');
+
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-2');
 
     stop();
   });
@@ -320,13 +502,13 @@ describe('startVtexCustomFieldsSync', () => {
   it('stop clears pending timeouts', async () => {
     getVtexAccount.mockReturnValue(undefined);
     const setCustomField = jest.fn();
-    globalThis.fetch.mockResolvedValue({ ok: false });
+    mockFetchByUrl();
 
     const stop = startVtexCustomFieldsSync(setCustomField);
-    await Promise.resolve();
+    await flushMicrotasks();
     stop();
 
-    await jest.advanceTimersByTimeAsync(5000);
+    await jest.advanceTimersByTimeAsync(25_000);
 
     expect(setCustomField).not.toHaveBeenCalled();
   });
