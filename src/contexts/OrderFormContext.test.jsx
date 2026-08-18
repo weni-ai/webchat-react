@@ -1231,4 +1231,234 @@ describe('pending cart items', () => {
 
     jest.useRealTimers();
   });
+
+  it('keeps catalog origin on product-details when catalog is in history', () => {
+    const chat = buildChatValue({
+      currentPage: { view: 'product-details' },
+      pageHistory: [{ view: 'product-catalog' }],
+    });
+    const { result } = renderWithChat(chat);
+
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+
+    expect(result.current.pendingCartItems['sku1#seller1'].origin).toBe(
+      'catalog',
+    );
+    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(1);
+  });
+
+  it('uses conversation origin on product-details without a catalog history', () => {
+    const chat = buildChatValue({
+      currentPage: { view: 'product-details' },
+      pageHistory: [],
+    });
+    const { result } = renderWithChat(chat);
+
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 'bad',
+      });
+    });
+
+    expect(result.current.pendingCartItems['sku1#seller1'].origin).toBe(
+      'conversation',
+    );
+    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(0);
+  });
+
+  it('ignores incomplete pending item payloads', () => {
+    const { result } = renderWithChat(buildChatValue());
+    act(() => {
+      result.current.setPendingCartItem({ skuId: 'sku1', sellerId: 'seller1' });
+      result.current.setPendingCartItem({ key: 'k', sellerId: 'seller1' });
+      result.current.setPendingCartItem({ key: 'k', skuId: 'sku1' });
+    });
+    expect(result.current.pendingCartItems).toEqual({});
+  });
+
+  it('does not update quantity for an unknown pending key', () => {
+    const { result } = renderWithChat(buildChatValue());
+    act(() => {
+      result.current.updatePendingCartQuantity('missing', 2);
+    });
+    expect(result.current.pendingCartItems).toEqual({});
+  });
+
+  it('removes a pending item and is a no-op for unknown keys', () => {
+    const { result } = renderWithChat(buildChatValue());
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+    act(() => {
+      result.current.removePendingCartItem('missing');
+      result.current.removePendingCartItem('sku1#seller1');
+    });
+    expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
+  });
+
+  it('clears all pending items', () => {
+    const { result } = renderWithChat(buildChatValue());
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+      });
+    });
+    act(() => {
+      result.current.clearPendingCartItems();
+    });
+    expect(result.current.pendingCartItems).toEqual({});
+  });
+
+  it('returns early from sendProductsToCart without addProductToCart', async () => {
+    const chat = buildChatValue({ addProductToCart: undefined });
+    const { result } = renderWithChat(chat);
+    await act(async () => {
+      await result.current.sendProductsToCart(['sku1#seller1']);
+    });
+    expect(result.current.pendingCartItems).toEqual({});
+  });
+
+  it('returns early when there are no matching pending keys', async () => {
+    const addProductToCart = jest.fn();
+    const { result } = renderWithChat(buildChatValue({ addProductToCart }));
+    await act(async () => {
+      await result.current.sendProductsToCart(['missing']);
+    });
+    expect(addProductToCart).not.toHaveBeenCalled();
+  });
+
+  it('does not add to cart without an orderFormId outside FastStore', async () => {
+    const addProductToCart = jest.fn();
+    const { result } = renderWithChat(buildChatValue({ addProductToCart }));
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
+      });
+    });
+    await act(async () => {
+      await result.current.sendProductsToCart(['sku1#seller1']);
+    });
+    expect(addProductToCart).not.toHaveBeenCalled();
+  });
+
+  it('uses the single-item success message', async () => {
+    const addProductToCart = jest.fn(() => Promise.resolve());
+    const addConversationStatus = jest.fn();
+    getReliableOrderFormId.mockReturnValue('order-123');
+    const { result } = renderWithChat(
+      buildChatValue({ addProductToCart, addConversationStatus }),
+    );
+    act(() => {
+      result.current.requestOrderForm();
+    });
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
+        productName: 'Shoe',
+      });
+    });
+    await act(async () => {
+      await result.current.sendProductsToCart(['sku1#seller1']);
+    });
+    expect(addConversationStatus).toHaveBeenCalledWith(
+      expect.stringMatching(/Shoe|added to cart/i),
+      'success',
+    );
+  });
+
+  it('does not reschedule debounce when updating a catalog-origin quantity', () => {
+    jest.useFakeTimers();
+    const addProductToCart = jest.fn(() => Promise.resolve());
+    const { result } = renderWithChat(
+      buildChatValue({
+        currentPage: { view: 'product-catalog' },
+        addProductToCart,
+      }),
+    );
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
+      });
+    });
+    act(() => {
+      result.current.updatePendingCartQuantity('sku1#seller1', 4);
+    });
+    act(() => {
+      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
+    });
+    expect(addProductToCart).not.toHaveBeenCalled();
+    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(4);
+    jest.useRealTimers();
+  });
+
+  it('does not flush when returning to conversation without catalog items', async () => {
+    const addProductToCart = jest.fn(() => Promise.resolve());
+
+    function Root() {
+      const [chatValue, setChatValue] = useState(
+        buildChatValue({
+          currentPage: { view: 'product-details' },
+          pageHistory: [],
+          addProductToCart,
+        }),
+      );
+
+      return (
+        <ChatContext.Provider value={chatValue}>
+          <OrderFormProvider>
+            <button
+              type="button"
+              onClick={() =>
+                setChatValue((prev) => ({ ...prev, currentPage: null }))
+              }
+            >
+              go conversation
+            </button>
+          </OrderFormProvider>
+        </ChatContext.Provider>
+      );
+    }
+
+    render(<Root />);
+    await userEvent.click(screen.getByText('go conversation'));
+    expect(addProductToCart).not.toHaveBeenCalled();
+  });
+});
+
+describe('useOrderForm — pending fallbacks outside provider', () => {
+  it('exposes no-op pending helpers', async () => {
+    const { result } = renderHook(() => useOrderForm());
+    expect(result.current.pendingCartItems).toEqual({});
+    expect(() => result.current.setPendingCartItem({})).not.toThrow();
+    expect(() =>
+      result.current.updatePendingCartQuantity('k', 1),
+    ).not.toThrow();
+    expect(() => result.current.removePendingCartItem('k')).not.toThrow();
+    expect(() => result.current.clearPendingCartItems()).not.toThrow();
+    await expect(result.current.sendProductsToCart()).resolves.toBeUndefined();
+  });
 });
