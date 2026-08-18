@@ -1414,6 +1414,39 @@ describe('pending cart items', () => {
     expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(4);
     jest.useRealTimers();
   });
+
+  it('does not flush when returning to conversation without catalog items', async () => {
+    const addProductToCart = jest.fn(() => Promise.resolve());
+
+    function Root() {
+      const [chatValue, setChatValue] = useState(
+        buildChatValue({
+          currentPage: { view: 'product-details' },
+          pageHistory: [],
+          addProductToCart,
+        }),
+      );
+
+      return (
+        <ChatContext.Provider value={chatValue}>
+          <OrderFormProvider>
+            <button
+              type="button"
+              onClick={() =>
+                setChatValue((prev) => ({ ...prev, currentPage: null }))
+              }
+            >
+              go conversation
+            </button>
+          </OrderFormProvider>
+        </ChatContext.Provider>
+      );
+    }
+
+    render(<Root />);
+    await userEvent.click(screen.getByText('go conversation'));
+    expect(addProductToCart).not.toHaveBeenCalled();
+  });
 });
 
 describe('useOrderForm — pending fallbacks outside provider', () => {

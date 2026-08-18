@@ -102,4 +102,17 @@ describe('Avatar', () => {
     );
     expect(screen.getByTestId('avatar-root')).toHaveAttribute('title', 'hint');
   });
+
+  it('falls back to the window name when image alt is empty', () => {
+    const { container } = render(
+      <Avatar
+        src="https://example.com/a.png"
+        alt=""
+      />,
+    );
+    expect(container.querySelector('.weni-avatar__image')).toHaveAttribute(
+      'alt',
+      window.name,
+    );
+  });
 });
