@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('@/contexts/ChatContext', () => ({

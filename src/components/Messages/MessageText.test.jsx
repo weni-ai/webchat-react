@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { render, screen } from '@testing-library/react';
 
 const mockUseStreamingBuffer = jest.fn();
