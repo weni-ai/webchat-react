@@ -369,6 +369,31 @@ describe('InputBox — media actions', () => {
     await waitFor(() => expect(startRecording).toHaveBeenCalledTimes(1));
   });
 
+  it('does not start recording when requested audio permission is denied', async () => {
+    const requestAudioPermission = jest.fn().mockResolvedValue(false);
+    const startRecording = jest.fn();
+    useChatContext.mockReturnValue(
+      buildMockContext({
+        hasAudioPermission: jest.fn().mockResolvedValue(undefined),
+        requestAudioPermission,
+        startRecording,
+        config: {
+          inputTextFieldHint: 'Type a message',
+          showCameraButton: false,
+          showVoiceRecordingButton: true,
+          showFileUploaderButton: false,
+        },
+      }),
+    );
+    render(<InputBox />);
+    await waitFor(() =>
+      expect(screen.getByLabelText('input.media_audio')).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByLabelText('input.media_audio'));
+    await waitFor(() => expect(requestAudioPermission).toHaveBeenCalled());
+    expect(startRecording).not.toHaveBeenCalled();
+  });
+
   it('does not start recording when audio permission is denied', async () => {
     const startRecording = jest.fn();
     useChatContext.mockReturnValue(
@@ -435,6 +460,31 @@ describe('InputBox — media actions', () => {
     fireEvent.click(screen.getByLabelText('input.media_camera'));
     await waitFor(() => expect(requestCameraPermission).toHaveBeenCalled());
     await waitFor(() => expect(startCameraRecording).toHaveBeenCalledTimes(1));
+  });
+
+  it('does not start the camera when requested permission is denied', async () => {
+    const requestCameraPermission = jest.fn().mockResolvedValue(false);
+    const startCameraRecording = jest.fn();
+    useChatContext.mockReturnValue(
+      buildMockContext({
+        hasCameraPermission: jest.fn().mockResolvedValue(undefined),
+        requestCameraPermission,
+        startCameraRecording,
+        config: {
+          inputTextFieldHint: 'Type a message',
+          showCameraButton: true,
+          showVoiceRecordingButton: false,
+          showFileUploaderButton: false,
+        },
+      }),
+    );
+    render(<InputBox />);
+    await waitFor(() =>
+      expect(screen.getByLabelText('input.media_camera')).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByLabelText('input.media_camera'));
+    await waitFor(() => expect(requestCameraPermission).toHaveBeenCalled());
+    expect(startCameraRecording).not.toHaveBeenCalled();
   });
 
   it('hides media actions while voice mode is active', () => {
@@ -530,5 +580,42 @@ describe('InputBox — textarea autosize', () => {
       observerCallback();
     });
     expect(textarea.style.height).toBe('32px');
+  });
+
+  it('skips margin updates when the bounding height is 0', () => {
+    let observerCallback;
+    globalThis.ResizeObserver = jest.fn(function MockObserver(callback) {
+      observerCallback = callback;
+      this.observe = jest.fn();
+      this.disconnect = jest.fn();
+    });
+    useChatContext.mockReturnValue(
+      buildMockContext({ inputDraft: 'hello' }),
+    );
+    render(<InputBox />);
+    const textarea = screen.getByRole('textbox');
+    Object.defineProperty(textarea, 'scrollHeight', {
+      configurable: true,
+      get: () => 24,
+    });
+    textarea.getBoundingClientRect = () => ({ height: 0 });
+    act(() => {
+      observerCallback();
+    });
+    expect(textarea.style.height).toBe('24px');
+    expect(textarea.style.marginBottom).toBe('');
+  });
+
+  it('ignores ResizeObserver callbacks after unmount', () => {
+    let observerCallback;
+    globalThis.ResizeObserver = jest.fn(function MockObserver(callback) {
+      observerCallback = callback;
+      this.observe = jest.fn();
+      this.disconnect = jest.fn();
+    });
+    useChatContext.mockReturnValue(buildMockContext());
+    const { unmount } = render(<InputBox />);
+    unmount();
+    expect(() => observerCallback()).not.toThrow();
   });
 });

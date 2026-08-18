@@ -7,7 +7,7 @@ import './Header.scss';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-function HeaderTitle({ title, subtitle }) {
+export function HeaderTitle({ title, subtitle }) {
   return (
     <hgroup className="weni-chat-header__title-group">
       <h1 className="weni-chat-header__title">{title}</h1>

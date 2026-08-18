@@ -198,6 +198,21 @@ describe('ShowItems', () => {
     );
   });
 
+  it('renders an empty catalog card when every section has no products', () => {
+    render(
+      <ShowItems
+        buttonText="Open"
+        productList={{
+          sections: [{ title: 'Empty', product_items: [] }],
+        }}
+      />,
+    );
+    expect(screen.getByTestId('catalog-card')).toBeInTheDocument();
+    expect(screen.getByTestId('lines')).toHaveTextContent(
+      '0 show_items.items:0',
+    );
+  });
+
   it('stops click propagation from the catalog button', () => {
     const parentClick = jest.fn();
     render(

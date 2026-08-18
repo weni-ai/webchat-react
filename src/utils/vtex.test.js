@@ -812,6 +812,18 @@ describe('buildProductContextString', () => {
     expect(result).toContain('SKU ID: N/A');
     expect(result).not.toContain('Selected SKU');
   });
+
+  it('uses N/A when a matched SKU has no itemId and no name', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items: [{ itemId: '10', sellers: [{ commertialOffer: {} }] }],
+    };
+    const result = buildProductContextString(product, '10');
+    expect(result).toContain('SKU 10: N/A | Price: N/A');
+  });
 });
 
 function injectLdJson(data) {

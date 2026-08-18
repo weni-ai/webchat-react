@@ -14,7 +14,7 @@ jest.mock('react-i18next', () => ({
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
-import { Header } from './Header';
+import { Header, HeaderTitle } from './Header';
 
 function setup({
   weniChat = {},
@@ -163,5 +163,27 @@ describe('Header', () => {
     render(<Header />);
     fireEvent.click(screen.getByLabelText('Close chat'));
     expect(helpers.toggleChat).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('HeaderTitle', () => {
+  it('renders the title without a subtitle', () => {
+    render(<HeaderTitle title="Support" />);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Support' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+  });
+
+  it('renders the subtitle when provided', () => {
+    render(
+      <HeaderTitle
+        title="Support"
+        subtitle="Online"
+      />,
+    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Online' }),
+    ).toBeInTheDocument();
   });
 });
