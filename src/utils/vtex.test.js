@@ -25,6 +25,7 @@ import {
   getSelectedSkuIdFromUrl,
   getSelectedSkuId,
   getSkuIdFromRawProduct,
+  isFastStoreHost,
 } from './vtex';
 
 function mockPathname(value) {
@@ -169,6 +170,22 @@ describe('getVtexAccount', () => {
     window.__RUNTIME__ = {};
     window.VTEX_METADATA = {};
     expect(getVtexAccount()).toBeUndefined();
+  });
+});
+
+describe('isFastStoreHost', () => {
+  afterEach(() => {
+    delete window.faststore_sdk_stores;
+  });
+
+  it('returns true when the FastStore SDK get function exists', () => {
+    window.faststore_sdk_stores = { get: () => ({}) };
+    expect(isFastStoreHost()).toBe(true);
+  });
+
+  it('returns false when get is missing', () => {
+    window.faststore_sdk_stores = {};
+    expect(isFastStoreHost()).toBe(false);
   });
 });
 
@@ -761,6 +778,40 @@ describe('buildProductContextString', () => {
     expect(result).toContain('Product ID: 5413344');
     expect(result).toContain('SKU ID: 310122646');
   });
+
+  it('treats an empty productId as missing and uses nameComplete in the SKU line', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '',
+      properties: [],
+      items: [
+        {
+          itemId: '10',
+          nameComplete: 'TV 55',
+          name: 'ignored',
+          sellers: [],
+          variations: [{ name: 'Size', values: ['55'] }],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '10');
+    expect(result).toContain('Product ID: N/A');
+    expect(result).toContain('SKU 10: TV 55 (Size: 55)');
+  });
+
+  it('uses N/A when the selected SKU id is an empty string and when itemId is missing', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items: [{ name: 'No id', sellers: [] }],
+    };
+    const result = buildProductContextString(product, '');
+    expect(result).toContain('SKU ID: N/A');
+    expect(result).not.toContain('Selected SKU');
+  });
 });
 
 function injectLdJson(data) {
@@ -824,6 +875,20 @@ describe('findProductInLdJson', () => {
   it('returns null when no tag has a Product type', () => {
     injectLdJson({ '@type': 'Organization', name: 'Acme' });
     expect(findProductInLdJson()).toBeNull();
+  });
+
+  it('returns null when @type is neither a string nor an array', () => {
+    injectLdJson({ '@type': 123, name: 'Nope' });
+    expect(findProductInLdJson()).toBeNull();
+  });
+
+  it('returns null when querySelectorAll throws', () => {
+    const origQuery = document.querySelectorAll;
+    document.querySelectorAll = () => {
+      throw new Error('forced');
+    };
+    expect(findProductInLdJson()).toBeNull();
+    document.querySelectorAll = origQuery;
   });
 });
 
@@ -948,6 +1013,18 @@ describe('extractSpecsFromNextData', () => {
       { specifications: [{ name: 'X', values: ['Y'] }] },
     ];
     expect(extractSpecsFromNextData(groups)).toEqual({ X: 'Y' });
+  });
+
+  it('uses an empty string when spec values are not an array and skips unnamed specs', () => {
+    const groups = [
+      {
+        specifications: [
+          { name: 'Color', values: 'Red' },
+          { values: ['ignored'] },
+        ],
+      },
+    ];
+    expect(extractSpecsFromNextData(groups)).toEqual({ Color: '' });
   });
 });
 
@@ -1423,6 +1500,18 @@ describe('resolveProductData', () => {
     const result = await resolveProductData('slug', 'store');
     expect(result).toBeNull();
   });
+
+  it('falls through when IS API products do not match the slug', async () => {
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          products: [{ linkText: 'other', productName: 'Other' }],
+        }),
+    });
+    const result = await resolveProductData('missing', 'store');
+    expect(result).toBeNull();
+  });
 });
 
 describe('edge cases for branch coverage', () => {
@@ -1551,6 +1640,75 @@ describe('edge cases for branch coverage', () => {
     });
     const result = extractFromLdJson('no-props');
     expect(result.productData.attributes).toEqual({});
+  });
+
+  it('extractFromLdJson skips unnamed additional properties and stringifies missing values', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Props',
+      brand: 'B',
+      additionalProperty: [{ value: 'no-name' }, { name: 'Color' }],
+    });
+    const result = extractFromLdJson('props');
+    expect(result.productData.attributes).toEqual({ Color: '' });
+  });
+
+  it('normalizeForContext ld+json uses an empty brand when brand has no name', () => {
+    const result = normalizeForContext(
+      { name: 'X', brand: {}, description: 'D' },
+      'ld+json',
+    );
+    expect(result.brand).toBe('');
+  });
+
+  it('normalizeForContext next-data skips unnamed specs and empty current offers', () => {
+    const result = normalizeForContext(
+      {
+        name: 'P',
+        brand: {},
+        id: '1',
+        sku: '1',
+        isVariantOf: {
+          skuVariants: { allVariantProducts: [{ sku: '1', name: 'A' }] },
+        },
+        customData: {
+          specificationGroups: [
+            { specifications: [{ values: ['x'] }, { name: 'Color' }] },
+          ],
+        },
+      },
+      'next-data',
+    );
+    expect(result.brand).toBe('');
+    expect(result.properties).toEqual([{ name: 'Color', values: [] }]);
+    expect(result.items[0].sellers).toEqual([]);
+  });
+
+  it('getSelectedSkuIdFromLdJson skips malformed tags and empty skus', () => {
+    injectLdJson('{{{');
+    injectLdJson({ '@type': 'Product', sku: '   ', name: 'X' });
+    injectLdJson({ '@type': 'Product', sku: 'real', name: 'Y' });
+    expect(getSelectedSkuIdFromLdJson()).toBe('real');
+  });
+
+  it('getSelectedSkuIdFromLdJson returns null when querySelectorAll throws', () => {
+    const origQuery = document.querySelectorAll;
+    document.querySelectorAll = () => {
+      throw new Error('forced');
+    };
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+    document.querySelectorAll = origQuery;
+  });
+
+  it('getSelectedSkuIdFromNextData returns null when reading __NEXT_DATA__ throws', () => {
+    Object.defineProperty(window, '__NEXT_DATA__', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
+    });
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+    delete window.__NEXT_DATA__;
   });
 
   it('extractFromNextData handles brand as string', () => {
@@ -1737,6 +1895,10 @@ describe('getSkuIdFromRawProduct', () => {
     expect(getSkuIdFromRawProduct({ id: '1' }, 'next-data')).toBeNull();
     expect(getSkuIdFromRawProduct(null, 'ld+json')).toBeNull();
   });
+
+  it('returns null for an unknown source', () => {
+    expect(getSkuIdFromRawProduct({ sku: '1' }, 'other')).toBeNull();
+  });
 });
 
 describe('getSelectedSkuIdFromVtexState', () => {
@@ -1769,6 +1931,42 @@ describe('getSelectedSkuIdFromVtexState', () => {
   it('returns null when __STATE__ is missing', () => {
     expect(getSelectedSkuIdFromVtexState()).toBeNull();
   });
+
+  it('returns null when __STATE__ is not an object', () => {
+    window.__STATE__ = 'bad';
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when ROOT_QUERY is missing', () => {
+    window.__STATE__ = {};
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when the product ref has no items', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"x"})': { id: 'Product:1' } },
+      'Product:1': { items: [] },
+    };
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when the product key has no id', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"x"})': {} },
+    };
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when accessing __STATE__ throws', () => {
+    Object.defineProperty(window, '__STATE__', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
+    });
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+    delete window.__STATE__;
+  });
 });
 
 describe('getProductIdFromDom', () => {
@@ -1781,6 +1979,16 @@ describe('getProductIdFromDom', () => {
 
   it('returns null when no data-sku marker exists', () => {
     expect(getProductIdFromDom()).toBeNull();
+  });
+
+  it('returns null when querying the DOM throws', () => {
+    const origQuery = document.querySelector;
+    document.querySelector = () => {
+      throw new Error('forced');
+    };
+    expect(getProductIdFromDom()).toBeNull();
+    expect(getSelectedSkuIdFromDom()).toBeNull();
+    document.querySelector = origQuery;
   });
 });
 
@@ -1826,6 +2034,16 @@ describe('getSelectedSkuIdFromUrl', () => {
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { ...window.location, search: '' },
+    });
+    expect(getSelectedSkuIdFromUrl()).toBeNull();
+  });
+
+  it('returns null when reading the search string throws', () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
     });
     expect(getSelectedSkuIdFromUrl()).toBeNull();
   });
