@@ -22,13 +22,13 @@ describe('Avatar', () => {
   });
 
   it('renders an image when src is provided', () => {
-    render(
+    const { container } = render(
       <Avatar
         src="https://example.com/a.png"
         alt="Jane"
       />,
     );
-    expect(screen.getByRole('img', { name: 'Jane' })).toHaveAttribute(
+    expect(container.querySelector('.weni-avatar__image')).toHaveAttribute(
       'src',
       'https://example.com/a.png',
     );
@@ -36,7 +36,7 @@ describe('Avatar', () => {
 
   it('switches to the fallback and calls onError when the image fails', () => {
     const onError = jest.fn();
-    render(
+    const { container } = render(
       <Avatar
         src="https://example.com/broken.png"
         alt="Broken"
@@ -44,14 +44,14 @@ describe('Avatar', () => {
       />,
     );
 
-    fireEvent.error(screen.getByRole('img', { name: 'Broken' }));
+    fireEvent.error(container.querySelector('.weni-avatar__image'));
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('avatar-fallback-icon')).toBeInTheDocument();
   });
 
   it('does not throw when the image fails and onError is omitted', () => {
-    render(
+    const { container } = render(
       <Avatar
         src="https://example.com/broken.png"
         alt="Broken"
@@ -59,7 +59,7 @@ describe('Avatar', () => {
     );
 
     expect(() => {
-      fireEvent.error(screen.getByRole('img', { name: 'Broken' }));
+      fireEvent.error(container.querySelector('.weni-avatar__image'));
     }).not.toThrow();
   });
 

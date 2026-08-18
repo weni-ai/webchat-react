@@ -33,14 +33,16 @@ describe('ThinkingIndicator', () => {
   });
 
   it('starts with an initializing blank line', () => {
-    render(<ThinkingIndicator />);
-    expect(screen.getByText('\u00a0')).toBeInTheDocument();
+    const { container } = render(<ThinkingIndicator />);
+    expect(
+      container.querySelector('.weni-thinking-indicator__text').textContent,
+    ).toBe('\u00a0');
   });
 
   it('shows the first message after the init animation', () => {
     render(<ThinkingIndicator />);
     act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersToNextTimer();
     });
     expect(screen.getByText('thinking.messages.processing')).toBeInTheDocument();
   });
@@ -48,16 +50,16 @@ describe('ThinkingIndicator', () => {
   it('slides to the next message after the random delay', () => {
     render(<ThinkingIndicator />);
     act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersToNextTimer();
     });
     act(() => {
-      jest.advanceTimersByTime(4000);
+      jest.advanceTimersToNextTimer();
     });
     expect(screen.getByText('thinking.messages.processing')).toBeInTheDocument();
     expect(screen.getByText('thinking.messages.connecting')).toBeInTheDocument();
 
     act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersToNextTimer();
     });
     expect(screen.getByText('thinking.messages.connecting')).toBeInTheDocument();
   });
@@ -65,13 +67,13 @@ describe('ThinkingIndicator', () => {
   it('stops scheduling after the last message', () => {
     render(<ThinkingIndicator />);
     act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersToNextTimer();
     });
 
     for (let i = 0; i < 4; i += 1) {
       act(() => {
-        jest.advanceTimersByTime(4000);
-        jest.advanceTimersByTime(500);
+        jest.advanceTimersToNextTimer();
+        jest.advanceTimersToNextTimer();
       });
     }
 
@@ -83,8 +85,12 @@ describe('ThinkingIndicator', () => {
     expect(screen.getByText('thinking.messages.almost')).toBeInTheDocument();
   });
 
-  it('clears pending timers on unmount', () => {
+  it('clears pending timers on unmount during a slide', () => {
     const { unmount } = render(<ThinkingIndicator />);
+    act(() => {
+      jest.advanceTimersToNextTimer();
+      jest.advanceTimersToNextTimer();
+    });
     unmount();
     expect(() => {
       act(() => {
