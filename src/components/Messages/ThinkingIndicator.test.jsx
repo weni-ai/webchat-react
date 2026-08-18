@@ -44,7 +44,9 @@ describe('ThinkingIndicator', () => {
     act(() => {
       jest.advanceTimersToNextTimer();
     });
-    expect(screen.getByText('thinking.messages.processing')).toBeInTheDocument();
+    expect(
+      screen.getByText('thinking.messages.processing'),
+    ).toBeInTheDocument();
   });
 
   it('slides to the next message after the random delay', () => {
@@ -55,13 +57,19 @@ describe('ThinkingIndicator', () => {
     act(() => {
       jest.advanceTimersToNextTimer();
     });
-    expect(screen.getByText('thinking.messages.processing')).toBeInTheDocument();
-    expect(screen.getByText('thinking.messages.connecting')).toBeInTheDocument();
+    expect(
+      screen.getByText('thinking.messages.processing'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('thinking.messages.connecting'),
+    ).toBeInTheDocument();
 
     act(() => {
       jest.advanceTimersToNextTimer();
     });
-    expect(screen.getByText('thinking.messages.connecting')).toBeInTheDocument();
+    expect(
+      screen.getByText('thinking.messages.connecting'),
+    ).toBeInTheDocument();
   });
 
   it('stops scheduling after the last message', () => {

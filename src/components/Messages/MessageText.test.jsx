@@ -66,9 +66,9 @@ describe('MessageText', () => {
         componentsEnabled
       />,
     );
-    expect(container.querySelector('.weni-message-text--incoming')).toHaveTextContent(
-      'Hello',
-    );
+    expect(
+      container.querySelector('.weni-message-text--incoming'),
+    ).toHaveTextContent('Hello');
   });
 
   it('passes streaming state into the buffer hook', () => {
@@ -99,9 +99,7 @@ describe('MessageText', () => {
       displayedText: '• first\n• second',
       isBuffering: true,
     });
-    const { container } = render(
-      <MessageText message={baseMessage()} />,
-    );
+    const { container } = render(<MessageText message={baseMessage()} />);
     expect(container.querySelector('.weni-message-text').innerHTML).toContain(
       '* first',
     );

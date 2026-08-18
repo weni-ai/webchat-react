@@ -91,7 +91,9 @@ describe('ShowItems', () => {
             { title: 'Shoes', product_items: [item()] },
             {
               title: 'Hats',
-              product_items: [item({ product_retailer_id: 'sku-2', name: 'Cap' })],
+              product_items: [
+                item({ product_retailer_id: 'sku-2', name: 'Cap' }),
+              ],
             },
           ],
         }}

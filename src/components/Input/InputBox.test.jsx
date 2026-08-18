@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -545,9 +551,7 @@ describe('InputBox — textarea autosize', () => {
   });
 
   it('skips applying height when scrollHeight is 0', () => {
-    useChatContext.mockReturnValue(
-      buildMockContext({ inputDraft: 'value' }),
-    );
+    useChatContext.mockReturnValue(buildMockContext({ inputDraft: 'value' }));
     render(<InputBox />);
     const textarea = screen.getByRole('textbox');
     Object.defineProperty(textarea, 'scrollHeight', {
@@ -566,9 +570,7 @@ describe('InputBox — textarea autosize', () => {
       this.observe = jest.fn();
       this.disconnect = jest.fn();
     });
-    useChatContext.mockReturnValue(
-      buildMockContext({ inputDraft: 'hello' }),
-    );
+    useChatContext.mockReturnValue(buildMockContext({ inputDraft: 'hello' }));
     render(<InputBox />);
     const textarea = screen.getByRole('textbox');
     Object.defineProperty(textarea, 'scrollHeight', {
@@ -589,9 +591,7 @@ describe('InputBox — textarea autosize', () => {
       this.observe = jest.fn();
       this.disconnect = jest.fn();
     });
-    useChatContext.mockReturnValue(
-      buildMockContext({ inputDraft: 'hello' }),
-    );
+    useChatContext.mockReturnValue(buildMockContext({ inputDraft: 'hello' }));
     render(<InputBox />);
     const textarea = screen.getByRole('textbox');
     Object.defineProperty(textarea, 'scrollHeight', {

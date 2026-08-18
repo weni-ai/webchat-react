@@ -16,10 +16,7 @@ import { useWeniChat } from '@/hooks/useWeniChat';
 import { useChatContext } from '@/contexts/ChatContext';
 import { Header, HeaderTitle } from './Header';
 
-function setup({
-  weniChat = {},
-  chatContext = {},
-} = {}) {
+function setup({ weniChat = {}, chatContext = {} } = {}) {
   const defaults = {
     toggleChat: jest.fn(),
     isChatFullscreen: false,

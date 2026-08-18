@@ -54,16 +54,16 @@ describe('ProductDetails', () => {
   it('renders product content and the add-to-cart button when quantity is zero', () => {
     setup();
     render(<ProductDetails product={product} />);
-    expect(screen.getByRole('heading', { name: 'Blue shoe' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Blue shoe' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('A comfortable shoe')).toBeInTheDocument();
     expect(screen.getByText('BRL:99.90')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Blue shoe' })).toHaveAttribute(
       'src',
       product.image,
     );
-    expect(
-      screen.getByText('product_details.add_to_cart'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('product_details.add_to_cart')).toBeInTheDocument();
     expect(screen.queryByTestId('counter')).not.toBeInTheDocument();
   });
 
@@ -86,7 +86,9 @@ describe('ProductDetails', () => {
       },
     });
     render(<ProductDetails product={product} />);
-    expect(screen.queryByText('product_details.add_to_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('product_details.add_to_cart'),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('counter')).toHaveTextContent('2');
     expect(screen.getByText('cart.see_cart (3)')).toBeInTheDocument();
 
@@ -103,7 +105,9 @@ describe('ProductDetails', () => {
       cart: {},
     });
     render(<ProductDetails product={product} />);
-    expect(screen.queryByText('product_details.add_to_cart')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('product_details.add_to_cart'),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/cart.see_cart/)).not.toBeInTheDocument();
     expect(screen.getByTestId('counter')).toHaveTextContent('0');
   });

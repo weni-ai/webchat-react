@@ -1454,7 +1454,9 @@ describe('useOrderForm — pending fallbacks outside provider', () => {
     const { result } = renderHook(() => useOrderForm());
     expect(result.current.pendingCartItems).toEqual({});
     expect(() => result.current.setPendingCartItem({})).not.toThrow();
-    expect(() => result.current.updatePendingCartQuantity('k', 1)).not.toThrow();
+    expect(() =>
+      result.current.updatePendingCartQuantity('k', 1),
+    ).not.toThrow();
     expect(() => result.current.removePendingCartItem('k')).not.toThrow();
     expect(() => result.current.clearPendingCartItems()).not.toThrow();
     await expect(result.current.sendProductsToCart()).resolves.toBeUndefined();
