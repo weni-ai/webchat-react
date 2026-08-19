@@ -8,8 +8,8 @@ jest.mock('@/hooks/useStreamingBuffer', () => ({
   useStreamingBuffer: (...args) => mockUseStreamingBuffer(...args),
 }));
 
-jest.mock('dompurify', () => ({
-  sanitize: (value) => value,
+jest.mock('@/utils/sanitizeHtml', () => ({
+  sanitizeHtml: (value) => value,
 }));
 
 jest.mock('marked', () => ({

@@ -119,8 +119,20 @@ describe('passthrough formatters', () => {
     expect(formatPhoneNumber('+5511999999999')).toBe('+5511999999999');
   });
 
-  it('sanitizeHTML returns the original markup', () => {
+  it('sanitizeHTML keeps safe markup', () => {
     expect(sanitizeHTML('<b>ok</b>')).toBe('<b>ok</b>');
+  });
+
+  it('sanitizeHTML strips script tags', () => {
+    expect(sanitizeHTML('<p>hi</p><script>alert(1)</script>')).toBe(
+      '<p>hi</p>',
+    );
+  });
+
+  it('sanitizeHTML strips event handlers', () => {
+    expect(sanitizeHTML('<img src="x" onerror="alert(1)">')).toBe(
+      '<img src="x">',
+    );
   });
 });
 
