@@ -13,7 +13,9 @@ describe('sanitizeHtml', () => {
   });
 
   it('strips script tags and event handlers', () => {
-    expect(sanitizeHtml('<p>ok</p><script>alert(1)</script>')).toBe('<p>ok</p>');
+    expect(sanitizeHtml('<p>ok</p><script>alert(1)</script>')).toBe(
+      '<p>ok</p>',
+    );
     expect(sanitizeHtml('<img src="x" onerror="alert(1)">')).toBe(
       '<img src="x">',
     );

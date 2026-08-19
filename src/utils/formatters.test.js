@@ -124,7 +124,9 @@ describe('passthrough formatters', () => {
   });
 
   it('sanitizeHTML strips script tags', () => {
-    expect(sanitizeHTML('<p>hi</p><script>alert(1)</script>')).toBe('<p>hi</p>');
+    expect(sanitizeHTML('<p>hi</p><script>alert(1)</script>')).toBe(
+      '<p>hi</p>',
+    );
   });
 
   it('sanitizeHTML strips event handlers', () => {
