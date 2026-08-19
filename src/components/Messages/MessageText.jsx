@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 import { ListMessage } from './TextComponents/ListMessage';
 import { CallToAction } from './TextComponents/CallToAction';
 import { useStreamingBuffer } from '@/hooks/useStreamingBuffer';
+import { sanitizeHtml } from '@/utils/sanitizeHtml';
 
 import './MessageText.scss';
 
@@ -24,8 +24,6 @@ export function MessageText({ message, componentsEnabled }) {
   const html = useMemo(() => {
     if (!displayedText && !isBuffering) return '';
 
-    const purifiedContent = DOMPurify.sanitize(displayedText);
-
     marked.use({
       breaks: true,
       useNewRenderer: true,
@@ -39,16 +37,17 @@ export function MessageText({ message, componentsEnabled }) {
       },
     });
 
-    // Convert bullet points to proper Markdown list syntax
-    const processedContent =
-      purifiedContent
-        // Convert • bullet points to proper Markdown list syntax
-        .replace(/\n•\s*/g, '\n* ')
-        // Handle cases where • appears at the start of content
-        .replace(/^•\s*/g, '* ') +
-      (isBuffering ? '<span class="weni-message-text__caret" />' : '');
+    const processedContent = displayedText
+      .replace(/\n•\s*/g, '\n* ')
+      .replace(/^•\s*/g, '* ');
 
-    return marked.parse(processedContent);
+    const parsedHtml = marked.parse(processedContent);
+    const purifiedHtml = sanitizeHtml(parsedHtml);
+
+    return (
+      purifiedHtml +
+      (isBuffering ? '<span class="weni-message-text__caret"></span>' : '')
+    );
   }, [displayedText, isBuffering]);
 
   return (
