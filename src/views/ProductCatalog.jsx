@@ -11,13 +11,8 @@ import { useOrderForm } from '@/contexts/OrderFormContext';
 import './ProductCatalog.scss';
 
 export function ProductCatalog({ productGroups }) {
-  const {
-    cart,
-    setCurrentPage,
-    clearPageHistory,
-    isInsideVTEXStore,
-    config,
-  } = useChatContext();
+  const { cart, setCurrentPage, clearPageHistory, isInsideVTEXStore, config } =
+    useChatContext();
   const { pendingCartItems } = useOrderForm();
   const { t } = useTranslation();
 

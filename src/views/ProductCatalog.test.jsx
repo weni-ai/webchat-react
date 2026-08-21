@@ -144,7 +144,9 @@ describe('ProductCatalog', () => {
       config: { addToCart: true },
     });
     render(<ProductCatalog productGroups={groups} />);
-    expect(screen.getByText('product_catalog.items_selected:0')).toBeInTheDocument();
+    expect(
+      screen.getByText('product_catalog.items_selected:0'),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
         name: 'product_catalog.add_items_and_return',
@@ -162,7 +164,9 @@ describe('ProductCatalog', () => {
       },
     });
     render(<ProductCatalog productGroups={groups} />);
-    expect(screen.getByText('product_catalog.items_selected:1')).toBeInTheDocument();
+    expect(
+      screen.getByText('product_catalog.items_selected:1'),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
         name: 'product_catalog.add_items_and_return',
@@ -180,7 +184,9 @@ describe('ProductCatalog', () => {
       },
     });
     render(<ProductCatalog productGroups={groups} />);
-    expect(screen.getByText('product_catalog.items_selected:3')).toBeInTheDocument();
+    expect(
+      screen.getByText('product_catalog.items_selected:3'),
+    ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole('button', {
         name: 'product_catalog.add_items_and_return',
@@ -199,7 +205,9 @@ describe('ProductCatalog', () => {
       },
     });
     render(<ProductCatalog productGroups={groups} />);
-    expect(screen.getByText('product_catalog.items_selected:0')).toBeInTheDocument();
+    expect(
+      screen.getByText('product_catalog.items_selected:0'),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
         name: 'product_catalog.add_items_and_return',
