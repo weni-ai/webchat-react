@@ -47,6 +47,9 @@ class WeniWebchatService {
   disconnect() {
     this._connected = false;
   }
+  reconnectNow() {
+    return this.connect();
+  }
 
   // State
   getState() {

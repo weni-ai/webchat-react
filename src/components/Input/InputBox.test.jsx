@@ -40,11 +40,12 @@ jest.mock('./InputFile', () => {
 });
 
 jest.mock('@/components/VoiceMode', () => ({
-  VoiceModeButton: ({ onClick }) => (
+  VoiceModeButton: ({ onClick, disabled }) => (
     <button
       type="button"
       aria-label="voice-mode"
       onClick={onClick}
+      disabled={disabled}
     >
       voice
     </button>
@@ -95,6 +96,7 @@ function buildMockContext(overrides = {}) {
       showFileUploaderButton: false,
     },
     mode: 'live',
+    isConnected: true,
     isVoiceModePageActive: false,
     voiceIntentBanner: null,
     handleVoiceModeIntent: jest.fn(),
@@ -191,6 +193,20 @@ describe('InputBox — modes and send', () => {
       'mode.preview.input_placeholder',
     );
     expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+
+  it('disables the textarea, send, and voice controls when disconnected', () => {
+    useChatContext.mockReturnValue(
+      buildMockContext({
+        isConnected: false,
+        inputDraft: '',
+        isVoiceEnabledByServer: true,
+        isVoiceModeSupported: true,
+      }),
+    );
+    render(<InputBox />);
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    expect(screen.getByLabelText('voice-mode')).toBeDisabled();
   });
 
   it('does not send when Shift+Enter is pressed', () => {

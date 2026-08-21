@@ -58,6 +58,12 @@
     "added": "Adicionado",
     "product_added_to_cart": "{{productName}} adicionado ao carrinho"
   },
+  "connection": {
+    "reconnecting": "Tentando reconectar",
+    "reconnecting_in": "Conexão perdida. Reconectando em {{seconds}}s…",
+    "restored": "Conexão restaurada",
+    "try_again": "Tentar novamente"
+  },
   "input": {
     "attach_tooltip": "Anexar",
     "media_audio": "Áudio",
