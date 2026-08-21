@@ -36,6 +36,11 @@
     "items_one": "ítem",
     "items_other": "ítems"
   },
+  "product_catalog": {
+    "add_items_and_return": "Agregar ítems y volver al chat",
+    "items_selected_one": "{{count}} ítem seleccionado",
+    "items_selected_other": "{{count}} ítems seleccionados"
+  },
   "product_details": {
     "title": "Detalles",
     "add_to_cart": "Agregar al carrito"

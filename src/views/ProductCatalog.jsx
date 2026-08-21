@@ -3,13 +3,22 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/common/Button';
+import { FSButton } from '@/components/common/FSButton';
 import { InlineProduct } from '@/components/Product/InlineProduct';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useOrderForm } from '@/contexts/OrderFormContext';
 
 import './ProductCatalog.scss';
 
 export function ProductCatalog({ productGroups }) {
-  const { cart, setCurrentPage, isInsideVTEXStore } = useChatContext();
+  const {
+    cart,
+    setCurrentPage,
+    clearPageHistory,
+    isInsideVTEXStore,
+    config,
+  } = useChatContext();
+  const { pendingCartItems } = useOrderForm();
   const { t } = useTranslation();
 
   const totalItems = useMemo(() => {
@@ -19,7 +28,15 @@ export function ProductCatalog({ productGroups }) {
     );
   }, [cart]);
 
+  const pendingSelectedCount = useMemo(() => {
+    return Object.values(pendingCartItems).reduce((acc, item) => {
+      if (item.origin !== 'catalog') return acc;
+      return acc + Math.max(0, Number(item.quantity) || 0);
+    }, 0);
+  }, [pendingCartItems]);
+
   const showSeeCartButton = totalItems > 0 && !isInsideVTEXStore;
+  const showAddItemsFooter = isInsideVTEXStore && config?.addToCart;
 
   return (
     <section className="weni-view-product-catalog">
@@ -40,6 +57,24 @@ export function ProductCatalog({ productGroups }) {
           </section>
         ))}
       </section>
+
+      {showAddItemsFooter && (
+        <footer className="weni-view-product-catalog__footer weni-view-product-catalog__footer--add-items">
+          <p className="weni-view-product-catalog__selected-count">
+            {t('product_catalog.items_selected', {
+              count: pendingSelectedCount,
+            })}
+          </p>
+
+          <FSButton
+            disabled={pendingSelectedCount === 0}
+            onClick={() => clearPageHistory()}
+            className="weni-view-product-catalog__add-items-button"
+          >
+            {t('product_catalog.add_items_and_return')}
+          </FSButton>
+        </footer>
+      )}
 
       {showSeeCartButton && (
         <footer className="weni-view-product-catalog__footer">
