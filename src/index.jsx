@@ -234,6 +234,35 @@ function App() {
             Simulate product carousel
           </button>
           <button
+            id="simulate-connection-banner"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              const nextIndex =
+                window.__weniConnectionBannerDebugIndex || 0;
+              const steps = [
+                {
+                  status: 'reconnecting',
+                  nextAttemptAt: Date.now() + 8_000,
+                },
+                {
+                  status: 'reconnecting',
+                  nextAttemptAt: Date.now(),
+                },
+                {
+                  status: 'connected',
+                  nextAttemptAt: null,
+                },
+              ];
+              await window.WebChat.simulateConnectionStatus(
+                steps[nextIndex % steps.length],
+              );
+              window.__weniConnectionBannerDebugIndex = nextIndex + 1;
+            }}
+          >
+            Simulate connection banner
+          </button>
+          <button
             id="simulate-product-catalog"
             style={buttonStyle}
             onClick={async () => {

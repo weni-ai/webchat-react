@@ -417,6 +417,24 @@ async function simulateMessageSent(message) {
   service.simulateMessageSent(message);
 }
 
+/**
+ * Simulate socket connection status for UI debug (connection banner).
+ * @param {{ status?: string, nextAttemptAt?: number|null, reconnectAttempts?: number }} connection
+ * @returns {Promise<void>}
+ */
+async function simulateConnectionStatus(connection = {}) {
+  const service = await serviceWhenReady();
+  const current = typeof service.getState === 'function' ? service.getState() : {};
+  const nextState = {
+    ...current,
+    connection: {
+      ...(current.connection || {}),
+      ...connection,
+    },
+  };
+  service.emit('state:changed', nextState);
+}
+
 function validateStartersInput(questions) {
   if (!Array.isArray(questions)) return false;
   if (questions.length < 1 || questions.length > 3) return false;
@@ -478,6 +496,7 @@ const WebChat = {
   reload,
   simulateMessageReceived,
   simulateMessageSent,
+  simulateConnectionStatus,
   changeLanguage,
 };
 
