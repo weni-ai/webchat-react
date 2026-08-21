@@ -4,6 +4,10 @@
   font: $fs-text-weight-medium #{$fs-text-size-0}/1.33 $font-family;
   color: $base-fg;
 
+  p {
+    margin: 0;
+  }
+
   &--critical {
     background-color: $border-color-critical;
   }

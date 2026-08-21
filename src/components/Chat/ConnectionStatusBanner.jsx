@@ -103,19 +103,18 @@ export function ConnectionStatusBanner() {
   const isRestored = phase === 'restored';
 
   return (
-    <div
+    <aside
       className={`weni-connection-status-banner ${
         isRestored
           ? 'weni-connection-status-banner--success'
           : 'weni-connection-status-banner--critical'
       }`}
       role="status"
+      aria-live="polite"
     >
       {phase === 'wait' && (
-        <>
-          <span>
-            {t('connection.reconnecting_in', { seconds: secondsLeft })}
-          </span>{' '}
+        <p>
+          {t('connection.reconnecting_in', { seconds: secondsLeft })}{' '}
           <button
             type="button"
             className="weni-connection-status-banner__try-again"
@@ -123,16 +122,16 @@ export function ConnectionStatusBanner() {
           >
             {t('connection.try_again')}
           </button>
-        </>
+        </p>
       )}
       {phase === 'active' && (
-        <span>
+        <p>
           {t('connection.reconnecting')}
           {'.'.repeat(dotCount)}
-        </span>
+        </p>
       )}
-      {isRestored && <span>{t('connection.restored')}</span>}
-    </div>
+      {isRestored && <p>{t('connection.restored')}</p>}
+    </aside>
   );
 }
 
