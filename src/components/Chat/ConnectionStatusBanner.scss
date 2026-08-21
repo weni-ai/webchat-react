@@ -1,0 +1,25 @@
+.weni-connection-status-banner {
+  flex-shrink: 0;
+  padding: $spacing-2 $spacing-3;
+  font: $fs-text-weight-medium #{$fs-text-size-0}/1.33 $font-family;
+  color: $base-fg;
+
+  &--critical {
+    background-color: $border-color-critical;
+  }
+
+  &--success {
+    background-color: $border-color-success;
+  }
+
+  &__try-again {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-weight: $fs-text-weight-bold;
+    color: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
