@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 
-export function VoiceModeButton({ onClick }) {
+export function VoiceModeButton({ onClick, disabled = false }) {
   const { t } = useTranslation();
 
   return (
@@ -13,12 +13,14 @@ export function VoiceModeButton({ onClick }) {
       onClick={onClick}
       aria-label={t('voice_mode.aria_enter')}
       rounded
+      disabled={disabled}
     />
   );
 }
 
 VoiceModeButton.propTypes = {
   onClick: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
 
 export default VoiceModeButton;

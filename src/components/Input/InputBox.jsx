@@ -46,6 +46,7 @@ export function InputBox({ maxLength = 5000 }) {
     exitVoiceMode,
     config,
     mode,
+    isConnected,
     isVoiceModePageActive,
     voiceIntentBanner,
     handleVoiceModeIntent,
@@ -70,6 +71,10 @@ export function InputBox({ maxLength = 5000 }) {
   }, [t, mode, config.inputTextFieldHint]);
 
   const handleSend = async () => {
+    if (!isConnected) {
+      return;
+    }
+
     if (isRecording) {
       await stopAndSendAudio();
       return;
@@ -133,7 +138,7 @@ export function InputBox({ maxLength = 5000 }) {
       onKeyDown: handleKeyPress,
       maxLength: maxLength,
       rows: 1,
-      disabled: isEnteringVoiceMode || mode === 'preview',
+      disabled: !isConnected || isEnteringVoiceMode || mode === 'preview',
       className: 'weni-input-box__textarea',
     }),
     [
@@ -144,6 +149,7 @@ export function InputBox({ maxLength = 5000 }) {
       maxLength,
       mode,
       isEnteringVoiceMode,
+      isConnected,
     ],
   );
 
@@ -327,7 +333,7 @@ export function InputBox({ maxLength = 5000 }) {
           type="button"
           className="weni-input-box__action-item"
           onClick={handleRecordAudio}
-          disabled={hasAudioPermissionState === false}
+          disabled={hasAudioPermissionState === false || !isConnected}
           aria-label={t('input.media_audio')}
         >
           <Icon name="mic" />
@@ -407,7 +413,10 @@ export function InputBox({ maxLength = 5000 }) {
           )}
 
           {!isEnteringVoiceMode && showVoiceButton && hasNoTextInput ? (
-            <VoiceModeButton onClick={handleVoiceModeIntent} />
+            <VoiceModeButton
+              onClick={handleVoiceModeIntent}
+              disabled={!isConnected}
+            />
           ) : (
             <Button
               onClick={handleSend}
@@ -416,7 +425,7 @@ export function InputBox({ maxLength = 5000 }) {
               icon="arrow_upward"
               size="large"
               rounded
-              disabled={!text.trim()}
+              disabled={!isConnected || !text.trim()}
             />
           )}
         </section>

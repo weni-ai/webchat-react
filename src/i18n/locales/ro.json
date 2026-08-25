@@ -48,6 +48,12 @@
       "continue_shopping": "Continuă cumpărăturile",
       "make_order": "Plasare comandă"
     },
+    "connection": {
+      "reconnecting": "Se reconectează",
+      "reconnecting_in": "Conexiune pierdută. Reconectare în {{seconds}}s…",
+      "restored": "Conexiune restabilită",
+      "try_again": "Încearcă din nou"
+    },
     "voice_mode": {
       "title": "Mod voce",
       "listening": "Te ascult. Cu ce te pot ajuta?",

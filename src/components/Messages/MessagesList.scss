@@ -20,6 +20,12 @@
       opacity: 0.55;
       animation: none;
     }
+
+    &--pending {
+      .weni-message-text {
+        color: $semantic-colors-light-fg;
+      }
+    }
   }
 
   &__message--product-list,
