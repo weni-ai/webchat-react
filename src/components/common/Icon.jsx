@@ -58,6 +58,7 @@ Icon.propTypes = {
   color: PropTypes.string,
   filled: PropTypes.bool,
   className: PropTypes.string,
+  style: PropTypes.object,
 };
 
 export default Icon;

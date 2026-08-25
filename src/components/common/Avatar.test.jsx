@@ -8,9 +8,9 @@ jest.mock('@/components/common/Icon', () => ({
     'aria-label': ariaLabel,
     className,
     style,
-    filled,
-    size,
-    color,
+    _filled,
+    _size,
+    _color,
     ...rest
   }) => (
     <span
