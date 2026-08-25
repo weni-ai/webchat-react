@@ -10,6 +10,12 @@
   &--primary {
     color: $fs-button-primary-text-color;
     background-color: var(--weni-main-color);
+
+    &:disabled {
+      cursor: not-allowed;
+      background-color: $fs-color-disabled-bkg;
+      color: $fs-color-disabled-text;
+    }
   }
 
   &--secondary {
