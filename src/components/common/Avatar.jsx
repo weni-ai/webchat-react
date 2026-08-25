@@ -33,6 +33,7 @@ export function Avatar({
   };
 
   const showImage = src && !imageError;
+  const accessibleName = alt || 'Avatar';
 
   const style = useMemo(() => {
     if (typeof size === 'number') {
@@ -46,36 +47,41 @@ export function Avatar({
     return {};
   }, [size]);
 
+  const avatarClassName = `
+    weni-avatar
+    ${typeof size === 'string' ? `weni-avatar--${size}` : ''}
+    weni-avatar--${shape}
+    ${className}
+  `;
+
+  const iconSize =
+    typeof size === 'string' && size !== 'full' ? size : 'x-large';
+
+  if (showImage) {
+    return (
+      <img
+        src={src}
+        alt={accessibleName}
+        className={avatarClassName}
+        style={style}
+        onError={handleImageError}
+        {...props}
+      />
+    );
+  }
+
   return (
-    <section
-      className={`
-        weni-avatar
-        ${typeof size === 'string' ? `weni-avatar--${size}` : ''}
-        weni-avatar--${shape}
-        ${!showImage && 'weni-avatar--with-background-color'}
-        ${className}
-      `}
-      role="img"
-      aria-label={alt || 'Avatar'}
+    <Icon
+      name="rounded_x"
+      size={iconSize}
+      color="weni-main-color"
+      filled
+      className={`${avatarClassName} weni-avatar--with-background-color`}
       style={style}
+      role="img"
+      aria-label={accessibleName}
       {...props}
-    >
-      {showImage ? (
-        <img
-          src={src}
-          alt={alt || name}
-          className="weni-avatar__image"
-          onError={handleImageError}
-        />
-      ) : (
-        <Icon
-          name="rounded_x"
-          size="x-large"
-          color="weni-main-color"
-          filled
-        />
-      )}
-    </section>
+    />
   );
 }
 

@@ -21,6 +21,7 @@ export function Icon({
   color = '',
   filled = false,
   className = '',
+  style: styleProp,
   ...props
 }) {
   const style = {
@@ -29,6 +30,7 @@ export function Icon({
       : color
         ? `var(--${color})`
         : 'currentColor',
+    ...styleProp,
   };
 
   const Icon = icons[name][filled ? 'filled' : 'default'];
@@ -56,6 +58,7 @@ Icon.propTypes = {
   color: PropTypes.string,
   filled: PropTypes.bool,
   className: PropTypes.string,
+  style: PropTypes.object,
 };
 
 export default Icon;
