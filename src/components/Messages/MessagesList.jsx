@@ -365,7 +365,7 @@ function renderMessage(group, message, messageIndex, enableComponents) {
       return (
         <Fragment key={`${rowKey}-body`}>
           <MessageContainer
-            className={`weni-messages-list__message weni-messages-list__message--${group.direction}`}
+            className={`weni-messages-list__message weni-messages-list__message--${group.direction}${message.status === 'pending' ? ' weni-messages-list__message--pending' : ''}`}
             direction={group.direction}
             type={message.type}
           >
@@ -373,14 +373,6 @@ function renderMessage(group, message, messageIndex, enableComponents) {
               message={message}
               componentsEnabled={enableComponents(message)}
             />
-
-            {message.status === 'pending' && (
-              <Icon
-                name="schedule"
-                size="small"
-                color="fg-muted"
-              />
-            )}
 
             {message.status === 'error' && (
               <Icon

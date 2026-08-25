@@ -717,6 +717,7 @@ describe('ChatContext — service events', () => {
     expect(ctx.messages).toEqual(newState.messages);
     expect(ctx.isConnected).toBe(false);
     expect(ctx.isConnectionClosed).toBe(true);
+    expect(ctx.connectionStatus).toBe('closed');
     expect(ctx.isTyping).toBe(true);
     expect(ctx.isThinking).toBe(true);
     expect(ctx.error).toEqual({ message: 'boom' });

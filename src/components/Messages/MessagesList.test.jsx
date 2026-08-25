@@ -438,14 +438,17 @@ describe('MessagesList — conversation starters full', () => {
 // ---------------------------------------------------------------------------
 
 describe('MessagesList — message status icons', () => {
-  it('renders the pending (schedule) icon for a pending message', () => {
+  it('does not render the pending (schedule) icon for a pending message', () => {
     setupMocks({
       messageGroups: [
         buildGroup([buildMessage({ id: 'p', status: 'pending' })], 'outgoing'),
       ],
     });
-    render(<MessagesList />);
-    expect(screen.getByTestId('icon-schedule')).toBeInTheDocument();
+    const { container } = render(<MessagesList />);
+    expect(screen.queryByTestId('icon-schedule')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('.weni-messages-list__message--pending'),
+    ).toBeInTheDocument();
   });
 
   it('renders the error icon for an errored message', () => {
