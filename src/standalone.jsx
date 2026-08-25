@@ -424,7 +424,8 @@ async function simulateMessageSent(message) {
  */
 async function simulateConnectionStatus(connection = {}) {
   const service = await serviceWhenReady();
-  const current = typeof service.getState === 'function' ? service.getState() : {};
+  const current =
+    typeof service.getState === 'function' ? service.getState() : {};
   const nextState = {
     ...current,
     connection: {

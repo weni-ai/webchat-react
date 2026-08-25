@@ -238,8 +238,7 @@ function App() {
             style={buttonStyle}
             onClick={async () => {
               await window.WebChat.open();
-              const nextIndex =
-                window.__weniConnectionBannerDebugIndex || 0;
+              const nextIndex = window.__weniConnectionBannerDebugIndex || 0;
               const steps = [
                 {
                   status: 'reconnecting',
