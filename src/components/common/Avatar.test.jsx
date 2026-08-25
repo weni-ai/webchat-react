@@ -2,7 +2,28 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('@/components/common/Icon', () => ({
-  Icon: ({ name }) => <span data-testid="avatar-fallback-icon">{name}</span>,
+  Icon: ({
+    name,
+    role,
+    'aria-label': ariaLabel,
+    className,
+    style,
+    filled,
+    size,
+    color,
+    ...rest
+  }) => (
+    <span
+      data-testid="avatar-fallback-icon"
+      role={role}
+      aria-label={ariaLabel}
+      className={className}
+      style={style}
+      {...rest}
+    >
+      {name}
+    </span>
+  ),
 }));
 
 import { Avatar } from './Avatar';
@@ -23,13 +44,13 @@ describe('Avatar', () => {
   });
 
   it('renders an image when src is provided', () => {
-    const { container } = render(
+    render(
       <Avatar
         src="https://example.com/a.png"
         alt="Jane"
       />,
     );
-    expect(container.querySelector('.weni-avatar__image')).toHaveAttribute(
+    expect(screen.getByRole('img', { name: 'Jane' })).toHaveAttribute(
       'src',
       'https://example.com/a.png',
     );
@@ -37,7 +58,7 @@ describe('Avatar', () => {
 
   it('switches to the fallback and calls onError when the image fails', () => {
     const onError = jest.fn();
-    const { container } = render(
+    render(
       <Avatar
         src="https://example.com/broken.png"
         alt="Broken"
@@ -45,14 +66,14 @@ describe('Avatar', () => {
       />,
     );
 
-    fireEvent.error(container.querySelector('.weni-avatar__image'));
+    fireEvent.error(screen.getByRole('img', { name: 'Broken' }));
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('avatar-fallback-icon')).toBeInTheDocument();
   });
 
   it('does not throw when the image fails and onError is omitted', () => {
-    const { container } = render(
+    render(
       <Avatar
         src="https://example.com/broken.png"
         alt="Broken"
@@ -60,7 +81,7 @@ describe('Avatar', () => {
     );
 
     expect(() => {
-      fireEvent.error(container.querySelector('.weni-avatar__image'));
+      fireEvent.error(screen.getByRole('img', { name: 'Broken' }));
     }).not.toThrow();
   });
 
@@ -104,16 +125,16 @@ describe('Avatar', () => {
     expect(screen.getByTestId('avatar-root')).toHaveAttribute('title', 'hint');
   });
 
-  it('falls back to the window name when image alt is empty', () => {
-    const { container } = render(
+  it('uses the default alt when image alt is empty', () => {
+    render(
       <Avatar
         src="https://example.com/a.png"
         alt=""
       />,
     );
-    expect(container.querySelector('.weni-avatar__image')).toHaveAttribute(
+    expect(screen.getByRole('img', { name: 'Avatar' })).toHaveAttribute(
       'alt',
-      window.name,
+      'Avatar',
     );
   });
 });
