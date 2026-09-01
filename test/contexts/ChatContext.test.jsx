@@ -825,7 +825,7 @@ describe('ChatContext — service events', () => {
     expect(ctx.isChatOpen).toBe(true);
   });
 
-  it('ignores chat:open:changed open events on checkout', async () => {
+  it('allows chat:open:changed open events on checkout', async () => {
     await renderWithContext({});
     isCheckoutPage.mockReturnValue(true);
     const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
@@ -834,8 +834,55 @@ describe('ChatContext — service events', () => {
       ctx.service.emit('chat:open:changed', true);
     });
 
-    expect(ctx.isChatOpen).toBe(false);
+    expect(ctx.isChatOpen).toBe(true);
+    expect(setOpenSpy).not.toHaveBeenCalledWith(false);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
+  it('does not re-close chat on internal checkout navigation', async () => {
+    isCheckoutPage.mockReturnValue(true);
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.setIsChatOpen(true);
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
+    setOpenSpy.mockClear();
+
+    await act(async () => {
+      history.pushState({}, '', '/checkout/#/payment');
+    });
+
+    expect(setOpenSpy).not.toHaveBeenCalledWith(false);
+    expect(ctx.isChatOpen).toBe(true);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
+  it('closes chat when re-entering checkout after leaving', async () => {
+    isCheckoutPage.mockReturnValue(true);
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.setIsChatOpen(true);
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    isCheckoutPage.mockReturnValue(false);
+    await act(async () => {
+      history.pushState({}, '', '/');
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    isCheckoutPage.mockReturnValue(true);
+    const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
+    await act(async () => {
+      history.pushState({}, '', '/checkout/');
+    });
+
     expect(setOpenSpy).toHaveBeenCalledWith(false);
+    expect(ctx.isChatOpen).toBe(false);
     isCheckoutPage.mockReturnValue(false);
   });
 });
