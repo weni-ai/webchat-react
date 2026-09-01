@@ -3,7 +3,8 @@ import { useState, useMemo } from 'react';
 import { Icon } from '@/components/common/Icon';
 import './Avatar.scss';
 
-export const DEFAULT_AVATAR_ACCESSIBLE_NAME = 'VTEX CX shopping assistant avatar';
+export const DEFAULT_AVATAR_ACCESSIBLE_NAME =
+  'VTEX CX shopping assistant avatar';
 
 /**
  * Avatar - User avatar component
