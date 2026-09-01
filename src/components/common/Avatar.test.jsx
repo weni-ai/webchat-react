@@ -26,7 +26,7 @@ jest.mock('@/components/common/Icon', () => ({
   ),
 }));
 
-import { Avatar } from './Avatar';
+import { Avatar, DEFAULT_AVATAR_ACCESSIBLE_NAME } from './Avatar';
 
 describe('Avatar', () => {
   it('renders a fallback icon when src is empty', () => {
@@ -40,7 +40,9 @@ describe('Avatar', () => {
 
   it('uses a default aria-label when alt is omitted', () => {
     render(<Avatar />);
-    expect(screen.getByRole('img', { name: 'Avatar' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: DEFAULT_AVATAR_ACCESSIBLE_NAME }),
+    ).toBeInTheDocument();
   });
 
   it('renders an image when src is provided', () => {
@@ -93,7 +95,9 @@ describe('Avatar', () => {
         className="extra"
       />,
     );
-    const avatar = screen.getByRole('img', { name: 'Avatar' });
+    const avatar = screen.getByRole('img', {
+      name: DEFAULT_AVATAR_ACCESSIBLE_NAME,
+    });
     expect(avatar).toHaveClass(
       'weni-avatar',
       'weni-avatar--large',
@@ -132,9 +136,8 @@ describe('Avatar', () => {
         alt=""
       />,
     );
-    expect(screen.getByRole('img', { name: 'Avatar' })).toHaveAttribute(
-      'alt',
-      'Avatar',
-    );
+    expect(
+      screen.getByRole('img', { name: DEFAULT_AVATAR_ACCESSIBLE_NAME }),
+    ).toHaveAttribute('alt', DEFAULT_AVATAR_ACCESSIBLE_NAME);
   });
 });
