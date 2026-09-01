@@ -47,6 +47,16 @@ describe('ConnectionStatusBanner', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('renders nothing in preview mode even while reconnecting', () => {
+    mockChat({
+      mode: 'preview',
+      connectionStatus: 'reconnecting',
+      nextAttemptAt: 1_000_000 + 3500,
+    });
+    const { container } = render(<ConnectionStatusBanner />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('shows the countdown and Try again while waiting to reconnect', () => {
     const reconnectNow = jest.fn();
     mockChat({

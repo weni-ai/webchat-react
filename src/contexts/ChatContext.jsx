@@ -328,10 +328,6 @@ export function ChatProvider({ children, config }) {
     }
 
     service.on('chat:open:changed', (isOpen) => {
-      if (isOpen && isCheckoutPage()) {
-        service.setIsChatOpen(false);
-        return;
-      }
       setIsChatOpen(isOpen);
     });
 
@@ -367,14 +363,18 @@ export function ChatProvider({ children, config }) {
   }, [isInsideVTEXStore, service]);
 
   useEffect(() => {
-    const closeChatOnCheckout = () => {
-      if (!isCheckoutPage()) return;
-      service.setIsChatOpen(false);
+    let wasOnCheckout = false;
+    const closeChatOnEnteringCheckout = () => {
+      const nowOnCheckout = isCheckoutPage();
+      if (nowOnCheckout && !wasOnCheckout) {
+        service.setIsChatOpen(false);
+      }
+      wasOnCheckout = nowOnCheckout;
     };
 
-    closeChatOnCheckout();
+    closeChatOnEnteringCheckout();
 
-    const monitor = createNavigationMonitor(closeChatOnCheckout);
+    const monitor = createNavigationMonitor(closeChatOnEnteringCheckout);
     monitor.start();
 
     return () => monitor.stop();

@@ -3,6 +3,9 @@ import { useState, useMemo } from 'react';
 import { Icon } from '@/components/common/Icon';
 import './Avatar.scss';
 
+export const DEFAULT_AVATAR_ACCESSIBLE_NAME =
+  'VTEX CX shopping assistant avatar';
+
 /**
  * Avatar - User avatar component
  *
@@ -33,7 +36,7 @@ export function Avatar({
   };
 
   const showImage = src && !imageError;
-  const accessibleName = alt || 'Avatar';
+  const accessibleName = alt || DEFAULT_AVATAR_ACCESSIBLE_NAME;
 
   const style = useMemo(() => {
     if (typeof size === 'number') {
