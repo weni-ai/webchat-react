@@ -17,15 +17,21 @@ function getWaitRemainingMs(nextAttemptAt) {
 
 export function ConnectionStatusBanner() {
   const { t } = useTranslation();
-  const { connectionStatus, nextAttemptAt, reconnectNow, isConnectionClosed } =
-    useWeniChat();
+  const {
+    connectionStatus,
+    nextAttemptAt,
+    reconnectNow,
+    isConnectionClosed,
+    mode,
+  } = useWeniChat();
   const hadOutageRef = useRef(false);
   const [phase, setPhase] = useState(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [dotCount, setDotCount] = useState(1);
+  const isPreview = mode === 'preview';
 
   useEffect(() => {
-    if (isConnectionClosed) {
+    if (isConnectionClosed || isPreview) {
       setPhase(null);
       return;
     }
@@ -44,7 +50,7 @@ export function ConnectionStatusBanner() {
       hadOutageRef.current = false;
       setPhase('restored');
     }
-  }, [connectionStatus, nextAttemptAt, isConnectionClosed]);
+  }, [connectionStatus, nextAttemptAt, isConnectionClosed, isPreview]);
 
   useEffect(() => {
     if (phase !== 'restored') {
