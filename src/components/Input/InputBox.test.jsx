@@ -209,6 +209,50 @@ describe('InputBox — modes and send', () => {
     expect(screen.getByLabelText('voice-mode')).toBeDisabled();
   });
 
+  it('keeps the textarea enabled and voice disabled when disconnected in demand mode', () => {
+    useChatContext.mockReturnValue(
+      buildMockContext({
+        isConnected: false,
+        inputDraft: '',
+        isVoiceEnabledByServer: true,
+        isVoiceModeSupported: true,
+        config: {
+          inputTextFieldHint: 'Type a message',
+          showCameraButton: false,
+          showVoiceRecordingButton: false,
+          showFileUploaderButton: false,
+          connectOn: 'demand',
+        },
+      }),
+    );
+    render(<InputBox />);
+    expect(screen.getByRole('textbox')).toBeEnabled();
+    expect(screen.getByLabelText('voice-mode')).toBeDisabled();
+  });
+
+  it('sends from the input when disconnected in demand mode', () => {
+    useChatContext.mockReturnValue(
+      buildMockContext({
+        isConnected: false,
+        inputDraft: 'first message',
+        config: {
+          inputTextFieldHint: 'Type a message',
+          showCameraButton: false,
+          showVoiceRecordingButton: false,
+          showFileUploaderButton: false,
+          connectOn: 'demand',
+        },
+      }),
+    );
+    render(<InputBox />);
+    expect(screen.getByRole('textbox')).toBeEnabled();
+    expect(screen.getByLabelText('Send message')).toBeEnabled();
+
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(mockSendMessage).toHaveBeenCalledWith('first message');
+    expect(mockSetInputDraft).toHaveBeenCalledWith('');
+  });
+
   it('does not send when Shift+Enter is pressed', () => {
     useChatContext.mockReturnValue(
       buildMockContext({ inputDraft: 'keep typing' }),
