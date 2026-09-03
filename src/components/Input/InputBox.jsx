@@ -61,6 +61,7 @@ export function InputBox({ maxLength = 5000 }) {
   const fileInputRef = useRef(null);
 
   const showVoiceButton = isVoiceEnabledByServer && isVoiceModeSupported;
+  const canSendText = isConnected || config.connectOn === 'demand';
 
   const inputTextFieldHint = useMemo(() => {
     if (mode === 'preview') {
@@ -71,7 +72,7 @@ export function InputBox({ maxLength = 5000 }) {
   }, [t, mode, config.inputTextFieldHint]);
 
   const handleSend = async () => {
-    if (!isConnected) {
+    if (!canSendText) {
       return;
     }
 
@@ -138,7 +139,7 @@ export function InputBox({ maxLength = 5000 }) {
       onKeyDown: handleKeyPress,
       maxLength: maxLength,
       rows: 1,
-      disabled: !isConnected || isEnteringVoiceMode || mode === 'preview',
+      disabled: !canSendText || isEnteringVoiceMode || mode === 'preview',
       className: 'weni-input-box__textarea',
     }),
     [
@@ -149,7 +150,7 @@ export function InputBox({ maxLength = 5000 }) {
       maxLength,
       mode,
       isEnteringVoiceMode,
-      isConnected,
+      canSendText,
     ],
   );
 
@@ -425,7 +426,7 @@ export function InputBox({ maxLength = 5000 }) {
               icon="arrow_upward"
               size="large"
               rounded
-              disabled={!isConnected || !text.trim()}
+              disabled={!canSendText || !text.trim()}
             />
           )}
         </section>
