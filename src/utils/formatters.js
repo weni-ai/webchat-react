@@ -3,6 +3,8 @@
  * TODO: Add more formatters as needed
  */
 
+import { sanitizeHtml } from './sanitizeHtml';
+
 /**
  * Format timestamp to readable time
  * TODO: Add internationalization support
@@ -131,11 +133,9 @@ export function formatTime(time, unit = 'seconds', padMinutes = false) {
 
 /**
  * Sanitize HTML to prevent XSS
- * TODO: Implement proper HTML sanitization
  */
 export function sanitizeHTML(html) {
-  // TODO: Use a library like DOMPurify or implement sanitization
-  return html;
+  return sanitizeHtml(html);
 }
 
 export default {

@@ -28,6 +28,11 @@
       "items_one": "articol",
       "items_other": "articole"
     },
+    "product_catalog": {
+      "add_items_and_return": "Adaugă articole și revino la chat",
+      "items_selected_one": "{{count}} articol selectat",
+      "items_selected_other": "{{count}} articole selectate"
+    },
     "product_details": {
       "title": "Detalii",
       "add_to_cart": "Adaugă în coș"
@@ -42,6 +47,12 @@
       "total": "Total",
       "continue_shopping": "Continuă cumpărăturile",
       "make_order": "Plasare comandă"
+    },
+    "connection": {
+      "reconnecting": "Se reconectează",
+      "reconnecting_in": "Conexiune pierdută. Reconectare în {{seconds}}s…",
+      "restored": "Conexiune restabilită",
+      "try_again": "Încearcă din nou"
     },
     "voice_mode": {
       "title": "Mod voce",

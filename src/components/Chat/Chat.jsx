@@ -3,6 +3,7 @@ import { useVtexCxVisualViewportCssVars } from '@/hooks/useVtexCxVisualViewportC
 import { useWeniChat } from '@/hooks/useWeniChat';
 import { OrderFormProvider } from '@/contexts/OrderFormContext';
 import Header from '@/components/Header/Header';
+import { ConnectionStatusBanner } from '@/components/Chat/ConnectionStatusBanner';
 import MessagesList from '@/components/Messages/MessagesList';
 import InputBox from '@/components/Input/InputBox';
 import PoweredBy from '@/components/common/PoweredBy';
@@ -80,6 +81,7 @@ export function Chat() {
       className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
     >
       <Header />
+      <ConnectionStatusBanner />
       <OrderFormProvider>
         <ChatContent />
       </OrderFormProvider>

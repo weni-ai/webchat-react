@@ -68,6 +68,10 @@ beforeEach(() => {
   service.setCustomField = jest.fn();
   service.simulateMessageReceived = jest.fn();
   service.simulateMessageSent = jest.fn();
+  service.getState = jest.fn().mockReturnValue({
+    messages: [],
+    connection: { status: 'connected' },
+  });
   service.emit = jest.fn();
   service.clearPageHistory = jest.fn();
   service.clearCart = jest.fn();
@@ -378,6 +382,23 @@ describe('WebChat service helpers', () => {
 
     expect(service.simulateMessageReceived).toHaveBeenCalledWith(received);
     expect(service.simulateMessageSent).toHaveBeenCalledWith(sent);
+  });
+
+  it('simulateConnectionStatus emits patched connection state', async () => {
+    const nextAttemptAt = Date.now() + 8_000;
+
+    await WebChat.simulateConnectionStatus({
+      status: 'reconnecting',
+      nextAttemptAt,
+    });
+
+    expect(service.emit).toHaveBeenCalledWith('state:changed', {
+      messages: [],
+      connection: {
+        status: 'reconnecting',
+        nextAttemptAt,
+      },
+    });
   });
 
   it('waits for service.onReady when it is defined', async () => {

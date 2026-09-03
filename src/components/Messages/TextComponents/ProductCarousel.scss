@@ -1,16 +1,30 @@
 .weni-product-carousel {
   position: relative;
+
+  &:hover .weni-product-carousel__nav {
+    opacity: 1;
+
+    .weni-product-carousel__nav-button:not(.weni-product-carousel__nav-button--hidden) {
+      pointer-events: auto;
+    }
+  }
 }
 
 .weni-product-carousel__track {
   display: flex;
   gap: $fs-spacing-1;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: $fs-spacing-1;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 
-  @include scrollable-container;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .weni-product-carousel__nav {
@@ -21,6 +35,8 @@
   justify-content: space-between;
   padding: 0 $fs-spacing-0;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
   z-index: 1;
 
   &::before,
@@ -57,12 +73,11 @@
 .weni-product-carousel__nav-button {
   position: relative;
   z-index: 1;
-  pointer-events: auto;
+  pointer-events: none;
   box-shadow: $shadow-1;
 
   &--hidden {
     visibility: hidden;
-    pointer-events: none;
   }
 }
 

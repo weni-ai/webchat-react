@@ -1,7 +1,7 @@
 import { render, act, renderHook } from '@testing-library/react';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount } from '@/utils/vtex';
+import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import i18n from '@/i18n';
 import { VoiceService } from '@/services/voice';
@@ -13,6 +13,7 @@ jest.mock('@/experimental/navigateIfSameDomain', () => ({
 
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(() => null),
+  isCheckoutPage: jest.fn(() => false),
 }));
 
 jest.mock('@/utils/vtexCustomFields', () => ({
@@ -450,6 +451,31 @@ describe('ChatContext — init behavior', () => {
     expect(ctx.isChatOpen).toBe(true);
   });
 
+  it('keeps chat closed on checkout even when session was open', async () => {
+    isCheckoutPage.mockReturnValue(true);
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest.spyOn(WeniWebchatService.prototype, 'getSession').mockReturnValue({
+      isChatOpen: true,
+    });
+    const setOpenSpy = jest.spyOn(
+      WeniWebchatService.prototype,
+      'setIsChatOpen',
+    );
+
+    await renderWithContext({});
+    expect(ctx.isChatOpen).toBe(false);
+    expect(setOpenSpy).toHaveBeenCalledWith(false);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
+  it('keeps chat closed on checkout even when startFullScreen is true', async () => {
+    isCheckoutPage.mockReturnValue(true);
+
+    await renderWithContext({ startFullScreen: true });
+    expect(ctx.isChatOpen).toBe(false);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
   it('sends initPayload as a hidden message when there are no messages', async () => {
     const WeniWebchatService = require('@weni/webchat-service');
     const sendSpy = jest.spyOn(WeniWebchatService.prototype, 'sendMessage');
@@ -691,6 +717,7 @@ describe('ChatContext — service events', () => {
     expect(ctx.messages).toEqual(newState.messages);
     expect(ctx.isConnected).toBe(false);
     expect(ctx.isConnectionClosed).toBe(true);
+    expect(ctx.connectionStatus).toBe('closed');
     expect(ctx.isTyping).toBe(true);
     expect(ctx.isThinking).toBe(true);
     expect(ctx.error).toEqual({ message: 'boom' });
@@ -796,6 +823,67 @@ describe('ChatContext — service events', () => {
     });
 
     expect(ctx.isChatOpen).toBe(true);
+  });
+
+  it('allows chat:open:changed open events on checkout', async () => {
+    await renderWithContext({});
+    isCheckoutPage.mockReturnValue(true);
+    const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
+
+    await act(async () => {
+      ctx.service.emit('chat:open:changed', true);
+    });
+
+    expect(ctx.isChatOpen).toBe(true);
+    expect(setOpenSpy).not.toHaveBeenCalledWith(false);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
+  it('does not re-close chat on internal checkout navigation', async () => {
+    isCheckoutPage.mockReturnValue(true);
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.setIsChatOpen(true);
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
+    setOpenSpy.mockClear();
+
+    await act(async () => {
+      history.pushState({}, '', '/checkout/#/payment');
+    });
+
+    expect(setOpenSpy).not.toHaveBeenCalledWith(false);
+    expect(ctx.isChatOpen).toBe(true);
+    isCheckoutPage.mockReturnValue(false);
+  });
+
+  it('closes chat when re-entering checkout after leaving', async () => {
+    isCheckoutPage.mockReturnValue(true);
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.setIsChatOpen(true);
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    isCheckoutPage.mockReturnValue(false);
+    await act(async () => {
+      history.pushState({}, '', '/');
+    });
+    expect(ctx.isChatOpen).toBe(true);
+
+    isCheckoutPage.mockReturnValue(true);
+    const setOpenSpy = jest.spyOn(ctx.service, 'setIsChatOpen');
+    await act(async () => {
+      history.pushState({}, '', '/checkout/');
+    });
+
+    expect(setOpenSpy).toHaveBeenCalledWith(false);
+    expect(ctx.isChatOpen).toBe(false);
+    isCheckoutPage.mockReturnValue(false);
   });
 });
 

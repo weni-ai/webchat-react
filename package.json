@@ -1,6 +1,6 @@
 {
   "name": "@weni/webchat-template-react",
-  "version": "2.7.0",
+  "version": "2.11.0",
   "description": "React UI for Weni Webchat",
   "keywords": [
     "weni",
@@ -28,13 +28,13 @@
     "postversion": "git push --follow-tags"
   },
   "peerDependencies": {
-    "@weni/webchat-service": "1.14.2",
+    "@weni/webchat-service": "1.17.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "dependencies": {
     "@material-symbols/svg-400": "^0.40.0",
-    "dompurify": "^3.3.0",
+    "dompurify": "^3.4.14",
     "i18next": "^25.6.0",
     "marked": "^16.4.0",
     "prop-types": "^15.8.1",
