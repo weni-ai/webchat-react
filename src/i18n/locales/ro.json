@@ -162,6 +162,17 @@
         "title": "Previzualizează",
         "input_placeholder": "Doar previzualizare"
       }
+    },
+    "whatsapp_offers_opt_in": {
+      "agent_confirmation": "Totul este pregătit. Vom trimite oferte și noutăți pe WhatsApp",
+      "agent_follow_up": "Ce cauți astăzi?",
+      "coupon_form_description": "Înscrie-te și trimitem cuponul direct pe WhatsApp",
+      "coupon_form_title": "Primește un cupon de {{percent}}% reducere pe WhatsApp",
+      "form_description": "Înscrie-te pentru cupoane exclusive, lansări și promoții",
+      "form_title": "Primește oferte și noutăți pe WhatsApp",
+      "not_now": "Nu acum",
+      "sign_me_up": "Înscrie-mă"
     }
   }
+
   

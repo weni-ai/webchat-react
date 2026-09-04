@@ -191,5 +191,15 @@
       "title": "Preview",
       "input_placeholder": "Preview only"
     }
+  },
+  "whatsapp_offers_opt_in": {
+    "agent_confirmation": "You're all set! We'll send offers and news to your WhatsApp.",
+    "agent_follow_up": "What are you looking for today?",
+    "coupon_form_description": "Sign up and we'll send your coupon straight to WhatsApp",
+    "coupon_form_title": "Get a {{percent}}% discount coupon on WhatsApp",
+    "form_description": "Sign up for exclusive coupons, launches and promotions",
+    "form_title": "Get offers and news on WhatsApp",
+    "not_now": "Not now",
+    "sign_me_up": "Sign me up"
   }
 }

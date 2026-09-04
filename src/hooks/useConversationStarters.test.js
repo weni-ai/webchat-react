@@ -83,6 +83,16 @@ function buildUnavailableNotifyContext(overrides = {}) {
   });
 }
 
+function buildWhatsappOffersContext(overrides = {}) {
+  return buildContext({
+    config: {
+      conversationStarters: { pdp: true },
+      whatsappOffersNotify: true,
+    },
+    ...overrides,
+  });
+}
+
 function getEventHandler(eventName) {
   const call = mockService.on.mock.calls.find(([name]) => name === eventName);
   return call ? call[1] : undefined;
@@ -1117,6 +1127,112 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(result.current.productName).toBe('Sample Product');
+    });
+  });
+
+  describe('whatsapp offers opt-in', () => {
+    it('ignores simulate when the feature is disabled', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+      expect(handler).toBeDefined();
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.isWhatsappOffersOptIn).toBe(false);
+      expect(result.current.isOptInBalloonVisible).toBe(false);
+    });
+
+    it('shows the balloon on simulate when the feature is enabled', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.isWhatsappOffersOptIn).toBe(true);
+      expect(result.current.isOptInBalloonVisible).toBe(true);
+      expect(result.current.couponPercent).toBeNull();
+      expect(result.current.isBackInStockNotify).toBe(false);
+      expect(result.current.questions).toEqual([]);
+    });
+
+    it('stores couponPercent from the simulate payload', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({ couponPercent: 20 });
+      });
+
+      expect(result.current.couponPercent).toBe(20);
+    });
+
+    it('opens the opt-in page on balloon click when chat is open', () => {
+      ctx = buildWhatsappOffersContext({ isChatOpen: true });
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({ couponPercent: 20 });
+      });
+
+      act(() => {
+        result.current.handleWhatsappOffersClick();
+      });
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'whatsapp-offers-opt-in',
+        title: 'Get a 20% discount coupon on WhatsApp',
+        props: { couponPercent: 20 },
+      });
+      expect(result.current.isOptInBalloonVisible).toBe(false);
+    });
+
+    it('opens chat then page when balloon is clicked while chat is closed', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      let rerender;
+      const rendered = renderHook(() => useConversationStartersCore());
+      hookResult = rendered.result;
+      rerender = rendered.rerender;
+
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+      act(() => {
+        handler({});
+      });
+
+      act(() => {
+        hookResult.current.handleWhatsappOffersClick();
+      });
+
+      expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
+      expect(ctx.setCurrentPage).not.toHaveBeenCalled();
+
+      ctx = buildWhatsappOffersContext({
+        isChatOpen: true,
+        setCurrentPage: ctx.setCurrentPage,
+      });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'whatsapp-offers-opt-in',
+        title: 'Get offers and news on WhatsApp',
+        props: { couponPercent: null },
+      });
     });
   });
 
