@@ -273,12 +273,14 @@ async function send(message, options = {}) {
 }
 
 /**
- * Add product to cart
+ * Add product(s) to cart
  * @param {Object} props - Product properties
  * @param {string} props.VTEXAccountName - VTEX account name
  * @param {string} props.orderFormId - Order form ID
- * @param {string} props.seller - Seller ID
- * @param {string} props.id - Product ID
+ * @param {Array<{ id: string, seller: string, quantity?: number }>} [props.items] - Items to add
+ * @param {string} [props.seller] - Seller ID (legacy single-item API)
+ * @param {string} [props.id] - Product ID (legacy single-item API)
+ * @param {number} [props.quantity] - Quantity (legacy single-item API)
  * @returns {Promise<void>}
  */
 async function addProductToCart(props) {
@@ -428,6 +430,25 @@ async function simulateUnavailableProduct(productName) {
   });
 }
 
+/**
+ * Simulate socket connection status for UI debug (connection banner).
+ * @param {{ status?: string, nextAttemptAt?: number|null, reconnectAttempts?: number }} connection
+ * @returns {Promise<void>}
+ */
+async function simulateConnectionStatus(connection = {}) {
+  const service = await serviceWhenReady();
+  const current =
+    typeof service.getState === 'function' ? service.getState() : {};
+  const nextState = {
+    ...current,
+    connection: {
+      ...(current.connection || {}),
+      ...connection,
+    },
+  };
+  service.emit('state:changed', nextState);
+}
+
 function validateStartersInput(questions) {
   if (!Array.isArray(questions)) return false;
   if (questions.length < 1 || questions.length > 3) return false;
@@ -452,6 +473,15 @@ async function setConversationStarters(questions) {
   svc.emit('starters:set-manual', questions);
 }
 
+async function clearConversationStarters() {
+  if (!widgetInstance && typeof service.emit !== 'function') {
+    return;
+  }
+
+  const svc = await serviceWhenReady();
+  svc.emit('starters:clear');
+}
+
 function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
@@ -474,12 +504,14 @@ const WebChat = {
   getContext,
   setCustomField,
   setConversationStarters,
+  clearConversationStarters,
   isOpen,
   isVisible,
   reload,
   simulateMessageReceived,
   simulateMessageSent,
   simulateUnavailableProduct,
+  simulateConnectionStatus,
   changeLanguage,
 };
 

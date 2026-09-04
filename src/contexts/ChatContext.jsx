@@ -13,9 +13,10 @@ import { VoiceService } from '@/services/voice';
 import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount } from '@/utils/vtex';
+import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
+import { createNavigationMonitor } from '@/utils/navigationMonitor';
 
 let serviceInstance = {
   fns: [],
@@ -249,7 +250,10 @@ export function ChatProvider({ children, config }) {
           }
         }
 
-        if (mergedConfig.startFullScreen) {
+        if (isCheckoutPage()) {
+          service.setIsChatOpen(false);
+          setIsChatOpen(false);
+        } else if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
           setIsChatOpen(service.getSession()?.isChatOpen || false);
@@ -324,7 +328,9 @@ export function ChatProvider({ children, config }) {
       service.on('voice:enabled', () => setIsVoiceEnabledByServer(true));
     }
 
-    service.on('chat:open:changed', (isOpen) => setIsChatOpen(isOpen));
+    service.on('chat:open:changed', (isOpen) => {
+      setIsChatOpen(isOpen);
+    });
 
     service.clearPageHistory = clearPageHistory;
     service.clearCart = clearCart;
@@ -358,6 +364,24 @@ export function ChatProvider({ children, config }) {
   }, [isInsideVTEXStore, service]);
 
   useEffect(() => {
+    let wasOnCheckout = false;
+    const closeChatOnEnteringCheckout = () => {
+      const nowOnCheckout = isCheckoutPage();
+      if (nowOnCheckout && !wasOnCheckout) {
+        service.setIsChatOpen(false);
+      }
+      wasOnCheckout = nowOnCheckout;
+    };
+
+    closeChatOnEnteringCheckout();
+
+    const monitor = createNavigationMonitor(closeChatOnEnteringCheckout);
+    monitor.start();
+
+    return () => monitor.stop();
+  }, [service]);
+
+  useEffect(() => {
     if (isChatOpen && mergedConfig.connectOn === 'demand') {
       service.connect();
     }
@@ -374,10 +398,19 @@ export function ChatProvider({ children, config }) {
       navigateIfSameDomain(message, mergedConfig.navigateIfSameDomain);
     };
 
+    const handleMessageUpdated = (messageId, updates) => {
+      navigateIfSameDomain(
+        { id: messageId, ...updates },
+        mergedConfig.navigateIfSameDomain,
+      );
+    };
+
     service.on('message:received', handleMessageReceived);
+    service.on('message:updated', handleMessageUpdated);
 
     return () => {
       service.off('message:received', handleMessageReceived);
+      service.off('message:updated', handleMessageUpdated);
     };
   }, [isChatOpen]);
 
@@ -548,6 +581,10 @@ export function ChatProvider({ children, config }) {
     messages: state.messages || [],
     isConnected: state.connection?.status === 'connected',
     isConnectionClosed: state.connection?.status === 'closed',
+    connectionStatus: state.connection?.status,
+    reconnectAttempts: state.connection?.reconnectAttempts,
+    nextAttemptAt: state.connection?.nextAttemptAt,
+    reconnectNow: () => service.reconnectNow(),
     isTyping: state.isTyping || false,
     isThinking: state.isThinking || false,
     context,

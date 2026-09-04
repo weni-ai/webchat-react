@@ -10,6 +10,10 @@ export function isVtexPdpPage() {
   return /\/[^/]+\/p\/?$/.test(window.location.pathname);
 }
 
+export function isCheckoutPage() {
+  return window.location.pathname.includes('/checkout/');
+}
+
 export function extractSlugFromUrl() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const pIndex = segments.indexOf('p');
@@ -41,6 +45,26 @@ function isProductType(type) {
   return false;
 }
 
+function nonEmptyString(value) {
+  if (value == null) return null;
+  const trimmed = String(value).trim();
+  return trimmed !== '' ? trimmed : null;
+}
+
+function getLdJsonProductCandidates(data) {
+  const candidates = [];
+  if (isProductType(data?.['@type'])) candidates.push(data);
+  if (Array.isArray(data?.['@graph'])) {
+    for (const entry of data['@graph']) {
+      if (isProductType(entry?.['@type'])) candidates.push(entry);
+    }
+  }
+  if (data?.mainEntity && isProductType(data.mainEntity['@type'])) {
+    candidates.push(data.mainEntity);
+  }
+  return candidates;
+}
+
 export function findProductInLdJson() {
   try {
     const scripts = document.querySelectorAll(
@@ -49,20 +73,10 @@ export function findProductInLdJson() {
 
     for (const script of scripts) {
       try {
-        const data = JSON.parse(script.textContent);
-
-        if (isProductType(data?.['@type'])) return data;
-
-        if (Array.isArray(data?.['@graph'])) {
-          const product = data['@graph'].find((entry) =>
-            isProductType(entry?.['@type']),
-          );
-          if (product) return product;
-        }
-
-        if (data?.mainEntity && isProductType(data.mainEntity['@type'])) {
-          return data.mainEntity;
-        }
+        const [product] = getLdJsonProductCandidates(
+          JSON.parse(script.textContent),
+        );
+        if (product) return product;
       } catch {
         /* malformed JSON — skip this tag */
       }
@@ -297,9 +311,49 @@ export function normalizeForContext(rawProduct, source) {
 }
 
 export function getSelectedSkuIdFromLdJson() {
-  const product = findProductInLdJson();
-  if (!product) return null;
-  return product.sku || null;
+  try {
+    const scripts = document.querySelectorAll(
+      'script[type="application/ld+json"]',
+    );
+
+    for (const script of scripts) {
+      try {
+        const candidates = getLdJsonProductCandidates(
+          JSON.parse(script.textContent),
+        );
+        for (const candidate of candidates) {
+          const sku = nonEmptyString(candidate?.sku);
+          if (sku) return sku;
+        }
+      } catch {
+        /* malformed JSON — skip this tag */
+      }
+    }
+  } catch {
+    /* querySelectorAll failure — unlikely but safe */
+  }
+  return null;
+}
+
+export function getSelectedSkuIdFromNextData() {
+  try {
+    const nextData = window.__NEXT_DATA__;
+    if (!nextData || nextData.page !== '/[slug]/p') return null;
+    return nonEmptyString(nextData.props?.pageProps?.data?.product?.sku);
+  } catch {
+    return null;
+  }
+}
+
+export function getSkuIdFromRawProduct(rawProduct, source) {
+  if (!rawProduct) return null;
+  if (source === 'intelligent-search') {
+    return nonEmptyString(rawProduct.items?.[0]?.itemId);
+  }
+  if (source === 'next-data' || source === 'ld+json') {
+    return nonEmptyString(rawProduct.sku);
+  }
+  return null;
 }
 
 export function getSelectedSkuIdFromVtexState() {
@@ -321,8 +375,17 @@ export function getSelectedSkuIdFromVtexState() {
     const itemRef = state[productRef]?.items?.[0]?.id;
     if (!itemRef) return null;
 
-    const itemId = state[itemRef]?.itemId;
-    return itemId != null && itemId !== '' ? String(itemId) : null;
+    return nonEmptyString(state[itemRef]?.itemId);
+  } catch {
+    return null;
+  }
+}
+
+export function getProductIdFromDom() {
+  try {
+    return nonEmptyString(
+      document.querySelector('[data-sku]')?.getAttribute('data-sku'),
+    );
   } catch {
     return null;
   }
@@ -330,37 +393,31 @@ export function getSelectedSkuIdFromVtexState() {
 
 export function getSelectedSkuIdFromDom() {
   try {
-    const dataSku = document
-      .querySelector('[data-sku]')
-      ?.getAttribute('data-sku');
-    if (dataSku?.trim()) return dataSku.trim();
-
-    const metaSku = document
-      .querySelector('meta[property="product:sku"]')
-      ?.getAttribute('content');
-    if (metaSku?.trim()) return metaSku.trim();
+    return nonEmptyString(
+      document
+        .querySelector('meta[property="product:sku"]')
+        ?.getAttribute('content'),
+    );
   } catch {
     return null;
   }
-
-  return null;
 }
 
 export function getSelectedSkuIdFromUrl() {
   try {
-    const skuId = new URLSearchParams(window.location.search).get('skuId');
-    if (skuId?.trim()) return skuId.trim();
+    return nonEmptyString(
+      new URLSearchParams(window.location.search).get('skuId'),
+    );
   } catch {
     return null;
   }
-
-  return null;
 }
 
 export function getSelectedSkuId() {
   return (
     getSelectedSkuIdFromUrl() ||
     getSelectedSkuIdFromLdJson() ||
+    getSelectedSkuIdFromNextData() ||
     getSelectedSkuIdFromVtexState() ||
     getSelectedSkuIdFromDom() ||
     null
@@ -462,12 +519,30 @@ function formatStockStatus(availableQuantity) {
   return availableQuantity > 0 ? 'Available' : 'Unavailable';
 }
 
+/**
+ * Strip leading zeros from numeric IDs (e.g. "000326125867" → "326125867").
+ * Non-numeric IDs are left unchanged so alphanumeric SKUs stay intact.
+ */
+export function stripLeadingZeros(id) {
+  if (id == null || id === '') return id;
+  const str = String(id);
+  if (!/^\d+$/.test(str)) return str;
+  const stripped = str.replace(/^0+/, '');
+  return stripped === '' ? '0' : stripped;
+}
+
+function skuIdsMatch(a, b) {
+  if (a == null || b == null) return false;
+  if (String(a) === String(b)) return true;
+  return stripLeadingZeros(a) === stripLeadingZeros(b);
+}
+
 function formatSkuLine(item) {
   const offer = item.sellers?.[0]?.commertialOffer;
   const price = offer?.Price ?? 'N/A';
   const stockStatus = formatStockStatus(offer?.AvailableQuantity);
   const name = item.nameComplete || item.name || 'N/A';
-  const skuId = item.itemId || 'N/A';
+  const skuId = item.itemId != null ? stripLeadingZeros(item.itemId) : 'N/A';
 
   const variationParts = (item.variations || []).map(
     (v) => `${v.name}: ${v.values?.join(', ') || 'N/A'}`,
@@ -483,7 +558,7 @@ function findSelectedSkuItem(product, selectedSkuId) {
   const items = product.items || [];
   return (
     items.find(
-      (item) => item.itemId && String(item.itemId) === String(selectedSkuId),
+      (item) => item.itemId && skuIdsMatch(item.itemId, selectedSkuId),
     ) || null
   );
 }
@@ -510,11 +585,23 @@ export function buildProductContextString(product, selectedSkuId) {
 
   const description = product.description || '';
   const attributes = filterInternalProperties(product.properties || []);
+  const productIdFromDom = getProductIdFromDom();
+  const rawProductId =
+    (product.productId != null && product.productId !== ''
+      ? product.productId
+      : null) || productIdFromDom;
+  const productId =
+    rawProductId != null ? stripLeadingZeros(rawProductId) : 'N/A';
+  const skuId =
+    selectedSkuId != null && selectedSkuId !== ''
+      ? stripLeadingZeros(selectedSkuId)
+      : 'N/A';
 
   const lines = [
     `Product: ${product.productName || 'N/A'}`,
     `Brand: ${product.brand || 'N/A'}`,
-    `SKU ID: ${product.productId || 'N/A'}`,
+    `Product ID: ${productId}`,
+    `SKU ID: ${skuId}`,
   ];
 
   if (description) {

@@ -108,10 +108,11 @@ export function InlineProduct({
 
     if (canUserNavigateToProductPage) {
       window.location.href = productURL;
-    } else {
-      onClick();
+      return;
     }
-  }, [canUserNavigateToProductPage, onClick, productURLObject]);
+
+    onClick?.();
+  }, [canUserNavigateToProductPage, onClick, productURL, productURLObject]);
 
   return (
     <section

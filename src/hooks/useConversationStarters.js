@@ -10,6 +10,7 @@ import {
   normalizeForContext,
   buildProductContextString,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
   isSelectedSkuAvailable,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
@@ -181,7 +182,9 @@ export function useConversationStartersCore() {
 
     if (currentFingerprintRef.current !== newFingerprint) return;
 
-    const selectedSkuId = getSelectedSkuId();
+    const selectedSkuId =
+      getSelectedSkuId() ||
+      getSkuIdFromRawProduct(result.rawProduct, result.source);
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
@@ -410,11 +413,18 @@ export function useConversationStartersCore() {
       showBackInStockNotify(name);
     };
 
+    const handleStartersClear = () => {
+      resetStartersState();
+      service.clearStarters();
+      service.setContext('');
+    };
+
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
     service.on('starters:simulate-unavailable', handleSimulateUnavailable);
+    service.on('starters:clear', handleStartersClear);
 
     if (isConnected) {
       handleConnected();
@@ -426,8 +436,15 @@ export function useConversationStartersCore() {
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
       service.off('starters:simulate-unavailable', handleSimulateUnavailable);
+      service.off('starters:clear', handleStartersClear);
     };
-  }, [service, isConnected, startMobileAutoHide, showBackInStockNotify]);
+  }, [
+    service,
+    isConnected,
+    startMobileAutoHide,
+    showBackInStockNotify,
+    resetStartersState,
+  ]);
 
   useEffect(() => {
     if (!service) return;

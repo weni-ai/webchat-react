@@ -68,6 +68,10 @@ beforeEach(() => {
   service.setCustomField = jest.fn();
   service.simulateMessageReceived = jest.fn();
   service.simulateMessageSent = jest.fn();
+  service.getState = jest.fn().mockReturnValue({
+    messages: [],
+    connection: { status: 'connected' },
+  });
   service.emit = jest.fn();
   service.clearPageHistory = jest.fn();
   service.clearCart = jest.fn();
@@ -397,6 +401,23 @@ describe('WebChat service helpers', () => {
     });
   });
 
+  it('simulateConnectionStatus emits patched connection state', async () => {
+    const nextAttemptAt = Date.now() + 8_000;
+
+    await WebChat.simulateConnectionStatus({
+      status: 'reconnecting',
+      nextAttemptAt,
+    });
+
+    expect(service.emit).toHaveBeenCalledWith('state:changed', {
+      messages: [],
+      connection: {
+        status: 'reconnecting',
+        nextAttemptAt,
+      },
+    });
+  });
+
   it('waits for service.onReady when it is defined', async () => {
     const readyService = {
       setIsChatOpen: jest.fn(),
@@ -462,6 +483,25 @@ describe('WebChat.setConversationStarters', () => {
       'Track order',
       'Talk to agent',
     ]);
+  });
+});
+
+describe('WebChat.clearConversationStarters', () => {
+  it('returns early when the widget is not mounted and service.emit is unavailable', async () => {
+    delete service.emit;
+
+    await WebChat.clearConversationStarters();
+
+    expect(service.emit).toBeUndefined();
+  });
+
+  it('emits starters:clear after init', async () => {
+    setupContainer();
+    WebChat.init(baseParams);
+
+    await WebChat.clearConversationStarters();
+
+    expect(service.emit).toHaveBeenCalledWith('starters:clear');
   });
 });
 

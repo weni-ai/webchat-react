@@ -7,7 +7,7 @@ import './Header.scss';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-function HeaderTitle({ title, subtitle }) {
+export function HeaderTitle({ title, subtitle }) {
   return (
     <hgroup className="weni-chat-header__title-group">
       <h1 className="weni-chat-header__title">{title}</h1>
@@ -44,7 +44,8 @@ export function Header() {
 
   const { config, isInsideVTEXStore } = useChatContext();
 
-  const showCartButton = cartTotalItems > 0 && !isInsideVTEXStore;
+  const showCartButton =
+    cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
 
   // TODO: Implement header layout
   // TODO: Add connection status indicator

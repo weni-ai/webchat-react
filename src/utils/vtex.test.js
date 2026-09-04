@@ -1,5 +1,6 @@
 import {
   isVtexPdpPage,
+  isCheckoutPage,
   extractSlugFromUrl,
   extractProductPathFromUrl,
   getVtexAccount,
@@ -16,11 +17,16 @@ import {
   extractProductData,
   buildProductContextString,
   isSelectedSkuAvailable,
+  stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
+  getSelectedSkuIdFromNextData,
   getSelectedSkuIdFromVtexState,
   getSelectedSkuIdFromDom,
+  getProductIdFromDom,
   getSelectedSkuIdFromUrl,
   getSelectedSkuId,
+  getSkuIdFromRawProduct,
+  isFastStoreHost,
 } from './vtex';
 
 function mockPathname(value) {
@@ -71,6 +77,27 @@ describe('isVtexPdpPage', () => {
   ])('returns false for non-PDP URL %s', (path, expected) => {
     mockPathname(path);
     expect(isVtexPdpPage()).toBe(expected);
+  });
+});
+
+describe('isCheckoutPage', () => {
+  it.each([
+    ['/checkout/', true],
+    ['/checkout/cart', true],
+    ['/store/checkout/order', true],
+  ])('returns true for checkout URL %s', (path, expected) => {
+    mockPathname(path);
+    expect(isCheckoutPage()).toBe(expected);
+  });
+
+  it.each([
+    ['/checkout', false],
+    ['/category/smartphones', false],
+    ['/', false],
+    ['/product/p', false],
+  ])('returns false for non-checkout URL %s', (path, expected) => {
+    mockPathname(path);
+    expect(isCheckoutPage()).toBe(expected);
   });
 });
 
@@ -144,6 +171,22 @@ describe('getVtexAccount', () => {
     window.__RUNTIME__ = {};
     window.VTEX_METADATA = {};
     expect(getVtexAccount()).toBeUndefined();
+  });
+});
+
+describe('isFastStoreHost', () => {
+  afterEach(() => {
+    delete window.faststore_sdk_stores;
+  });
+
+  it('returns true when the FastStore SDK get function exists', () => {
+    window.faststore_sdk_stores = { get: () => ({}) };
+    expect(isFastStoreHost()).toBe(true);
+  });
+
+  it('returns false when get is missing', () => {
+    window.faststore_sdk_stores = {};
+    expect(isFastStoreHost()).toBe(false);
   });
 });
 
@@ -366,9 +409,105 @@ describe('extractProductData', () => {
   });
 });
 
+describe('stripLeadingZeros', () => {
+  it('strips leading zeros from numeric IDs', () => {
+    expect(stripLeadingZeros('000326125867')).toBe('326125867');
+    expect(stripLeadingZeros('02003801')).toBe('2003801');
+    expect(stripLeadingZeros('005413344')).toBe('5413344');
+  });
+
+  it('leaves IDs without leading zeros unchanged', () => {
+    expect(stripLeadingZeros('123')).toBe('123');
+    expect(stripLeadingZeros('5413344')).toBe('5413344');
+  });
+
+  it('preserves alphanumeric IDs', () => {
+    expect(stripLeadingZeros('SKU-001')).toBe('SKU-001');
+    expect(stripLeadingZeros('00ABC')).toBe('00ABC');
+  });
+
+  it('keeps a single zero when the value is all zeros', () => {
+    expect(stripLeadingZeros('0')).toBe('0');
+    expect(stripLeadingZeros('000')).toBe('0');
+  });
+
+  it('handles null, empty, and numeric inputs', () => {
+    expect(stripLeadingZeros(null)).toBeNull();
+    expect(stripLeadingZeros('')).toBe('');
+    expect(stripLeadingZeros(42)).toBe('42');
+    expect(stripLeadingZeros(2003801)).toBe('2003801');
+  });
+});
+
 describe('buildProductContextString', () => {
   it('returns null for null product', () => {
     expect(buildProductContextString(null)).toBeNull();
+  });
+
+  it('strips leading zeros from productId and selected SKU in context', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '005413344',
+      properties: [],
+      items: [
+        {
+          itemId: '000326125867',
+          name: 'TV 85',
+          sellers: [{ commertialOffer: { Price: 100, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '000326125867');
+    expect(result).toContain('Product ID: 5413344');
+    expect(result).toContain('SKU ID: 326125867');
+    expect(result).toContain('SKU 326125867:');
+    expect(result).not.toContain('005413344');
+    expect(result).not.toContain('000326125867');
+  });
+
+  it('matches selected SKU when leading zeros differ between sources', () => {
+    const product = {
+      productName: 'Purifier',
+      brand: 'Electrolux',
+      productId: '1',
+      properties: [],
+      items: [
+        {
+          itemId: '02003801',
+          name: 'Purifier Grey',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 1 } },
+          ],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '2003801');
+    expect(result).toContain('Selected SKU:');
+    expect(result).toContain('SKU 2003801:');
+  });
+
+  it('preserves alphanumeric SKUs that are not purely numeric', () => {
+    const product = {
+      productName: 'Shoe',
+      brand: 'Brand',
+      productId: 'SKU-001',
+      properties: [],
+      items: [
+        {
+          itemId: 'SKU-00A',
+          name: 'Shoe Red',
+          sellers: [{ commertialOffer: { Price: 50, AvailableQuantity: 1 } }],
+          variations: [],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, 'SKU-00A');
+    expect(result).toContain('Product ID: SKU-001');
+    expect(result).toContain('SKU ID: SKU-00A');
+    expect(result).toContain('SKU SKU-00A:');
   });
 
   it('builds context with basic product fields', () => {
@@ -383,7 +522,8 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: iPad');
     expect(result).toContain('Brand: Apple');
-    expect(result).toContain('SKU ID: 123');
+    expect(result).toContain('Product ID: 123');
+    expect(result).toContain('SKU ID: N/A');
     expect(result).toContain('Description: A great tablet');
     expect(result).toContain('Attributes: Color: Silver');
   });
@@ -608,7 +748,82 @@ describe('buildProductContextString', () => {
     const result = buildProductContextString(product);
     expect(result).toContain('Product: N/A');
     expect(result).toContain('Brand: N/A');
+    expect(result).toContain('Product ID: N/A');
     expect(result).toContain('SKU ID: N/A');
+  });
+
+  it('prefers product.productId as Product ID over data-sku from DOM', () => {
+    document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '999',
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product, '000310122646');
+    expect(result).toContain('Product ID: 999');
+    expect(result).toContain('SKU ID: 310122646');
+    expect(result).not.toContain('Product ID: 5413344');
+  });
+
+  it('falls back to data-sku from DOM when product.productId is missing', () => {
+    document.body.innerHTML = '<button data-sku="005413344">Buy</button>';
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      properties: [],
+      items: [],
+    };
+    const result = buildProductContextString(product, '000310122646');
+    expect(result).toContain('Product ID: 5413344');
+    expect(result).toContain('SKU ID: 310122646');
+  });
+
+  it('treats an empty productId as missing and uses nameComplete in the SKU line', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'Samsung',
+      productId: '',
+      properties: [],
+      items: [
+        {
+          itemId: '10',
+          nameComplete: 'TV 55',
+          name: 'ignored',
+          sellers: [],
+          variations: [{ name: 'Size', values: ['55'] }],
+        },
+      ],
+    };
+    const result = buildProductContextString(product, '10');
+    expect(result).toContain('Product ID: N/A');
+    expect(result).toContain('SKU 10: TV 55 (Size: 55)');
+  });
+
+  it('uses N/A when the selected SKU id is an empty string and when itemId is missing', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items: [{ name: 'No id', sellers: [] }],
+    };
+    const result = buildProductContextString(product, '');
+    expect(result).toContain('SKU ID: N/A');
+    expect(result).not.toContain('Selected SKU');
+  });
+
+  it('uses N/A when a matched SKU has no itemId and no name', () => {
+    const product = {
+      productName: 'TV',
+      brand: 'B',
+      productId: '1',
+      properties: [],
+      items: [{ itemId: '10', sellers: [{ commertialOffer: {} }] }],
+    };
+    const result = buildProductContextString(product, '10');
+    expect(result).toContain('SKU 10: N/A | Price: N/A');
   });
 });
 
@@ -670,6 +885,20 @@ describe('isSelectedSkuAvailable', () => {
   it('returns true when product or selectedSkuId is missing', () => {
     expect(isSelectedSkuAvailable(null, '1')).toBe(true);
     expect(isSelectedSkuAvailable({ items: [] }, null)).toBe(true);
+  });
+
+  it('matches selected SKU when leading zeros differ between sources', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '2003801')).toBe(false);
   });
 });
 
@@ -734,6 +963,20 @@ describe('findProductInLdJson', () => {
   it('returns null when no tag has a Product type', () => {
     injectLdJson({ '@type': 'Organization', name: 'Acme' });
     expect(findProductInLdJson()).toBeNull();
+  });
+
+  it('returns null when @type is neither a string nor an array', () => {
+    injectLdJson({ '@type': 123, name: 'Nope' });
+    expect(findProductInLdJson()).toBeNull();
+  });
+
+  it('returns null when querySelectorAll throws', () => {
+    const origQuery = document.querySelectorAll;
+    document.querySelectorAll = () => {
+      throw new Error('forced');
+    };
+    expect(findProductInLdJson()).toBeNull();
+    document.querySelectorAll = origQuery;
   });
 });
 
@@ -858,6 +1101,18 @@ describe('extractSpecsFromNextData', () => {
       { specifications: [{ name: 'X', values: ['Y'] }] },
     ];
     expect(extractSpecsFromNextData(groups)).toEqual({ X: 'Y' });
+  });
+
+  it('uses an empty string when spec values are not an array and skips unnamed specs', () => {
+    const groups = [
+      {
+        specifications: [
+          { name: 'Color', values: 'Red' },
+          { values: ['ignored'] },
+        ],
+      },
+    ];
+    expect(extractSpecsFromNextData(groups)).toEqual({ Color: '' });
   });
 });
 
@@ -1333,6 +1588,18 @@ describe('resolveProductData', () => {
     const result = await resolveProductData('slug', 'store');
     expect(result).toBeNull();
   });
+
+  it('falls through when IS API products do not match the slug', async () => {
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          products: [{ linkText: 'other', productName: 'Other' }],
+        }),
+    });
+    const result = await resolveProductData('missing', 'store');
+    expect(result).toBeNull();
+  });
 });
 
 describe('edge cases for branch coverage', () => {
@@ -1463,6 +1730,75 @@ describe('edge cases for branch coverage', () => {
     expect(result.productData.attributes).toEqual({});
   });
 
+  it('extractFromLdJson skips unnamed additional properties and stringifies missing values', () => {
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Props',
+      brand: 'B',
+      additionalProperty: [{ value: 'no-name' }, { name: 'Color' }],
+    });
+    const result = extractFromLdJson('props');
+    expect(result.productData.attributes).toEqual({ Color: '' });
+  });
+
+  it('normalizeForContext ld+json uses an empty brand when brand has no name', () => {
+    const result = normalizeForContext(
+      { name: 'X', brand: {}, description: 'D' },
+      'ld+json',
+    );
+    expect(result.brand).toBe('');
+  });
+
+  it('normalizeForContext next-data skips unnamed specs and empty current offers', () => {
+    const result = normalizeForContext(
+      {
+        name: 'P',
+        brand: {},
+        id: '1',
+        sku: '1',
+        isVariantOf: {
+          skuVariants: { allVariantProducts: [{ sku: '1', name: 'A' }] },
+        },
+        customData: {
+          specificationGroups: [
+            { specifications: [{ values: ['x'] }, { name: 'Color' }] },
+          ],
+        },
+      },
+      'next-data',
+    );
+    expect(result.brand).toBe('');
+    expect(result.properties).toEqual([{ name: 'Color', values: [] }]);
+    expect(result.items[0].sellers).toEqual([]);
+  });
+
+  it('getSelectedSkuIdFromLdJson skips malformed tags and empty skus', () => {
+    injectLdJson('{{{');
+    injectLdJson({ '@type': 'Product', sku: '   ', name: 'X' });
+    injectLdJson({ '@type': 'Product', sku: 'real', name: 'Y' });
+    expect(getSelectedSkuIdFromLdJson()).toBe('real');
+  });
+
+  it('getSelectedSkuIdFromLdJson returns null when querySelectorAll throws', () => {
+    const origQuery = document.querySelectorAll;
+    document.querySelectorAll = () => {
+      throw new Error('forced');
+    };
+    expect(getSelectedSkuIdFromLdJson()).toBeNull();
+    document.querySelectorAll = origQuery;
+  });
+
+  it('getSelectedSkuIdFromNextData returns null when reading __NEXT_DATA__ throws', () => {
+    Object.defineProperty(window, '__NEXT_DATA__', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
+    });
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+    delete window.__NEXT_DATA__;
+  });
+
   it('extractFromNextData handles brand as string', () => {
     window.__NEXT_DATA__ = {
       props: {
@@ -1583,6 +1919,74 @@ describe('getSelectedSkuIdFromLdJson', () => {
     });
     expect(getSelectedSkuIdFromLdJson()).toBeNull();
   });
+
+  it('skips ProductGroup without sku and uses later Product with sku', () => {
+    injectLdJson({ '@type': 'ProductGroup', name: 'Group', brand: 'B' });
+    injectLdJson({
+      '@type': 'Product',
+      name: 'iPad',
+      sku: '000310122646',
+      brand: 'Apple',
+    });
+    expect(getSelectedSkuIdFromLdJson()).toBe('000310122646');
+  });
+});
+
+describe('getSelectedSkuIdFromNextData', () => {
+  it('returns sku from __NEXT_DATA__ product', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: {
+            product: { name: 'P', sku: '000310122646' },
+          },
+        },
+      },
+    };
+    expect(getSelectedSkuIdFromNextData()).toBe('000310122646');
+  });
+
+  it('returns null when __NEXT_DATA__ has no sku', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: { product: { name: 'P', id: '7' } },
+        },
+      },
+    };
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+  });
+
+  it('returns null when __NEXT_DATA__ is missing', () => {
+    expect(getSelectedSkuIdFromNextData()).toBeNull();
+  });
+});
+
+describe('getSkuIdFromRawProduct', () => {
+  it('returns sku for next-data and ld+json sources', () => {
+    expect(getSkuIdFromRawProduct({ sku: '37' }, 'next-data')).toBe('37');
+    expect(getSkuIdFromRawProduct({ sku: '37' }, 'ld+json')).toBe('37');
+  });
+
+  it('returns first itemId for intelligent-search source', () => {
+    expect(
+      getSkuIdFromRawProduct(
+        { items: [{ itemId: '99' }] },
+        'intelligent-search',
+      ),
+    ).toBe('99');
+  });
+
+  it('returns null when sku is missing', () => {
+    expect(getSkuIdFromRawProduct({ id: '1' }, 'next-data')).toBeNull();
+    expect(getSkuIdFromRawProduct(null, 'ld+json')).toBeNull();
+  });
+
+  it('returns null for an unknown source', () => {
+    expect(getSkuIdFromRawProduct({ sku: '1' }, 'other')).toBeNull();
+  });
 });
 
 describe('getSelectedSkuIdFromVtexState', () => {
@@ -1615,30 +2019,89 @@ describe('getSelectedSkuIdFromVtexState', () => {
   it('returns null when __STATE__ is missing', () => {
     expect(getSelectedSkuIdFromVtexState()).toBeNull();
   });
+
+  it('returns null when __STATE__ is not an object', () => {
+    window.__STATE__ = 'bad';
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when ROOT_QUERY is missing', () => {
+    window.__STATE__ = {};
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when the product ref has no items', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"x"})': { id: 'Product:1' } },
+      'Product:1': { items: [] },
+    };
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when the product key has no id', () => {
+    window.__STATE__ = {
+      ROOT_QUERY: { 'product({"slug":"x"})': {} },
+    };
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+  });
+
+  it('returns null when accessing __STATE__ throws', () => {
+    Object.defineProperty(window, '__STATE__', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
+    });
+    expect(getSelectedSkuIdFromVtexState()).toBeNull();
+    delete window.__STATE__;
+  });
 });
 
-describe('getSelectedSkuIdFromDom', () => {
+describe('getProductIdFromDom', () => {
   it('returns data-sku from the first matching element', () => {
     document.body.innerHTML =
       '<button data-sku="13" data-seller="1">Buy</button>';
 
-    expect(getSelectedSkuIdFromDom()).toBe('13');
+    expect(getProductIdFromDom()).toBe('13');
   });
 
-  it('falls back to meta[property="product:sku"] when data-sku is absent', () => {
+  it('returns null when no data-sku marker exists', () => {
+    expect(getProductIdFromDom()).toBeNull();
+  });
+
+  it('returns null when querying the DOM throws', () => {
+    const origQuery = document.querySelector;
+    document.querySelector = () => {
+      throw new Error('forced');
+    };
+    expect(getProductIdFromDom()).toBeNull();
+    expect(getSelectedSkuIdFromDom()).toBeNull();
+    document.querySelector = origQuery;
+  });
+});
+
+describe('getSelectedSkuIdFromDom', () => {
+  it('returns null when only data-sku is present (product id, not sku)', () => {
+    document.body.innerHTML =
+      '<button data-sku="13" data-seller="1">Buy</button>';
+
+    expect(getSelectedSkuIdFromDom()).toBeNull();
+  });
+
+  it('returns meta[property="product:sku"] content', () => {
     document.body.innerHTML =
       '<meta property="product:sku" content="34" data-react-helmet="true">';
 
     expect(getSelectedSkuIdFromDom()).toBe('34');
   });
 
-  it('prefers data-sku over meta product:sku when both are present', () => {
+  it('uses meta product:sku even when data-sku is also present', () => {
     document.body.innerHTML = `
       <meta property="product:sku" content="34">
       <button data-sku="13" data-seller="1">Buy</button>
     `;
 
-    expect(getSelectedSkuIdFromDom()).toBe('13');
+    expect(getSelectedSkuIdFromDom()).toBe('34');
   });
 
   it('returns null when no DOM SKU markers exist', () => {
@@ -1659,6 +2122,16 @@ describe('getSelectedSkuIdFromUrl', () => {
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { ...window.location, search: '' },
+    });
+    expect(getSelectedSkuIdFromUrl()).toBeNull();
+  });
+
+  it('returns null when reading the search string throws', () => {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      get() {
+        throw new Error('forced');
+      },
     });
     expect(getSelectedSkuIdFromUrl()).toBeNull();
   });
@@ -1697,6 +2170,19 @@ describe('getSelectedSkuId', () => {
     expect(getSelectedSkuId()).toBe('12345');
   });
 
+  it('falls back to __NEXT_DATA__ sku when ld+json has no sku', () => {
+    window.__NEXT_DATA__ = {
+      page: '/[slug]/p',
+      props: {
+        pageProps: {
+          data: { product: { name: 'P', sku: '000310122646' } },
+        },
+      },
+    };
+
+    expect(getSelectedSkuId()).toBe('000310122646');
+  });
+
   it('falls back to __STATE__ when ld+json has no sku', () => {
     window.__STATE__ = {
       ROOT_QUERY: { 'product({"slug":"cool-shoe"})': { id: 'Product:1' } },
@@ -1712,6 +2198,12 @@ describe('getSelectedSkuId', () => {
       '<meta property="product:sku" content="34" data-react-helmet="true">';
 
     expect(getSelectedSkuId()).toBe('34');
+  });
+
+  it('does not treat data-sku as SKU ID', () => {
+    document.body.innerHTML = '<button data-sku="13">Buy</button>';
+
+    expect(getSelectedSkuId()).toBeNull();
   });
 
   it('returns null when no SKU source is available', () => {
@@ -2102,7 +2594,7 @@ describe('real-world VTEX page data', () => {
 
     const ctx = buildProductContextString(normalized, '000326125867');
     expect(ctx).toContain('Selected SKU:');
-    expect(ctx).toContain('SKU 000326125867:');
+    expect(ctx).toContain('SKU 326125867:');
     expect(ctx).toContain('Price: 2296.8');
     expect(ctx).toContain('Available');
   });

@@ -37,7 +37,8 @@
     font-size: calc($icon-size-7 * 0.45);
   }
 
-  &--full {
+  &--full,
+  &.weni-icon#{&}--full {
     width: 100%;
     height: 100%;
     font-size: calc(100% * 0.45);
@@ -55,14 +56,6 @@
     border-radius: 8px;
   }
 
-  &__image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    aspect-ratio: 1/1;
-  }
-
   &__initials {
     display: flex;
     align-items: center;
@@ -72,3 +65,8 @@
   }
 }
 
+img.weni-avatar {
+  object-fit: cover;
+  display: block;
+  aspect-ratio: 1/1;
+}

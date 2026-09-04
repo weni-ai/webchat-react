@@ -23,8 +23,25 @@
     }
   }
 
+  &__add-items-button {
+    width: 100%;
+    justify-content: center;
+  }
+
   &__footer {
     margin-top: auto;
     display: grid;
+    padding: $spacing-2 $fs-spacing-3 $fs-spacing-3;
+
+    &--add-items {
+      gap: $spacing-1;
+    }
+  }
+
+  &__selected-count {
+    margin: 0;
+    text-align: center;
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
+    color: $fg-muted;
   }
 }
