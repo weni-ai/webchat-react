@@ -24,7 +24,7 @@ window.faststore_sdk_stores = {
 const DEMO_PRODUCT = {
   product_retailer_id: '1276545',
   seller_id: '1',
-  name: 'Nike Air Zoom Pegasus',
+  name: 'Oculus Quest All-in-one VR Gaming Headset 64GB (Blue, XS)',
   description: 'Running shoe for everyday training',
   price: 599.9,
   sale_price: 499.9,
