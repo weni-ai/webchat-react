@@ -130,6 +130,7 @@ describe('WebChat.init', () => {
           position: 'bottom-right',
           showCloseButton: true,
           renderPercentage: 100,
+          whatsappOffersNotify: false,
         }),
         theme: null,
       }),
@@ -383,6 +384,25 @@ describe('WebChat service helpers', () => {
     expect(service.simulateMessageReceived).toHaveBeenCalledWith(received);
     expect(service.simulateMessageSent).toHaveBeenCalledWith(sent);
   });
+
+  it('simulateWhatsappOffersOptIn emits starters:simulate-whatsapp-offers', async () => {
+    await WebChat.simulateWhatsappOffersOptIn();
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      {},
+    );
+  });
+
+  it('simulateWhatsappOffersOptIn forwards couponPercent', async () => {
+    await WebChat.simulateWhatsappOffersOptIn({ couponPercent: 20 });
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      { couponPercent: 20 },
+    );
+  });
+
 
   it('simulateConnectionStatus emits patched connection state', async () => {
     const nextAttemptAt = Date.now() + 8_000;

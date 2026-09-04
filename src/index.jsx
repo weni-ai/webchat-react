@@ -47,6 +47,7 @@ const config = {
   startFullScreen: false,
   showFullScreenButton: true,
   addToCart: true,
+  whatsappOffersNotify: true,
 };
 
 // Custom theme (optional)
@@ -262,6 +263,27 @@ function App() {
             Simulate connection banner
           </button>
           <button
+            id="simulate-whatsapp-offers-opt-in"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateWhatsappOffersOptIn();
+            }}
+          >
+            Simulate WhatsApp offers opt-in
+          </button>
+          <button
+            id="simulate-whatsapp-coupon-opt-in"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateWhatsappOffersOptIn({
+                couponPercent: 20,
+              });
+            }}
+          >
+            Simulate WhatsApp coupon opt-in
+          </button>
+          <button
+
             id="simulate-product-catalog"
             style={buttonStyle}
             onClick={async () => {

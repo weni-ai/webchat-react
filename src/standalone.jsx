@@ -126,6 +126,7 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage ?? 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
+    whatsappOffersNotify: params.whatsappOffersNotify || false,
     showCameraButton: params.showCameraButton !== false,
     showVoiceRecordingButton: params.showVoiceRecordingButton !== false,
     showFileUploaderButton: params.showFileUploaderButton !== false,
@@ -418,6 +419,21 @@ async function simulateMessageSent(message) {
 }
 
 /**
+ * Simulate WhatsApp offers opt-in balloon (generic or coupon copy)
+ * @param {{ couponPercent?: number }} [options]
+ * @returns {Promise<void>}
+ */
+async function simulateWhatsappOffersOptIn(options = {}) {
+  const svc = await serviceWhenReady();
+  const couponPercent = options?.couponPercent;
+  const payload =
+    typeof couponPercent === 'number' && Number.isFinite(couponPercent)
+      ? { couponPercent }
+      : {};
+  svc.emit('starters:simulate-whatsapp-offers', payload);
+}
+
+/**
  * Simulate socket connection status for UI debug (connection banner).
  * @param {{ status?: string, nextAttemptAt?: number|null, reconnectAttempts?: number }} connection
  * @returns {Promise<void>}
@@ -497,6 +513,7 @@ const WebChat = {
   reload,
   simulateMessageReceived,
   simulateMessageSent,
+  simulateWhatsappOffersOptIn,
   simulateConnectionStatus,
   changeLanguage,
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChatContext } from '@/contexts/ChatContext';
 import {
   isVtexPdpPage,
@@ -19,7 +20,15 @@ const MOBILE_AUTO_HIDE_MS = 5000;
 const NAVIGATION_DEBOUNCE_MS = 300;
 const NAVIGATION_URL_SETTLE_MS = 200;
 
+function parseCouponPercent(value) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+  return null;
+}
+
 export function useConversationStartersCore() {
+  const { t } = useTranslation();
   const {
     service,
     isChatOpen,
@@ -27,6 +36,7 @@ export function useConversationStartersCore() {
     sendMessage,
     config,
     setIsChatOpen,
+    setCurrentPage,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -38,10 +48,15 @@ export function useConversationStartersCore() {
   const [isInChatStartersDismissed, setIsInChatStartersDismissed] =
     useState(false);
   const [hasShownCompactStarters, setHasShownCompactStarters] = useState(false);
+  const [isWhatsappOffersOptIn, setIsWhatsappOffersOptIn] = useState(false);
+  const [isOptInBalloonVisible, setIsOptInBalloonVisible] = useState(false);
+  const [couponPercent, setCouponPercent] = useState(null);
 
   const pendingStarterRef = useRef(null);
+  const pendingWhatsappOffersRef = useRef(false);
   const currentFingerprintRef = useRef(null);
   const sourceRef = useRef(source);
+  const couponPercentRef = useRef(couponPercent);
   const mobileTimerRef = useRef(null);
   const deferredProductDataRef = useRef(null);
   const navigationDebounceRef = useRef(null);
@@ -51,10 +66,16 @@ export function useConversationStartersCore() {
   const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
   const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
+  const isWhatsappOffersNotifyEnabledRef = useRef(
+    config?.whatsappOffersNotify === true,
+  );
 
   sourceRef.current = source;
+  couponPercentRef.current = couponPercent;
   isConnectedRef.current = isConnected;
   isPdpEnabledRef.current = config?.conversationStarters?.pdp === true;
+  isWhatsappOffersNotifyEnabledRef.current =
+    config?.whatsappOffersNotify === true;
 
   const clearMobileTimer = useCallback(() => {
     if (mobileTimerRef.current) {
@@ -85,10 +106,49 @@ export function useConversationStartersCore() {
     setIsCompactVisible(false);
     setIsHiding(false);
     setIsInChatStartersDismissed(false);
+    setIsWhatsappOffersOptIn(false);
+    setIsOptInBalloonVisible(false);
+    setCouponPercent(null);
     clearMobileTimer();
     currentFingerprintRef.current = null;
     deferredProductDataRef.current = null;
+    pendingWhatsappOffersRef.current = false;
   }, [clearMobileTimer]);
+
+  const getWhatsappOffersFormTitle = useCallback(
+    (percent) => {
+      if (percent != null) {
+        return t('whatsapp_offers_opt_in.coupon_form_title', { percent });
+      }
+      return t('whatsapp_offers_opt_in.form_title');
+    },
+    [t],
+  );
+
+  const showWhatsappOffersOptIn = useCallback((percent) => {
+    setQuestions([]);
+    setIsCompactVisible(false);
+    setIsHiding(false);
+    setCouponPercent(percent);
+    setIsWhatsappOffersOptIn(true);
+    setIsOptInBalloonVisible(true);
+    setIsInChatStartersDismissed(false);
+    setIsLoading(false);
+  }, []);
+
+  const openWhatsappOffersPage = useCallback(
+    (percent) => {
+      if (!setCurrentPage) return;
+      const resolvedPercent =
+        percent != null ? percent : couponPercentRef.current;
+      setCurrentPage({
+        view: 'whatsapp-offers-opt-in',
+        title: getWhatsappOffersFormTitle(resolvedPercent),
+        props: { couponPercent: resolvedPercent },
+      });
+    },
+    [getWhatsappOffersFormTitle, setCurrentPage],
+  );
 
   const requestStarters = useCallback(
     (productData) => {
@@ -194,6 +254,25 @@ export function useConversationStartersCore() {
     });
   }, []);
 
+  const handleWhatsappOffersClick = useCallback(() => {
+    setIsOptInBalloonVisible(false);
+
+    if (isChatOpen) {
+      openWhatsappOffersPage(couponPercentRef.current);
+      setIsWhatsappOffersOptIn(false);
+    } else {
+      pendingWhatsappOffersRef.current = true;
+      setIsChatOpen(true);
+    }
+  }, [isChatOpen, openWhatsappOffersPage, setIsChatOpen]);
+
+  const dismissWhatsappOffersBalloon = useCallback(() => {
+    setIsOptInBalloonVisible(false);
+    setIsWhatsappOffersOptIn(false);
+    setCouponPercent(null);
+    pendingWhatsappOffersRef.current = false;
+  }, []);
+
   const handleFullStarterClick = useCallback(
     (question) => {
       clearMobileTimer();
@@ -250,7 +329,16 @@ export function useConversationStartersCore() {
   }, [resetStartersState, service]);
 
   useEffect(() => {
-    if (!isChatOpen || !pendingStarterRef.current) return;
+    if (!isChatOpen) return;
+
+    if (pendingWhatsappOffersRef.current) {
+      pendingWhatsappOffersRef.current = false;
+      openWhatsappOffersPage(couponPercentRef.current);
+      setIsWhatsappOffersOptIn(false);
+      return;
+    }
+
+    if (!pendingStarterRef.current) return;
 
     if (isConnected) {
       void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
@@ -260,7 +348,13 @@ export function useConversationStartersCore() {
       });
       pendingStarterRef.current = null;
     }
-  }, [isChatOpen, isConnected, sendMessage, service]);
+  }, [
+    isChatOpen,
+    isConnected,
+    sendMessage,
+    service,
+    openWhatsappOffersPage,
+  ]);
 
   useEffect(() => {
     const wasOpen = prevIsChatOpenRef.current;
@@ -271,7 +365,16 @@ export function useConversationStartersCore() {
       setIsHiding(false);
       startMobileAutoHide();
     }
-  }, [isChatOpen, questions.length, startMobileAutoHide]);
+
+    if (wasOpen && !isChatOpen && isWhatsappOffersOptIn) {
+      setIsOptInBalloonVisible(true);
+    }
+  }, [
+    isChatOpen,
+    questions.length,
+    startMobileAutoHide,
+    isWhatsappOffersOptIn,
+  ]);
 
   useEffect(() => {
     if (!service) return;
@@ -282,6 +385,9 @@ export function useConversationStartersCore() {
       const shouldAccept = !isPdpSource || hasValidFingerprint;
 
       if (shouldAccept) {
+        setIsWhatsappOffersOptIn(false);
+        setIsOptInBalloonVisible(false);
+        setCouponPercent(null);
         const nextQuestions = data.questions?.slice(0, 3) || [];
         setQuestions(nextQuestions);
         setIsCompactVisible(true);
@@ -311,6 +417,9 @@ export function useConversationStartersCore() {
     };
 
     const handleManualStarters = (manualQuestions) => {
+      setIsWhatsappOffersOptIn(false);
+      setIsOptInBalloonVisible(false);
+      setCouponPercent(null);
       const nextQuestions = manualQuestions.slice(0, 3);
       setQuestions(nextQuestions);
       setSource('manual');
@@ -325,6 +434,15 @@ export function useConversationStartersCore() {
       startMobileAutoHide();
     };
 
+    const handleSimulateWhatsappOffers = (payload = {}) => {
+      if (!isWhatsappOffersNotifyEnabledRef.current) return;
+
+      setSource('manual');
+      setFingerprint(null);
+      currentFingerprintRef.current = null;
+      showWhatsappOffersOptIn(parseCouponPercent(payload?.couponPercent));
+    };
+
     const handleStartersClear = () => {
       resetStartersState();
       service.clearStarters();
@@ -335,6 +453,10 @@ export function useConversationStartersCore() {
     service.on('starters:error', handleStartersError);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
+    service.on(
+      'starters:simulate-whatsapp-offers',
+      handleSimulateWhatsappOffers,
+    );
     service.on('starters:clear', handleStartersClear);
 
     if (isConnected) {
@@ -346,9 +468,19 @@ export function useConversationStartersCore() {
       service.off('starters:error', handleStartersError);
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
+      service.off(
+        'starters:simulate-whatsapp-offers',
+        handleSimulateWhatsappOffers,
+      );
       service.off('starters:clear', handleStartersClear);
     };
-  }, [service, isConnected, startMobileAutoHide, resetStartersState]);
+  }, [
+    service,
+    isConnected,
+    startMobileAutoHide,
+    showWhatsappOffersOptIn,
+    resetStartersState,
+  ]);
 
   useEffect(() => {
     if (!service) return;
@@ -382,8 +514,13 @@ export function useConversationStartersCore() {
     isHiding,
     isInChatStartersDismissed,
     hasShownCompactStarters,
+    isWhatsappOffersOptIn,
+    isOptInBalloonVisible,
+    couponPercent,
     handleCompactStarterClick,
     handleFullStarterClick,
+    handleWhatsappOffersClick,
+    dismissWhatsappOffersBalloon,
     clearStarters,
   };
 }
