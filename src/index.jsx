@@ -47,6 +47,7 @@ const config = {
   startFullScreen: false,
   showFullScreenButton: true,
   addToCart: true,
+  unavailableProductNotify: true,
 };
 
 // Custom theme (optional)
@@ -260,6 +261,17 @@ function App() {
             }}
           >
             Simulate connection banner
+          </button>
+          <button
+            id="simulate-unavailable-product"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateUnavailableProduct(
+                DEMO_PRODUCT.name,
+              );
+            }}
+          >
+            Simulate unavailable product
           </button>
           <button
             id="simulate-product-catalog"
