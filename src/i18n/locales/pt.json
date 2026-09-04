@@ -167,6 +167,18 @@
       }
     }
   },
+  "back_in_stock": {
+    "form_description": "Vamos te avisar no WhatsApp assim que o {{productName}} estiver de volta ao estoque",
+    "form_title": "Receba aviso de reposição",
+    "name_label": "Nome",
+    "notify_me": "Avise-me",
+    "notify_me_cta": "Avise-me quando voltar ao estoque",
+    "show_similar_products": "Ver produtos similares",
+    "success_description": "Vamos te avisar no WhatsApp quando o {{productName}} estiver de volta ao estoque",
+    "success_title": "Tudo pronto",
+    "wait_prompt": "Enquanto isso, veja produtos similares",
+    "whatsapp_label": "Número do WhatsApp"
+  },
   "conversation_starters": {
     "aria_label": "Pergunta sugerida: {{question}}",
     "send_question": "Enviar pergunta"
@@ -179,5 +191,15 @@
       "title": "Pré-visualização",
       "input_placeholder": "Somente pré-visualização"
     }
+  },
+  "whatsapp_offers_opt_in": {
+    "agent_confirmation": "Tudo pronto. Enviaremos ofertas e novidades no WhatsApp",
+    "agent_follow_up": "O que você busca hoje?",
+    "coupon_form_description": "Cadastre-se e enviaremos o cupom direto no WhatsApp",
+    "coupon_form_title": "Receba um cupom de {{percent}}% de desconto no WhatsApp",
+    "form_description": "Cadastre-se para cupons exclusivos, lançamentos e promoções",
+    "form_title": "Receba ofertas e novidades no WhatsApp",
+    "not_now": "Agora não",
+    "sign_me_up": "Cadastrar"
   }
 }

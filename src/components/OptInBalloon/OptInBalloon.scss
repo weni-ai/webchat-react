@@ -1,0 +1,51 @@
+@use '@/styles/animations.scss' as *;
+
+.weni-opt-in-balloon {
+  display: flex;
+  gap: $spacing-1;
+  align-items: flex-start;
+
+  width: max-content;
+  max-width: 260px;
+  background-color: $bg-base;
+  border-radius: $border-radius-2;
+  padding: $spacing-4;
+  box-shadow: 0 -1px 15px 0 rgba(0, 0, 0, 0.10);
+  margin-right: 20px;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-1;
+    cursor: pointer;
+  }
+
+  &__title {
+    font: $fs-text-weight-semibold #{$fs-text-size-1}/1.2 $font-family;
+    color: $fs-fg-base;
+    margin: 0;
+  }
+
+  &__body {
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.2 $font-family;
+    color: $fs-fg-base;
+    margin: 0;
+  }
+
+  &__close-button {
+    margin-top: -$spacing-3;
+    margin-right: -$spacing-3;
+    flex-shrink: 0;
+    width: fit-content;
+  }
+}
+
+.weni-widget--bottom-right .weni-opt-in-balloon {
+  @include weni-animation(0, 0.25s, weni-expand-in-bottom-right);
+}
+
+.weni-widget--bottom-left .weni-opt-in-balloon {
+  margin-right: 0;
+  margin-left: 20px;
+  @include weni-animation(0, 0.25s, weni-expand-in-bottom-left);
+}

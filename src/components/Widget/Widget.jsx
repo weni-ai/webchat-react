@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Chat from '@/components/Chat/Chat';
 import Launcher from '@/components/Launcher/Launcher';
 import { ConversationStartersCompact } from '@/components/ConversationStarters/ConversationStarters';
+import { OptInBalloon } from '@/components/OptInBalloon/OptInBalloon';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext.jsx';
 import {
   ConversationStartersProvider,
@@ -11,6 +12,7 @@ import {
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import './Widget.scss';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const VTEX_HEADER_STYLE_ID = 'vtex-cx-webchat-vtex-header-style';
 
@@ -34,6 +36,7 @@ const VTEX_HEADER_SELECTORS = [
  */
 
 function WidgetContent() {
+  const { t } = useTranslation();
   const {
     isChatFullscreen,
     isChatOpen,
@@ -48,11 +51,19 @@ function WidgetContent() {
     isHiding,
     handleCompactStarterClick,
     clearStarters,
+    isOptInBalloonVisible,
+    couponPercent,
+    handleWhatsappOffersClick,
+    dismissWhatsappOffersBalloon,
   } = useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
+  const shouldShowOptInBalloon = isOptInBalloonVisible && !isChatOpen;
   const isCompactStartersVisible =
-    questions.length > 0 && isCompactVisible && !isChatOpen;
+    !shouldShowOptInBalloon &&
+    questions.length > 0 &&
+    isCompactVisible &&
+    !isChatOpen;
   const shouldShowCompactStarters = isCompactStartersVisible || isHiding;
 
   useEffect(() => {
@@ -78,6 +89,24 @@ function WidgetContent() {
       <Chat />
       {!isChatFullscreenAndOpen && !isChatOpen && (
         <>
+          {shouldShowOptInBalloon && (
+            <OptInBalloon
+              title={
+                couponPercent != null
+                  ? t('whatsapp_offers_opt_in.coupon_form_title', {
+                      percent: couponPercent,
+                    })
+                  : t('whatsapp_offers_opt_in.form_title')
+              }
+              body={
+                couponPercent != null
+                  ? t('whatsapp_offers_opt_in.coupon_form_description')
+                  : t('whatsapp_offers_opt_in.form_description')
+              }
+              onOpen={handleWhatsappOffersClick}
+              onClose={dismissWhatsappOffersBalloon}
+            />
+          )}
           {shouldShowCompactStarters && (
             <ConversationStartersCompact
               questions={questions}

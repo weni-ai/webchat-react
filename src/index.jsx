@@ -24,7 +24,7 @@ window.faststore_sdk_stores = {
 const DEMO_PRODUCT = {
   product_retailer_id: '1276545',
   seller_id: '1',
-  name: 'Nike Air Zoom Pegasus',
+  name: 'Oculus Quest All-in-one VR Gaming Headset 64GB (Blue, XS)',
   description: 'Running shoe for everyday training',
   price: 599.9,
   sale_price: 499.9,
@@ -47,6 +47,8 @@ const config = {
   startFullScreen: false,
   showFullScreenButton: true,
   addToCart: true,
+  unavailableProductNotify: true,
+  whatsappOffersNotify: true,
 };
 
 // Custom theme (optional)
@@ -260,6 +262,37 @@ function App() {
             }}
           >
             Simulate connection banner
+          </button>
+          <button
+            id="simulate-unavailable-product"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateUnavailableProduct(
+                DEMO_PRODUCT.name,
+              );
+            }}
+          >
+            Simulate unavailable product
+          </button>
+          <button
+            id="simulate-whatsapp-offers-opt-in"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateWhatsappOffersOptIn();
+            }}
+          >
+            Simulate WhatsApp offers opt-in
+          </button>
+          <button
+            id="simulate-whatsapp-coupon-opt-in"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.simulateWhatsappOffersOptIn({
+                couponPercent: 20,
+              });
+            }}
+          >
+            Simulate WhatsApp coupon opt-in
           </button>
           <button
             id="simulate-product-catalog"

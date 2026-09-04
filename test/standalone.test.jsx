@@ -130,6 +130,8 @@ describe('WebChat.init', () => {
           position: 'bottom-right',
           showCloseButton: true,
           renderPercentage: 100,
+          unavailableProductNotify: false,
+          whatsappOffersNotify: false,
         }),
         theme: null,
       }),
@@ -382,6 +384,40 @@ describe('WebChat service helpers', () => {
 
     expect(service.simulateMessageReceived).toHaveBeenCalledWith(received);
     expect(service.simulateMessageSent).toHaveBeenCalledWith(sent);
+  });
+
+  it('simulateUnavailableProduct emits starters:simulate-unavailable', async () => {
+    await WebChat.simulateUnavailableProduct('Oculus Quest');
+
+    expect(service.emit).toHaveBeenCalledWith('starters:simulate-unavailable', {
+      productName: 'Oculus Quest',
+    });
+  });
+
+  it('simulateUnavailableProduct defaults product name when omitted', async () => {
+    await WebChat.simulateUnavailableProduct();
+
+    expect(service.emit).toHaveBeenCalledWith('starters:simulate-unavailable', {
+      productName: 'Sample Product',
+    });
+  });
+
+  it('simulateWhatsappOffersOptIn emits starters:simulate-whatsapp-offers', async () => {
+    await WebChat.simulateWhatsappOffersOptIn();
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      {},
+    );
+  });
+
+  it('simulateWhatsappOffersOptIn forwards couponPercent', async () => {
+    await WebChat.simulateWhatsappOffersOptIn({ couponPercent: 20 });
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      { couponPercent: 20 },
+    );
   });
 
   it('simulateConnectionStatus emits patched connection state', async () => {

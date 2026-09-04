@@ -74,6 +74,8 @@ const defaultConfig = {
 
   mode: 'live',
   showMode: false,
+  unavailableProductNotify: false,
+  whatsappOffersNotify: false,
   showChatAvatar: true,
 };
 
@@ -652,6 +654,8 @@ export function ChatProvider({ children, config }) {
         void sendVtexUtm(service, UTM_SOURCES.ASSISTANT, { silent: true });
       }
     },
+    simulateMessageReceived: (message) =>
+      service.simulateMessageReceived(message),
     addProductToCart: (props) => service.addProductToCart(props),
     sendUtm: (utm_source, options) =>
       sendVtexUtm(service, utm_source, { silent: true, ...options }),
@@ -740,6 +744,11 @@ ChatProvider.propTypes = {
     conversationStarters: PropTypes.shape({
       pdp: PropTypes.bool,
     }),
+
+    mode: PropTypes.oneOf(['live', 'preview']),
+    showMode: PropTypes.bool,
+    unavailableProductNotify: PropTypes.bool,
+    whatsappOffersNotify: PropTypes.bool,
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),
