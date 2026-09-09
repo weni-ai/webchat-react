@@ -12,6 +12,7 @@ import {
   getSelectedSkuId,
   getSkuIdFromRawProduct,
   isSelectedSkuAvailable,
+  getSellerIdForSku,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -57,6 +58,8 @@ export function useConversationStartersCore() {
   const pendingStarterRef = useRef(null);
   const pendingBackInStockRef = useRef(false);
   const pendingWhatsappOffersRef = useRef(false);
+  const notifySkuIdRef = useRef('');
+  const notifySellerRef = useRef('');
   const currentFingerprintRef = useRef(null);
   const sourceRef = useRef(source);
   const isBackInStockNotifyRef = useRef(isBackInStockNotify);
@@ -128,11 +131,15 @@ export function useConversationStartersCore() {
     deferredProductDataRef.current = null;
     pendingBackInStockRef.current = false;
     pendingWhatsappOffersRef.current = false;
+    notifySkuIdRef.current = '';
+    notifySellerRef.current = '';
   }, [clearMobileTimer]);
 
   const showBackInStockNotify = useCallback(
-    (name) => {
+    (name, meta = {}) => {
       const resolvedName = name || '';
+      notifySkuIdRef.current = meta.skuId || '';
+      notifySellerRef.current = meta.seller || '';
       setIsWhatsappOffersOptIn(false);
       setIsOptInBalloonVisible(false);
       setCouponPercent(null);
@@ -165,6 +172,8 @@ export function useConversationStartersCore() {
     setIsCompactVisible(false);
     setIsHiding(false);
     pendingBackInStockRef.current = false;
+    notifySkuIdRef.current = '';
+    notifySellerRef.current = '';
     setCouponPercent(percent);
     setIsWhatsappOffersOptIn(true);
     setIsOptInBalloonVisible(true);
@@ -178,7 +187,11 @@ export function useConversationStartersCore() {
       setCurrentPage({
         view: 'back-in-stock-notify',
         title: t('back_in_stock.form_title'),
-        props: { productName: name || productNameRef.current || '' },
+        props: {
+          productName: name || productNameRef.current || '',
+          skuId: notifySkuIdRef.current || getSelectedSkuId() || '',
+          seller: notifySellerRef.current || '',
+        },
       });
     },
     [setCurrentPage, t],
@@ -262,7 +275,10 @@ export function useConversationStartersCore() {
       isUnavailableNotifyEnabledRef.current &&
       !isSelectedSkuAvailable(normalized, selectedSkuId)
     ) {
-      showBackInStockNotify(resolvedProductName);
+      showBackInStockNotify(resolvedProductName, {
+        skuId: selectedSkuId || '',
+        seller: getSellerIdForSku(normalized, selectedSkuId),
+      });
       return;
     }
 
@@ -504,6 +520,8 @@ export function useConversationStartersCore() {
       setIsWhatsappOffersOptIn(false);
       setIsOptInBalloonVisible(false);
       setCouponPercent(null);
+      notifySkuIdRef.current = '';
+      notifySellerRef.current = '';
       setQuestions(manualQuestions.slice(0, 3));
       setSource('manual');
       setFingerprint(null);

@@ -17,6 +17,7 @@ jest.mock('@/utils/vtex', () => ({
   getSelectedSkuId: jest.fn(),
   getSkuIdFromRawProduct: jest.fn(),
   isSelectedSkuAvailable: jest.fn(),
+  getSellerIdForSku: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -43,6 +44,7 @@ import {
   getSelectedSkuId,
   getSkuIdFromRawProduct,
   isSelectedSkuAvailable,
+  getSellerIdForSku,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -106,6 +108,7 @@ describe('useConversationStartersCore', () => {
     isVtexPdpPage.mockReturnValue(false);
     isSelectedSkuAvailable.mockReturnValue(true);
     getSkuIdFromRawProduct.mockReturnValue(null);
+    getSellerIdForSku.mockReturnValue('1');
     createNavigationMonitor.mockReturnValue(mockMonitor);
     window.matchMedia = jest.fn().mockReturnValue({ matches: false });
     ctx = buildContext();
@@ -987,6 +990,7 @@ describe('useConversationStartersCore', () => {
       normalizeForContext.mockReturnValue(unavailableNormalized);
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
       getSelectedSkuId.mockReturnValue('SKU-001');
+      getSellerIdForSku.mockReturnValue('1');
       ctx = buildUnavailableNotifyContext();
       useChatContext.mockReturnValue(ctx);
     });
@@ -1062,7 +1066,7 @@ describe('useConversationStartersCore', () => {
       expect(ctx.setCurrentPage).toHaveBeenCalledWith({
         view: 'back-in-stock-notify',
         title: "Get notified when it's back in stock",
-        props: { productName: 'Cool Shoe' },
+        props: { productName: 'Cool Shoe', skuId: 'SKU-001', seller: '1' },
       });
       expect(hookResult.current.isInChatStartersDismissed).toBe(true);
     });
@@ -1097,7 +1101,7 @@ describe('useConversationStartersCore', () => {
       expect(ctx.setCurrentPage).toHaveBeenCalledWith({
         view: 'back-in-stock-notify',
         title: "Get notified when it's back in stock",
-        props: { productName: 'Cool Shoe' },
+        props: { productName: 'Cool Shoe', skuId: 'SKU-001', seller: '1' },
       });
     });
 

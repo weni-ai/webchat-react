@@ -580,6 +580,19 @@ export function isSelectedSkuAvailable(product, selectedSkuId) {
   return availableQuantity > 0;
 }
 
+export function getSellerIdForSku(product, selectedSkuId) {
+  const matched = findSelectedSkuItem(product, selectedSkuId);
+  const sellers = matched?.sellers;
+  if (!Array.isArray(sellers) || sellers.length === 0) return '1';
+
+  const preferred =
+    sellers.find((seller) => seller.sellerDefault) || sellers[0];
+  const sellerId = preferred?.sellerId;
+  if (sellerId == null || sellerId === '') return '1';
+
+  return String(sellerId);
+}
+
 export function buildProductContextString(product, selectedSkuId) {
   if (!product) return null;
 

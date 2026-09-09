@@ -4,19 +4,38 @@ import { useTranslation } from 'react-i18next';
 
 import { FSButton } from '@/components/common/FSButton';
 import { useChatContext } from '@/contexts/ChatContext';
+import { subscribeAvailabilityNotify } from '@/utils/availabilityNotify';
 
 import './BackInStockNotify.scss';
 
-export function BackInStockNotify({ productName = '' }) {
-  const { t } = useTranslation();
+export function BackInStockNotify({
+  productName = '',
+  skuId = '',
+  seller = '',
+}) {
+  const { t, i18n } = useTranslation();
   const { clearPageHistory, sendMessage } = useChatContext();
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await subscribeAvailabilityNotify({
+        name,
+        phone: whatsapp,
+        skuId,
+        seller,
+        language: i18n.language,
+      });
+    } finally {
+      setSubmitted(true);
+    }
   }
 
   function handleShowSimilarProducts() {
@@ -96,7 +115,13 @@ export function BackInStockNotify({ productName = '' }) {
         </section>
 
         <footer className="weni-view-back-in-stock__footer">
-          <FSButton type="submit">{t('back_in_stock.notify_me')}</FSButton>
+          <FSButton
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            {t('back_in_stock.notify_me')}
+          </FSButton>
         </footer>
       </form>
     </section>
@@ -105,4 +130,6 @@ export function BackInStockNotify({ productName = '' }) {
 
 BackInStockNotify.propTypes = {
   productName: PropTypes.string,
+  skuId: PropTypes.string,
+  seller: PropTypes.string,
 };

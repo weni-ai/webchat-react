@@ -17,6 +17,7 @@ import {
   extractProductData,
   buildProductContextString,
   isSelectedSkuAvailable,
+  getSellerIdForSku,
   stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromNextData,
@@ -899,6 +900,48 @@ describe('isSelectedSkuAvailable', () => {
       ],
     };
     expect(isSelectedSkuAvailable(product, '2003801')).toBe(false);
+  });
+});
+
+describe('getSellerIdForSku', () => {
+  it('returns the default seller when present', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [
+            { sellerId: '2', sellerDefault: false },
+            { sellerId: '9', sellerDefault: true },
+          ],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('9');
+  });
+
+  it('returns the first seller when none is default', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [{ sellerId: '3' }, { sellerId: '4' }],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('3');
+  });
+
+  it('falls back to 1 when seller id is missing', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [{ commertialOffer: { AvailableQuantity: 0 } }],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('1');
+    expect(getSellerIdForSku(null, '27')).toBe('1');
   });
 });
 
