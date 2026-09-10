@@ -37,6 +37,7 @@ export function useConversationStartersCore() {
   const [isHiding, setIsHiding] = useState(false);
   const [isInChatStartersDismissed, setIsInChatStartersDismissed] =
     useState(false);
+  const [hasShownCompactStarters, setHasShownCompactStarters] = useState(false);
 
   const pendingStarterRef = useRef(null);
   const currentFingerprintRef = useRef(null);
@@ -157,6 +158,7 @@ export function useConversationStartersCore() {
 
     lastHandledPathnameRef.current = pathname;
     fetchGenerationRef.current += 1;
+    setHasShownCompactStarters(false);
 
     if (!service) return true;
 
@@ -274,10 +276,14 @@ export function useConversationStartersCore() {
       const shouldAccept = !isPdpSource || hasValidFingerprint;
 
       if (shouldAccept) {
-        setQuestions(data.questions?.slice(0, 3) || []);
+        const nextQuestions = data.questions?.slice(0, 3) || [];
+        setQuestions(nextQuestions);
         setIsCompactVisible(true);
         setIsInChatStartersDismissed(false);
         setIsLoading(false);
+        if (nextQuestions.length > 0) {
+          setHasShownCompactStarters(true);
+        }
         startMobileAutoHide();
       }
     };
@@ -299,13 +305,17 @@ export function useConversationStartersCore() {
     };
 
     const handleManualStarters = (manualQuestions) => {
-      setQuestions(manualQuestions.slice(0, 3));
+      const nextQuestions = manualQuestions.slice(0, 3);
+      setQuestions(nextQuestions);
       setSource('manual');
       setFingerprint(null);
       setIsCompactVisible(true);
       setIsInChatStartersDismissed(false);
       setIsLoading(false);
       currentFingerprintRef.current = null;
+      if (nextQuestions.length > 0) {
+        setHasShownCompactStarters(true);
+      }
       startMobileAutoHide();
     };
 
@@ -365,6 +375,7 @@ export function useConversationStartersCore() {
     isCompactVisible,
     isHiding,
     isInChatStartersDismissed,
+    hasShownCompactStarters,
     handleCompactStarterClick,
     handleFullStarterClick,
     clearStarters,

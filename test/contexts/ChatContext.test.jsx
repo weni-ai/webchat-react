@@ -555,6 +555,7 @@ describe('ChatContext — tooltip on init', () => {
       type: 'message',
       message: { text: 'Need help?' },
     });
+    expect(ctx.isWelcomeTooltip).toBe(true);
     simulateSpy.mockRestore();
   });
 
@@ -604,6 +605,28 @@ describe('ChatContext — tooltip on init', () => {
     expect(simulateSpy).not.toHaveBeenCalled();
     simulateSpy.mockRestore();
   });
+
+  it('clears isWelcomeTooltip when a later message is received', async () => {
+    jest.useFakeTimers();
+
+    await renderWithContext({
+      tooltipMessage: 'Need help?',
+      tooltipDelay: 500,
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(500);
+    });
+    expect(ctx.isWelcomeTooltip).toBe(true);
+
+    await act(async () => {
+      ctx.service.simulateMessageReceived({
+        type: 'message',
+        message: { text: 'real reply' },
+      });
+    });
+    expect(ctx.isWelcomeTooltip).toBe(false);
+  });
 });
 
 describe('ChatContext — message:received', () => {
@@ -620,6 +643,7 @@ describe('ChatContext — message:received', () => {
     expect(ctx.tooltipMessage).toEqual(
       expect.objectContaining({ text: 'new message' }),
     );
+    expect(ctx.isWelcomeTooltip).toBe(false);
   });
 
   it('does not increment unreadCount when chat is open', async () => {

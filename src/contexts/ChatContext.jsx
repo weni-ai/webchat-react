@@ -142,6 +142,8 @@ export function ChatProvider({ children, config }) {
 
   const [title] = useState(mergedConfig.title);
   const [tooltipMessage, setTooltipMessage] = useState(null);
+  const [isWelcomeTooltip, setIsWelcomeTooltip] = useState(false);
+  const expectingWelcomeTooltipRef = useRef(false);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
   const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
@@ -213,6 +215,7 @@ export function ChatProvider({ children, config }) {
       return;
     }
 
+    expectingWelcomeTooltipRef.current = true;
     service.simulateMessageReceived({
       type: 'message',
       message: {
@@ -389,8 +392,12 @@ export function ChatProvider({ children, config }) {
       if (!isChatOpen) {
         setUnreadCount((prev) => prev + 1);
 
+        const isWelcome = expectingWelcomeTooltipRef.current;
+        expectingWelcomeTooltipRef.current = false;
+
         if (!mergedConfig.disableTooltips) {
           setTooltipMessage(message);
+          setIsWelcomeTooltip(isWelcome);
         }
       }
 
@@ -613,6 +620,7 @@ export function ChatProvider({ children, config }) {
     config: configState,
     fileConfig: service.getFileConfig(),
     tooltipMessage,
+    isWelcomeTooltip,
     clearTooltipMessage: () => setTooltipMessage(null),
     currentPage,
     setCurrentPage: pushPage,

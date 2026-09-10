@@ -17,7 +17,7 @@ import './Launcher.scss';
  * TODO: Add unread count badge
  * TODO: Add dinamically image url as Icon
  */
-export function Launcher() {
+export function Launcher({ hideNotification = false }) {
   const {
     isChatOpen,
     unreadCount,
@@ -127,7 +127,7 @@ export function Launcher() {
         className="weni-launcher__badge"
       />
 
-      {tooltipMessage && (
+      {tooltipMessage && !hideNotification && (
         <Notification
           name={title}
           message={tooltipMessage}
@@ -140,6 +140,7 @@ export function Launcher() {
 }
 
 Launcher.propTypes = {
+  hideNotification: PropTypes.bool,
   position: PropTypes.oneOf([
     'bottom-right',
     'bottom-left',
