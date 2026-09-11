@@ -40,12 +40,15 @@ function WidgetContent() {
     clearTooltipMessage,
     config,
     shouldRender,
+    isWelcomeTooltip,
   } = useChatContext();
 
   const {
     questions,
     isCompactVisible,
     isHiding,
+    isLoading,
+    hasShownCompactStarters,
     handleCompactStarterClick,
     clearStarters,
   } = useConversationStarters();
@@ -54,6 +57,8 @@ function WidgetContent() {
   const isCompactStartersVisible =
     questions.length > 0 && isCompactVisible && !isChatOpen;
   const shouldShowCompactStarters = isCompactStartersVisible || isHiding;
+  const hideNotification =
+    (hasShownCompactStarters || isLoading) && isWelcomeTooltip;
 
   useEffect(() => {
     if (isChatOpen) {
@@ -88,7 +93,7 @@ function WidgetContent() {
               position={config.position}
             />
           )}
-          <Launcher />
+          <Launcher hideNotification={hideNotification} />
         </>
       )}
     </aside>

@@ -95,6 +95,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isHiding).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(false);
       expect(result.current.source).toBeNull();
       expect(result.current.fingerprint).toBeNull();
       expect(typeof result.current.handleCompactStarterClick).toBe('function');
@@ -319,6 +320,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.questions).toEqual(['Q1?', 'Q2?']);
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('slices questions to a maximum of 3', () => {
@@ -343,6 +345,18 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(result.current.questions).toEqual([]);
+    });
+
+    it('does not set hasShownCompactStarters when received questions are empty', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const handler = getEventHandler('starters:received');
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.hasShownCompactStarters).toBe(false);
     });
 
     it('updates questions in PDP source when fingerprint is set', async () => {
@@ -414,6 +428,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('slices manual questions to 3', () => {
@@ -450,6 +465,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.questions).toEqual([]);
       expect(result.current.source).toBeNull();
       expect(result.current.isCompactVisible).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
       expect(mockService.clearStarters).toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('');
     });
@@ -709,6 +725,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isInChatStartersDismissed).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
       expect(mockService.clearStarters).toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('');
     });
@@ -749,6 +766,7 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isHiding).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('does not auto-hide on desktop', () => {
@@ -901,6 +919,42 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(mockService.clearStarters).toHaveBeenCalledTimes(1);
+      jest.useRealTimers();
+    });
+
+    it('resets hasShownCompactStarters when pathname changes after navigation', () => {
+      jest.useFakeTimers();
+      let pathname = '/product-a/p';
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          get pathname() {
+            return pathname;
+          },
+        },
+      });
+
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const handler = getEventHandler('starters:received');
+      act(() => {
+        handler({ questions: ['Q1?'] });
+      });
+      expect(result.current.hasShownCompactStarters).toBe(true);
+
+      pathname = '/home';
+      const onNavigate = createNavigationMonitor.mock.calls[0][0];
+
+      act(() => {
+        onNavigate();
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300 + 200);
+      });
+
+      expect(result.current.hasShownCompactStarters).toBe(false);
       jest.useRealTimers();
     });
   });
