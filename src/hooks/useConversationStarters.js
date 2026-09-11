@@ -201,7 +201,10 @@ export function useConversationStartersCore() {
       setIsInChatStartersDismissed(true);
       void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
       if (isChatOpen) {
-        sendMessage(question, { skipUtm: true });
+        sendMessage(question, {
+          skipUtm: true,
+          fromConversationStarter: true,
+        });
       } else {
         pendingStarterRef.current = question;
         setIsChatOpen(true);
@@ -251,7 +254,10 @@ export function useConversationStartersCore() {
 
     if (isConnected) {
       void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
-      sendMessage(pendingStarterRef.current, { skipUtm: true });
+      sendMessage(pendingStarterRef.current, {
+        skipUtm: true,
+        fromConversationStarter: true,
+      });
       pendingStarterRef.current = null;
     }
   }, [isChatOpen, isConnected, sendMessage, service]);

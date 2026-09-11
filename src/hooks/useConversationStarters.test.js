@@ -597,7 +597,10 @@ describe('useConversationStartersCore', () => {
         result.current.handleFullStarterClick('Q1?');
       });
 
-      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?', { skipUtm: true });
+      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?', {
+        skipUtm: true,
+        fromConversationStarter: true,
+      });
       expect(sendVtexUtm).toHaveBeenCalledWith(
         mockService,
         UTM_SOURCES.CONV_STARTER,
@@ -692,7 +695,10 @@ describe('useConversationStartersCore', () => {
 
       rerender();
 
-      expect(sendMessage).toHaveBeenCalledWith('Pending Q?', { skipUtm: true });
+      expect(sendMessage).toHaveBeenCalledWith('Pending Q?', {
+        skipUtm: true,
+        fromConversationStarter: true,
+      });
       expect(sendVtexUtm).toHaveBeenCalledWith(
         mockService,
         UTM_SOURCES.CONV_STARTER,
