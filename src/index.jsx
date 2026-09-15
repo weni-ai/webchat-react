@@ -48,7 +48,6 @@ const config = {
   showFullScreenButton: true,
   addToCart: true,
   unavailableProductNotify: true,
-  whatsappOffersNotify: true,
 };
 
 // Custom theme (optional)
@@ -273,26 +272,6 @@ function App() {
             }}
           >
             Simulate unavailable product
-          </button>
-          <button
-            id="simulate-whatsapp-offers-opt-in"
-            style={buttonStyle}
-            onClick={async () => {
-              await window.WebChat.simulateWhatsappOffersOptIn();
-            }}
-          >
-            Simulate WhatsApp offers opt-in
-          </button>
-          <button
-            id="simulate-whatsapp-coupon-opt-in"
-            style={buttonStyle}
-            onClick={async () => {
-              await window.WebChat.simulateWhatsappOffersOptIn({
-                couponPercent: 20,
-              });
-            }}
-          >
-            Simulate WhatsApp coupon opt-in
           </button>
           <button
             id="simulate-product-catalog"

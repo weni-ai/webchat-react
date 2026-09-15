@@ -75,7 +75,6 @@ const defaultConfig = {
   mode: 'live',
   showMode: false,
   unavailableProductNotify: false,
-  whatsappOffersNotify: false,
   showChatAvatar: true,
 };
 
@@ -748,7 +747,6 @@ ChatProvider.propTypes = {
     mode: PropTypes.oneOf(['live', 'preview']),
     showMode: PropTypes.bool,
     unavailableProductNotify: PropTypes.bool,
-    whatsappOffersNotify: PropTypes.bool,
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),
