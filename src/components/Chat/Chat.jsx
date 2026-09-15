@@ -13,6 +13,7 @@ import { ProductCatalog } from '@/views/ProductCatalog';
 import { ProductDetails } from '@/views/ProductDetails';
 import { Cart } from '@/views/Cart';
 import { BackInStockNotify } from '@/views/BackInStockNotify';
+import { WhatsappOffersOptIn } from '@/views/WhatsappOffersOptIn';
 
 import './Chat.scss';
 
@@ -41,6 +42,10 @@ function ChatContent() {
 
   if (currentPage?.view === 'back-in-stock-notify') {
     return <BackInStockNotify {...currentPage.props} />;
+  }
+
+  if (currentPage?.view === 'whatsapp-offers-opt-in') {
+    return <WhatsappOffersOptIn {...currentPage.props} />;
   }
 
   return <MessagesList />;

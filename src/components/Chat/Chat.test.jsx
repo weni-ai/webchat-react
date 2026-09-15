@@ -82,6 +82,18 @@ jest.mock('@/views/BackInStockNotify', () => {
   return { BackInStockNotify: MockBackInStockNotify };
 });
 
+jest.mock('@/views/WhatsappOffersOptIn', () => {
+  function MockWhatsappOffersOptIn({ couponPercent }) {
+    return (
+      <div data-testid="whatsapp-offers-opt-in">
+        {couponPercent == null ? 'generic' : couponPercent}
+      </div>
+    );
+  }
+
+  return { WhatsappOffersOptIn: MockWhatsappOffersOptIn };
+});
+
 import { useWeniChat } from '@/hooks/useWeniChat';
 
 describe('Chat — back-in-stock-notify view', () => {
@@ -101,6 +113,28 @@ describe('Chat — back-in-stock-notify view', () => {
 
     expect(screen.getByTestId('back-in-stock-notify')).toHaveTextContent(
       'Cool Shoe',
+    );
+    expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
+  });
+});
+
+describe('Chat — whatsapp-offers-opt-in view', () => {
+  it('renders WhatsappOffersOptIn when currentPage.view matches', () => {
+    useWeniChat.mockReturnValue({
+      isChatOpen: true,
+      isConnectionClosed: false,
+      currentPage: {
+        view: 'whatsapp-offers-opt-in',
+        props: { couponPercent: 20 },
+      },
+      config: { embedded: false },
+      mode: 'live',
+    });
+
+    render(<Chat />);
+
+    expect(screen.getByTestId('whatsapp-offers-opt-in')).toHaveTextContent(
+      '20',
     );
     expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
   });

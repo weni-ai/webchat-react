@@ -1,6 +1,21 @@
 import { renderHook, act } from '@testing-library/react';
 import { useConversationStartersCore } from '@/hooks/useConversationStarters';
 import { useChatContext } from '@/contexts/ChatContext';
+import {
+  isVtexPdpPage,
+  extractSlugFromUrl,
+  extractProductPathFromUrl,
+  getVtexAccount,
+  resolveProductData,
+  normalizeForContext,
+  buildProductContextString,
+  getSelectedSkuId,
+  getSkuIdFromRawProduct,
+  isSelectedSkuAvailable,
+  getSellerIdForSku,
+} from '@/utils/vtex';
+import { createNavigationMonitor } from '@/utils/navigationMonitor';
+import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -33,22 +48,6 @@ jest.mock('@/utils/sendVtexUtm', () => ({
   },
 }));
 
-import {
-  isVtexPdpPage,
-  extractSlugFromUrl,
-  extractProductPathFromUrl,
-  getVtexAccount,
-  resolveProductData,
-  normalizeForContext,
-  buildProductContextString,
-  getSelectedSkuId,
-  getSkuIdFromRawProduct,
-  isSelectedSkuAvailable,
-  getSellerIdForSku,
-} from '@/utils/vtex';
-import { createNavigationMonitor } from '@/utils/navigationMonitor';
-import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
-
 const mockMonitor = { start: jest.fn(), stop: jest.fn() };
 
 const mockService = {
@@ -73,6 +72,16 @@ function buildContext(overrides = {}) {
     setCurrentPage: jest.fn(),
     ...overrides,
   };
+}
+
+function buildWhatsappOffersContext(overrides = {}) {
+  return buildContext({
+    config: {
+      conversationStarters: { pdp: true },
+      whatsappOffersNotify: true,
+    },
+    ...overrides,
+  });
 }
 
 function buildUnavailableNotifyContext(overrides = {}) {
@@ -114,6 +123,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isHiding).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(false);
       expect(result.current.source).toBeNull();
       expect(result.current.fingerprint).toBeNull();
       expect(typeof result.current.handleCompactStarterClick).toBe('function');
@@ -338,6 +348,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.questions).toEqual(['Q1?', 'Q2?']);
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('slices questions to a maximum of 3', () => {
@@ -362,6 +373,18 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(result.current.questions).toEqual([]);
+    });
+
+    it('does not set hasShownCompactStarters when received questions are empty', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const handler = getEventHandler('starters:received');
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.hasShownCompactStarters).toBe(false);
     });
 
     it('updates questions in PDP source when fingerprint is set', async () => {
@@ -433,6 +456,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.isInChatStartersDismissed).toBe(false);
       expect(result.current.isLoading).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('slices manual questions to 3', () => {
@@ -469,6 +493,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.questions).toEqual([]);
       expect(result.current.source).toBeNull();
       expect(result.current.isCompactVisible).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
       expect(mockService.clearStarters).toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('');
     });
@@ -600,7 +625,10 @@ describe('useConversationStartersCore', () => {
         result.current.handleFullStarterClick('Q1?');
       });
 
-      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?', { skipUtm: true });
+      expect(ctx.sendMessage).toHaveBeenCalledWith('Q1?', {
+        skipUtm: true,
+        fromConversationStarter: true,
+      });
       expect(sendVtexUtm).toHaveBeenCalledWith(
         mockService,
         UTM_SOURCES.CONV_STARTER,
@@ -695,7 +723,10 @@ describe('useConversationStartersCore', () => {
 
       rerender();
 
-      expect(sendMessage).toHaveBeenCalledWith('Pending Q?', { skipUtm: true });
+      expect(sendMessage).toHaveBeenCalledWith('Pending Q?', {
+        skipUtm: true,
+        fromConversationStarter: true,
+      });
       expect(sendVtexUtm).toHaveBeenCalledWith(
         mockService,
         UTM_SOURCES.CONV_STARTER,
@@ -722,6 +753,7 @@ describe('useConversationStartersCore', () => {
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isInChatStartersDismissed).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
       expect(mockService.clearStarters).toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('');
     });
@@ -762,6 +794,7 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.isCompactVisible).toBe(false);
       expect(result.current.isHiding).toBe(false);
+      expect(result.current.hasShownCompactStarters).toBe(true);
     });
 
     it('does not auto-hide on desktop', () => {
@@ -804,10 +837,6 @@ describe('useConversationStartersCore', () => {
       );
       expect(mockService.off).toHaveBeenCalledWith(
         'starters:set-manual',
-        expect.any(Function),
-      );
-      expect(mockService.off).toHaveBeenCalledWith(
-        'starters:simulate-unavailable',
         expect.any(Function),
       );
       expect(mockService.off).toHaveBeenCalledWith(
@@ -920,6 +949,42 @@ describe('useConversationStartersCore', () => {
       expect(mockService.clearStarters).toHaveBeenCalledTimes(1);
       jest.useRealTimers();
     });
+
+    it('resets hasShownCompactStarters when pathname changes after navigation', () => {
+      jest.useFakeTimers();
+      let pathname = '/product-a/p';
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          get pathname() {
+            return pathname;
+          },
+        },
+      });
+
+      const { result } = renderHook(() => useConversationStartersCore());
+
+      const handler = getEventHandler('starters:received');
+      act(() => {
+        handler({ questions: ['Q1?'] });
+      });
+      expect(result.current.hasShownCompactStarters).toBe(true);
+
+      pathname = '/home';
+      const onNavigate = createNavigationMonitor.mock.calls[0][0];
+
+      act(() => {
+        onNavigate();
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300 + 200);
+      });
+
+      expect(result.current.hasShownCompactStarters).toBe(false);
+      jest.useRealTimers();
+    });
   });
 
   describe('Compact visibility on chat close', () => {
@@ -944,6 +1009,111 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.isCompactVisible).toBe(true);
       expect(result.current.questions).toEqual(['Q1?', 'Q2?']);
+    });
+  });
+
+  describe('whatsapp offers opt-in', () => {
+    it('ignores simulate when the feature is disabled', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+      expect(handler).toBeDefined();
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.isWhatsappOffersOptIn).toBe(false);
+      expect(result.current.isOptInBalloonVisible).toBe(false);
+    });
+
+    it('shows the balloon on simulate when the feature is enabled', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({});
+      });
+
+      expect(result.current.isWhatsappOffersOptIn).toBe(true);
+      expect(result.current.isOptInBalloonVisible).toBe(true);
+      expect(result.current.couponPercent).toBeNull();
+      expect(result.current.questions).toEqual([]);
+    });
+
+    it('stores couponPercent from the simulate payload', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({ couponPercent: 20 });
+      });
+
+      expect(result.current.couponPercent).toBe(20);
+    });
+
+    it('opens the opt-in page on balloon click when chat is open', () => {
+      ctx = buildWhatsappOffersContext({ isChatOpen: true });
+      useChatContext.mockReturnValue(ctx);
+
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+
+      act(() => {
+        handler({ couponPercent: 20 });
+      });
+
+      act(() => {
+        result.current.handleWhatsappOffersClick();
+      });
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'whatsapp-offers-opt-in',
+        title: 'Get a 20% discount coupon on WhatsApp',
+        props: { couponPercent: 20 },
+      });
+      expect(result.current.isOptInBalloonVisible).toBe(false);
+    });
+
+    it('opens chat then page when balloon is clicked while chat is closed', () => {
+      ctx = buildWhatsappOffersContext();
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      let rerender;
+      const rendered = renderHook(() => useConversationStartersCore());
+      hookResult = rendered.result;
+      rerender = rendered.rerender;
+
+      const handler = getEventHandler('starters:simulate-whatsapp-offers');
+      act(() => {
+        handler({});
+      });
+
+      act(() => {
+        hookResult.current.handleWhatsappOffersClick();
+      });
+
+      expect(ctx.setIsChatOpen).toHaveBeenCalledWith(true);
+      expect(ctx.setCurrentPage).not.toHaveBeenCalled();
+
+      ctx = buildWhatsappOffersContext({
+        isChatOpen: true,
+        setCurrentPage: ctx.setCurrentPage,
+      });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'whatsapp-offers-opt-in',
+        title: 'Get offers and news on WhatsApp',
+        props: { couponPercent: null },
+      });
     });
   });
 

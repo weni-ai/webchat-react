@@ -131,6 +131,7 @@ describe('WebChat.init', () => {
           showCloseButton: true,
           renderPercentage: 100,
           unavailableProductNotify: false,
+          whatsappOffersNotify: false,
         }),
         theme: null,
       }),
@@ -399,6 +400,24 @@ describe('WebChat service helpers', () => {
     expect(service.emit).toHaveBeenCalledWith('starters:simulate-unavailable', {
       productName: 'Sample Product',
     });
+  });
+
+  it('simulateWhatsappOffersOptIn emits starters:simulate-whatsapp-offers', async () => {
+    await WebChat.simulateWhatsappOffersOptIn();
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      {},
+    );
+  });
+
+  it('simulateWhatsappOffersOptIn forwards couponPercent', async () => {
+    await WebChat.simulateWhatsappOffersOptIn({ couponPercent: 20 });
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-whatsapp-offers',
+      { couponPercent: 20 },
+    );
   });
 
   it('simulateConnectionStatus emits patched connection state', async () => {
