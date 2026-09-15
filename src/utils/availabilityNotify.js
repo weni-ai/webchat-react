@@ -1,7 +1,7 @@
 import { getSelectedSkuId } from '@/utils/vtex';
 
 export const AVAILABILITY_NOTIFY_SUBSCRIBE_PATH =
-  '/_v/availability-notify/subscribe';
+  '/_v/private/availability-notify/subscribe';
 
 const LOCALE_BY_LANGUAGE = {
   pt: 'pt-BR',
