@@ -74,6 +74,14 @@ jest.mock('@/views/Cart', () => ({
   },
 }));
 
+jest.mock('@/views/BackInStockNotify', () => {
+  function MockBackInStockNotify({ productName }) {
+    return <div data-testid="back-in-stock-notify">{productName}</div>;
+  }
+
+  return { BackInStockNotify: MockBackInStockNotify };
+});
+
 jest.mock('@/views/WhatsappOffersOptIn', () => {
   function MockWhatsappOffersOptIn({ couponPercent }) {
     return (
@@ -87,6 +95,28 @@ jest.mock('@/views/WhatsappOffersOptIn', () => {
 });
 
 import { useWeniChat } from '@/hooks/useWeniChat';
+
+describe('Chat — back-in-stock-notify view', () => {
+  it('renders BackInStockNotify when currentPage.view matches', () => {
+    useWeniChat.mockReturnValue({
+      isChatOpen: true,
+      isConnectionClosed: false,
+      currentPage: {
+        view: 'back-in-stock-notify',
+        props: { productName: 'Cool Shoe' },
+      },
+      config: { embedded: false },
+      mode: 'live',
+    });
+
+    render(<Chat />);
+
+    expect(screen.getByTestId('back-in-stock-notify')).toHaveTextContent(
+      'Cool Shoe',
+    );
+    expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
+  });
+});
 
 describe('Chat — whatsapp-offers-opt-in view', () => {
   it('renders WhatsappOffersOptIn when currentPage.view matches', () => {

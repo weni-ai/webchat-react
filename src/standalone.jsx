@@ -126,6 +126,7 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage ?? 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
+    unavailableProductNotify: params.unavailableProductNotify || false,
     whatsappOffersNotify: params.whatsappOffersNotify || false,
     showCameraButton: params.showCameraButton !== false,
     showVoiceRecordingButton: params.showVoiceRecordingButton !== false,
@@ -419,6 +420,18 @@ async function simulateMessageSent(message) {
 }
 
 /**
+ * Simulate an unavailable product (back-in-stock notify bubble)
+ * @param {string} [productName]
+ * @returns {Promise<void>}
+ */
+async function simulateUnavailableProduct(productName) {
+  const svc = await serviceWhenReady();
+  svc.emit('starters:simulate-unavailable', {
+    productName: productName || 'Sample Product',
+  });
+}
+
+/**
  * Simulate WhatsApp offers opt-in balloon (generic or coupon copy)
  * @param {{ couponPercent?: number }} [options]
  * @returns {Promise<void>}
@@ -513,6 +526,7 @@ const WebChat = {
   reload,
   simulateMessageReceived,
   simulateMessageSent,
+  simulateUnavailableProduct,
   simulateWhatsappOffersOptIn,
   simulateConnectionStatus,
   changeLanguage,

@@ -16,6 +16,8 @@ import {
   filterInternalProperties,
   extractProductData,
   buildProductContextString,
+  isSelectedSkuAvailable,
+  getSellerIdForSku,
   stripLeadingZeros,
   getSelectedSkuIdFromLdJson,
   getSelectedSkuIdFromNextData,
@@ -823,6 +825,123 @@ describe('buildProductContextString', () => {
     };
     const result = buildProductContextString(product, '10');
     expect(result).toContain('SKU 10: N/A | Price: N/A');
+  });
+});
+
+describe('isSelectedSkuAvailable', () => {
+  it('returns false when AvailableQuantity is 0', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(false);
+  });
+
+  it('returns true when AvailableQuantity is greater than 0', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 5 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(true);
+  });
+
+  it('returns true when AvailableQuantity is missing', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [{ commertialOffer: { Price: 1234.9 } }],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '02003801')).toBe(true);
+  });
+
+  it('returns true when selected SKU is unmatched', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '999')).toBe(true);
+  });
+
+  it('returns true when product or selectedSkuId is missing', () => {
+    expect(isSelectedSkuAvailable(null, '1')).toBe(true);
+    expect(isSelectedSkuAvailable({ items: [] }, null)).toBe(true);
+  });
+
+  it('matches selected SKU when leading zeros differ between sources', () => {
+    const product = {
+      items: [
+        {
+          itemId: '02003801',
+          sellers: [
+            { commertialOffer: { Price: 1234.9, AvailableQuantity: 0 } },
+          ],
+        },
+      ],
+    };
+    expect(isSelectedSkuAvailable(product, '2003801')).toBe(false);
+  });
+});
+
+describe('getSellerIdForSku', () => {
+  it('returns the default seller when present', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [
+            { sellerId: '2', sellerDefault: false },
+            { sellerId: '9', sellerDefault: true },
+          ],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('9');
+  });
+
+  it('returns the first seller when none is default', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [{ sellerId: '3' }, { sellerId: '4' }],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('3');
+  });
+
+  it('falls back to 1 when seller id is missing', () => {
+    const product = {
+      items: [
+        {
+          itemId: '27',
+          sellers: [{ commertialOffer: { AvailableQuantity: 0 } }],
+        },
+      ],
+    };
+    expect(getSellerIdForSku(product, '27')).toBe('1');
+    expect(getSellerIdForSku(null, '27')).toBe('1');
   });
 });
 
