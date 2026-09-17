@@ -4,8 +4,7 @@ import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import i18n from '@/i18n';
-import { VoiceService } from '@/services/voice';
-import { AudioCapture } from '@/services/voice/AudioCapture';
+import { VoiceService, AudioCapture } from '@weni/webchat-service';
 
 jest.mock('@/experimental/navigateIfSameDomain', () => ({
   navigateIfSameDomain: jest.fn(),
@@ -18,20 +17,6 @@ jest.mock('@/utils/vtex', () => ({
 
 jest.mock('@/utils/vtexCustomFields', () => ({
   startVtexCustomFieldsSync: jest.fn(() => jest.fn()),
-}));
-
-jest.mock('@/services/voice', () => {
-  const MockVoiceService = jest.fn();
-  MockVoiceService.isSupported = jest.fn(() => true);
-  return { VoiceService: MockVoiceService };
-});
-
-jest.mock('@/services/voice/AudioCapture', () => ({
-  AudioCapture: {
-    checkPermission: jest.fn(() => Promise.resolve('granted')),
-    requestPermission: jest.fn(() => Promise.resolve(true)),
-    isSupported: jest.fn(() => true),
-  },
 }));
 
 function createMockVoiceService() {
