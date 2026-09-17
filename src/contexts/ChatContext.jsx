@@ -1,4 +1,7 @@
-import WeniWebchatService from '@weni/webchat-service';
+import WeniWebchatService, {
+  VoiceService,
+  AudioCapture,
+} from '@weni/webchat-service';
 import PropTypes from 'prop-types';
 import {
   createContext,
@@ -9,8 +12,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { VoiceService } from '@/services/voice';
-import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
 import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';

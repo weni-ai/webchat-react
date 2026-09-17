@@ -141,6 +141,19 @@ class WeniWebchatService {
   }
 }
 
+const VoiceService = jest.fn();
+VoiceService.isSupported = jest.fn(() => true);
+
+const AudioCapture = {
+  checkPermission: jest.fn(() => Promise.resolve('granted')),
+  requestPermission: jest.fn(() => Promise.resolve(true)),
+  isSupported: jest.fn(() => true),
+};
+
+WeniWebchatService.VoiceService = VoiceService;
+WeniWebchatService.AudioCapture = AudioCapture;
+WeniWebchatService.isVoiceSupported = VoiceService.isSupported;
+
 // Mirrors the real package, which exposes the constants both as static
 // properties on the class and as named module exports.
 WeniWebchatService.CONNECTION_STATUS = {
