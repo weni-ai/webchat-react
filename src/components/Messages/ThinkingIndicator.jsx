@@ -93,7 +93,6 @@ export function ThinkingIndicator({ className = '', text = null }) {
       setDisplayedText(hasExternalText ? text : messages[0].text);
     }, SLIDE_DURATION_MS);
     return () => clearTimeout(initTimeoutRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- init once on mount
   }, []);
 
   useEffect(() => {
@@ -107,7 +106,6 @@ export function ThinkingIndicator({ className = '', text = null }) {
     return () => {
       clearTimers();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMessageIndex, messages.length, hasExternalText, isInitializing]);
 
   useEffect(() => {
@@ -132,7 +130,6 @@ export function ThinkingIndicator({ className = '', text = null }) {
         animationTimeoutRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, hasExternalText, isInitializing]);
 
   const isSliding = isAnimatingOut || isInitializing;
