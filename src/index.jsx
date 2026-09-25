@@ -352,10 +352,6 @@ function App() {
             style={buttonStyle}
             onClick={async () => {
               await window.WebChat.open();
-              await window.WebChat.simulateMessageReceived({
-                type: 'typing_start',
-                from: 'ai-assistant',
-              });
               const phrases = [
                 'Looking up products…',
                 'Comparing options…',

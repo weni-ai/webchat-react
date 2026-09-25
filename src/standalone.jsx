@@ -515,7 +515,12 @@ async function setThinkingText(text) {
   }
 
   const svc = await serviceWhenReady();
+  // Text first, then the indicator, so the first paint already has the phrase.
   svc.emit('thinking:set-text', text);
+  svc.simulateMessageReceived({
+    type: 'typing_start',
+    from: 'ai-assistant',
+  });
 }
 
 function changeLanguage(language) {

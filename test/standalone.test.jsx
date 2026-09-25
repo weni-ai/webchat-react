@@ -541,7 +541,7 @@ describe('WebChat.setThinkingText', () => {
     expect(service.emit).toBeUndefined();
   });
 
-  it('emits thinking:set-text for a valid string after init', async () => {
+  it('emits thinking:set-text and starts thinking for a valid string after init', async () => {
     setupContainer();
     WebChat.init(baseParams);
 
@@ -550,6 +550,13 @@ describe('WebChat.setThinkingText', () => {
     expect(service.emit).toHaveBeenCalledWith(
       'thinking:set-text',
       'Looking up products',
+    );
+    expect(service.simulateMessageReceived).toHaveBeenCalledWith({
+      type: 'typing_start',
+      from: 'ai-assistant',
+    });
+    expect(service.emit.mock.invocationCallOrder[0]).toBeLessThan(
+      service.simulateMessageReceived.mock.invocationCallOrder[0],
     );
   });
 });

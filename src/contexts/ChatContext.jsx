@@ -296,6 +296,9 @@ export function ChatProvider({ children, config }) {
 
     service.on('state:changed', (newState) => {
       setState(newState);
+      if (!newState.isThinking) {
+        setThinkingText(null);
+      }
       forwardIncomingMessageToVoiceMode(newState);
     });
 
