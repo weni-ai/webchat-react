@@ -524,6 +524,26 @@ describe('WebChat.clearConversationStarters', () => {
   });
 });
 
+describe('WebChat.getConversationStartersLog', () => {
+  it('is exposed on window.WebChat', () => {
+    expect(typeof WebChat.getConversationStartersLog).toBe('function');
+    expect(typeof window.WebChat.default.getConversationStartersLog).toBe(
+      'function',
+    );
+    expect(window.getConversationStartersLog).toBeUndefined();
+
+    const dump = window.WebChat.default.getConversationStartersLog();
+    expect(dump).toEqual(
+      expect.objectContaining({
+        entries: expect.any(Array),
+        config: expect.objectContaining({
+          conversationStarters: expect.any(Object),
+        }),
+      }),
+    );
+  });
+});
+
 describe('WebChat utility methods', () => {
   it('isVisible warns that it is not implemented', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});

@@ -16,6 +16,10 @@ import {
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
+import {
+  recordConversationStarterEvent,
+  setConversationStartersLogConfig,
+} from '@/utils/conversationStartersLog';
 
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
@@ -92,6 +96,7 @@ export function useConversationStartersCore() {
     config?.unavailableProductNotify === true;
   isWhatsappOffersNotifyEnabledRef.current =
     config?.whatsappOffersNotify === true;
+  setConversationStartersLogConfig(config || {});
 
   const clearMobileTimer = useCallback(() => {
     if (mobileTimerRef.current) {
@@ -205,18 +210,38 @@ export function useConversationStartersCore() {
 
   const requestStarters = useCallback(
     (productData) => {
-      if (!service) return;
+      if (!service) {
+        recordConversationStarterEvent('ws_request', 'warn', {
+          reason: 'no_service',
+        });
+        return;
+      }
 
       try {
         if (isConnectedRef.current) {
+          recordConversationStarterEvent('ws_request', 'info', {
+            account: productData?.account,
+            linkText: productData?.linkText,
+            productPath: productData?.productPath,
+            productName: productData?.productName,
+          });
           service.getStarters(productData);
         } else {
+          recordConversationStarterEvent('ws_deferred', 'info', {
+            account: productData?.account,
+            linkText: productData?.linkText,
+            productPath: productData?.productPath,
+            connectOn: config?.connectOn,
+          });
           deferredProductDataRef.current = productData;
           if (config?.connectOn === 'demand') {
             service.connect();
           }
         }
-      } catch {
+      } catch (error) {
+        recordConversationStarterEvent('ws_request_error', 'error', {
+          message: error?.message || 'getStarters_failed',
+        });
         setIsLoading(false);
       }
     },
@@ -224,17 +249,43 @@ export function useConversationStartersCore() {
   );
 
   const detectAndFetchPdp = useCallback(async () => {
-    if (!isPdpEnabledRef.current || !isVtexPdpPage()) return;
+    if (!isPdpEnabledRef.current) {
+      recordConversationStarterEvent('skip', 'info', {
+        reason: 'pdp_disabled',
+      });
+      return;
+    }
+    if (!isVtexPdpPage()) {
+      recordConversationStarterEvent('skip', 'info', {
+        reason: 'not_pdp',
+        pathname: window.location.pathname,
+      });
+      return;
+    }
 
     const slug = extractSlugFromUrl();
-    if (!slug) return;
+    if (!slug) {
+      recordConversationStarterEvent('skip', 'info', { reason: 'no_slug' });
+      return;
+    }
 
     const account = getVtexAccount();
-    if (!account) return;
+    if (!account) {
+      recordConversationStarterEvent('skip', 'info', { reason: 'no_account' });
+      return;
+    }
 
     const productPath = extractProductPathFromUrl();
     const newFingerprint = `${account}:${productPath || slug}`;
     const generation = ++fetchGenerationRef.current;
+
+    recordConversationStarterEvent('attempt', 'info', {
+      fingerprint: newFingerprint,
+      slug,
+      account,
+      productPath,
+      generation,
+    });
 
     currentFingerprintRef.current = newFingerprint;
     setFingerprint(newFingerprint);
@@ -242,14 +293,39 @@ export function useConversationStartersCore() {
     setSource('pdp');
 
     const result = await resolveProductData(slug, account);
-    if (generation !== fetchGenerationRef.current) return;
+    if (generation !== fetchGenerationRef.current) {
+      recordConversationStarterEvent('ws_discarded', 'warn', {
+        reason: 'stale_generation',
+        generation,
+        currentGeneration: fetchGenerationRef.current,
+      });
+      return;
+    }
 
     if (!result) {
+      recordConversationStarterEvent('product_resolve_failed', 'warn', {
+        slug,
+        account,
+      });
       setIsLoading(false);
       return;
     }
 
-    if (currentFingerprintRef.current !== newFingerprint) return;
+    recordConversationStarterEvent('product_resolved', 'info', {
+      source: result.source,
+      account: result.productData?.account,
+      linkText: result.productData?.linkText,
+      productPath: result.productData?.productPath,
+      productName: result.productData?.productName,
+    });
+
+    if (currentFingerprintRef.current !== newFingerprint) {
+      recordConversationStarterEvent('ws_discarded', 'warn', {
+        reason: 'fingerprint_changed',
+        fingerprint: newFingerprint,
+      });
+      return;
+    }
 
     const selectedSkuId =
       getSelectedSkuId() ||
@@ -257,6 +333,10 @@ export function useConversationStartersCore() {
     const normalized = normalizeForContext(result.rawProduct, result.source);
     const contextString = buildProductContextString(normalized, selectedSkuId);
     if (contextString && service) {
+      recordConversationStarterEvent('context_set', 'info', {
+        length: contextString.length,
+        skuId: selectedSkuId || '',
+      });
       service.setContext(contextString);
     }
 
@@ -267,6 +347,10 @@ export function useConversationStartersCore() {
       isUnavailableNotifyEnabledRef.current &&
       !isSelectedSkuAvailable(normalized, selectedSkuId)
     ) {
+      recordConversationStarterEvent('divert_back_in_stock', 'info', {
+        skuId: selectedSkuId || '',
+        productName: resolvedProductName,
+      });
       showBackInStockNotify(resolvedProductName, {
         skuId: selectedSkuId || '',
         seller: getSellerIdForSku(normalized, selectedSkuId),
@@ -286,6 +370,8 @@ export function useConversationStartersCore() {
     lastHandledPathnameRef.current = pathname;
     fetchGenerationRef.current += 1;
     setHasShownCompactStarters(false);
+
+    recordConversationStarterEvent('nav_clear', 'info', { pathname });
 
     if (!service) return true;
 
@@ -364,6 +450,10 @@ export function useConversationStartersCore() {
       clearMobileTimer();
       removeQuestionFromList(question);
       setIsInChatStartersDismissed(true);
+      recordConversationStarterEvent('click', 'info', {
+        from: 'full',
+        questionLength: question?.length,
+      });
       void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
       if (isChatOpen) {
         sendMessage(question, {
@@ -400,6 +490,10 @@ export function useConversationStartersCore() {
       }
       removeQuestionFromList(question);
       setIsInChatStartersDismissed(true);
+      recordConversationStarterEvent('click', 'info', {
+        from: 'compact',
+        questionLength: question?.length,
+      });
       pendingStarterRef.current = question;
       setIsChatOpen(true);
     },
@@ -490,6 +584,11 @@ export function useConversationStartersCore() {
         setIsOptInBalloonVisible(false);
         setCouponPercent(null);
         const nextQuestions = data.questions?.slice(0, 3) || [];
+        recordConversationStarterEvent('ws_success', 'info', {
+          questionCount: nextQuestions.length,
+          status: data.status,
+          fingerprint: currentFingerprintRef.current,
+        });
         setQuestions(nextQuestions);
         setIsCompactVisible(true);
         setIsInChatStartersDismissed(false);
@@ -498,20 +597,50 @@ export function useConversationStartersCore() {
           setHasShownCompactStarters(true);
         }
         startMobileAutoHide();
+      } else {
+        recordConversationStarterEvent('ws_discarded', 'warn', {
+          reason: 'invalid_fingerprint',
+          questionCount: data.questions?.length,
+        });
       }
     };
 
-    const handleStartersError = () => {
+    const handleStartersError = (data) => {
+      const code = data?.data?.code || data?.code;
+      recordConversationStarterEvent('ws_error', 'error', {
+        error: data?.error,
+        code,
+        account: data?.data?.account,
+        linkText: data?.data?.linkText,
+        productPath: data?.data?.productPath,
+        durationMs: data?.data?.duration_ms,
+      });
+      if (code === 'STARTERS_IN_FLIGHT') return;
       setIsLoading(false);
+    };
+
+    const handleStartersDiscarded = (payload) => {
+      recordConversationStarterEvent('ws_discarded', 'warn', {
+        reason: payload?.reason || 'stale_fingerprint',
+        questionCount: payload?.data?.questions?.length,
+      });
     };
 
     const handleConnected = () => {
       if (deferredProductDataRef.current) {
         const productData = deferredProductDataRef.current;
         deferredProductDataRef.current = null;
+        recordConversationStarterEvent('ws_request_flushed', 'info', {
+          account: productData?.account,
+          linkText: productData?.linkText,
+          productPath: productData?.productPath,
+        });
         try {
           service.getStarters(productData);
-        } catch {
+        } catch (error) {
+          recordConversationStarterEvent('ws_request_error', 'error', {
+            message: error?.message || 'getStarters_failed',
+          });
           setIsLoading(false);
         }
       }
@@ -567,6 +696,7 @@ export function useConversationStartersCore() {
 
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
+    service.on('starters:discarded', handleStartersDiscarded);
     service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
     service.on('starters:simulate-unavailable', handleSimulateUnavailable);
@@ -583,6 +713,7 @@ export function useConversationStartersCore() {
     return () => {
       service.off('starters:received', handleStartersReceived);
       service.off('starters:error', handleStartersError);
+      service.off('starters:discarded', handleStartersDiscarded);
       service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
       service.off('starters:simulate-unavailable', handleSimulateUnavailable);
@@ -605,6 +736,13 @@ export function useConversationStartersCore() {
     if (!service) return;
 
     lastHandledPathnameRef.current = window.location.pathname;
+    recordConversationStarterEvent('init', 'info', {
+      pdpEnabled: isPdpEnabledRef.current,
+      pathname: window.location.pathname,
+      account: getVtexAccount(),
+      isConnected: isConnectedRef.current,
+      connectOn: config?.connectOn,
+    });
     detectAndFetchPdp();
 
     const monitor = createNavigationMonitor(scheduleNavigationHandling);
