@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
@@ -23,6 +23,8 @@ export function ThinkingIndicator({ className = '', text = null }) {
   const timeoutRef = useRef(null);
   const animationTimeoutRef = useRef(null);
   const initTimeoutRef = useRef(null);
+  const trackRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   const messages = [
     {
@@ -132,6 +134,7 @@ export function ThinkingIndicator({ className = '', text = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, hasExternalText, isInitializing]);
 
+  const isSliding = isAnimatingOut || isInitializing;
   const outgoingText = committedText;
   const incomingText = isInitializing
     ? hasExternalText
@@ -143,6 +146,31 @@ export function ThinkingIndicator({ className = '', text = null }) {
         : messages[currentMessageIndex + 1]?.text
       : committedText;
 
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    const wrapper = wrapperRef.current;
+    if (!track || !wrapper) return;
+
+    const paragraphs = track.querySelectorAll('.weni-thinking-indicator__text');
+    const outgoing = paragraphs[0];
+    const incoming = paragraphs[paragraphs.length - 1];
+    const outgoingHeight = outgoing?.offsetHeight ?? 0;
+    const incomingHeight = incoming?.offsetHeight ?? 0;
+
+    if (paragraphs.length > 1) {
+      track.style.setProperty('--thinking-slide-offset', `${outgoingHeight}px`);
+    } else {
+      track.style.removeProperty('--thinking-slide-offset');
+    }
+
+    if (incomingHeight > 0) {
+      wrapper.style.setProperty(
+        '--thinking-wrapper-height',
+        `${incomingHeight}px`,
+      );
+    }
+  }, [isSliding, outgoingText, incomingText]);
+
   return (
     <>
       <section className={`weni-thinking-indicator ${className}`}>
@@ -153,9 +181,13 @@ export function ThinkingIndicator({ className = '', text = null }) {
           className="weni-fs-button__loading-spinner weni-thinking-indicator__icon"
         />
 
-        <div className="weni-thinking-indicator__text-wrapper">
+        <div
+          ref={wrapperRef}
+          className="weni-thinking-indicator__text-wrapper"
+        >
           <div
-            className={`weni-thinking-indicator__text-track${isAnimatingOut || isInitializing ? ' weni-thinking-indicator__text-track--sliding' : ''}`}
+            ref={trackRef}
+            className={`weni-thinking-indicator__text-track${isSliding ? ' weni-thinking-indicator__text-track--sliding' : ''}`}
           >
             {isInitializing && (
               <p className="weni-thinking-indicator__text">&nbsp;</p>
