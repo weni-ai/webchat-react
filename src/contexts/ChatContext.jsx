@@ -151,6 +151,7 @@ export function ChatProvider({ children, config }) {
   const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
 
   const [inputDraft, setInputDraft] = useState('');
+  const [thinkingText, setThinkingText] = useState(null);
 
   // Voice mode state
   const [isVoiceEnabledByClient] = useState(!!mergedConfig.voiceMode?.enabled);
@@ -314,6 +315,7 @@ export function ChatProvider({ children, config }) {
     );
 
     service.on('context:changed', (context) => setContext(context));
+    service.on('thinking:set-text', (text) => setThinkingText(text));
 
     const syncVoiceModeLanguage = (language) => {
       const isoLang = language ? language.split('-')[0].toLowerCase() : 'en';
@@ -595,6 +597,7 @@ export function ChatProvider({ children, config }) {
     reconnectNow: () => service.reconnectNow(),
     isTyping: state.isTyping || false,
     isThinking: state.isThinking || false,
+    thinkingText,
     context,
     error: state.error || null,
 

@@ -71,7 +71,8 @@ Message.propTypes = {
 
 export function MessagesList() {
   const { t } = useTranslation();
-  const { isTyping, isThinking, messageGroups, isChatOpen } = useWeniChat();
+  const { isTyping, isThinking, thinkingText, messageGroups, isChatOpen } =
+    useWeniChat();
   const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
@@ -220,7 +221,10 @@ export function MessagesList() {
               type="typing"
             >
               {isThinking ? (
-                <ThinkingIndicator className="weni-message__thinking-indicator" />
+                <ThinkingIndicator
+                  className="weni-message__thinking-indicator"
+                  text={thinkingText}
+                />
               ) : (
                 <TypingIndicator />
               )}

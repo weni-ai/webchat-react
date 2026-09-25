@@ -5,17 +5,21 @@ import PropTypes from 'prop-types';
 import Icon from '@/components/common/Icon';
 import './ThinkingIndicator.scss';
 
+const SLIDE_DURATION_MS = 500;
+
 /**
  * ThinkingIndicator - Animated thinking indicator with rotating messages
  *
  * Displays rotating messages with icons to indicate AI is thinking/processing.
  * Messages change every 4-7.5 seconds with smooth fade animations.
+ * An optional `text` prop overrides rotation and slides to each new value.
  */
-export function ThinkingIndicator({ className = '' }) {
+export function ThinkingIndicator({ className = '', text = null }) {
   const { t } = useTranslation();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [displayedText, setDisplayedText] = useState(null);
   const timeoutRef = useRef(null);
   const animationTimeoutRef = useRef(null);
   const initTimeoutRef = useRef(null);
@@ -43,6 +47,21 @@ export function ThinkingIndicator({ className = '' }) {
     },
   ];
 
+  const hasExternalText = typeof text === 'string' && text.trim().length > 0;
+  const rotationText = messages[currentMessageIndex].text;
+  const committedText = displayedText ?? (hasExternalText ? text : rotationText);
+
+  const clearTimers = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+    }
+  };
+
   const scheduleNextMessage = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -52,7 +71,6 @@ export function ThinkingIndicator({ className = '' }) {
       return;
     }
 
-    // Random delay between 4 and 7.5 seconds
     const delay = (4 + Math.random() * 3.5) * 1000;
 
     timeoutRef.current = setTimeout(() => {
@@ -60,30 +78,70 @@ export function ThinkingIndicator({ className = '' }) {
 
       animationTimeoutRef.current = setTimeout(() => {
         setCurrentMessageIndex((prev) => prev + 1);
+        setDisplayedText(messages[currentMessageIndex + 1]?.text);
         setIsAnimatingOut(false);
-      }, 500); // Match CSS animation duration
+      }, SLIDE_DURATION_MS);
     }, delay);
   };
 
   useEffect(() => {
-    initTimeoutRef.current = setTimeout(() => setIsInitializing(false), 500);
+    initTimeoutRef.current = setTimeout(() => {
+      setIsInitializing(false);
+      setDisplayedText(hasExternalText ? text : messages[0].text);
+    }, SLIDE_DURATION_MS);
     return () => clearTimeout(initTimeoutRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- init once on mount
   }, []);
 
   useEffect(() => {
+    if (hasExternalText || isInitializing) {
+      clearTimers();
+      return undefined;
+    }
+
     scheduleNextMessage();
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      clearTimers();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMessageIndex, messages.length, hasExternalText, isInitializing]);
+
+  useEffect(() => {
+    if (!hasExternalText || isInitializing) {
+      return undefined;
+    }
+
+    if (text === committedText) {
+      return undefined;
+    }
+
+    setIsAnimatingOut(true);
+
+    animationTimeoutRef.current = setTimeout(() => {
+      setDisplayedText(text);
+      setIsAnimatingOut(false);
+    }, SLIDE_DURATION_MS);
+
+    return () => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
       }
     };
-  }, [currentMessageIndex, messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, hasExternalText, isInitializing]);
 
-  const currentMessage = messages[currentMessageIndex];
+  const outgoingText = committedText;
+  const incomingText = isInitializing
+    ? hasExternalText
+      ? text
+      : rotationText
+    : isAnimatingOut
+      ? hasExternalText
+        ? text
+        : messages[currentMessageIndex + 1]?.text
+      : committedText;
 
   return (
     <>
@@ -92,7 +150,7 @@ export function ThinkingIndicator({ className = '' }) {
           name="progress_activity"
           size="small"
           color="weni-main-color"
-          className="weni-fs-button__loading-spinner"
+          className="weni-fs-button__loading-spinner weni-thinking-indicator__icon"
         />
 
         <div className="weni-thinking-indicator__text-wrapper">
@@ -103,17 +161,13 @@ export function ThinkingIndicator({ className = '' }) {
               <p className="weni-thinking-indicator__text">&nbsp;</p>
             )}
             {!isInitializing && isAnimatingOut && (
-              <p className="weni-thinking-indicator__text">
-                {currentMessage.text}
-              </p>
+              <p className="weni-thinking-indicator__text">{outgoingText}</p>
             )}
             <p
-              key={currentMessageIndex}
+              key={incomingText}
               className="weni-thinking-indicator__text"
             >
-              {isAnimatingOut
-                ? messages[currentMessageIndex + 1]?.text
-                : currentMessage.text}
+              {incomingText}
             </p>
           </div>
         </div>
@@ -124,6 +178,7 @@ export function ThinkingIndicator({ className = '' }) {
 
 ThinkingIndicator.propTypes = {
   className: PropTypes.string,
+  text: PropTypes.string,
 };
 
 export default ThinkingIndicator;

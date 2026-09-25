@@ -7,6 +7,7 @@
   height: $line-height;
 
   &__icon {
+    min-width: $icon-size-4;
     transition: opacity 0.5s ease-in-out;
 
     &--in {
@@ -43,7 +44,6 @@
   &__text {
     font: $fs-text-weight-regular #{$fs-text-size-0}/#{$line-height} $font-family;
     color: $fs-fg-base;
-    white-space: nowrap;
     flex-shrink: 0;
   }
 }
