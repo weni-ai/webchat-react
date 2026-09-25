@@ -51,7 +51,8 @@ export function ThinkingIndicator({ className = '', text = null }) {
 
   const hasExternalText = typeof text === 'string' && text.trim().length > 0;
   const rotationText = messages[currentMessageIndex].text;
-  const committedText = displayedText ?? (hasExternalText ? text : rotationText);
+  const committedText =
+    displayedText ?? (hasExternalText ? text : rotationText);
 
   const clearTimers = () => {
     if (timeoutRef.current) {

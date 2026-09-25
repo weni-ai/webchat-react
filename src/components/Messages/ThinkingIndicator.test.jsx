@@ -124,7 +124,9 @@ describe('ThinkingIndicator', () => {
   });
 
   it('slides from the previous text to a new text', () => {
-    const { rerender } = render(<ThinkingIndicator text="Looking up products" />);
+    const { rerender } = render(
+      <ThinkingIndicator text="Looking up products" />,
+    );
     act(() => {
       jest.advanceTimersToNextTimer();
     });
