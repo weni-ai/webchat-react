@@ -16,6 +16,10 @@ import {
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
+import {
+  clearConversationStartersLog,
+  getConversationStartersLog,
+} from '@/utils/conversationStartersLog';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -104,6 +108,7 @@ describe('useConversationStartersCore', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    clearConversationStartersLog();
     isVtexPdpPage.mockReturnValue(false);
     isSelectedSkuAvailable.mockReturnValue(true);
     getSkuIdFromRawProduct.mockReturnValue(null);
@@ -1291,6 +1296,102 @@ describe('useConversationStartersCore', () => {
       });
 
       expect(result.current.productName).toBe('Sample Product');
+    });
+  });
+
+  describe('conversation starters debug log', () => {
+    it('records skip when PDP is disabled', () => {
+      ctx = buildContext({ config: { conversationStarters: { pdp: false } } });
+      useChatContext.mockReturnValue(ctx);
+
+      renderHook(() => useConversationStartersCore());
+
+      const phases = getConversationStartersLog().entries.map((e) => e.phase);
+      expect(phases).toContain('init');
+      expect(phases).toContain('skip');
+      expect(
+        getConversationStartersLog().entries.find((e) => e.phase === 'skip')
+          .detail.reason,
+      ).toBe('pdp_disabled');
+    });
+
+    it('records skip when the page is not a PDP', () => {
+      isVtexPdpPage.mockReturnValue(false);
+
+      renderHook(() => useConversationStartersCore());
+
+      expect(
+        getConversationStartersLog().entries.find((e) => e.phase === 'skip')
+          .detail.reason,
+      ).toBe('not_pdp');
+    });
+
+    it('records ws_success when starters arrive', async () => {
+      isVtexPdpPage.mockReturnValue(true);
+      extractSlugFromUrl.mockReturnValue('cool-shoe');
+      extractProductPathFromUrl.mockReturnValue('/en/cool-shoe/p');
+      getVtexAccount.mockReturnValue('mystore');
+      resolveProductData.mockResolvedValue({
+        productData: {
+          account: 'mystore',
+          linkText: 'cool-shoe',
+          productPath: '/en/cool-shoe/p',
+          productName: 'Cool Shoe',
+        },
+        rawProduct: { productName: 'Cool Shoe' },
+        source: 'ld+json',
+      });
+      normalizeForContext.mockReturnValue({ productName: 'Cool Shoe' });
+      buildProductContextString.mockReturnValue('ctx');
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      const receivedHandler = getEventHandler('starters:received');
+      act(() => {
+        receivedHandler({ questions: ['Q1?', 'Q2?'], status: 'empty' });
+      });
+
+      const success = getConversationStartersLog().entries.find(
+        (e) => e.phase === 'ws_success',
+      );
+      expect(success.detail.questionCount).toBe(2);
+    });
+
+    it('records ws_error and keeps loading for STARTERS_IN_FLIGHT', async () => {
+      isVtexPdpPage.mockReturnValue(true);
+      extractSlugFromUrl.mockReturnValue('cool-shoe');
+      extractProductPathFromUrl.mockReturnValue('/en/cool-shoe/p');
+      getVtexAccount.mockReturnValue('mystore');
+      resolveProductData.mockImplementation(
+        () =>
+          new Promise(() => {
+            /* hang so loading stays true */
+          }),
+      );
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(hookResult.current.isLoading).toBe(true);
+
+      const errorHandler = getEventHandler('starters:error');
+      act(() => {
+        errorHandler({
+          error: 'get pdp starters: request already in flight',
+          data: { code: 'STARTERS_IN_FLIGHT' },
+        });
+      });
+
+      expect(hookResult.current.isLoading).toBe(true);
+      const errorEntry = getConversationStartersLog().entries.find(
+        (e) => e.phase === 'ws_error',
+      );
+      expect(errorEntry.detail.code).toBe('STARTERS_IN_FLIGHT');
     });
   });
 
