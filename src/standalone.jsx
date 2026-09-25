@@ -498,6 +498,30 @@ async function clearConversationStarters() {
   svc.emit('starters:clear');
 }
 
+function isValidThinkingText(text) {
+  return typeof text === 'string' && text.trim().length > 0;
+}
+
+async function setThinkingText(text) {
+  if (!isValidThinkingText(text)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('WebChat.setThinkingText: expected a non-empty string');
+    }
+    return;
+  }
+
+  if (!widgetInstance && typeof service.emit !== 'function') {
+    return;
+  }
+
+  const svc = await serviceWhenReady();
+  svc.emit('thinking:set-text', text);
+  svc.simulateMessageReceived({
+    type: 'typing_start',
+    from: 'ai-assistant',
+  });
+}
+
 function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
@@ -521,6 +545,7 @@ const WebChat = {
   setCustomField,
   setConversationStarters,
   clearConversationStarters,
+  setThinkingText,
   isOpen,
   isVisible,
   reload,

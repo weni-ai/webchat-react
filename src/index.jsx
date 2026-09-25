@@ -334,6 +334,39 @@ function App() {
           >
             Simulate product catalog
           </button>
+          <button
+            id="simulate-thinking-start"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'typing_start',
+                from: 'ai-assistant',
+              });
+            }}
+          >
+            Simulate thinking start
+          </button>
+          <button
+            id="simulate-thinking-text"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              const phrases = [
+                'Looking up products…',
+                'Comparing options…',
+                'Almost there…',
+                `One moment, I'll search my catalog for bikes that handle both asphalt and dirt within that budget.`,
+              ];
+              const nextIndex = window.__weniThinkingTextIndex || 0;
+              await window.WebChat.setThinkingText(
+                phrases[nextIndex % phrases.length],
+              );
+              window.__weniThinkingTextIndex = nextIndex + 1;
+            }}
+          >
+            Simulate thinking text
+          </button>
         </section>
       </div>
 

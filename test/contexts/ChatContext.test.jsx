@@ -747,6 +747,32 @@ describe('ChatContext — service events', () => {
     expect(ctx.error).toEqual({ message: 'boom' });
   });
 
+  it('updates thinkingText from thinking:set-text', async () => {
+    await renderWithContext({});
+    expect(ctx.thinkingText).toBeNull();
+
+    await act(async () => {
+      ctx.service.emit('thinking:set-text', 'Looking up products');
+    });
+
+    expect(ctx.thinkingText).toBe('Looking up products');
+  });
+
+  it('clears thinkingText when thinking stops', async () => {
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.emit('thinking:set-text', 'Looking up products');
+      ctx.service.emit('state:changed', { isThinking: true, messages: [] });
+    });
+    expect(ctx.thinkingText).toBe('Looking up products');
+
+    await act(async () => {
+      ctx.service.emit('state:changed', { isThinking: false, messages: [] });
+    });
+    expect(ctx.thinkingText).toBeNull();
+  });
+
   it('updates recording state from recording events', async () => {
     await renderWithContext({});
     await act(async () => {

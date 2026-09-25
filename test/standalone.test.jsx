@@ -505,6 +505,62 @@ describe('WebChat.setConversationStarters', () => {
   });
 });
 
+describe('WebChat.setThinkingText', () => {
+  it('rejects invalid input shapes', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await WebChat.setThinkingText(null);
+    await WebChat.setThinkingText('');
+    await WebChat.setThinkingText('   ');
+    await WebChat.setThinkingText(42);
+
+    expect(service.emit).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('warns in development when input is invalid', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await WebChat.setThinkingText('');
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      'WebChat.setThinkingText: expected a non-empty string',
+    );
+
+    process.env.NODE_ENV = originalNodeEnv;
+    warnSpy.mockRestore();
+  });
+
+  it('returns early when the widget is not mounted and service.emit is unavailable', async () => {
+    delete service.emit;
+
+    await WebChat.setThinkingText('Looking up products');
+
+    expect(service.emit).toBeUndefined();
+  });
+
+  it('emits thinking:set-text and starts thinking for a valid string after init', async () => {
+    setupContainer();
+    WebChat.init(baseParams);
+
+    await WebChat.setThinkingText('Looking up products');
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'thinking:set-text',
+      'Looking up products',
+    );
+    expect(service.simulateMessageReceived).toHaveBeenCalledWith({
+      type: 'typing_start',
+      from: 'ai-assistant',
+    });
+    expect(service.emit.mock.invocationCallOrder[0]).toBeLessThan(
+      service.simulateMessageReceived.mock.invocationCallOrder[0],
+    );
+  });
+});
+
 describe('WebChat.clearConversationStarters', () => {
   it('returns early when the widget is not mounted and service.emit is unavailable', async () => {
     delete service.emit;

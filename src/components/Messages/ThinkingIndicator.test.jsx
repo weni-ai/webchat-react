@@ -106,4 +106,89 @@ describe('ThinkingIndicator', () => {
       });
     }).not.toThrow();
   });
+
+  it('shows the provided text after init and does not rotate', () => {
+    render(<ThinkingIndicator text="Looking up products" />);
+    act(() => {
+      jest.advanceTimersToNextTimer();
+    });
+    expect(screen.getByText('Looking up products')).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(10_000);
+    });
+    expect(screen.getByText('Looking up products')).toBeInTheDocument();
+    expect(
+      screen.queryByText('thinking.messages.connecting'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('slides from the previous text to a new text', () => {
+    const { rerender } = render(
+      <ThinkingIndicator text="Looking up products" />,
+    );
+    act(() => {
+      jest.advanceTimersToNextTimer();
+    });
+
+    rerender(<ThinkingIndicator text="Comparing options" />);
+
+    expect(screen.getByText('Looking up products')).toBeInTheDocument();
+    expect(screen.getByText('Comparing options')).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersToNextTimer();
+    });
+
+    expect(screen.queryByText('Looking up products')).not.toBeInTheDocument();
+    expect(screen.getByText('Comparing options')).toBeInTheDocument();
+  });
+
+  it('slides by the outgoing text height when the next text is taller', () => {
+    const heights = new Map();
+    const descriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'offsetHeight',
+    );
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get() {
+        return heights.get(this.textContent) ?? 16;
+      },
+    });
+
+    const longText =
+      "One moment, I'll search my catalog for bikes that handle both asphalt and dirt within that budget.";
+    heights.set('Looking up products', 16);
+    heights.set(longText, 64);
+    heights.set('\u00a0', 16);
+
+    const { container, rerender } = render(
+      <ThinkingIndicator text="Looking up products" />,
+    );
+    act(() => {
+      jest.advanceTimersToNextTimer();
+    });
+
+    rerender(<ThinkingIndicator text={longText} />);
+
+    const track = container.querySelector(
+      '.weni-thinking-indicator__text-track',
+    );
+    const wrapper = container.querySelector(
+      '.weni-thinking-indicator__text-wrapper',
+    );
+    expect(track.style.getPropertyValue('--thinking-slide-offset')).toBe(
+      '16px',
+    );
+    expect(wrapper.style.getPropertyValue('--thinking-wrapper-height')).toBe(
+      '64px',
+    );
+
+    if (descriptor) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', descriptor);
+    } else {
+      delete HTMLElement.prototype.offsetHeight;
+    }
+  });
 });
