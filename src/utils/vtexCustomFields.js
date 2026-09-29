@@ -3,7 +3,7 @@ import { getVtexAccount } from '@/utils/vtex';
 
 const ORDER_FORM_ID_REGEX = /^[a-f0-9]{32}$/;
 const DEFAULT_POLL_INTERVAL_MS = 1000;
-const SESSION_POLL_INTERVAL_MS = 20_000;
+const SESSION_POLL_INTERVAL_MS = 60_000;
 
 function isValidOrderFormId(value) {
   return typeof value === 'string' && ORDER_FORM_ID_REGEX.test(value);
