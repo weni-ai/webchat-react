@@ -275,6 +275,20 @@ function App() {
             Simulate unavailable product
           </button>
           <button
+            id="simulate-back-in-stock-page"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateBackInStockPage({
+                productName: DEMO_PRODUCT.name,
+                skuId: DEMO_PRODUCT.product_retailer_id,
+                seller: DEMO_PRODUCT.seller_id,
+              });
+            }}
+          >
+            Simulate back in stock page
+          </button>
+          <button
             id="simulate-whatsapp-offers-opt-in"
             style={buttonStyle}
             onClick={async () => {
