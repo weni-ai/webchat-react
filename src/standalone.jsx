@@ -432,6 +432,27 @@ async function simulateUnavailableProduct(productName) {
 }
 
 /**
+ * Open the back-in-stock notify page for local UI debugging.
+ * @param {{ productName?: string, skuId?: string, seller?: string }} [product]
+ * @returns {Promise<void>}
+ */
+async function simulateBackInStockPage(product = {}) {
+  const svc = await serviceWhenReady();
+  const productName =
+    typeof product?.productName === 'string' && product.productName.trim()
+      ? product.productName.trim()
+      : 'Sample Product';
+  const skuId = typeof product?.skuId === 'string' ? product.skuId : '';
+  const seller = typeof product?.seller === 'string' ? product.seller : '';
+
+  svc.emit('starters:simulate-back-in-stock-page', {
+    productName,
+    skuId,
+    seller,
+  });
+}
+
+/**
  * Simulate WhatsApp offers opt-in balloon (generic or coupon copy)
  * @param {{ couponPercent?: number }} [options]
  * @returns {Promise<void>}
@@ -552,6 +573,7 @@ const WebChat = {
   simulateMessageReceived,
   simulateMessageSent,
   simulateUnavailableProduct,
+  simulateBackInStockPage,
   simulateWhatsappOffersOptIn,
   simulateConnectionStatus,
   changeLanguage,

@@ -168,9 +168,13 @@
     }
   },
   "back_in_stock": {
+    "ddi_label": "DDI",
     "form_description": "Te avisaremos por WhatsApp en cuanto {{productName}} vuelva a estar en stock",
     "form_title": "Recibe aviso de reposición",
+    "invalid_phone": "Ingresa un teléfono válido",
     "name_label": "Nombre",
+    "name_required": "Completa este campo",
+    "not_now": "Ahora no",
     "notify_me": "Avísame",
     "notify_me_cta": "Avísame cuando vuelva a estar en stock",
     "show_similar_products": "Ver productos similares",

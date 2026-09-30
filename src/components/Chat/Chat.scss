@@ -15,6 +15,10 @@
 
   border-radius: $fs-border-radius-medium;
 
+  &--compact {
+    height: auto;
+  }
+
   &--disabled-animation {
     animation: none;
   }
@@ -69,5 +73,10 @@
     width: 100vw;
     height: var(--vtex-cx-webchat-height, 85vh);
     margin: 0;
+  }
+
+  .weni-chat.weni-chat--compact {
+    height: auto;
+    max-height: var(--vtex-cx-webchat-height, 85vh);
   }
 }

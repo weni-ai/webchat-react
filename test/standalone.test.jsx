@@ -402,6 +402,36 @@ describe('WebChat service helpers', () => {
     });
   });
 
+  it('simulateBackInStockPage emits starters:simulate-back-in-stock-page', async () => {
+    await WebChat.simulateBackInStockPage({
+      productName: 'Oculus Quest',
+      skuId: '1276545',
+      seller: '1',
+    });
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-back-in-stock-page',
+      {
+        productName: 'Oculus Quest',
+        skuId: '1276545',
+        seller: '1',
+      },
+    );
+  });
+
+  it('simulateBackInStockPage defaults product name when omitted', async () => {
+    await WebChat.simulateBackInStockPage();
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-back-in-stock-page',
+      {
+        productName: 'Sample Product',
+        skuId: '',
+        seller: '',
+      },
+    );
+  });
+
   it('simulateWhatsappOffersOptIn emits starters:simulate-whatsapp-offers', async () => {
     await WebChat.simulateWhatsappOffersOptIn();
 

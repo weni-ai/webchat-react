@@ -88,7 +88,7 @@ export function Chat() {
   return (
     <section
       ref={chatRootRef}
-      className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''}`}
+      className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''} ${currentPage?.view === 'back-in-stock-notify' ? 'weni-chat--compact' : ''}`}
     >
       <Header />
       <ConnectionStatusBanner />
