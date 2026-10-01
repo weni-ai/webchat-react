@@ -73,6 +73,7 @@ beforeEach(() => {
     connection: { status: 'connected' },
   });
   service.emit = jest.fn();
+  service.setThinkingText = jest.fn();
   service.clearPageHistory = jest.fn();
   service.clearCart = jest.fn();
   WebChat.destroy();
@@ -544,7 +545,7 @@ describe('WebChat.setThinkingText', () => {
     await WebChat.setThinkingText('   ');
     await WebChat.setThinkingText(42);
 
-    expect(service.emit).not.toHaveBeenCalled();
+    expect(service.setThinkingText).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
 
@@ -558,6 +559,7 @@ describe('WebChat.setThinkingText', () => {
     expect(warnSpy).toHaveBeenCalledWith(
       'WebChat.setThinkingText: expected a non-empty string',
     );
+    expect(service.setThinkingText).not.toHaveBeenCalled();
 
     process.env.NODE_ENV = originalNodeEnv;
     warnSpy.mockRestore();
@@ -571,23 +573,14 @@ describe('WebChat.setThinkingText', () => {
     expect(service.emit).toBeUndefined();
   });
 
-  it('emits thinking:set-text and starts thinking for a valid string after init', async () => {
+  it('calls service.setThinkingText once for a valid string after init', async () => {
     setupContainer();
     WebChat.init(baseParams);
 
     await WebChat.setThinkingText('Looking up products');
 
-    expect(service.emit).toHaveBeenCalledWith(
-      'thinking:set-text',
-      'Looking up products',
-    );
-    expect(service.simulateMessageReceived).toHaveBeenCalledWith({
-      type: 'typing_start',
-      from: 'ai-assistant',
-    });
-    expect(service.emit.mock.invocationCallOrder[0]).toBeLessThan(
-      service.simulateMessageReceived.mock.invocationCallOrder[0],
-    );
+    expect(service.setThinkingText).toHaveBeenCalledTimes(1);
+    expect(service.setThinkingText).toHaveBeenCalledWith('Looking up products');
   });
 });
 

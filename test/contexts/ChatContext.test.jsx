@@ -747,28 +747,39 @@ describe('ChatContext — service events', () => {
     expect(ctx.error).toEqual({ message: 'boom' });
   });
 
-  it('updates thinkingText from thinking:set-text', async () => {
+  it('mirrors thinkingText from state.thinkingText on state:changed', async () => {
     await renderWithContext({});
     expect(ctx.thinkingText).toBeNull();
 
     await act(async () => {
-      ctx.service.emit('thinking:set-text', 'Looking up products');
+      ctx.service.emit('state:changed', {
+        isThinking: true,
+        thinkingText: 'Looking up products',
+        messages: [],
+      });
     });
 
     expect(ctx.thinkingText).toBe('Looking up products');
   });
 
-  it('clears thinkingText when thinking stops', async () => {
+  it('clears thinkingText when the service state clears it', async () => {
     await renderWithContext({});
 
     await act(async () => {
-      ctx.service.emit('thinking:set-text', 'Looking up products');
-      ctx.service.emit('state:changed', { isThinking: true, messages: [] });
+      ctx.service.emit('state:changed', {
+        isThinking: true,
+        thinkingText: 'Looking up products',
+        messages: [],
+      });
     });
     expect(ctx.thinkingText).toBe('Looking up products');
 
     await act(async () => {
-      ctx.service.emit('state:changed', { isThinking: false, messages: [] });
+      ctx.service.emit('state:changed', {
+        isThinking: false,
+        thinkingText: null,
+        messages: [],
+      });
     });
     expect(ctx.thinkingText).toBeNull();
   });

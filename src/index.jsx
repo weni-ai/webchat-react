@@ -381,6 +381,23 @@ function App() {
           >
             Simulate thinking text
           </button>
+          <button
+            id="simulate-rationale"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'message',
+                message_kind: 'rationale',
+                message: {
+                  type: 'text',
+                  text: 'Checking your order status...',
+                },
+              });
+            }}
+          >
+            Simulate rationale
+          </button>
         </section>
       </div>
 

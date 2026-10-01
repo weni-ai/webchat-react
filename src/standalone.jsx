@@ -536,11 +536,7 @@ async function setThinkingText(text) {
   }
 
   const svc = await serviceWhenReady();
-  svc.emit('thinking:set-text', text);
-  svc.simulateMessageReceived({
-    type: 'typing_start',
-    from: 'ai-assistant',
-  });
+  svc.setThinkingText(text);
 }
 
 function changeLanguage(language) {
