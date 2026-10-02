@@ -1292,6 +1292,31 @@ describe('useConversationStartersCore', () => {
 
       expect(result.current.productName).toBe('Sample Product');
     });
+
+    it('opens the back-in-stock page on starters:simulate-back-in-stock-page', () => {
+      const { result } = renderHook(() => useConversationStartersCore());
+      const handler = getEventHandler('starters:simulate-back-in-stock-page');
+      expect(handler).toBeDefined();
+
+      act(() => {
+        handler({
+          productName: 'Oculus Quest',
+          skuId: '1276545',
+          seller: '1',
+        });
+      });
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith({
+        view: 'back-in-stock-notify',
+        title: "Get notified when it's back in stock",
+        props: {
+          productName: 'Oculus Quest',
+          skuId: '1276545',
+          seller: '1',
+        },
+      });
+      expect(result.current.productName).toBe('Oculus Quest');
+    });
   });
 
   describe('No service', () => {
