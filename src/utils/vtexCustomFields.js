@@ -2,7 +2,7 @@ import { getReliableOrderFormId } from '@/utils/VTEXIOMinicartBridge';
 import { getVtexAccount } from '@/utils/vtex';
 
 const ORDER_FORM_ID_REGEX = /^[a-f0-9]{32}$/;
-const DEFAULT_POLL_INTERVAL_MS = 1000;
+const DEFAULT_POLL_INTERVAL_MS = 15_000;
 const SESSION_POLL_INTERVAL_MS = 60_000;
 
 function isValidOrderFormId(value) {

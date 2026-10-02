@@ -1285,6 +1285,11 @@ describe('normalizeForContext', () => {
     expect(normalizeForContext(raw, 'intelligent-search')).toBe(raw);
   });
 
+  it('passes catalog product through unchanged', () => {
+    const raw = { productName: 'Dog Chow', items: [{ itemId: '31' }] };
+    expect(normalizeForContext(raw, 'catalog')).toBe(raw);
+  });
+
   it('normalizes ld+json product with offers', () => {
     const raw = {
       name: 'iPad',
@@ -1568,7 +1573,10 @@ describe('resolveProductData', () => {
     const result = await resolveProductData('test-product', 'store');
     expect(result.source).toBe('intelligent-search');
     expect(result.productData.productName).toBe('Test');
-    expect(globalThis.fetch).toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/io/_v/api/intelligent-search/product_search/test-product',
+    );
   });
 
   it('falls to ld+json when __NEXT_DATA__ and IS API fail', async () => {
@@ -1642,6 +1650,79 @@ describe('resolveProductData', () => {
     });
     const result = await resolveProductData('missing', 'store');
     expect(result).toBeNull();
+  });
+
+  it('falls to catalog when earlier sources miss the slug', async () => {
+    const catalogProduct = {
+      linkText: 'dog-chow',
+      productName: 'Dog Chow',
+      description: 'Racao',
+      brand: 'Purina',
+      items: [
+        {
+          itemId: '31',
+          sellers: [{ commertialOffer: { AvailableQuantity: 0 } }],
+        },
+      ],
+    };
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            products: [{ linkText: 'other', productName: 'Other' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([catalogProduct]),
+      });
+
+    const result = await resolveProductData('dog-chow', 'store');
+
+    expect(result.source).toBe('catalog');
+    expect(result.productData.productName).toBe('Dog Chow');
+    expect(result.productData.account).toBe('store');
+    expect(
+      result.rawProduct.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(0);
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/dog-chow/p',
+    );
+  });
+
+  it('returns null when catalog responds not ok', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({ ok: false });
+
+    const result = await resolveProductData('missing', 'store');
+
+    expect(result).toBeNull();
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/missing/p',
+    );
+  });
+
+  it('returns null when catalog body is not an array', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ products: [] }),
+      });
+
+    expect(await resolveProductData('missing', 'store')).toBeNull();
+  });
+
+  it('returns null when catalog fetch throws', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockRejectedValueOnce(new Error('catalog down'));
+
+    expect(await resolveProductData('missing', 'store')).toBeNull();
   });
 });
 
@@ -2020,6 +2101,12 @@ describe('getSkuIdFromRawProduct', () => {
         'intelligent-search',
       ),
     ).toBe('99');
+  });
+
+  it('returns first itemId for catalog source', () => {
+    expect(
+      getSkuIdFromRawProduct({ items: [{ itemId: '31' }] }, 'catalog'),
+    ).toBe('31');
   });
 
   it('returns null when sku is missing', () => {
