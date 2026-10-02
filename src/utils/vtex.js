@@ -303,6 +303,7 @@ const CONTEXT_NORMALIZERS = {
   'ld+json': normalizeLdJsonForContext,
   'next-data': normalizeNextDataForContext,
   'intelligent-search': (raw) => raw,
+  catalog: (raw) => raw,
 };
 
 export function normalizeForContext(rawProduct, source) {
@@ -347,7 +348,7 @@ export function getSelectedSkuIdFromNextData() {
 
 export function getSkuIdFromRawProduct(rawProduct, source) {
   if (!rawProduct) return null;
-  if (source === 'intelligent-search') {
+  if (source === 'intelligent-search' || source === 'catalog') {
     return nonEmptyString(rawProduct.items?.[0]?.itemId);
   }
   if (source === 'next-data' || source === 'ld+json') {
@@ -469,6 +470,17 @@ export async function resolveProductData(slug, account) {
     };
   }
 
+  const catalogProduct = await fetchCatalogProduct(slug);
+  if (catalogProduct) {
+    return {
+      productData: attachProductPath(
+        extractProductData(catalogProduct, account),
+      ),
+      rawProduct: catalogProduct,
+      source: 'catalog',
+    };
+  }
+
   return null;
 }
 
@@ -478,6 +490,19 @@ export async function fetchProductData(slug) {
     const response = await fetch(url);
     if (!response.ok) return null;
     return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCatalogProduct(slug) {
+  try {
+    const url = `/api/catalog_system/pub/products/search/${slug}/p`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const products = await response.json();
+    if (!Array.isArray(products)) return null;
+    return selectProduct(products, slug);
   } catch {
     return null;
   }
