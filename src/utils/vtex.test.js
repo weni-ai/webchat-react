@@ -4,6 +4,8 @@ import {
   extractSlugFromUrl,
   extractProductPathFromUrl,
   getVtexAccount,
+  resetVtexAccountLookup,
+  watchVtexAccount,
   isValidProductData,
   findProductInLdJson,
   extractFromLdJson,
@@ -39,8 +41,10 @@ function mockPathname(value) {
 
 beforeEach(() => {
   jest.restoreAllMocks();
+  resetVtexAccountLookup();
   delete window.__RUNTIME__;
   delete window.VTEX_METADATA;
+  delete window.webpackChunk_N_E;
   delete window.__NEXT_DATA__;
   delete window.__STATE__;
   document
@@ -172,6 +176,95 @@ describe('getVtexAccount', () => {
     window.__RUNTIME__ = {};
     window.VTEX_METADATA = {};
     expect(getVtexAccount()).toBeUndefined();
+  });
+
+  it('returns the FastStore store id from webpack modules already in memory', () => {
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('prefers __RUNTIME__ and VTEX_METADATA over the FastStore store id', () => {
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    window.VTEX_METADATA = { account: 'metadata-account' };
+    expect(getVtexAccount()).toBe('metadata-account');
+
+    window.__RUNTIME__ = { account: 'runtime-account' };
+    expect(getVtexAccount()).toBe('runtime-account');
+  });
+
+  it('returns undefined without creating webpackChunk_N_E', () => {
+    expect(getVtexAccount()).toBeUndefined();
+    expect(window.webpackChunk_N_E).toBeUndefined();
+  });
+
+  it('pushes the webpack probe once', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+    expect(getVtexAccount()).toBe('storeaccount');
+    expect(chunks.probeCount).toBe(1);
+  });
+});
+
+function installFastStoreChunks(moduleSource) {
+  const req = () => {};
+  req.m = {
+    config: new Function(moduleSource),
+  };
+  const chunks = [];
+  chunks.probeCount = 0;
+  chunks.push = (entry) => {
+    chunks.probeCount += 1;
+    entry[2](req);
+  };
+  window.webpackChunk_N_E = chunks;
+  return chunks;
+}
+
+describe('watchVtexAccount', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('reports an account that appears on a later attempt', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    watchVtexAccount({ onAccount, timeoutMs: 60_000, intervalMs: 500 });
+
+    expect(onAccount).not.toHaveBeenCalled();
+
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(500);
+
+    expect(onAccount).toHaveBeenCalledTimes(1);
+    expect(onAccount).toHaveBeenCalledWith('storeaccount');
+  });
+
+  it('stops after 60s', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    watchVtexAccount({ onAccount, timeoutMs: 60_000, intervalMs: 500 });
+
+    jest.advanceTimersByTime(60_000);
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(60_000);
+
+    expect(onAccount).not.toHaveBeenCalled();
+  });
+
+  it('stops when the caller cancels the watch', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    const stop = watchVtexAccount({
+      onAccount,
+      timeoutMs: 60_000,
+      intervalMs: 500,
+    });
+
+    stop();
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(500);
+
+    expect(onAccount).not.toHaveBeenCalled();
   });
 });
 

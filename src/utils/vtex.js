@@ -25,8 +25,116 @@ export function extractProductPathFromUrl() {
   return window.location.pathname;
 }
 
+const FAST_STORE_ACCOUNT_TIMEOUT_MS = 60_000;
+const FAST_STORE_ACCOUNT_INTERVAL_MS = 5000;
+const FAST_STORE_STORE_ID_PATTERN = /api:\{storeId:"([a-z0-9]+)"/;
+
+let cachedFastStoreAccount;
+let webpackRequire;
+let fastStoreProbeInstalled = false;
+const seenFastStoreModuleIds = new Set();
+
+function ensureWebpackRequire() {
+  if (webpackRequire) return webpackRequire;
+
+  const chunks = window.webpackChunk_N_E;
+  if (!chunks || typeof chunks.push !== 'function' || fastStoreProbeInstalled) {
+    return webpackRequire;
+  }
+
+  fastStoreProbeInstalled = true;
+  try {
+    chunks.push([
+      ['weni-vtex-account'],
+      {},
+      (require) => {
+        webpackRequire = require;
+      },
+    ]);
+  } catch {
+    fastStoreProbeInstalled = false;
+  }
+
+  return webpackRequire;
+}
+
+function readFastStoreAccount() {
+  if (cachedFastStoreAccount) return cachedFastStoreAccount;
+
+  const req = ensureWebpackRequire();
+  if (!req?.m) return undefined;
+
+  for (const id of Object.keys(req.m)) {
+    if (seenFastStoreModuleIds.has(id)) continue;
+
+    let source;
+    try {
+      source = Function.prototype.toString.call(req.m[id]);
+    } catch {
+      continue;
+    }
+
+    seenFastStoreModuleIds.add(id);
+    const match = source.match(FAST_STORE_STORE_ID_PATTERN);
+    if (!match) continue;
+
+    cachedFastStoreAccount = match[1];
+    return cachedFastStoreAccount;
+  }
+
+  return undefined;
+}
+
+export function resetVtexAccountLookup() {
+  cachedFastStoreAccount = undefined;
+  webpackRequire = undefined;
+  fastStoreProbeInstalled = false;
+  seenFastStoreModuleIds.clear();
+}
+
 export function getVtexAccount() {
-  return window.__RUNTIME__?.account || window.VTEX_METADATA?.account;
+  return (
+    window.__RUNTIME__?.account ||
+    window.VTEX_METADATA?.account ||
+    readFastStoreAccount()
+  );
+}
+
+export function watchVtexAccount({
+  onAccount,
+  timeoutMs = FAST_STORE_ACCOUNT_TIMEOUT_MS,
+  intervalMs = FAST_STORE_ACCOUNT_INTERVAL_MS,
+} = {}) {
+  const startedAt = Date.now();
+
+  const publish = (account) => {
+    if (account) onAccount(account);
+  };
+
+  const schedule = () => {
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) return;
+    timer = setTimeout(tick, Math.min(intervalMs, remainingMs));
+  };
+
+  const tick = () => {
+    const account = getVtexAccount();
+    if (account) {
+      publish(account);
+      return;
+    }
+    schedule();
+  };
+
+  let timer;
+  const account = getVtexAccount();
+  if (account) {
+    publish(account);
+    return () => {};
+  }
+
+  schedule();
+  return () => clearTimeout(timer);
 }
 
 export function isFastStoreHost() {
