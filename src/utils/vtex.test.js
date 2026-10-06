@@ -51,6 +51,9 @@ beforeEach(() => {
     .querySelectorAll('script[type="application/ld+json"]')
     .forEach((el) => el.remove());
   document
+    .querySelectorAll('link[rel="preconnect"], link[rel="dns-prefetch"]')
+    .forEach((el) => el.remove());
+  document
     .querySelectorAll('[data-sku], meta[property="product:sku"]')
     .forEach((el) => el.remove());
   Object.defineProperty(window, 'location', {
@@ -203,14 +206,100 @@ describe('getVtexAccount', () => {
     expect(getVtexAccount()).toBe('storeaccount');
     expect(chunks.probeCount).toBe(1);
   });
+
+  it('prefers a single vtexassets preconnect over the starter store id', () => {
+    addAssetLink('preconnect', 'https://storeaccount.vtexassets.com/');
+    installFastStoreChunks('api:{storeId:"storeframework"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('reads a single vtexassets dns-prefetch link', () => {
+    addAssetLink('dns-prefetch', 'https://storeaccount.vtexassets.com/');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('ignores multiple vtexassets preconnect hosts and uses the webpack store id', () => {
+    addAssetLink('preconnect', 'https://store-a.vtexassets.com/');
+    addAssetLink('preconnect', 'https://store-b.vtexassets.com/');
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns the non-starter store id when the starter config is also bundled', () => {
+    installFastStoreChunks(
+      'api:{storeId:"storeframework"}',
+      'api:{storeId:"storeaccount"}',
+    );
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns undefined when the only store id is the starter account', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeframework"}');
+    expect(getVtexAccount()).toBeUndefined();
+
+    chunks.modules.later = new Function('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns undefined when webpack modules contain two non-starter store ids', () => {
+    installFastStoreChunks(
+      'api:{storeId:"storeaccount"}',
+      'api:{storeId:"otheraccount"}',
+    );
+    expect(getVtexAccount()).toBeUndefined();
+  });
+
+  it('returns a hyphenated store id', () => {
+    installFastStoreChunks('api:{storeId:"store-account"}');
+    expect(getVtexAccount()).toBe('store-account');
+  });
+
+  it('returns undefined when account lookups throw', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    jest.spyOn(document, 'querySelectorAll').mockImplementation(() => {
+      throw new Error('links unavailable');
+    });
+    const chunks = [];
+    chunks.push = () => {
+      throw new Error('webpack unavailable');
+    };
+    window.webpackChunk_N_E = chunks;
+
+    expect(getVtexAccount()).toBeUndefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps reading later sources when an earlier source throws', () => {
+    Object.defineProperty(window, '__RUNTIME__', {
+      configurable: true,
+      get() {
+        throw new Error('runtime unavailable');
+      },
+    });
+    window.VTEX_METADATA = { account: 'metadata-account' };
+
+    expect(getVtexAccount()).toBe('metadata-account');
+  });
 });
 
-function installFastStoreChunks(moduleSource) {
+function addAssetLink(rel, href) {
+  const link = document.createElement('link');
+  link.rel = rel;
+  link.href = href;
+  document.head.appendChild(link);
+  return link;
+}
+
+function installFastStoreChunks(...moduleSources) {
   const req = () => {};
-  req.m = {
-    config: new Function(moduleSource),
-  };
+  req.m = {};
+  moduleSources.forEach((source, index) => {
+    req.m[`config-${index}`] = new Function(source);
+  });
   const chunks = [];
+  chunks.modules = req.m;
   chunks.probeCount = 0;
   chunks.push = (entry) => {
     chunks.probeCount += 1;
@@ -249,6 +338,22 @@ describe('watchVtexAccount', () => {
     jest.advanceTimersByTime(60_000);
 
     expect(onAccount).not.toHaveBeenCalled();
+  });
+
+  it('does not surface a listener failure', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+
+    expect(() =>
+      watchVtexAccount({
+        onAccount: () => {
+          throw new Error('listener failed');
+        },
+      }),
+    ).not.toThrow();
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('stops when the caller cancels the watch', () => {
