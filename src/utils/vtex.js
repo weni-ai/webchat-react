@@ -98,6 +98,7 @@ function collectStoreIds(source) {
 function readFastStoreAccount() {
   try {
     if (cachedFastStoreAccount) return cachedFastStoreAccount;
+    if (!isFastStoreHost()) return undefined;
 
     const req = ensureWebpackRequire();
     if (req?.m) {

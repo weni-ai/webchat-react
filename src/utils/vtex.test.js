@@ -45,6 +45,7 @@ beforeEach(() => {
   delete window.__RUNTIME__;
   delete window.VTEX_METADATA;
   delete window.webpackChunk_N_E;
+  delete window.faststore_sdk_stores;
   delete window.__NEXT_DATA__;
   delete window.__STATE__;
   document
@@ -200,6 +201,14 @@ describe('getVtexAccount', () => {
     expect(window.webpackChunk_N_E).toBeUndefined();
   });
 
+  it('does not touch webpack on a Next.js site that is not FastStore', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeaccount"}');
+    delete window.faststore_sdk_stores;
+
+    expect(getVtexAccount()).toBeUndefined();
+    expect(chunks.probeCount).toBe(0);
+  });
+
   it('pushes the webpack probe once', () => {
     const chunks = installFastStoreChunks('api:{storeId:"storeaccount"}');
     expect(getVtexAccount()).toBe('storeaccount');
@@ -266,6 +275,7 @@ describe('getVtexAccount', () => {
       throw new Error('webpack unavailable');
     };
     window.webpackChunk_N_E = chunks;
+    window.faststore_sdk_stores = new Map();
 
     expect(getVtexAccount()).toBeUndefined();
     expect(consoleError).not.toHaveBeenCalled();
@@ -306,6 +316,7 @@ function installFastStoreChunks(...moduleSources) {
     entry[2](req);
   };
   window.webpackChunk_N_E = chunks;
+  window.faststore_sdk_stores = new Map();
   return chunks;
 }
 
