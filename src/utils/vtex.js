@@ -1,3 +1,5 @@
+import { recordConversationStarterEvent } from '@/utils/conversationStartersLog';
+
 const INTERNAL_PROPERTIES = new Set([
   'sellerId',
   'commercialConditionId',
@@ -433,6 +435,11 @@ function attachProductPath(productData) {
 }
 
 export async function resolveProductData(slug, account) {
+  recordConversationStarterEvent('waterfall_step', 'info', {
+    step: 'next-data',
+    slug,
+    account,
+  });
   const nextResult = extractFromNextData(slug);
   if (nextResult) {
     return {
@@ -442,6 +449,11 @@ export async function resolveProductData(slug, account) {
     };
   }
 
+  recordConversationStarterEvent('waterfall_step', 'info', {
+    step: 'intelligent-search',
+    slug,
+    account,
+  });
   try {
     const response = await fetchProductData(slug);
     if (response?.products) {
@@ -457,10 +469,18 @@ export async function resolveProductData(slug, account) {
         };
       }
     }
-  } catch {
-    /* network or parse error — fall through to ld+json */
+  } catch (error) {
+    recordConversationStarterEvent('http_fail', 'warn', {
+      slug,
+      reason: error?.message || 'intelligent-search-error',
+    });
   }
 
+  recordConversationStarterEvent('waterfall_step', 'info', {
+    step: 'ld+json',
+    slug,
+    account,
+  });
   const ldResult = extractFromLdJson(slug);
   if (ldResult) {
     return {
@@ -485,12 +505,27 @@ export async function resolveProductData(slug, account) {
 }
 
 export async function fetchProductData(slug) {
+  const url = `/api/io/_v/api/intelligent-search/product_search/${slug}`;
+  recordConversationStarterEvent('http_attempt', 'info', { slug, url });
   try {
-    const url = `/api/io/_v/api/intelligent-search/product_search/${slug}`;
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      recordConversationStarterEvent('http_fail', 'warn', {
+        slug,
+        status: response.status,
+      });
+      return null;
+    }
+    recordConversationStarterEvent('http_ok', 'info', {
+      slug,
+      status: response.status,
+    });
     return await response.json();
-  } catch {
+  } catch (error) {
+    recordConversationStarterEvent('http_fail', 'warn', {
+      slug,
+      reason: error?.message || 'network-error',
+    });
     return null;
   }
 }

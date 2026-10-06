@@ -10,6 +10,11 @@ import ReactDOM from 'react-dom/client';
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
 import { sendVtexUtm } from '@/utils/sendVtexUtm';
+import {
+  getConversationStartersLog,
+  recordConversationStarterEvent,
+  setConversationStartersLogConfig,
+} from '@/utils/conversationStartersLog';
 import './styles/index.scss';
 import './i18n';
 import i18n from './i18n';
@@ -199,6 +204,7 @@ function init(params) {
 
   // Map config (functional properties)
   const config = mapConfig(params);
+  setConversationStartersLogConfig(config);
 
   // Extract theme (visual properties)
   const theme = extractThemeFromParams(params);
@@ -494,6 +500,9 @@ function validateStartersInput(questions) {
 
 async function setConversationStarters(questions) {
   if (!validateStartersInput(questions)) {
+    recordConversationStarterEvent('manual_invalid', 'warn', {
+      reason: 'invalid_input',
+    });
     if (process.env.NODE_ENV === 'development') {
       console.warn(
         'WebChat.setConversationStarters: expected array of 1–3 non-empty strings',
@@ -507,6 +516,9 @@ async function setConversationStarters(questions) {
   }
 
   const svc = await serviceWhenReady();
+  recordConversationStarterEvent('manual_set', 'info', {
+    count: questions.length,
+  });
   svc.emit('starters:set-manual', questions);
 }
 
@@ -516,6 +528,7 @@ async function clearConversationStarters() {
   }
 
   const svc = await serviceWhenReady();
+  recordConversationStarterEvent('manual_clear', 'info');
   svc.emit('starters:clear');
 }
 
@@ -542,6 +555,7 @@ const WebChat = {
   setCustomField,
   setConversationStarters,
   clearConversationStarters,
+  getConversationStartersLog,
   isOpen,
   isVisible,
   reload,
