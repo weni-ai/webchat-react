@@ -1,0 +1,7 @@
+project_id: "934103"
+base_path: "."
+preserve_hierarchy: true
+
+files:
+  - source: src/i18n/locales/en.json
+    translation: src/i18n/locales/%locale%.json
