@@ -55,7 +55,9 @@ beforeEach(() => {
     .querySelectorAll('link[rel="preconnect"], link[rel="dns-prefetch"]')
     .forEach((el) => el.remove());
   document
-    .querySelectorAll('[data-sku], meta[property="product:sku"]')
+    .querySelectorAll(
+      '[data-sku], meta[property="product:sku"], meta[name="description"], meta[property="og:description"]',
+    )
     .forEach((el) => el.remove());
   Object.defineProperty(window, 'location', {
     value: {
@@ -1932,6 +1934,220 @@ describe('resolveProductData', () => {
       .mockRejectedValueOnce(new Error('catalog down'));
 
     expect(await resolveProductData('missing', 'store')).toBeNull();
+  });
+
+  function injectMetaDescription(content) {
+    const meta = document.createElement('meta');
+    meta.setAttribute('name', 'description');
+    meta.setAttribute('content', content);
+    document.head.appendChild(meta);
+  }
+
+  it('replaces an ld+json meta description with the __STATE__ product description', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    injectMetaDescription('Find  this   tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+      sku: '100',
+    });
+    window.__STATE__ = {
+      'Product:tablet-pro': {
+        linkText: 'tablet-pro',
+        description: '<p>Washable <strong>&aacute;</strong> finish.</p>',
+        metaTagDescription: 'Find this tablet.',
+      },
+    };
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Washable á finish.');
+    expect(result.rawProduct.description).toBe('Washable á finish.');
+    expect(result.rawProduct.sku).toBe('100');
+    expect(result.productData.productName).toBe('Tablet Pro');
+    expect(
+      buildProductContextString(
+        normalizeForContext(result.rawProduct, result.source),
+        '100',
+      ),
+    ).toContain('Description: Washable á finish.');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
+  });
+
+  it('reads the __STATE__ product description when linkText matches the slug', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    injectMetaDescription('Find this lamp.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Desk Lamp',
+      description: 'Find this lamp.',
+      brand: 'Acme',
+    });
+    window.__STATE__ = {
+      'Product:sp-desk-lamp': {
+        linkText: 'desk-lamp',
+        description: '<p>Adjustable arm.</p>',
+        metaTagDescription: 'Find this lamp.',
+      },
+    };
+
+    const result = await resolveProductData('desk-lamp', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Adjustable arm.');
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/desk-lamp/p',
+    );
+  });
+
+  it('replaces an ld+json meta description with the catalog description', async () => {
+    injectMetaDescription('Find this tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+      sku: '100',
+    });
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              linkText: 'tablet-pro',
+              productName: 'Tablet Pro',
+              description: '<p>Compact &amp; light.</p>',
+              metaTagDescription: 'Find this tablet.',
+              brand: 'Acme',
+            },
+          ]),
+      });
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Compact & light.');
+    expect(result.rawProduct.description).toBe('Compact & light.');
+    expect(result.rawProduct.sku).toBe('100');
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
+  });
+
+  it('keeps a next-data description that differs from the meta description', async () => {
+    injectMetaDescription('Buy this tablet today.');
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'Surface',
+              description: 'Compact tablet.',
+              seo: { description: 'Buy this tablet today.' },
+              brand: { name: 'MS' },
+              isVariantOf: { name: 'Surface' },
+              customData: { specificationGroups: [] },
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
+    window.__STATE__ = {
+      'Product:surface': {
+        linkText: 'surface',
+        description: '<p>From state.</p>',
+        metaTagDescription: 'Buy this tablet today.',
+      },
+    };
+
+    const result = await resolveProductData('surface', 'store');
+
+    expect(result.source).toBe('next-data');
+    expect(result.productData.description).toBe('Compact tablet.');
+    expect(result.rawProduct.description).toBe('Compact tablet.');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps an intelligent-search description that differs from the meta description', async () => {
+    injectMetaDescription('Buy this product.');
+    window.__STATE__ = {
+      'Product:test-product': {
+        linkText: 'test-product',
+        description: '<p>From state.</p>',
+        metaTagDescription: 'Buy this product.',
+      },
+    };
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          products: [
+            {
+              linkText: 'test-product',
+              productName: 'Test',
+              description: 'A real description.',
+              metaTagDescription: 'Buy this product.',
+              brand: 'Brand',
+              properties: [],
+            },
+          ],
+        }),
+    });
+
+    const result = await resolveProductData('test-product', 'store');
+
+    expect(result.source).toBe('intelligent-search');
+    expect(result.productData.description).toBe('A real description.');
+    expect(result.rawProduct.description).toBe('A real description.');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/test-product/p',
+    );
+  });
+
+  it('keeps the meta description when no product description exists', async () => {
+    injectMetaDescription('Find this tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+    });
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              linkText: 'tablet-pro',
+              productName: 'Tablet Pro',
+              description: 'Find this tablet.',
+              metaTagDescription: 'Find this tablet.',
+              brand: 'Acme',
+            },
+          ]),
+      });
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Find this tablet.');
+    expect(result.rawProduct.description).toBe('Find this tablet.');
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
   });
 });
 
