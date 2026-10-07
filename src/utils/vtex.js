@@ -607,14 +607,154 @@ function attachProductPath(productData) {
   };
 }
 
+function metaContent(selector) {
+  try {
+    const content = document.querySelector(selector)?.getAttribute('content');
+    if (typeof content !== 'string' || content.trim() === '') return null;
+    return content;
+  } catch {
+    return null;
+  }
+}
+
+function isStateProduct(value) {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      (typeof value.description === 'string' ||
+        typeof value.metaTagDescription === 'string' ||
+        typeof value.linkText === 'string'),
+  );
+}
+
+function readStateProduct(slug) {
+  try {
+    const state = window.__STATE__;
+    if (!state || typeof state !== 'object') return null;
+
+    const direct = state[`Product:${slug}`];
+    if (isStateProduct(direct)) return direct;
+
+    for (const value of Object.values(state)) {
+      if (isStateProduct(value) && value.linkText === slug) return value;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function toPlainDescription(value) {
+  if (typeof value !== 'string') return '';
+  if (!/<[^>]+>|&(?:#\d+|#x[\da-f]+|[a-z]+);/i.test(value)) return value;
+
+  const withoutTags = value.replace(/<[^>]+>/g, ' ');
+  let decoded = withoutTags;
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = withoutTags;
+    decoded = textarea.value;
+  } catch {
+    decoded = withoutTags;
+  }
+  return decoded.replace(/\s+/g, ' ').trim();
+}
+
+function normalizedDescription(value) {
+  return toPlainDescription(value).replace(/\s+/g, ' ').trim();
+}
+
+function descriptionsMatch(left, right) {
+  const normalizedLeft = normalizedDescription(left);
+  const normalizedRight = normalizedDescription(right);
+  return normalizedLeft !== '' && normalizedLeft === normalizedRight;
+}
+
+function collectMetaTexts(result, stateProduct) {
+  const metas = [
+    metaContent('meta[name="description"]'),
+    metaContent('meta[property="og:description"]'),
+    stateProduct?.metaTagDescription,
+  ];
+
+  if (
+    result.source === 'next-data' &&
+    typeof result.rawProduct?.seo?.description === 'string'
+  ) {
+    metas.push(result.rawProduct.seo.description);
+  }
+
+  if (
+    (result.source === 'intelligent-search' || result.source === 'catalog') &&
+    typeof result.rawProduct?.metaTagDescription === 'string'
+  ) {
+    metas.push(result.rawProduct.metaTagDescription);
+  }
+
+  return metas.filter((text) => typeof text === 'string' && text.trim() !== '');
+}
+
+function isMetaDescription(text, metas) {
+  return metas.some((meta) => descriptionsMatch(text, meta));
+}
+
+function applyDescription(result, description) {
+  if (typeof description !== 'string' || description === '') return result;
+  if (
+    description === result.productData.description &&
+    result.rawProduct?.description === description
+  ) {
+    return result;
+  }
+
+  return {
+    ...result,
+    productData: { ...result.productData, description },
+    rawProduct: result.rawProduct
+      ? { ...result.rawProduct, description }
+      : result.rawProduct,
+  };
+}
+
+async function preferProductDescription(result, slug) {
+  const stateProduct = readStateProduct(slug);
+  const metas = collectMetaTexts(result, stateProduct);
+  const current = result.productData.description || '';
+  let chosen = current;
+
+  if (!current || isMetaDescription(current, metas)) {
+    const stateDescription = stateProduct?.description;
+    if (stateDescription && !isMetaDescription(stateDescription, metas)) {
+      chosen = stateDescription;
+    } else if (result.source !== 'catalog') {
+      const catalogProduct = await fetchCatalogProduct(slug);
+      const catalogMetas = catalogProduct?.metaTagDescription
+        ? [...metas, catalogProduct.metaTagDescription]
+        : metas;
+      if (
+        catalogProduct?.description &&
+        !isMetaDescription(catalogProduct.description, catalogMetas)
+      ) {
+        chosen = catalogProduct.description;
+      }
+    }
+  }
+
+  if (chosen === current) return result;
+
+  return applyDescription(result, toPlainDescription(chosen));
+}
+
 export async function resolveProductData(slug, account) {
+  const finish = (result) => preferProductDescription(result, slug);
+
   const nextResult = extractFromNextData(slug);
   if (nextResult) {
-    return {
+    return finish({
       productData: attachProductPath({ ...nextResult.productData, account }),
       rawProduct: nextResult.rawProduct,
       source: 'next-data',
-    };
+    });
   }
 
   try {
@@ -625,11 +765,11 @@ export async function resolveProductData(slug, account) {
         const productData = attachProductPath(
           extractProductData(product, account),
         );
-        return {
+        return finish({
           productData,
           rawProduct: product,
           source: 'intelligent-search',
-        };
+        });
       }
     }
   } catch {
@@ -638,22 +778,22 @@ export async function resolveProductData(slug, account) {
 
   const ldResult = extractFromLdJson(slug);
   if (ldResult) {
-    return {
+    return finish({
       productData: attachProductPath({ ...ldResult.productData, account }),
       rawProduct: ldResult.rawProduct,
       source: 'ld+json',
-    };
+    });
   }
 
   const catalogProduct = await fetchCatalogProduct(slug);
   if (catalogProduct) {
-    return {
+    return finish({
       productData: attachProductPath(
         extractProductData(catalogProduct, account),
       ),
       rawProduct: catalogProduct,
       source: 'catalog',
-    };
+    });
   }
 
   return null;
