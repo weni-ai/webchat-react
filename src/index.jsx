@@ -69,6 +69,8 @@ const buttonStyle = {
   cursor: 'pointer',
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function App() {
   return (
     <div
@@ -397,6 +399,55 @@ function App() {
             }}
           >
             Simulate rationale
+          </button>
+          <button
+            id="simulate-streamed-rationale"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              const id = `demo-${Date.now()}`;
+              await window.WebChat.simulateMessageReceived({
+                type: 'typing_start',
+                from: 'ai-assistant',
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_start',
+                id,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_rationale',
+                id,
+                content: 'Checking your order status...',
+                index: 1,
+              });
+              await delay(1500);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_rationale',
+                id,
+                content: 'Looking up delivery options...',
+                index: 2,
+              });
+              await delay(1500);
+              await window.WebChat.simulateMessageReceived({
+                v: 'Your order ',
+                seq: 1,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                v: 'is on its way.',
+                seq: 2,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_end',
+                id,
+                content: 'Your order is on its way.',
+              });
+            }}
+          >
+            Simulate streamed rationale
           </button>
         </section>
       </div>
