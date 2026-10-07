@@ -292,6 +292,43 @@ describe('useConversationStartersCore', () => {
       expect(hookResult.current.isLoading).toBe(false);
     });
 
+    it('fetches PDP starters when the VTEX account is detected after mount', async () => {
+      getVtexAccount.mockReturnValue(undefined);
+      useChatContext.mockReturnValue(
+        buildContext({ isInsideVTEXStore: false }),
+      );
+
+      let rerender;
+      await act(async () => {
+        ({ rerender } = renderHook(() => useConversationStartersCore()));
+      });
+      expect(resolveProductData).not.toHaveBeenCalled();
+
+      getVtexAccount.mockReturnValue('mystore');
+      useChatContext.mockReturnValue(buildContext({ isInsideVTEXStore: true }));
+      await act(async () => {
+        rerender();
+      });
+
+      expect(resolveProductData).toHaveBeenCalledTimes(1);
+      expect(resolveProductData).toHaveBeenCalledWith('cool-shoe', 'mystore');
+      expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
+    });
+
+    it('does not refetch PDP starters when the account was known at mount', async () => {
+      useChatContext.mockReturnValue(buildContext({ isInsideVTEXStore: true }));
+
+      let rerender;
+      await act(async () => {
+        ({ rerender } = renderHook(() => useConversationStartersCore()));
+      });
+      await act(async () => {
+        rerender();
+      });
+
+      expect(resolveProductData).toHaveBeenCalledTimes(1);
+    });
+
     it('defers getStarters when service is not connected', async () => {
       useChatContext.mockReturnValue(buildContext({ isConnected: false }));
 

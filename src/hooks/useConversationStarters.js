@@ -39,6 +39,7 @@ export function useConversationStartersCore() {
     config,
     setIsChatOpen,
     setCurrentPage,
+    isInsideVTEXStore,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -74,6 +75,7 @@ export function useConversationStartersCore() {
   const fetchGenerationRef = useRef(0);
   const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
+  const wasInsideVTEXStoreRef = useRef(isInsideVTEXStore);
   const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
   const isUnavailableNotifyEnabledRef = useRef(
     config?.unavailableProductNotify === true,
@@ -646,6 +648,16 @@ export function useConversationStartersCore() {
     scheduleNavigationHandling,
     clearMobileTimer,
   ]);
+
+  useEffect(() => {
+    const accountArrivedAfterMount =
+      isInsideVTEXStore && !wasInsideVTEXStoreRef.current;
+    wasInsideVTEXStoreRef.current = isInsideVTEXStore;
+
+    if (accountArrivedAfterMount && service) {
+      detectAndFetchPdp();
+    }
+  }, [isInsideVTEXStore, service, detectAndFetchPdp]);
 
   return {
     questions,

@@ -13,7 +13,7 @@ import { VoiceService } from '@/services/voice';
 import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
+import { getVtexAccount, isCheckoutPage, watchVtexAccount } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
@@ -148,7 +148,9 @@ export function ChatProvider({ children, config }) {
   const expectingWelcomeTooltipRef = useRef(false);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
-  const [isInsideVTEXStore] = useState(() => !!getVtexAccount());
+  const [isInsideVTEXStore, setIsInsideVTEXStore] = useState(
+    () => !!getVtexAccount(),
+  );
 
   const [inputDraft, setInputDraft] = useState('');
 
@@ -351,6 +353,14 @@ export function ChatProvider({ children, config }) {
       service.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (isInsideVTEXStore) return undefined;
+
+    return watchVtexAccount({
+      onAccount: () => setIsInsideVTEXStore(true),
+    });
+  }, [isInsideVTEXStore]);
 
   useEffect(() => {
     if (!isInsideVTEXStore) return undefined;
