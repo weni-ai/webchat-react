@@ -9,6 +9,26 @@ import { sanitizeHtml } from '@/utils/sanitizeHtml';
 
 import './MessageText.scss';
 
+const STREAMING_CARET = '<span class="weni-message-text__caret"></span>';
+const TEXT_CONTAINER_CLOSE = /<\/(p|li|h[1-6]|td|th|dd|code)>/gi;
+
+/**
+ * marked wraps streamed text in block elements (`<p>`, `<li>`, …).
+ * A caret placed after that markup is a sibling of the block and drops
+ * onto the next line. Insert it before the last text-container close tag
+ * so it stays at the end of the words revealed so far.
+ */
+export function appendStreamingCaret(html) {
+  if (!html) return STREAMING_CARET;
+
+  const matches = [...html.matchAll(TEXT_CONTAINER_CLOSE)];
+  const last = matches[matches.length - 1];
+  if (!last) return `${html}${STREAMING_CARET}`;
+
+  const index = last.index;
+  return `${html.slice(0, index)}${STREAMING_CARET}${html.slice(index)}`;
+}
+
 /**
  * MessageText - Text message component with markdown support
  * Renders text with proper formatting, links, and markdown syntax
@@ -44,10 +64,7 @@ export function MessageText({ message, componentsEnabled }) {
     const parsedHtml = marked.parse(processedContent);
     const purifiedHtml = sanitizeHtml(parsedHtml);
 
-    return (
-      purifiedHtml +
-      (isBuffering ? '<span class="weni-message-text__caret"></span>' : '')
-    );
+    return isBuffering ? appendStreamingCaret(purifiedHtml) : purifiedHtml;
   }, [displayedText, isBuffering]);
 
   return (
