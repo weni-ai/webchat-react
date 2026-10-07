@@ -2043,6 +2043,34 @@ describe('resolveProductData', () => {
     );
   });
 
+  it('leaves a non-meta description with angle brackets untouched', async () => {
+    injectMetaDescription('Buy this tablet today.');
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'Surface',
+              description: 'Holds 3 < 5 kg and 7 > 2',
+              seo: { description: 'Buy this tablet today.' },
+              brand: { name: 'MS' },
+              isVariantOf: { name: 'Surface' },
+              customData: { specificationGroups: [] },
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
+
+    const result = await resolveProductData('surface', 'store');
+
+    expect(result.source).toBe('next-data');
+    expect(result.productData.description).toBe('Holds 3 < 5 kg and 7 > 2');
+    expect(result.rawProduct.description).toBe('Holds 3 < 5 kg and 7 > 2');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
   it('keeps a next-data description that differs from the meta description', async () => {
     injectMetaDescription('Buy this tablet today.');
     window.__NEXT_DATA__ = {

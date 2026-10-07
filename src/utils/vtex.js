@@ -740,6 +740,8 @@ async function preferProductDescription(result, slug) {
     }
   }
 
+  if (chosen === current) return result;
+
   return applyDescription(result, toPlainDescription(chosen));
 }
 
