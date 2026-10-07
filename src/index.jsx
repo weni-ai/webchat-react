@@ -69,6 +69,8 @@ const buttonStyle = {
   cursor: 'pointer',
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function App() {
   return (
     <div
@@ -347,6 +349,105 @@ function App() {
             }}
           >
             Simulate product catalog
+          </button>
+          <button
+            id="simulate-thinking-start"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'typing_start',
+                from: 'ai-assistant',
+              });
+            }}
+          >
+            Simulate thinking start
+          </button>
+          <button
+            id="simulate-thinking-text"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              const phrases = [
+                'Looking up products…',
+                'Comparing options…',
+                'Almost there…',
+                `One moment, I'll search my catalog for bikes that handle both asphalt and dirt within that budget.`,
+              ];
+              const nextIndex = window.__weniThinkingTextIndex || 0;
+              await window.WebChat.setThinkingText(
+                phrases[nextIndex % phrases.length],
+              );
+              window.__weniThinkingTextIndex = nextIndex + 1;
+            }}
+          >
+            Simulate thinking text
+          </button>
+          <button
+            id="simulate-rationale"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              await window.WebChat.simulateMessageReceived({
+                type: 'message',
+                message_kind: 'rationale',
+                message: {
+                  type: 'text',
+                  text: 'Checking your order status...',
+                },
+              });
+            }}
+          >
+            Simulate rationale
+          </button>
+          <button
+            id="simulate-streamed-rationale"
+            style={buttonStyle}
+            onClick={async () => {
+              await window.WebChat.open();
+              const id = `demo-${Date.now()}`;
+              await window.WebChat.simulateMessageReceived({
+                type: 'typing_start',
+                from: 'ai-assistant',
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_start',
+                id,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_rationale',
+                id,
+                content: 'Checking your order status...',
+                index: 1,
+              });
+              await delay(1500);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_rationale',
+                id,
+                content: 'Looking up delivery options...',
+                index: 2,
+              });
+              await delay(1500);
+              await window.WebChat.simulateMessageReceived({
+                v: 'Your order ',
+                seq: 1,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                v: 'is on its way.',
+                seq: 2,
+              });
+              await delay(300);
+              await window.WebChat.simulateMessageReceived({
+                type: 'stream_end',
+                id,
+                content: 'Your order is on its way.',
+              });
+            }}
+          >
+            Simulate streamed rationale
           </button>
         </section>
       </div>

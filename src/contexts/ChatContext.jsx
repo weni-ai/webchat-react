@@ -90,7 +90,7 @@ const defaultConfig = {
  * The service StateManager is the only source of truth for:
  * - Messages (including sender, timestamp, processing)
  * - Connection state
- * - Typing indicators (isTyping, isThinking)
+ * - Typing indicators (isTyping, isThinking, thinkingText)
  * - Session management and context
  * - Error state
  *
@@ -605,6 +605,7 @@ export function ChatProvider({ children, config }) {
     reconnectNow: () => service.reconnectNow(),
     isTyping: state.isTyping || false,
     isThinking: state.isThinking || false,
+    thinkingText: state.thinkingText ?? null,
     context,
     error: state.error || null,
 
