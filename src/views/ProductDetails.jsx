@@ -69,6 +69,7 @@ export function ProductDetails({ product }) {
         {showCounterControls && (
           <CounterControls
             productName={product.title}
+            image={product.image}
             counter={quantity}
             setCounter={(counter) => setCounter(product.uuid, product, counter)}
             size="medium"

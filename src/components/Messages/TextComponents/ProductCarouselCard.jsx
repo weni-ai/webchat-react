@@ -59,6 +59,7 @@ export function ProductCarouselCard({ product, disabled = false }) {
 
       <CounterControls
         productName={product.title}
+        image={product.image}
         counter={getCounter(product.uuid)}
         setCounter={(counter) => setCounter(product.uuid, product, counter)}
         uuid={product.uuid}

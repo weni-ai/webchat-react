@@ -23,6 +23,7 @@ function parseUuid(uuid, sellerIdFallback) {
 
 export function CounterControls({
   productName,
+  image,
   counter,
   setCounter,
   hideWhenNotInteracted = false,
@@ -118,6 +119,7 @@ export function CounterControls({
       sellerId: parsed.sellerId,
       quantity: 1,
       productName,
+      image,
     });
   }
 
@@ -197,6 +199,7 @@ export function CounterControls({
 
 CounterControls.propTypes = {
   productName: PropTypes.string,
+  image: PropTypes.string,
   counter: PropTypes.number.isRequired,
   setCounter: PropTypes.func.isRequired,
   hideWhenNotInteracted: PropTypes.bool,
