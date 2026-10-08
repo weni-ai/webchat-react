@@ -928,6 +928,49 @@ describe('pending cart items', () => {
     jest.useRealTimers();
   });
 
+  it('forwards the product image on the add-to-cart payload', async () => {
+    jest.useFakeTimers();
+    const addProductToCart = jest.fn(() => Promise.resolve());
+    const chat = buildChatValue({ addProductToCart });
+
+    getReliableOrderFormId.mockReturnValue('order-123');
+    const { result } = renderWithChat(chat);
+
+    act(() => {
+      result.current.requestOrderForm();
+    });
+
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
+        productName: 'Shoe',
+        image: 'https://cdn.example/shoe.webp',
+      });
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
+    });
+
+    expect(addProductToCart).toHaveBeenCalledWith({
+      VTEXAccountName: 'mystore',
+      orderFormId: 'order-123',
+      items: [
+        {
+          id: 'sku1',
+          seller: 'seller1',
+          quantity: 1,
+          image: 'https://cdn.example/shoe.webp',
+        },
+      ],
+    });
+
+    jest.useRealTimers();
+  });
+
   it('sends multiple pending items in a single addProductToCart call', async () => {
     jest.useFakeTimers();
     const addProductToCart = jest.fn(() => Promise.resolve());
