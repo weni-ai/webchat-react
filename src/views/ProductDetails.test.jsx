@@ -70,11 +70,7 @@ describe('ProductDetails', () => {
 
   it('renders list and sale prices when salePrice is present', () => {
     setup();
-    render(
-      <ProductDetails
-        product={{ ...product, salePrice: '79.90' }}
-      />,
-    );
+    render(<ProductDetails product={{ ...product, salePrice: '79.90' }} />);
     expect(screen.getByText('BRL:99.90')).toBeInTheDocument();
     expect(screen.getByText('BRL:79.90')).toBeInTheDocument();
   });
