@@ -68,6 +68,17 @@ describe('ProductDetails', () => {
     expect(screen.queryByTestId('counter')).not.toBeInTheDocument();
   });
 
+  it('renders list and sale prices when salePrice is present', () => {
+    setup();
+    render(
+      <ProductDetails
+        product={{ ...product, salePrice: '79.90' }}
+      />,
+    );
+    expect(screen.getByText('BRL:99.90')).toBeInTheDocument();
+    expect(screen.getByText('BRL:79.90')).toBeInTheDocument();
+  });
+
   it('adds the product to the cart with quantity 1', () => {
     const { setCart } = setup();
     render(<ProductDetails product={product} />);
