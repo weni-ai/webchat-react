@@ -168,9 +168,13 @@
     }
   },
   "back_in_stock": {
+    "ddi_label": "DDI",
     "form_description": "We'll message you on WhatsApp the moment the {{productName}} is back in stock.",
     "form_title": "Get notified when it's back in stock",
+    "invalid_phone": "Enter a valid phone number",
     "name_label": "Name",
+    "name_required": "Complete this field",
+    "not_now": "Not now",
     "notify_me": "Notify me",
     "notify_me_cta": "Notify me when back in stock",
     "show_similar_products": "Show me similar products",

@@ -4,6 +4,8 @@ import {
   extractSlugFromUrl,
   extractProductPathFromUrl,
   getVtexAccount,
+  resetVtexAccountLookup,
+  watchVtexAccount,
   isValidProductData,
   findProductInLdJson,
   extractFromLdJson,
@@ -39,15 +41,23 @@ function mockPathname(value) {
 
 beforeEach(() => {
   jest.restoreAllMocks();
+  resetVtexAccountLookup();
   delete window.__RUNTIME__;
   delete window.VTEX_METADATA;
+  delete window.webpackChunk_N_E;
+  delete window.faststore_sdk_stores;
   delete window.__NEXT_DATA__;
   delete window.__STATE__;
   document
     .querySelectorAll('script[type="application/ld+json"]')
     .forEach((el) => el.remove());
   document
-    .querySelectorAll('[data-sku], meta[property="product:sku"]')
+    .querySelectorAll('link[rel="preconnect"], link[rel="dns-prefetch"]')
+    .forEach((el) => el.remove());
+  document
+    .querySelectorAll(
+      '[data-sku], meta[property="product:sku"], meta[name="description"], meta[property="og:description"]',
+    )
     .forEach((el) => el.remove());
   Object.defineProperty(window, 'location', {
     value: {
@@ -172,6 +182,207 @@ describe('getVtexAccount', () => {
     window.__RUNTIME__ = {};
     window.VTEX_METADATA = {};
     expect(getVtexAccount()).toBeUndefined();
+  });
+
+  it('returns the FastStore store id from webpack modules already in memory', () => {
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('prefers __RUNTIME__ and VTEX_METADATA over the FastStore store id', () => {
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    window.VTEX_METADATA = { account: 'metadata-account' };
+    expect(getVtexAccount()).toBe('metadata-account');
+
+    window.__RUNTIME__ = { account: 'runtime-account' };
+    expect(getVtexAccount()).toBe('runtime-account');
+  });
+
+  it('returns undefined without creating webpackChunk_N_E', () => {
+    expect(getVtexAccount()).toBeUndefined();
+    expect(window.webpackChunk_N_E).toBeUndefined();
+  });
+
+  it('does not touch webpack on a Next.js site that is not FastStore', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeaccount"}');
+    delete window.faststore_sdk_stores;
+
+    expect(getVtexAccount()).toBeUndefined();
+    expect(chunks.probeCount).toBe(0);
+  });
+
+  it('pushes the webpack probe once', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+    expect(getVtexAccount()).toBe('storeaccount');
+    expect(chunks.probeCount).toBe(1);
+  });
+
+  it('prefers a single vtexassets preconnect over the starter store id', () => {
+    addAssetLink('preconnect', 'https://storeaccount.vtexassets.com/');
+    installFastStoreChunks('api:{storeId:"storeframework"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('reads a single vtexassets dns-prefetch link', () => {
+    addAssetLink('dns-prefetch', 'https://storeaccount.vtexassets.com/');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('ignores multiple vtexassets preconnect hosts and uses the webpack store id', () => {
+    addAssetLink('preconnect', 'https://store-a.vtexassets.com/');
+    addAssetLink('preconnect', 'https://store-b.vtexassets.com/');
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns the non-starter store id when the starter config is also bundled', () => {
+    installFastStoreChunks(
+      'api:{storeId:"storeframework"}',
+      'api:{storeId:"storeaccount"}',
+    );
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns undefined when the only store id is the starter account', () => {
+    const chunks = installFastStoreChunks('api:{storeId:"storeframework"}');
+    expect(getVtexAccount()).toBeUndefined();
+
+    chunks.modules.later = new Function('api:{storeId:"storeaccount"}');
+    expect(getVtexAccount()).toBe('storeaccount');
+  });
+
+  it('returns undefined when webpack modules contain two non-starter store ids', () => {
+    installFastStoreChunks(
+      'api:{storeId:"storeaccount"}',
+      'api:{storeId:"otheraccount"}',
+    );
+    expect(getVtexAccount()).toBeUndefined();
+  });
+
+  it('returns a hyphenated store id', () => {
+    installFastStoreChunks('api:{storeId:"store-account"}');
+    expect(getVtexAccount()).toBe('store-account');
+  });
+
+  it('returns undefined when account lookups throw', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    jest.spyOn(document, 'querySelectorAll').mockImplementation(() => {
+      throw new Error('links unavailable');
+    });
+    const chunks = [];
+    chunks.push = () => {
+      throw new Error('webpack unavailable');
+    };
+    window.webpackChunk_N_E = chunks;
+    window.faststore_sdk_stores = new Map();
+
+    expect(getVtexAccount()).toBeUndefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps reading later sources when an earlier source throws', () => {
+    Object.defineProperty(window, '__RUNTIME__', {
+      configurable: true,
+      get() {
+        throw new Error('runtime unavailable');
+      },
+    });
+    window.VTEX_METADATA = { account: 'metadata-account' };
+
+    expect(getVtexAccount()).toBe('metadata-account');
+  });
+});
+
+function addAssetLink(rel, href) {
+  const link = document.createElement('link');
+  link.rel = rel;
+  link.href = href;
+  document.head.appendChild(link);
+  return link;
+}
+
+function installFastStoreChunks(...moduleSources) {
+  const req = () => {};
+  req.m = {};
+  moduleSources.forEach((source, index) => {
+    req.m[`config-${index}`] = new Function(source);
+  });
+  const chunks = [];
+  chunks.modules = req.m;
+  chunks.probeCount = 0;
+  chunks.push = (entry) => {
+    chunks.probeCount += 1;
+    entry[2](req);
+  };
+  window.webpackChunk_N_E = chunks;
+  window.faststore_sdk_stores = new Map();
+  return chunks;
+}
+
+describe('watchVtexAccount', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('reports an account that appears on a later attempt', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    watchVtexAccount({ onAccount, timeoutMs: 60_000, intervalMs: 500 });
+
+    expect(onAccount).not.toHaveBeenCalled();
+
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(500);
+
+    expect(onAccount).toHaveBeenCalledTimes(1);
+    expect(onAccount).toHaveBeenCalledWith('storeaccount');
+  });
+
+  it('stops after 60s', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    watchVtexAccount({ onAccount, timeoutMs: 60_000, intervalMs: 500 });
+
+    jest.advanceTimersByTime(60_000);
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(60_000);
+
+    expect(onAccount).not.toHaveBeenCalled();
+  });
+
+  it('does not surface a listener failure', () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+
+    expect(() =>
+      watchVtexAccount({
+        onAccount: () => {
+          throw new Error('listener failed');
+        },
+      }),
+    ).not.toThrow();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('stops when the caller cancels the watch', () => {
+    jest.useFakeTimers();
+    const onAccount = jest.fn();
+    const stop = watchVtexAccount({
+      onAccount,
+      timeoutMs: 60_000,
+      intervalMs: 500,
+    });
+
+    stop();
+    installFastStoreChunks('api:{storeId:"storeaccount"}');
+    jest.advanceTimersByTime(500);
+
+    expect(onAccount).not.toHaveBeenCalled();
   });
 });
 
@@ -1285,6 +1496,11 @@ describe('normalizeForContext', () => {
     expect(normalizeForContext(raw, 'intelligent-search')).toBe(raw);
   });
 
+  it('passes catalog product through unchanged', () => {
+    const raw = { productName: 'Dog Chow', items: [{ itemId: '31' }] };
+    expect(normalizeForContext(raw, 'catalog')).toBe(raw);
+  });
+
   it('normalizes ld+json product with offers', () => {
     const raw = {
       name: 'iPad',
@@ -1568,7 +1784,10 @@ describe('resolveProductData', () => {
     const result = await resolveProductData('test-product', 'store');
     expect(result.source).toBe('intelligent-search');
     expect(result.productData.productName).toBe('Test');
-    expect(globalThis.fetch).toHaveBeenCalled();
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/io/_v/api/intelligent-search/product_search/test-product',
+    );
   });
 
   it('falls to ld+json when __NEXT_DATA__ and IS API fail', async () => {
@@ -1642,6 +1861,321 @@ describe('resolveProductData', () => {
     });
     const result = await resolveProductData('missing', 'store');
     expect(result).toBeNull();
+  });
+
+  it('falls to catalog when earlier sources miss the slug', async () => {
+    const catalogProduct = {
+      linkText: 'dog-chow',
+      productName: 'Dog Chow',
+      description: 'Racao',
+      brand: 'Purina',
+      items: [
+        {
+          itemId: '31',
+          sellers: [{ commertialOffer: { AvailableQuantity: 0 } }],
+        },
+      ],
+    };
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            products: [{ linkText: 'other', productName: 'Other' }],
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([catalogProduct]),
+      });
+
+    const result = await resolveProductData('dog-chow', 'store');
+
+    expect(result.source).toBe('catalog');
+    expect(result.productData.productName).toBe('Dog Chow');
+    expect(result.productData.account).toBe('store');
+    expect(
+      result.rawProduct.items[0].sellers[0].commertialOffer.AvailableQuantity,
+    ).toBe(0);
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/dog-chow/p',
+    );
+  });
+
+  it('returns null when catalog responds not ok', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({ ok: false });
+
+    const result = await resolveProductData('missing', 'store');
+
+    expect(result).toBeNull();
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/missing/p',
+    );
+  });
+
+  it('returns null when catalog body is not an array', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ products: [] }),
+      });
+
+    expect(await resolveProductData('missing', 'store')).toBeNull();
+  });
+
+  it('returns null when catalog fetch throws', async () => {
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockRejectedValueOnce(new Error('catalog down'));
+
+    expect(await resolveProductData('missing', 'store')).toBeNull();
+  });
+
+  function injectMetaDescription(content) {
+    const meta = document.createElement('meta');
+    meta.setAttribute('name', 'description');
+    meta.setAttribute('content', content);
+    document.head.appendChild(meta);
+  }
+
+  it('replaces an ld+json meta description with the __STATE__ product description', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    injectMetaDescription('Find  this   tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+      sku: '100',
+    });
+    window.__STATE__ = {
+      'Product:tablet-pro': {
+        linkText: 'tablet-pro',
+        description: '<p>Washable <strong>&aacute;</strong> finish.</p>',
+        metaTagDescription: 'Find this tablet.',
+      },
+    };
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Washable á finish.');
+    expect(result.rawProduct.description).toBe('Washable á finish.');
+    expect(result.rawProduct.sku).toBe('100');
+    expect(result.productData.productName).toBe('Tablet Pro');
+    expect(
+      buildProductContextString(
+        normalizeForContext(result.rawProduct, result.source),
+        '100',
+      ),
+    ).toContain('Description: Washable á finish.');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
+  });
+
+  it('reads the __STATE__ product description when linkText matches the slug', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    injectMetaDescription('Find this lamp.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Desk Lamp',
+      description: 'Find this lamp.',
+      brand: 'Acme',
+    });
+    window.__STATE__ = {
+      'Product:sp-desk-lamp': {
+        linkText: 'desk-lamp',
+        description: '<p>Adjustable arm.</p>',
+        metaTagDescription: 'Find this lamp.',
+      },
+    };
+
+    const result = await resolveProductData('desk-lamp', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Adjustable arm.');
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/desk-lamp/p',
+    );
+  });
+
+  it('replaces an ld+json meta description with the catalog description', async () => {
+    injectMetaDescription('Find this tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+      sku: '100',
+    });
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              linkText: 'tablet-pro',
+              productName: 'Tablet Pro',
+              description: '<p>Compact &amp; light.</p>',
+              metaTagDescription: 'Find this tablet.',
+              brand: 'Acme',
+            },
+          ]),
+      });
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Compact & light.');
+    expect(result.rawProduct.description).toBe('Compact & light.');
+    expect(result.rawProduct.sku).toBe('100');
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
+  });
+
+  it('leaves a non-meta description with angle brackets untouched', async () => {
+    injectMetaDescription('Buy this tablet today.');
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'Surface',
+              description: 'Holds 3 < 5 kg and 7 > 2',
+              seo: { description: 'Buy this tablet today.' },
+              brand: { name: 'MS' },
+              isVariantOf: { name: 'Surface' },
+              customData: { specificationGroups: [] },
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
+
+    const result = await resolveProductData('surface', 'store');
+
+    expect(result.source).toBe('next-data');
+    expect(result.productData.description).toBe('Holds 3 < 5 kg and 7 > 2');
+    expect(result.rawProduct.description).toBe('Holds 3 < 5 kg and 7 > 2');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps a next-data description that differs from the meta description', async () => {
+    injectMetaDescription('Buy this tablet today.');
+    window.__NEXT_DATA__ = {
+      props: {
+        pageProps: {
+          data: {
+            product: {
+              name: 'Surface',
+              description: 'Compact tablet.',
+              seo: { description: 'Buy this tablet today.' },
+              brand: { name: 'MS' },
+              isVariantOf: { name: 'Surface' },
+              customData: { specificationGroups: [] },
+            },
+          },
+        },
+      },
+      page: '/[slug]/p',
+    };
+    window.__STATE__ = {
+      'Product:surface': {
+        linkText: 'surface',
+        description: '<p>From state.</p>',
+        metaTagDescription: 'Buy this tablet today.',
+      },
+    };
+
+    const result = await resolveProductData('surface', 'store');
+
+    expect(result.source).toBe('next-data');
+    expect(result.productData.description).toBe('Compact tablet.');
+    expect(result.rawProduct.description).toBe('Compact tablet.');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps an intelligent-search description that differs from the meta description', async () => {
+    injectMetaDescription('Buy this product.');
+    window.__STATE__ = {
+      'Product:test-product': {
+        linkText: 'test-product',
+        description: '<p>From state.</p>',
+        metaTagDescription: 'Buy this product.',
+      },
+    };
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          products: [
+            {
+              linkText: 'test-product',
+              productName: 'Test',
+              description: 'A real description.',
+              metaTagDescription: 'Buy this product.',
+              brand: 'Brand',
+              properties: [],
+            },
+          ],
+        }),
+    });
+
+    const result = await resolveProductData('test-product', 'store');
+
+    expect(result.source).toBe('intelligent-search');
+    expect(result.productData.description).toBe('A real description.');
+    expect(result.rawProduct.description).toBe('A real description.');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/api/catalog_system/pub/products/search/test-product/p',
+    );
+  });
+
+  it('keeps the meta description when no product description exists', async () => {
+    injectMetaDescription('Find this tablet.');
+    injectLdJson({
+      '@type': 'Product',
+      name: 'Tablet Pro',
+      description: 'Find this tablet.',
+      brand: { name: 'Acme' },
+    });
+    globalThis.fetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              linkText: 'tablet-pro',
+              productName: 'Tablet Pro',
+              description: 'Find this tablet.',
+              metaTagDescription: 'Find this tablet.',
+              brand: 'Acme',
+            },
+          ]),
+      });
+
+    const result = await resolveProductData('tablet-pro', 'store');
+
+    expect(result.source).toBe('ld+json');
+    expect(result.productData.description).toBe('Find this tablet.');
+    expect(result.rawProduct.description).toBe('Find this tablet.');
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/catalog_system/pub/products/search/tablet-pro/p',
+    );
   });
 });
 
@@ -2020,6 +2554,12 @@ describe('getSkuIdFromRawProduct', () => {
         'intelligent-search',
       ),
     ).toBe('99');
+  });
+
+  it('returns first itemId for catalog source', () => {
+    expect(
+      getSkuIdFromRawProduct({ items: [{ itemId: '31' }] }, 'catalog'),
+    ).toBe('31');
   });
 
   it('returns null when sku is missing', () => {

@@ -43,6 +43,7 @@ export function useConversationStartersCore() {
     config,
     setIsChatOpen,
     setCurrentPage,
+    isInsideVTEXStore,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -78,6 +79,7 @@ export function useConversationStartersCore() {
   const fetchGenerationRef = useRef(0);
   const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
+  const wasInsideVTEXStoreRef = useRef(isInsideVTEXStore);
   const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
   const isUnavailableNotifyEnabledRef = useRef(
     config?.unavailableProductNotify === true,
@@ -679,6 +681,20 @@ export function useConversationStartersCore() {
       showBackInStockNotify(name);
     };
 
+    const handleSimulateBackInStockPage = (payload = {}) => {
+      const name =
+        typeof payload?.productName === 'string' && payload.productName.trim()
+          ? payload.productName.trim()
+          : 'Sample Product';
+      notifySkuIdRef.current =
+        typeof payload?.skuId === 'string' ? payload.skuId : '';
+      notifySellerRef.current =
+        typeof payload?.seller === 'string' ? payload.seller : '';
+      setProductName(name);
+      productNameRef.current = name;
+      openBackInStockPage(name);
+    };
+
     const handleSimulateWhatsappOffers = (payload = {}) => {
       if (!isWhatsappOffersNotifyEnabledRef.current) return;
 
@@ -701,6 +717,10 @@ export function useConversationStartersCore() {
     service.on('starters:set-manual', handleManualStarters);
     service.on('starters:simulate-unavailable', handleSimulateUnavailable);
     service.on(
+      'starters:simulate-back-in-stock-page',
+      handleSimulateBackInStockPage,
+    );
+    service.on(
       'starters:simulate-whatsapp-offers',
       handleSimulateWhatsappOffers,
     );
@@ -718,6 +738,10 @@ export function useConversationStartersCore() {
       service.off('starters:set-manual', handleManualStarters);
       service.off('starters:simulate-unavailable', handleSimulateUnavailable);
       service.off(
+        'starters:simulate-back-in-stock-page',
+        handleSimulateBackInStockPage,
+      );
+      service.off(
         'starters:simulate-whatsapp-offers',
         handleSimulateWhatsappOffers,
       );
@@ -729,6 +753,7 @@ export function useConversationStartersCore() {
     startMobileAutoHide,
     showBackInStockNotify,
     showWhatsappOffersOptIn,
+    openBackInStockPage,
     resetStartersState,
   ]);
 
@@ -761,6 +786,16 @@ export function useConversationStartersCore() {
     scheduleNavigationHandling,
     clearMobileTimer,
   ]);
+
+  useEffect(() => {
+    const accountArrivedAfterMount =
+      isInsideVTEXStore && !wasInsideVTEXStoreRef.current;
+    wasInsideVTEXStoreRef.current = isInsideVTEXStore;
+
+    if (accountArrivedAfterMount && service) {
+      detectAndFetchPdp();
+    }
+  }, [isInsideVTEXStore, service, detectAndFetchPdp]);
 
   return {
     questions,

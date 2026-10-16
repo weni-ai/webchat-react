@@ -11,7 +11,7 @@ export function MessageOrder({ message }) {
   const { t } = useTranslation();
 
   const firstImage = useMemo(() => {
-    return productItems[0]?.image;
+    return productItems.find((item) => item?.image)?.image;
   }, [productItems]);
 
   const totalItems = useMemo(() => {

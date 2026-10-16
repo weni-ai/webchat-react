@@ -451,8 +451,28 @@ describe('CounterControls — add-to-cart FSButton', () => {
       sellerId: 'seller1',
       quantity: 1,
       productName: 'Cool Shoe',
+      image: undefined,
     });
     expect(addProductToCart).not.toHaveBeenCalled();
+  });
+
+  it('stages the product image with the pending item', () => {
+    renderCounter({
+      uuid: 'sku1#seller1',
+      productName: 'Cool Shoe',
+      image: 'https://cdn.example/shoe.webp',
+    });
+
+    fireEvent.click(screen.getByTestId('fs-button-shopping_cart'));
+
+    expect(setPendingCartItem).toHaveBeenCalledWith({
+      key: 'sku1#seller1',
+      skuId: 'sku1',
+      sellerId: 'seller1',
+      quantity: 1,
+      productName: 'Cool Shoe',
+      image: 'https://cdn.example/shoe.webp',
+    });
   });
 
   it('stops event propagation on FSButton click', () => {

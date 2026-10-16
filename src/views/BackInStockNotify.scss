@@ -1,33 +1,22 @@
 .weni-view-back-in-stock {
   padding: $fs-spacing-3;
   display: flex;
-  gap: $spacing-4;
   flex-direction: column;
-
-  @include scrollable-container;
 
   &__content {
     display: flex;
     flex-direction: column;
     gap: $spacing-4;
-    @include scrollable-content;
-
-    &--success {
-      gap: $spacing-2;
-      text-align: center;
-      align-items: center;
-      margin-block: auto;
-    }
   }
 
   &__header {
     display: flex;
     flex-direction: column;
-    gap: $spacing-1;
+    gap: $spacing-2;
   }
 
   &__title {
-    font: $fs-text-weight-semibold #{$fs-text-size-1}/1.2 $font-family;
+    font: $fs-text-weight-semibold #{$fs-text-size-2}/1.2 $font-family;
     color: $fs-fg-base;
     margin: 0;
   }
@@ -44,31 +33,85 @@
     gap: $spacing-2;
   }
 
-  &__field {
+  &__field-group {
     display: flex;
     flex-direction: column;
     gap: $spacing-1;
   }
 
+  &__phone-row {
+    display: flex;
+    gap: $spacing-2;
+    align-items: flex-start;
+  }
+
+  &__field {
+    position: relative;
+    display: block;
+    width: 100%;
+
+    &--ddi {
+      width: calc(5ch + #{$spacing-4 * 2});
+      flex-shrink: 0;
+    }
+
+    &--phone {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
   &__label {
+    position: absolute;
+    left: $spacing-4;
+    top: 18px;
     font: $fs-text-weight-regular #{$fs-text-size-2}/1.25 $font-family;
-    color: $fg-base-soft;
+    color: $fs-color-neutral-7;
+    pointer-events: none;
   }
 
   &__input {
-    font: $fs-text-weight-regular #{$fs-text-size-1}/1.42 $font-family;
+    font: $fs-text-weight-regular #{$fs-text-size-2}/1.25 $font-family;
     color: $fs-fg-base;
     background: $bg-base;
-    border: 1px solid $border-soft;
-    border-radius: $border-radius-2;
-    padding: 0 $spacing-4;
+    border: $fs-border-width solid $fs-border-color;
+    border-radius: $border-radius-1;
+    padding: 22px $spacing-4 6px;
     width: 100%;
     box-sizing: border-box;
-    height: 42px;
-    outline: none;
+    height: $fs-spacing-8;
 
-    &:focus {
+    &:focus,
+    &:focus-visible {
+      outline: none;
       border-color: var(--weni-main-color);
+    }
+
+    &:focus + .weni-view-back-in-stock__label,
+    &:not(:placeholder-shown) + .weni-view-back-in-stock__label {
+      top: $spacing-2;
+      font: $fs-text-weight-regular #{$fs-text-size-0}/#{$fs-text-size-2} $font-family;
+    }
+
+    &--invalid {
+      border-color: $border-critical;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font: $fs-text-weight-regular #{$fs-text-size-0}/1.33 $font-family;
+    color: $fg-critical;
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: column;
+    gap: $fs-spacing-0;
+
+    .weni-fs-button {
+      width: 100%;
+      justify-content: center;
     }
   }
 }

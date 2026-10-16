@@ -7,7 +7,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 
 import './ProductDetails.scss';
 import { CounterControls } from '@/components/Product/CounterControls';
-import { formatPriceWithCurrency } from '@/utils/currency';
+import { PriceDisplay } from '@/components/Product/PriceDisplay';
 
 export function ProductDetails({ product }) {
   const { cart, setCart, setCurrentPage, isInsideVTEXStore } = useChatContext();
@@ -47,7 +47,12 @@ export function ProductDetails({ product }) {
 
         <section className="weni-view-product-details__product-title">
           <h1>{product.title}</h1>
-          <p>{formatPriceWithCurrency(product.price, product.currency)}</p>
+          <PriceDisplay
+            price={product.price}
+            salePrice={product.salePrice}
+            currency={product.currency}
+            priceModifier="product"
+          />
         </section>
 
         <p className="weni-view-product-details__product-description">
@@ -69,6 +74,7 @@ export function ProductDetails({ product }) {
         {showCounterControls && (
           <CounterControls
             productName={product.title}
+            image={product.image}
             counter={quantity}
             setCounter={(counter) => setCounter(product.uuid, product, counter)}
             size="medium"

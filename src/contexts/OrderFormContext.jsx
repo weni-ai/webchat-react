@@ -222,11 +222,15 @@ export function OrderFormProvider({ children }) {
         await addProductToCart({
           VTEXAccountName: getVtexAccount(),
           orderFormId: effectiveOrderFormId,
-          items: positives.map(({ item }) => ({
-            id: item.skuId,
-            seller: item.sellerId,
-            quantity: item.quantity,
-          })),
+          items: positives.map(({ item }) => {
+            const payload = {
+              id: item.skuId,
+              seller: item.sellerId,
+              quantity: item.quantity,
+            };
+            if (item.image) payload.image = item.image;
+            return payload;
+          }),
         });
 
         void chat?.sendUtm?.(UTM_SOURCES.CART);
@@ -285,7 +289,7 @@ export function OrderFormProvider({ children }) {
   );
 
   const setPendingCartItem = useCallback(
-    ({ key, skuId, sellerId, quantity = 1, productName }) => {
+    ({ key, skuId, sellerId, quantity = 1, productName, image }) => {
       if (!key || !skuId || !sellerId) return;
 
       const origin =
@@ -300,6 +304,7 @@ export function OrderFormProvider({ children }) {
           sellerId,
           quantity: nextQuantity,
           productName,
+          ...(image ? { image } : {}),
           origin,
         },
       }));

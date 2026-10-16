@@ -73,6 +73,7 @@ beforeEach(() => {
     connection: { status: 'connected' },
   });
   service.emit = jest.fn();
+  service.setThinkingText = jest.fn();
   service.clearPageHistory = jest.fn();
   service.clearCart = jest.fn();
   WebChat.destroy();
@@ -402,6 +403,36 @@ describe('WebChat service helpers', () => {
     });
   });
 
+  it('simulateBackInStockPage emits starters:simulate-back-in-stock-page', async () => {
+    await WebChat.simulateBackInStockPage({
+      productName: 'Oculus Quest',
+      skuId: '1276545',
+      seller: '1',
+    });
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-back-in-stock-page',
+      {
+        productName: 'Oculus Quest',
+        skuId: '1276545',
+        seller: '1',
+      },
+    );
+  });
+
+  it('simulateBackInStockPage defaults product name when omitted', async () => {
+    await WebChat.simulateBackInStockPage();
+
+    expect(service.emit).toHaveBeenCalledWith(
+      'starters:simulate-back-in-stock-page',
+      {
+        productName: 'Sample Product',
+        skuId: '',
+        seller: '',
+      },
+    );
+  });
+
   it('simulateWhatsappOffersOptIn emits starters:simulate-whatsapp-offers', async () => {
     await WebChat.simulateWhatsappOffersOptIn();
 
@@ -502,6 +533,54 @@ describe('WebChat.setConversationStarters', () => {
       'Track order',
       'Talk to agent',
     ]);
+  });
+});
+
+describe('WebChat.setThinkingText', () => {
+  it('rejects invalid input shapes', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await WebChat.setThinkingText(null);
+    await WebChat.setThinkingText('');
+    await WebChat.setThinkingText('   ');
+    await WebChat.setThinkingText(42);
+
+    expect(service.setThinkingText).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('warns in development when input is invalid', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await WebChat.setThinkingText('');
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      'WebChat.setThinkingText: expected a non-empty string',
+    );
+    expect(service.setThinkingText).not.toHaveBeenCalled();
+
+    process.env.NODE_ENV = originalNodeEnv;
+    warnSpy.mockRestore();
+  });
+
+  it('returns early when the widget is not mounted and service.emit is unavailable', async () => {
+    delete service.emit;
+
+    await WebChat.setThinkingText('Looking up products');
+
+    expect(service.emit).toBeUndefined();
+  });
+
+  it('calls service.setThinkingText once for a valid string after init', async () => {
+    setupContainer();
+    WebChat.init(baseParams);
+
+    await WebChat.setThinkingText('Looking up products');
+
+    expect(service.setThinkingText).toHaveBeenCalledTimes(1);
+    expect(service.setThinkingText).toHaveBeenCalledWith('Looking up products');
   });
 });
 

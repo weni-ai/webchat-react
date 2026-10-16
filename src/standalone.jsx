@@ -438,6 +438,27 @@ async function simulateUnavailableProduct(productName) {
 }
 
 /**
+ * Open the back-in-stock notify page for local UI debugging.
+ * @param {{ productName?: string, skuId?: string, seller?: string }} [product]
+ * @returns {Promise<void>}
+ */
+async function simulateBackInStockPage(product = {}) {
+  const svc = await serviceWhenReady();
+  const productName =
+    typeof product?.productName === 'string' && product.productName.trim()
+      ? product.productName.trim()
+      : 'Sample Product';
+  const skuId = typeof product?.skuId === 'string' ? product.skuId : '';
+  const seller = typeof product?.seller === 'string' ? product.seller : '';
+
+  svc.emit('starters:simulate-back-in-stock-page', {
+    productName,
+    skuId,
+    seller,
+  });
+}
+
+/**
  * Simulate WhatsApp offers opt-in balloon (generic or coupon copy)
  * @param {{ couponPercent?: number }} [options]
  * @returns {Promise<void>}
@@ -511,6 +532,26 @@ async function clearConversationStarters() {
   svc.emit('starters:clear');
 }
 
+function isValidThinkingText(text) {
+  return typeof text === 'string' && text.trim().length > 0;
+}
+
+async function setThinkingText(text) {
+  if (!isValidThinkingText(text)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('WebChat.setThinkingText: expected a non-empty string');
+    }
+    return;
+  }
+
+  if (!widgetInstance && typeof service.emit !== 'function') {
+    return;
+  }
+
+  const svc = await serviceWhenReady();
+  svc.setThinkingText(text);
+}
+
 function changeLanguage(language) {
   i18n.changeLanguage(language);
 }
@@ -535,12 +576,14 @@ const WebChat = {
   setConversationStarters,
   clearConversationStarters,
   getConversationStartersLog,
+  setThinkingText,
   isOpen,
   isVisible,
   reload,
   simulateMessageReceived,
   simulateMessageSent,
   simulateUnavailableProduct,
+  simulateBackInStockPage,
   simulateWhatsappOffersOptIn,
   simulateConnectionStatus,
   changeLanguage,

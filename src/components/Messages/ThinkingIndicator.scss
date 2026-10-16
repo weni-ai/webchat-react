@@ -1,12 +1,13 @@
 .weni-thinking-indicator {
   $line-height: $fs-text-size-base;
-  
+
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: $spacing-1;
-  height: $line-height;
+  min-height: $line-height;
 
   &__icon {
+    min-width: $icon-size-4;
     transition: opacity 0.5s ease-in-out;
 
     &--in {
@@ -20,7 +21,10 @@
   }
 
   &__text-wrapper {
-    height: $line-height;
+    overflow: hidden;
+    min-height: $line-height;
+    height: var(--thinking-wrapper-height, #{$line-height});
+    transition: height 0.5s ease-in-out;
   }
 
   &__text-track {
@@ -43,14 +47,13 @@
   &__text {
     font: $fs-text-weight-regular #{$fs-text-size-0}/#{$line-height} $font-family;
     color: $fs-fg-base;
-    white-space: nowrap;
     flex-shrink: 0;
   }
 }
 
 @keyframes thinking-push {
   from { transform: translateY(0); }
-  to { transform: translateY(-50%); }
+  to { transform: translateY(calc(-1 * var(--thinking-slide-offset, #{$fs-text-size-base}))); }
 }
 
 @keyframes thinking-fade-out {

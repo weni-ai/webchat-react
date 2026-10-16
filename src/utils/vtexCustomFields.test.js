@@ -493,7 +493,7 @@ describe('startVtexCustomFieldsSync', () => {
     await flushMicrotasks();
     expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-1');
 
-    await jest.advanceTimersByTimeAsync(20_000);
+    await jest.advanceTimersByTimeAsync(60_000);
     expect(setCustomField).toHaveBeenCalledWith('session', 'session-token-2');
 
     stop();

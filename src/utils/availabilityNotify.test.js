@@ -9,6 +9,7 @@ import {
 
 jest.mock('@/utils/vtex', () => ({
   getSelectedSkuId: jest.fn(),
+  stripLeadingZeros: jest.requireActual('@/utils/vtex').stripLeadingZeros,
 }));
 
 import { getSelectedSkuId } from '@/utils/vtex';
@@ -127,6 +128,37 @@ describe('buildAvailabilityNotifyBody', () => {
       sku_id: '99',
       seller: '1',
     });
+  });
+
+  it('strips leading zeros from a numeric sku id', () => {
+    expect(
+      buildAvailabilityNotifyBody({
+        name: 'Ana',
+        phone: '11999999999',
+        skuId: '00000027',
+      }).sku_id,
+    ).toBe('27');
+  });
+
+  it('strips leading zeros from the selected sku fallback', () => {
+    getSelectedSkuId.mockReturnValue('000326125867');
+
+    expect(
+      buildAvailabilityNotifyBody({
+        name: 'Ana',
+        phone: '11999999999',
+      }).sku_id,
+    ).toBe('326125867');
+  });
+
+  it('keeps a non-numeric sku id unchanged', () => {
+    expect(
+      buildAvailabilityNotifyBody({
+        name: 'Ana',
+        phone: '11999999999',
+        skuId: 'SKU-001',
+      }).sku_id,
+    ).toBe('SKU-001');
   });
 });
 

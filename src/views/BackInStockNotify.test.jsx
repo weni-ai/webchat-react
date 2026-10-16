@@ -15,8 +15,12 @@ jest.mock('react-i18next', () => ({
         'back_in_stock.form_title': "Get notified when it's back in stock",
         'back_in_stock.form_description': `We'll message you on WhatsApp the moment the ${options?.productName} is back in stock.`,
         'back_in_stock.name_label': 'Name',
+        'back_in_stock.ddi_label': 'DDI',
         'back_in_stock.whatsapp_label': 'WhatsApp number',
         'back_in_stock.notify_me': 'Notify me',
+        'back_in_stock.not_now': 'Not now',
+        'back_in_stock.invalid_phone': 'Enter a valid phone number',
+        'back_in_stock.name_required': 'Complete this field',
         'back_in_stock.success_title': "You're all set!",
         'back_in_stock.success_description': `I'll message you on WhatsApp when ${options?.productName} is back in stock.`,
         'back_in_stock.wait_prompt':
@@ -27,6 +31,21 @@ jest.mock('react-i18next', () => ({
     },
   }),
 }));
+
+function fillName(value = 'Ana') {
+  fireEvent.change(screen.getByLabelText('Name'), {
+    target: { value },
+  });
+}
+
+function fillValidPhone() {
+  fireEvent.change(screen.getByLabelText('DDI'), {
+    target: { value: '+55' },
+  });
+  fireEvent.change(screen.getByLabelText('WhatsApp number'), {
+    target: { value: '11999999999' },
+  });
+}
 
 describe('BackInStockNotify', () => {
   const clearPageHistory = jest.fn();
@@ -55,10 +74,131 @@ describe('BackInStockNotify', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('DDI')).toBeInTheDocument();
     expect(screen.getByLabelText('WhatsApp number')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Notify me' }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Not now' })).toBeInTheDocument();
+  });
+
+  it('prefills DDI from the VTEX culture country', () => {
+    window.__RUNTIME__ = { culture: { country: 'BRA' } };
+
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    expect(screen.getByLabelText('DDI')).toHaveValue('+55');
+  });
+
+  it('prefills DDI from the FastStore session country', () => {
+    window.faststore_sdk_stores = {
+      get: () => ({
+        read: () => ({ country: 'USA' }),
+      }),
+    };
+
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    expect(screen.getByLabelText('DDI')).toHaveValue('+1');
+  });
+
+  it('prefills DDI from /api/segments when the page has no session', async () => {
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ countryCode: 'ARG' }),
+    });
+
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('DDI')).toHaveValue('+54');
+    });
+  });
+
+  it('prefills DDI from the segment token when culture is absent', () => {
+    window.__RUNTIME__ = {
+      segmentToken: btoa(JSON.stringify({ countryCode: 'ARG' })),
+    };
+
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    expect(screen.getByLabelText('DDI')).toHaveValue('+54');
+  });
+
+  it('prefers culture over the segment token', () => {
+    window.__RUNTIME__ = {
+      culture: { country: 'BRA' },
+      segmentToken: btoa(JSON.stringify({ countryCode: 'ARG' })),
+    };
+
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    expect(screen.getByLabelText('DDI')).toHaveValue('+55');
+  });
+
+  it('does not submit an invalid phone number', () => {
+    render(
+      <BackInStockNotify
+        productName="Cool Shoe"
+        skuId="27"
+      />,
+    );
+
+    fillName();
+    fireEvent.change(screen.getByLabelText('DDI'), {
+      target: { value: '+55' },
+    });
+    fireEvent.change(screen.getByLabelText('WhatsApp number'), {
+      target: { value: '123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      expect.anything(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Enter a valid phone number',
+    );
+    expect(screen.queryByText("You're all set!")).not.toBeInTheDocument();
+  });
+
+  it('does not submit when the name is empty', () => {
+    render(
+      <BackInStockNotify
+        productName="Cool Shoe"
+        skuId="27"
+      />,
+    );
+
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      expect.anything(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
+    expect(screen.queryByText("You're all set!")).not.toBeInTheDocument();
+  });
+
+  it('does not submit a name that is only spaces', () => {
+    render(
+      <BackInStockNotify
+        productName="Cool Shoe"
+        skuId="27"
+      />,
+    );
+
+    fillName('   ');
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      expect.anything(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
   });
 
   it('switches to success content after Notify me', async () => {
@@ -70,12 +210,8 @@ describe('BackInStockNotify', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Name'), {
-      target: { value: 'Ana' },
-    });
-    fireEvent.change(screen.getByLabelText('WhatsApp number'), {
-      target: { value: '+5511999999999' },
-    });
+    fillName();
+    fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
     await waitFor(() => {
@@ -110,9 +246,24 @@ describe('BackInStockNotify', () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
+  it('clears the page without subscribing when Not now is clicked', () => {
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
+
+    expect(clearPageHistory).toHaveBeenCalledTimes(1);
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      expect.anything(),
+    );
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
   it('sends similar products message and clears page history', async () => {
     render(<BackInStockNotify productName="Cool Shoe" />);
 
+    fillName();
+    fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
     await waitFor(() => {
       expect(
@@ -136,6 +287,8 @@ describe('BackInStockNotify', () => {
         skuId="27"
       />,
     );
+    fillName();
+    fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
     await waitFor(() => {
@@ -152,6 +305,8 @@ describe('BackInStockNotify', () => {
         skuId="27"
       />,
     );
+    fillName();
+    fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
     await waitFor(() => {

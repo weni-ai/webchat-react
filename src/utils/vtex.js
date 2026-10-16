@@ -27,8 +27,183 @@ export function extractProductPathFromUrl() {
   return window.location.pathname;
 }
 
+const FAST_STORE_ACCOUNT_TIMEOUT_MS = 60_000;
+const FAST_STORE_ACCOUNT_INTERVAL_MS = 5000;
+const FAST_STORE_STARTER_ACCOUNT = 'storeframework';
+const FAST_STORE_STORE_ID_PATTERN = /api:\{storeId:"([a-z0-9-]+)"/g;
+const VTEX_ASSETS_ACCOUNT_PATTERN =
+  /^https?:\/\/([a-z0-9-]+)\.vtexassets\.com\/?$/i;
+
+let cachedFastStoreAccount;
+let webpackRequire;
+let fastStoreProbeInstalled = false;
+const seenFastStoreModuleIds = new Set();
+const foundFastStoreAccountIds = new Set();
+
+function ensureWebpackRequire() {
+  if (webpackRequire) return webpackRequire;
+
+  const chunks = window.webpackChunk_N_E;
+  if (!chunks || typeof chunks.push !== 'function' || fastStoreProbeInstalled) {
+    return webpackRequire;
+  }
+
+  fastStoreProbeInstalled = true;
+  try {
+    chunks.push([
+      ['weni-vtex-account'],
+      {},
+      (require) => {
+        webpackRequire = require;
+      },
+    ]);
+  } catch {
+    fastStoreProbeInstalled = false;
+  }
+
+  return webpackRequire;
+}
+
+function readAccountFromAssetLinks() {
+  try {
+    const accounts = new Set();
+    const links = document.querySelectorAll(
+      'link[rel="preconnect"], link[rel="dns-prefetch"]',
+    );
+
+    for (const link of links) {
+      try {
+        const href = link.getAttribute('href') || '';
+        const match = String(href).match(VTEX_ASSETS_ACCOUNT_PATTERN);
+        if (match) accounts.add(match[1].toLowerCase());
+      } catch {
+        continue;
+      }
+    }
+
+    if (accounts.size !== 1) return undefined;
+    return [...accounts][0];
+  } catch {
+    return undefined;
+  }
+}
+
+function collectStoreIds(source) {
+  FAST_STORE_STORE_ID_PATTERN.lastIndex = 0;
+  let match = FAST_STORE_STORE_ID_PATTERN.exec(source);
+  while (match) {
+    foundFastStoreAccountIds.add(match[1]);
+    match = FAST_STORE_STORE_ID_PATTERN.exec(source);
+  }
+}
+
+function readFastStoreAccount() {
+  try {
+    if (cachedFastStoreAccount) return cachedFastStoreAccount;
+    if (!isFastStoreHost()) return undefined;
+
+    const req = ensureWebpackRequire();
+    if (req?.m) {
+      for (const id of Object.keys(req.m)) {
+        if (seenFastStoreModuleIds.has(id)) continue;
+
+        let source;
+        try {
+          source = Function.prototype.toString.call(req.m[id]);
+        } catch {
+          continue;
+        }
+
+        seenFastStoreModuleIds.add(id);
+        collectStoreIds(source);
+      }
+    }
+
+    const candidates = [...foundFastStoreAccountIds].filter(
+      (account) => account !== FAST_STORE_STARTER_ACCOUNT,
+    );
+    if (candidates.length !== 1) return undefined;
+
+    cachedFastStoreAccount = candidates[0];
+    return cachedFastStoreAccount;
+  } catch {
+    return undefined;
+  }
+}
+
+export function resetVtexAccountLookup() {
+  cachedFastStoreAccount = undefined;
+  webpackRequire = undefined;
+  fastStoreProbeInstalled = false;
+  seenFastStoreModuleIds.clear();
+  foundFastStoreAccountIds.clear();
+}
+
+function readAccountSource(read) {
+  try {
+    return read() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getVtexAccount() {
-  return window.__RUNTIME__?.account || window.VTEX_METADATA?.account;
+  return (
+    readAccountSource(() => window.__RUNTIME__?.account) ||
+    readAccountSource(() => window.VTEX_METADATA?.account) ||
+    readAccountSource(readAccountFromAssetLinks) ||
+    readAccountSource(readFastStoreAccount)
+  );
+}
+
+export function watchVtexAccount({
+  onAccount,
+  timeoutMs = FAST_STORE_ACCOUNT_TIMEOUT_MS,
+  intervalMs = FAST_STORE_ACCOUNT_INTERVAL_MS,
+} = {}) {
+  const startedAt = Date.now();
+
+  const publish = (account) => {
+    if (!account) return;
+    try {
+      onAccount(account);
+    } catch {
+      // Ignore a failing account listener.
+    }
+  };
+
+  const schedule = () => {
+    const remainingMs = timeoutMs - (Date.now() - startedAt);
+    if (remainingMs <= 0) return;
+    try {
+      timer = setTimeout(tick, Math.min(intervalMs, remainingMs));
+    } catch {
+      // Leave the lookup unresolved when timers are unavailable.
+    }
+  };
+
+  const tick = () => {
+    try {
+      const account = getVtexAccount();
+      if (account) {
+        publish(account);
+        return;
+      }
+    } catch {
+      // Keep waiting until the deadline.
+    }
+    schedule();
+  };
+
+  let timer;
+  const account = getVtexAccount();
+  if (account) {
+    publish(account);
+    return () => {};
+  }
+
+  schedule();
+  return () => clearTimeout(timer);
 }
 
 export function isFastStoreHost() {
@@ -305,6 +480,7 @@ const CONTEXT_NORMALIZERS = {
   'ld+json': normalizeLdJsonForContext,
   'next-data': normalizeNextDataForContext,
   'intelligent-search': (raw) => raw,
+  catalog: (raw) => raw,
 };
 
 export function normalizeForContext(rawProduct, source) {
@@ -349,7 +525,7 @@ export function getSelectedSkuIdFromNextData() {
 
 export function getSkuIdFromRawProduct(rawProduct, source) {
   if (!rawProduct) return null;
-  if (source === 'intelligent-search') {
+  if (source === 'intelligent-search' || source === 'catalog') {
     return nonEmptyString(rawProduct.items?.[0]?.itemId);
   }
   if (source === 'next-data' || source === 'ld+json') {
@@ -433,7 +609,147 @@ function attachProductPath(productData) {
   };
 }
 
+function metaContent(selector) {
+  try {
+    const content = document.querySelector(selector)?.getAttribute('content');
+    if (typeof content !== 'string' || content.trim() === '') return null;
+    return content;
+  } catch {
+    return null;
+  }
+}
+
+function isStateProduct(value) {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      (typeof value.description === 'string' ||
+        typeof value.metaTagDescription === 'string' ||
+        typeof value.linkText === 'string'),
+  );
+}
+
+function readStateProduct(slug) {
+  try {
+    const state = window.__STATE__;
+    if (!state || typeof state !== 'object') return null;
+
+    const direct = state[`Product:${slug}`];
+    if (isStateProduct(direct)) return direct;
+
+    for (const value of Object.values(state)) {
+      if (isStateProduct(value) && value.linkText === slug) return value;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function toPlainDescription(value) {
+  if (typeof value !== 'string') return '';
+  if (!/<[^>]+>|&(?:#\d+|#x[\da-f]+|[a-z]+);/i.test(value)) return value;
+
+  const withoutTags = value.replace(/<[^>]+>/g, ' ');
+  let decoded = withoutTags;
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = withoutTags;
+    decoded = textarea.value;
+  } catch {
+    decoded = withoutTags;
+  }
+  return decoded.replace(/\s+/g, ' ').trim();
+}
+
+function normalizedDescription(value) {
+  return toPlainDescription(value).replace(/\s+/g, ' ').trim();
+}
+
+function descriptionsMatch(left, right) {
+  const normalizedLeft = normalizedDescription(left);
+  const normalizedRight = normalizedDescription(right);
+  return normalizedLeft !== '' && normalizedLeft === normalizedRight;
+}
+
+function collectMetaTexts(result, stateProduct) {
+  const metas = [
+    metaContent('meta[name="description"]'),
+    metaContent('meta[property="og:description"]'),
+    stateProduct?.metaTagDescription,
+  ];
+
+  if (
+    result.source === 'next-data' &&
+    typeof result.rawProduct?.seo?.description === 'string'
+  ) {
+    metas.push(result.rawProduct.seo.description);
+  }
+
+  if (
+    (result.source === 'intelligent-search' || result.source === 'catalog') &&
+    typeof result.rawProduct?.metaTagDescription === 'string'
+  ) {
+    metas.push(result.rawProduct.metaTagDescription);
+  }
+
+  return metas.filter((text) => typeof text === 'string' && text.trim() !== '');
+}
+
+function isMetaDescription(text, metas) {
+  return metas.some((meta) => descriptionsMatch(text, meta));
+}
+
+function applyDescription(result, description) {
+  if (typeof description !== 'string' || description === '') return result;
+  if (
+    description === result.productData.description &&
+    result.rawProduct?.description === description
+  ) {
+    return result;
+  }
+
+  return {
+    ...result,
+    productData: { ...result.productData, description },
+    rawProduct: result.rawProduct
+      ? { ...result.rawProduct, description }
+      : result.rawProduct,
+  };
+}
+
+async function preferProductDescription(result, slug) {
+  const stateProduct = readStateProduct(slug);
+  const metas = collectMetaTexts(result, stateProduct);
+  const current = result.productData.description || '';
+  let chosen = current;
+
+  if (!current || isMetaDescription(current, metas)) {
+    const stateDescription = stateProduct?.description;
+    if (stateDescription && !isMetaDescription(stateDescription, metas)) {
+      chosen = stateDescription;
+    } else if (result.source !== 'catalog') {
+      const catalogProduct = await fetchCatalogProduct(slug);
+      const catalogMetas = catalogProduct?.metaTagDescription
+        ? [...metas, catalogProduct.metaTagDescription]
+        : metas;
+      if (
+        catalogProduct?.description &&
+        !isMetaDescription(catalogProduct.description, catalogMetas)
+      ) {
+        chosen = catalogProduct.description;
+      }
+    }
+  }
+
+  if (chosen === current) return result;
+
+  return applyDescription(result, toPlainDescription(chosen));
+}
+
 export async function resolveProductData(slug, account) {
+  const finish = (result) => preferProductDescription(result, slug);
+
   recordConversationStarterEvent('waterfall_step', 'info', {
     step: 'next-data',
     slug,
@@ -441,11 +757,11 @@ export async function resolveProductData(slug, account) {
   });
   const nextResult = extractFromNextData(slug);
   if (nextResult) {
-    return {
+    return finish({
       productData: attachProductPath({ ...nextResult.productData, account }),
       rawProduct: nextResult.rawProduct,
       source: 'next-data',
-    };
+    });
   }
 
   recordConversationStarterEvent('waterfall_step', 'info', {
@@ -461,11 +777,11 @@ export async function resolveProductData(slug, account) {
         const productData = attachProductPath(
           extractProductData(product, account),
         );
-        return {
+        return finish({
           productData,
           rawProduct: product,
           source: 'intelligent-search',
-        };
+        });
       }
     }
   } catch (error) {
@@ -482,11 +798,22 @@ export async function resolveProductData(slug, account) {
   });
   const ldResult = extractFromLdJson(slug);
   if (ldResult) {
-    return {
+    return finish({
       productData: attachProductPath({ ...ldResult.productData, account }),
       rawProduct: ldResult.rawProduct,
       source: 'ld+json',
-    };
+    });
+  }
+
+  const catalogProduct = await fetchCatalogProduct(slug);
+  if (catalogProduct) {
+    return finish({
+      productData: attachProductPath(
+        extractProductData(catalogProduct, account),
+      ),
+      rawProduct: catalogProduct,
+      source: 'catalog',
+    });
   }
 
   return null;
@@ -514,6 +841,19 @@ export async function fetchProductData(slug) {
       slug,
       reason: error?.message || 'network-error',
     });
+    return null;
+  }
+}
+
+export async function fetchCatalogProduct(slug) {
+  try {
+    const url = `/api/catalog_system/pub/products/search/${slug}/p`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const products = await response.json();
+    if (!Array.isArray(products)) return null;
+    return selectProduct(products, slug);
+  } catch {
     return null;
   }
 }

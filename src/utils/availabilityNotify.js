@@ -1,4 +1,4 @@
-import { getSelectedSkuId } from '@/utils/vtex';
+import { getSelectedSkuId, stripLeadingZeros } from '@/utils/vtex';
 
 export const AVAILABILITY_NOTIFY_SUBSCRIBE_PATH =
   '/_v/private/availability-notify/subscribe';
@@ -65,7 +65,7 @@ export function buildAvailabilityNotifyBody({
   seller,
   language,
 } = {}) {
-  const resolvedSkuId = skuId || getSelectedSkuId() || '';
+  const resolvedSkuId = stripLeadingZeros(skuId || getSelectedSkuId() || '');
 
   return {
     sku_id: resolvedSkuId === '' ? '' : String(resolvedSkuId),

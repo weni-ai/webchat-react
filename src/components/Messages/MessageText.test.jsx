@@ -37,7 +37,7 @@ jest.mock('./TextComponents/CallToAction', () => ({
   ),
 }));
 
-import { MessageText } from './MessageText';
+import { MessageText, appendStreamingCaret } from './MessageText';
 
 function baseMessage(overrides = {}) {
   return {
@@ -50,6 +50,32 @@ function baseMessage(overrides = {}) {
     ...overrides,
   };
 }
+
+describe('appendStreamingCaret', () => {
+  const caret = '<span class="weni-message-text__caret"></span>';
+
+  it('inserts the caret before the last paragraph close tag', () => {
+    expect(appendStreamingCaret('<p>Your order is on its</p>\n')).toBe(
+      `<p>Your order is on its${caret}</p>\n`,
+    );
+  });
+
+  it('follows the latest paragraph when several blocks are present', () => {
+    expect(appendStreamingCaret('<p>Hello</p>\n<p>World</p>\n')).toBe(
+      `<p>Hello</p>\n<p>World${caret}</p>\n`,
+    );
+  });
+
+  it('stays inside the last list item', () => {
+    expect(
+      appendStreamingCaret('<ul>\n<li>one</li>\n<li>two</li>\n</ul>\n'),
+    ).toBe(`<ul>\n<li>one</li>\n<li>two${caret}</li>\n</ul>\n`);
+  });
+
+  it('renders a lone caret when there is no markup yet', () => {
+    expect(appendStreamingCaret('')).toBe(caret);
+  });
+});
 
 describe('MessageText', () => {
   beforeEach(() => {
@@ -107,8 +133,8 @@ describe('MessageText', () => {
     expect(container.querySelector('.weni-message-text').innerHTML).toContain(
       '* second',
     );
-    expect(container.querySelector('.weni-message-text').innerHTML).toContain(
-      'weni-message-text__caret',
+    expect(container.querySelector('.weni-message-text').innerHTML).toBe(
+      '<p>* first\n* second<span class="weni-message-text__caret"></span></p>',
     );
   });
 

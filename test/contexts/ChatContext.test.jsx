@@ -1,7 +1,7 @@
 import { render, act, renderHook } from '@testing-library/react';
 import { ChatProvider, useChatContext } from '@/contexts/ChatContext';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount, isCheckoutPage } from '@/utils/vtex';
+import { getVtexAccount, isCheckoutPage, watchVtexAccount } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import i18n from '@/i18n';
 import { VoiceService } from '@/services/voice';
@@ -14,6 +14,7 @@ jest.mock('@/experimental/navigateIfSameDomain', () => ({
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(() => null),
   isCheckoutPage: jest.fn(() => false),
+  watchVtexAccount: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('@/utils/vtexCustomFields', () => ({
@@ -119,6 +120,8 @@ beforeEach(() => {
   AudioCapture.checkPermission.mockResolvedValue('granted');
   AudioCapture.requestPermission.mockResolvedValue(true);
   getVtexAccount.mockReturnValue(null);
+  watchVtexAccount.mockReset();
+  watchVtexAccount.mockImplementation(() => jest.fn());
   jest.spyOn(i18n, 'changeLanguage').mockImplementation(() => {});
   jest.spyOn(i18n, 't').mockImplementation((key) => key);
   jest.spyOn(i18n, 'on').mockImplementation(() => {});
@@ -747,6 +750,43 @@ describe('ChatContext — service events', () => {
     expect(ctx.error).toEqual({ message: 'boom' });
   });
 
+  it('mirrors thinkingText from state.thinkingText on state:changed', async () => {
+    await renderWithContext({});
+    expect(ctx.thinkingText).toBeNull();
+
+    await act(async () => {
+      ctx.service.emit('state:changed', {
+        isThinking: true,
+        thinkingText: 'Looking up products',
+        messages: [],
+      });
+    });
+
+    expect(ctx.thinkingText).toBe('Looking up products');
+  });
+
+  it('clears thinkingText when the service state clears it', async () => {
+    await renderWithContext({});
+
+    await act(async () => {
+      ctx.service.emit('state:changed', {
+        isThinking: true,
+        thinkingText: 'Looking up products',
+        messages: [],
+      });
+    });
+    expect(ctx.thinkingText).toBe('Looking up products');
+
+    await act(async () => {
+      ctx.service.emit('state:changed', {
+        isThinking: false,
+        thinkingText: null,
+        messages: [],
+      });
+    });
+    expect(ctx.thinkingText).toBeNull();
+  });
+
   it('updates recording state from recording events', async () => {
     await renderWithContext({});
     await act(async () => {
@@ -980,6 +1020,24 @@ describe('ChatContext — UI helpers', () => {
     await renderWithContext({});
 
     expect(startVtexCustomFieldsSync).not.toHaveBeenCalled();
+  });
+
+  it('marks the store when the account appears after mount', async () => {
+    getVtexAccount.mockReturnValue(null);
+    watchVtexAccount.mockImplementation(({ onAccount }) => {
+      onAccount('storeaccount');
+      return jest.fn();
+    });
+
+    await renderWithContext({});
+
+    expect(ctx.isInsideVTEXStore).toBe(true);
+    expect(startVtexCustomFieldsSync).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        isCancelled: expect.any(Function),
+      }),
+    );
   });
 });
 

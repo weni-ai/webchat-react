@@ -1,24 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 import Icon from '@/components/common/Icon';
 import './ThinkingIndicator.scss';
 
+const SLIDE_DURATION_MS = 500;
+
 /**
  * ThinkingIndicator - Animated thinking indicator with rotating messages
  *
  * Displays rotating messages with icons to indicate AI is thinking/processing.
  * Messages change every 4-7.5 seconds with smooth fade animations.
+ * An optional `text` prop overrides rotation and slides to each new value.
  */
-export function ThinkingIndicator({ className = '' }) {
+export function ThinkingIndicator({ className = '', text = null }) {
   const { t } = useTranslation();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [displayedText, setDisplayedText] = useState(null);
   const timeoutRef = useRef(null);
   const animationTimeoutRef = useRef(null);
   const initTimeoutRef = useRef(null);
+  const trackRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   const messages = [
     {
@@ -43,6 +49,22 @@ export function ThinkingIndicator({ className = '' }) {
     },
   ];
 
+  const hasExternalText = typeof text === 'string' && text.trim().length > 0;
+  const rotationText = messages[currentMessageIndex].text;
+  const committedText =
+    displayedText ?? (hasExternalText ? text : rotationText);
+
+  const clearTimers = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+    }
+  };
+
   const scheduleNextMessage = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -52,7 +74,6 @@ export function ThinkingIndicator({ className = '' }) {
       return;
     }
 
-    // Random delay between 4 and 7.5 seconds
     const delay = (4 + Math.random() * 3.5) * 1000;
 
     timeoutRef.current = setTimeout(() => {
@@ -60,30 +81,93 @@ export function ThinkingIndicator({ className = '' }) {
 
       animationTimeoutRef.current = setTimeout(() => {
         setCurrentMessageIndex((prev) => prev + 1);
+        setDisplayedText(messages[currentMessageIndex + 1]?.text);
         setIsAnimatingOut(false);
-      }, 500); // Match CSS animation duration
+      }, SLIDE_DURATION_MS);
     }, delay);
   };
 
   useEffect(() => {
-    initTimeoutRef.current = setTimeout(() => setIsInitializing(false), 500);
+    initTimeoutRef.current = setTimeout(() => {
+      setIsInitializing(false);
+      setDisplayedText(hasExternalText ? text : messages[0].text);
+    }, SLIDE_DURATION_MS);
     return () => clearTimeout(initTimeoutRef.current);
   }, []);
 
   useEffect(() => {
+    if (hasExternalText || isInitializing) {
+      clearTimers();
+      return undefined;
+    }
+
     scheduleNextMessage();
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      clearTimers();
+    };
+  }, [currentMessageIndex, messages.length, hasExternalText, isInitializing]);
+
+  useEffect(() => {
+    if (!hasExternalText || isInitializing) {
+      return undefined;
+    }
+
+    if (text === committedText) {
+      return undefined;
+    }
+
+    setIsAnimatingOut(true);
+
+    animationTimeoutRef.current = setTimeout(() => {
+      setDisplayedText(text);
+      setIsAnimatingOut(false);
+    }, SLIDE_DURATION_MS);
+
+    return () => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
       }
     };
-  }, [currentMessageIndex, messages.length]);
+  }, [text, hasExternalText, isInitializing]);
 
-  const currentMessage = messages[currentMessageIndex];
+  const isSliding = isAnimatingOut || isInitializing;
+  const outgoingText = committedText;
+  const incomingText = isInitializing
+    ? hasExternalText
+      ? text
+      : rotationText
+    : isAnimatingOut
+      ? hasExternalText
+        ? text
+        : messages[currentMessageIndex + 1]?.text
+      : committedText;
+
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    const wrapper = wrapperRef.current;
+    if (!track || !wrapper) return;
+
+    const paragraphs = track.querySelectorAll('.weni-thinking-indicator__text');
+    const outgoing = paragraphs[0];
+    const incoming = paragraphs[paragraphs.length - 1];
+    const outgoingHeight = outgoing?.offsetHeight ?? 0;
+    const incomingHeight = incoming?.offsetHeight ?? 0;
+
+    if (paragraphs.length > 1) {
+      track.style.setProperty('--thinking-slide-offset', `${outgoingHeight}px`);
+    } else {
+      track.style.removeProperty('--thinking-slide-offset');
+    }
+
+    if (incomingHeight > 0) {
+      wrapper.style.setProperty(
+        '--thinking-wrapper-height',
+        `${incomingHeight}px`,
+      );
+    }
+  }, [isSliding, outgoingText, incomingText]);
 
   return (
     <>
@@ -92,28 +176,28 @@ export function ThinkingIndicator({ className = '' }) {
           name="progress_activity"
           size="small"
           color="weni-main-color"
-          className="weni-fs-button__loading-spinner"
+          className="weni-fs-button__loading-spinner weni-thinking-indicator__icon"
         />
 
-        <div className="weni-thinking-indicator__text-wrapper">
+        <div
+          ref={wrapperRef}
+          className="weni-thinking-indicator__text-wrapper"
+        >
           <div
-            className={`weni-thinking-indicator__text-track${isAnimatingOut || isInitializing ? ' weni-thinking-indicator__text-track--sliding' : ''}`}
+            ref={trackRef}
+            className={`weni-thinking-indicator__text-track${isSliding ? ' weni-thinking-indicator__text-track--sliding' : ''}`}
           >
             {isInitializing && (
               <p className="weni-thinking-indicator__text">&nbsp;</p>
             )}
             {!isInitializing && isAnimatingOut && (
-              <p className="weni-thinking-indicator__text">
-                {currentMessage.text}
-              </p>
+              <p className="weni-thinking-indicator__text">{outgoingText}</p>
             )}
             <p
-              key={currentMessageIndex}
+              key={incomingText}
               className="weni-thinking-indicator__text"
             >
-              {isAnimatingOut
-                ? messages[currentMessageIndex + 1]?.text
-                : currentMessage.text}
+              {incomingText}
             </p>
           </div>
         </div>
@@ -124,6 +208,7 @@ export function ThinkingIndicator({ className = '' }) {
 
 ThinkingIndicator.propTypes = {
   className: PropTypes.string,
+  text: PropTypes.string,
 };
 
 export default ThinkingIndicator;

@@ -5,6 +5,8 @@ class WeniWebchatService {
     this.state = {
       messages: [],
       connection: { status: 'connected' },
+      isThinking: false,
+      thinkingText: null,
     };
     this.session = { isChatOpen: false };
     this.isAudioRecordingSupported = true;
@@ -54,6 +56,23 @@ class WeniWebchatService {
   // State
   getState() {
     return this.state;
+  }
+
+  _applyState(partial) {
+    const next = { ...this.state, ...partial };
+    if (next.isThinking === false) {
+      next.thinkingText = null;
+    }
+    this.state = next;
+    this.emit('state:changed', this.getState());
+  }
+
+  setThinking(isThinking) {
+    this._applyState({ isThinking });
+  }
+
+  setThinkingText(text) {
+    this._applyState({ isThinking: true, thinkingText: text });
   }
   getMessages() {
     return this.state.messages;

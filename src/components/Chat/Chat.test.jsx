@@ -115,6 +115,25 @@ describe('Chat — back-in-stock-notify view', () => {
       'Cool Shoe',
     );
     expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
+    expect(document.querySelector('.weni-chat')).toHaveClass(
+      'weni-chat--compact',
+    );
+  });
+
+  it('does not use the compact height on the conversation', () => {
+    useWeniChat.mockReturnValue({
+      isChatOpen: true,
+      isConnectionClosed: false,
+      currentPage: null,
+      config: { embedded: false },
+      mode: 'live',
+    });
+
+    render(<Chat />);
+
+    expect(document.querySelector('.weni-chat')).not.toHaveClass(
+      'weni-chat--compact',
+    );
   });
 });
 

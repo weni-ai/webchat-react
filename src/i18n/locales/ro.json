@@ -139,9 +139,13 @@
       }
     },
     "back_in_stock": {
+      "ddi_label": "DDI",
       "form_description": "Te anunțăm pe WhatsApp imediat ce {{productName}} revine în stoc",
       "form_title": "Primește notificare de restocare",
+      "invalid_phone": "Introdu un număr de telefon valid",
       "name_label": "Nume",
+      "name_required": "Completează acest câmp",
+      "not_now": "Nu acum",
       "notify_me": "Anunță-mă",
       "notify_me_cta": "Anunță-mă când revine în stoc",
       "show_similar_products": "Arată produse similare",
