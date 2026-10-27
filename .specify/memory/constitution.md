@@ -1,51 +1,35 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.1.0 → 2.0.0 (MAJOR — principles redefined and sections removed)
+  Version change: 2.0.0 → 3.0.0 (MAJOR — two principles redefined)
 
   Modified principles:
-    - I. Clean Code & Readability → VII. Code as Documentation (merged with the
-      frontend base article; Python-specific guidance dropped)
-    - II. Code Style Standards → X. Code Style & Formatting (frontend only;
-      pre-commit commands aligned with real npm scripts)
-    - III. Naming Conventions → XI. Naming Conventions (explicit file-naming
-      exception for React components, hooks, and utilities)
-    - IV. Testing & Quality Assurance → Quality Standards > Testing (behavior-
-      focused testing rules from the frontend base added)
-    - V. Semantic HTML & Accessibility → Quality Standards > Accessibility &
-      Semantic HTML and Quality Standards > Internationalization (Romanian
-      locale added to the parity list)
-    - VI. Pre-Commit Compliance → Development Workflow > Local Quality Gate
-    - Backend Standards > Commit Standards → VI. Commit Messages (root format
-      `<type>: <description>`; `style` type and scopes removed)
-    - Frontend Standards > Component Guidelines → XII. Component Architecture
-    - Design System Compliance → XIII. Styling, BEM & Design Tokens (Unnnic is
-      the visual reference; tokens live in `src/styles/variables.scss`)
+    - V. Specification Traceability & No Silent Divergence — redefined to
+      follow the root base: an engineering spec either derives from a pinned
+      product spec (opens with "Inheritance from Product Spec") or originates
+      in engineering (opens with "Origin Without Product Spec"). No Silent
+      Divergence now applies only to derived specs.
+    - Quality Standards > Internationalization — redefined: contributors edit
+      only the Crowdin source locale `src/i18n/locales/en.json`; translation
+      files are owned by the Localization team. Adds an explicit, justified
+      project exception to the frontend base rules "New strings MUST be
+      localized before merge" and "Locale files SHOULD maintain parity".
+    - Development Workflow > Local Quality Gate — documents the existing
+      `.githooks/pre-commit` hook (localization lock) installed by
+      `npm install` through the `prepare` script.
 
-  Added principles:
-    - I. Version Control and Review
-    - II. Security and Secrets
-    - III. Observability
-    - IV. Versioned Contracts
-    - V. Specification Traceability & No Silent Divergence
-    - VIII. Type Safety
-    - IX. Single Responsibility
-    - XIV. State Management
-    - XV. Async State Correctness
-    - XVI. API Integration & Data Boundaries
-    - Quality Standards > Performance, Defensive Programming, Maintainability
-    - Development Workflow > Changelog Maintenance
-
-  Removed sections:
-    - Backend Standards (Python/Django guidance; this repository is frontend only)
-    - Python items from Code Style, Naming, and Pre-Commit articles
+  Added principles: none
+  Removed sections: none
 
   Templates requiring updates:
-    - .specify/templates/spec-template.md ⚠ pending: lacks the mandatory
-      "Inheritance from Product Spec" section (Principle V)
+    - .specify/presets/vtex-cx-engineering/templates/spec-template.md ✅
+      already provides both opening sections required by Principle V
+    - .specify/templates/spec-template.md ✅ superseded by the preset above
     - .specify/templates/plan-template.md ✅ no changes needed (Constitution
       Check reads this file)
     - .specify/templates/tasks-template.md ✅ no changes needed
+    - AGENTS.md ✅ localization-lock block already matches the
+      Internationalization article
 
   Follow-up TODOs:
     - TODO(TYPESCRIPT_TOOLCHAIN): add `tsconfig.json` (strict), Babel/Jest
@@ -55,19 +39,21 @@
     - TODO(CHANGELOG): create `CHANGELOG.md` in Keep a Changelog format; the
       package is published to npm and currently relies only on generated
       GitHub release notes (Development Workflow > Changelog Maintenance).
-    - TODO(PRE_COMMIT_HOOKS): no git hook runner is configured; the local
-      quality gate is enforced by convention and CI only.
+    - TODO(PRE_COMMIT_HOOKS): `.githooks/pre-commit` runs only the
+      localization lock; Prettier, ESLint, and Jest from the local quality
+      gate are still enforced by convention and CI only.
     - TODO(BRANCH_PROTECTION): confirm GitHub branch protection on `main`
       requires one approval plus green `Linting on Push` and
       `Run tests and upload coverage` checks (Principle I).
     - TODO(SPEC_INHERITANCE): specs 001–005 under `specs/` predate Principle V
-      and lack the inheritance section; new specs MUST include it.
+      and open with neither the inheritance nor the origin section; new specs
+      MUST open with one of them.
 
   Provenance:
     - Source: weni-ai/vtex-cx-engineering-constitutions (main)
     - Bases: base-constitution.md, frontend/base-constitution.md
     - Domains: frontend
-    - Project layer: preserved and adapted from constitution 1.1.0
+    - Project layer: preserved and adapted from constitution 2.0.0
 -->
 
 # Weni AI Webchat React Constitution
@@ -130,18 +116,23 @@ deprecations give consumers a predictable way to adapt without outages.
 
 ### V. Specification Traceability & No Silent Divergence
 
-Every engineering spec under `specs/<feature>/` MUST derive from exactly one
-approved product spec and MUST reference it through an immutable, pinned version
-(commit or tag); a mutable URL or ID alone MUST NOT be used. The product spec
-MUST exist and be tagged before its engineering spec is created. An engineering
-spec MUST NOT redefine the "what" it inherits: problem, scope, success criteria,
-and binding decisions belong to the product spec. A technical architecture
-document SHOULD be produced for non-trivial features; when it exists it MUST be
-linked from the engineering spec and pinned by commit or tag, but its absence
-MUST NOT block the engineering spec.
+An engineering spec under `specs/<feature>/` either derives from a product spec
+or originates in engineering (a hotfix, a fix, technical debt). Both are regular
+paths; neither requires a justification, and either may follow the full or the
+lite cycle.
 
-Every engineering spec MUST open with an inheritance section in exactly this
-format:
+When the change has a product spec, the engineering spec MUST derive from
+exactly one approved product spec and MUST reference it through an immutable,
+pinned version (commit or tag); a mutable URL or ID alone MUST NOT be used. The
+product spec MUST exist and be tagged before its engineering spec is created. An
+engineering spec MUST NOT redefine the "what" it inherits: problem, scope,
+success criteria, and binding decisions belong to the product spec. A technical
+architecture document SHOULD be produced for non-trivial features; when it
+exists it MUST be linked from the engineering spec and pinned by commit or tag,
+but its absence MUST NOT block the engineering spec.
+
+An engineering spec derived from a product spec MUST open with an inheritance
+section in exactly this format:
 
 ```
 ## Inheritance from Product Spec
@@ -153,18 +144,31 @@ format:
 - Divergences: <none | link to amendment>
 ```
 
-When a technical need contradicts scope, success criteria, or a binding decision
-inherited from the product spec, the divergence MUST NOT be implemented silently.
-It MUST be raised as an amendment in the product repository and recorded in the
-`Divergences` field with a link to that amendment. Once the amendment is approved
-and tagged, `Pinned version` MUST be updated to the new tag. A technical choice
-that contradicts nothing inherited is an implementation decision and MUST be
-recorded in the engineering spec.
+An engineering spec without a product spec states its own "what" and MUST open
+with an origin section in exactly this format:
+
+```
+## Origin Without Product Spec
+- Product Spec: none
+- Problem: <what is wrong or missing, in one or two sentences>
+- Acceptance criteria: <observable outcomes that prove the change is done>
+```
+
+For derived specs, when a technical need contradicts scope, success criteria, or
+a binding decision inherited from the product spec, the divergence MUST NOT be
+implemented silently. It MUST be raised as an amendment in the product
+repository and recorded in the `Divergences` field with a link to that
+amendment. Once the amendment is approved and tagged, `Pinned version` MUST be
+updated to the new tag. A technical choice that contradicts nothing inherited is
+an implementation decision and MUST be recorded in the engineering spec. A spec
+without a product spec inherits nothing it could diverge from.
 
 **Rationale:** pinning the product spec ensures every team implements the same
-version of a feature. Routing divergences through amendments keeps intent and
-implementation aligned and leaves an audit trail. A single inheritance format
-keeps the link machine-checkable across repositories.
+version of a feature, and routing divergences through amendments keeps intent
+and implementation aligned with an audit trail. When a change is born in
+engineering, its own problem and acceptance criteria are what it is verified
+against. A fixed opening format for each path keeps the origin machine-checkable
+across repositories.
 
 ### VI. Commit Messages
 
@@ -424,15 +428,28 @@ conversion.
 
 User-facing strings MUST NOT be hardcoded; they MUST use `react-i18next`
 (`useTranslation` and `t()`). This applies to visible text and to `aria-label`,
-`aria-labelledby`, `title`, and `placeholder`. Every new key MUST be added to all
-locale files in `src/i18n/locales/` (`en.json`, `pt.json`, `es.json`, `ro.json`)
-before merge. Error messages from service layers MAY keep English strings as
-internal fallbacks and MUST be translated at the UI layer using i18n keys with
-`defaultValue`. Dates, numbers, and currencies MUST be formatted with the
-user's locale (see `src/utils/currency.js` and `src/utils/formatters.js`).
+`aria-labelledby`, `title`, and `placeholder`. Every new or changed key MUST be
+written in English in the Crowdin source file `src/i18n/locales/en.json`, as
+declared by `source` in `crowdin.yml`. Files matching the `translation` pattern
+(`pt.json`, `es.json`, `ro.json`, and any future locale) are managed by Crowdin
+and MUST NOT be created, modified, or deleted by contributors or agents. Error
+messages from service layers MAY keep English strings as internal fallbacks and
+MUST be translated at the UI layer using i18n keys with `defaultValue`. Dates,
+numbers, and currencies MUST be formatted with the user's locale (see
+`src/utils/currency.js` and `src/utils/formatters.js`).
+
+**Project exception to the frontend base (localize before merge, locale
+parity):** translations are produced after merge. The `Localization automation`
+workflow blocks pull requests that touch translation files and, once a PR is
+merged into `main`, dispatches a ticket to the Localization team, who deliver the
+translations through Crowdin. Locale parity is therefore the Localization team's
+responsibility, and untranslated keys fall back to English until then.
+Justification: translation quality and terminology are owned by a dedicated team.
+Hand-edited translations in feature PRs would be overwritten by Crowdin and would
+bypass review.
 
 **Rationale:** externalized strings make translation possible without code
-changes, and the localization workflow opens tickets from locale diffs.
+changes, and a single English source keeps the Crowdin pipeline authoritative.
 Locale-aware formatting builds trust with international shoppers.
 
 ### Defensive Programming
@@ -468,9 +485,11 @@ failure:
 2. `npm run lint -- --fix`, then `npm run lint` with zero errors
 3. `npm test -- --coverage`, with all four metrics at or above 80%
 
-If git hooks are introduced (see `TODO(PRE_COMMIT_HOOKS)`), they MUST NOT be
-bypassed with `--no-verify`, except for an urgent hotfix approved by a code
-owner.
+`npm install` sets `core.hooksPath` to `.githooks` through the `prepare` script;
+the `pre-commit` hook runs the localization lock (`scripts/localization-lock.js`).
+Git hooks MUST NOT be bypassed with `--no-verify`, except for an urgent hotfix
+approved by a code owner. Steps 1–3 are not yet automated by the hook (see
+`TODO(PRE_COMMIT_HOOKS)`).
 
 **Rationale:** running the CI checks locally keeps pull requests green and review
 focused on behavior rather than formatting.
@@ -514,4 +533,4 @@ an article states an explicit, justified exception.
 - Code reviews MUST check convention compliance.
 - Added complexity MUST be justified in the PR description.
 
-**Version**: 2.0.0 | **Ratified**: 2026-02-13 | **Last Amended**: 2026-10-01
+**Version**: 3.0.0 | **Ratified**: 2026-02-13 | **Last Amended**: 2026-10-27
