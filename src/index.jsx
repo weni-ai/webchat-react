@@ -37,6 +37,7 @@ const config = {
   // channelUuid: 'your-channel-uuid-here', // Replace with your actual channel UUID
   socketUrl: 'https://websocket.weni.ai',
   channelUuid: '5de2d244-2138-43c4-be6b-59a9eaae2f3b', // Replace with your actual channel UUID
+  channelUuid: '6d47fd2b-0995-47b2-b6f4-46e59689871a',
   host: 'https://flows.weni.ai',
 
   // Optional configurations

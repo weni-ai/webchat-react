@@ -1,5 +1,9 @@
 import { render, screen } from '@testing-library/react';
 
+jest.mock('marked', () =>
+  jest.requireActual('../../../node_modules/marked/lib/marked.umd.js'),
+);
+
 import { MessageImage } from './MessageImage';
 
 function buildMessage(overrides = {}) {
@@ -32,6 +36,64 @@ describe('MessageImage — image rendering', () => {
   it('falls back to "Image" as alt text when caption is absent', () => {
     render(<MessageImage message={buildMessage()} />);
     expect(screen.getByRole('img')).toHaveAttribute('alt', 'Image');
+  });
+
+  it('falls back to "Image" as alt text when caption is blank', () => {
+    render(<MessageImage message={buildMessage({ caption: '   ' })} />);
+    expect(screen.getByRole('img')).toHaveAttribute('alt', 'Image');
+  });
+});
+
+describe('MessageImage — caption', () => {
+  it('renders a non-blank caption under the image with text formatting', () => {
+    const { container } = render(
+      <MessageImage
+        message={buildMessage({
+          caption: 'See the [photo](https://example.com/page)\nsecond line',
+        })}
+      />,
+    );
+
+    const block = container.querySelector('.weni-message-image-block');
+    expect(block.firstElementChild).toContainElement(screen.getByRole('img'));
+    expect(screen.getByText(/second line/)).toBeInTheDocument();
+    const captionLink = screen.getByRole('link', { name: 'photo' });
+    expect(captionLink).toHaveAttribute('href', 'https://example.com/page');
+    expect(block.querySelector('.weni-message-text')).toHaveClass(
+      'weni-message-text--incoming',
+    );
+  });
+
+  it.each([
+    ['absent', {}],
+    ['empty', { caption: '' }],
+    ['whitespace', { caption: '   ' }],
+  ])('omits the caption when it is %s', (_label, overrides) => {
+    const { container } = render(
+      <MessageImage message={buildMessage(overrides)} />,
+    );
+    expect(container.querySelector('.weni-message-text')).toBeNull();
+  });
+
+  it('keeps the caption outside the image link', () => {
+    render(
+      <MessageImage message={buildMessage({ caption: 'A sunset photo' })} />,
+    );
+    const imageLink = screen.getByRole('link', { name: 'A sunset photo' });
+    expect(imageLink).toHaveAttribute('href', 'https://example.com/photo.jpg');
+    expect(imageLink).not.toContainElement(screen.getByText('A sunset photo'));
+  });
+
+  it('strips script markup from the caption', () => {
+    const { container } = render(
+      <MessageImage
+        message={buildMessage({
+          caption: '<script>alert(1)</script>hello',
+        })}
+      />,
+    );
+    expect(container.querySelector('script')).toBeNull();
+    expect(screen.getByText('hello')).toBeInTheDocument();
   });
 });
 
