@@ -30,6 +30,33 @@ export function appendStreamingCaret(html) {
 }
 
 /**
+ * Parses message text the same way a text bubble does: bullet normalization,
+ * markdown with line breaks, then sanitization. Does not add the streaming caret.
+ */
+export function renderMessageMarkdown(text) {
+  if (!text) return '';
+
+  marked.use({
+    breaks: true,
+    useNewRenderer: true,
+    renderer: {
+      link(token) {
+        if (typeof token === 'string' && token.includes('mailto:')) {
+          return token.replace('mailto:', '');
+        }
+        return `<a target="_blank" href="${token.href || token}">${token.text || token}</a>`;
+      },
+    },
+  });
+
+  const processedContent = text
+    .replace(/\n•\s*/g, '\n* ')
+    .replace(/^•\s*/g, '* ');
+
+  return sanitizeHtml(marked.parse(processedContent));
+}
+
+/**
  * MessageText - Text message component with markdown support
  * Renders text with proper formatting, links, and markdown syntax
  * TODO: Add timestamp display
@@ -44,25 +71,7 @@ export function MessageText({ message, componentsEnabled }) {
   const html = useMemo(() => {
     if (!displayedText && !isBuffering) return '';
 
-    marked.use({
-      breaks: true,
-      useNewRenderer: true,
-      renderer: {
-        link(token) {
-          if (typeof token === 'string' && token.includes('mailto:')) {
-            return token.replace('mailto:', '');
-          }
-          return `<a target="_blank" href="${token.href || token}">${token.text || token}</a>`;
-        },
-      },
-    });
-
-    const processedContent = displayedText
-      .replace(/\n•\s*/g, '\n* ')
-      .replace(/^•\s*/g, '* ');
-
-    const parsedHtml = marked.parse(processedContent);
-    const purifiedHtml = sanitizeHtml(parsedHtml);
+    const purifiedHtml = renderMessageMarkdown(displayedText);
 
     return isBuffering ? appendStreamingCaret(purifiedHtml) : purifiedHtml;
   }, [displayedText, isBuffering]);
