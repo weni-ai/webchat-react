@@ -5,7 +5,15 @@ jest.mock('@/utils/constants', () => ({
 }));
 
 jest.mock('@/components/common/Icon', () => ({
-  Icon: () => <span data-testid="icon" />,
+  // Records the color prop. Not a real component, so it has no prop-types.
+
+  Icon: (props) => (
+    <span
+      data-testid="icon"
+      // eslint-disable-next-line react/prop-types
+      data-color={props.color ?? ''}
+    />
+  ),
 }));
 
 import { MessageDocument } from './MessageDocument';
@@ -176,6 +184,51 @@ describe('MessageDocument — direction styling', () => {
     );
     expect(screen.getByRole('button')).toHaveClass(
       'weni-message-document__view--outgoing',
+    );
+  });
+
+  it('paints an outgoing file with the sent-text foreground', () => {
+    render(
+      <MessageDocument
+        message={buildMessage({
+          direction: 'outgoing',
+          metadata: {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: 0,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('icon')).toHaveAttribute('data-color', '');
+    expect(screen.getByRole('button')).toHaveClass(
+      'weni-message-document__view--outgoing',
+    );
+    expect(document.querySelector('.weni-message-document')).toHaveClass(
+      'weni-message-document--outgoing',
+    );
+  });
+
+  it('keeps the incoming file icon on the emphasized foreground', () => {
+    render(
+      <MessageDocument
+        message={buildMessage({
+          metadata: {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: 0,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('icon')).toHaveAttribute(
+      'data-color',
+      'fg-emphasized',
+    );
+    expect(screen.getByRole('button')).toHaveClass(
+      'weni-message-document__view--incoming',
     );
   });
 

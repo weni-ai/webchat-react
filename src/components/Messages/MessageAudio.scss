@@ -3,6 +3,11 @@
   align-items: center;
   gap: $spacing-2;
   width: 100%;
+  color: $fs-fg-base;
+
+  .weni-button {
+    color: $fs-fg-base;
+  }
 
   &__progress-bar {
     position: relative;
@@ -17,20 +22,20 @@
     cursor: pointer;
 
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       width: var(--progress, 0%);
       height: 100%;
       border-radius: $border-radius-4;
-      background: $gray-700;
+      background: $fs-fg-base;
     }
 
     @mixin slider-track {
       width: 100%;
       height: 100%;
       border-radius: $border-radius-4;
-      background: $white;
+      background: $fs-color-neutral-5;
       border: none;
     }
 
@@ -42,9 +47,9 @@
       height: $icon-size-3;
       width: $icon-size-3;
       opacity: 0;
-      
+
       border-radius: $border-radius-full;
-      background: $gray-700;
+      background: $fs-fg-base;
       border: none;
       cursor: pointer;
     }
@@ -55,7 +60,6 @@
     }
     &::-webkit-slider-thumb {
       @include slider-thumb;
-      
     }
 
     // Firefox styles
@@ -75,7 +79,7 @@
   &__time {
     font: $font-emphasis;
     line-height: calc(1.25 * $font-size);
-    color: $fg-inverted;
+    color: $fs-fg-base;
     font-variant-numeric: proportional-nums;
   }
 }

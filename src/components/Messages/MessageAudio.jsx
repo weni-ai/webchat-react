@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 import Button from '@/components/common/Button';
+import { Icon } from '@/components/common/Icon';
 
 import { formatTime } from '@/utils/formatters';
 
@@ -122,12 +123,9 @@ export function MessageAudio({ message }) {
       />
 
       <Button
-        className="weni-message-audio__play-button"
+        className="weni-message-audio__play-button weni-button--only-icon"
         onClick={togglePlayPause}
         disabled={hasError}
-        icon={isPlaying ? 'pause' : 'play_arrow'}
-        iconColor="white"
-        iconFilled
         variant="tertiary"
         size="small"
         aria-label={
@@ -135,7 +133,13 @@ export function MessageAudio({ message }) {
             ? t('message_audio.aria_pause')
             : t('message_audio.aria_play')
         }
-      />
+      >
+        <Icon
+          name={isPlaying ? 'pause' : 'play_arrow'}
+          filled
+          size="small"
+        />
+      </Button>
 
       <input
         className="weni-message-audio__progress-bar"
