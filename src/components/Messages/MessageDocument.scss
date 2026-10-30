@@ -3,6 +3,10 @@
   align-items: center;
   gap: $spacing-2;
 
+  &--outgoing {
+    color: $fs-fg-base;
+  }
+
   &__view {
     background-color: transparent;
     border: none;
@@ -15,7 +19,7 @@
     cursor: pointer;
 
     &--outgoing {
-      color: $white;
+      color: $fs-fg-base;
     }
 
     &--incoming {

@@ -62,12 +62,16 @@ export function MessageDocument({ message }) {
     }
   };
 
+  const isOutgoing = message.direction === 'outgoing';
+
   return (
-    <section className="weni-message-document">
+    <section
+      className={`weni-message-document weni-message-document--${message.direction}`}
+    >
       <Icon
         name="article"
         size="large"
-        color={message.direction === 'outgoing' ? 'white' : 'fg-emphasized'}
+        color={isOutgoing ? undefined : 'fg-emphasized'}
       />
 
       <button

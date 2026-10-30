@@ -1,7 +1,15 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
 jest.mock('@/components/common/Icon', () => ({
-  Icon: () => <span data-testid="icon" />,
+  // Records the color prop. Not a real component, so it has no prop-types.
+
+  Icon: (props) => (
+    <span
+      data-testid="icon"
+      // eslint-disable-next-line react/prop-types
+      data-color={props.color ?? ''}
+    />
+  ),
 }));
 
 import { MessageAudio } from './MessageAudio';
@@ -57,6 +65,24 @@ describe('MessageAudio — rendering', () => {
       screen.getByRole('button', { name: 'Play audio' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('slider')).toBeInTheDocument();
+  });
+
+  it('uses the sent-text foreground for the play control and progress', () => {
+    render(<MessageAudio message={buildMessage({ direction: 'outgoing' })} />);
+
+    expect(screen.getByTestId('icon')).toHaveAttribute('data-color', '');
+    expect(screen.getByRole('slider')).toHaveClass(
+      'weni-message-audio__progress-bar',
+    );
+    expect(document.querySelector('.weni-message-audio__time')).toHaveClass(
+      'weni-message-audio__time',
+    );
+  });
+
+  it('uses the same dark foreground for an incoming audio message', () => {
+    render(<MessageAudio message={buildMessage()} />);
+
+    expect(screen.getByTestId('icon')).toHaveAttribute('data-color', '');
   });
 
   it('disables the progress bar while metadata is loading', () => {
