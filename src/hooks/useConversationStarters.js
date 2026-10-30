@@ -520,7 +520,14 @@ export function useConversationStartersCore() {
   useEffect(() => {
     if (!isChatOpen) return;
 
-    if (pendingBackInStockRef.current) {
+    // Once per closed-to-open while the offer is active. A later render in
+    // the same open session must not cover the conversation after back.
+    const openedNow = !prevIsChatOpenRef.current;
+    const shouldOpenBackInStock =
+      pendingBackInStockRef.current ||
+      (openedNow && isBackInStockNotifyRef.current);
+
+    if (shouldOpenBackInStock) {
       pendingBackInStockRef.current = false;
       openBackInStockPage(productNameRef.current);
       return;

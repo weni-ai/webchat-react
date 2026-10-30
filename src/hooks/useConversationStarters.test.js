@@ -1273,6 +1273,79 @@ describe('useConversationStartersCore', () => {
       expect(hookResult.current.isInChatStartersDismissed).toBe(true);
     });
 
+    it('opens the back-in-stock page when the chat opens while the offer is active', async () => {
+      isSelectedSkuAvailable.mockReturnValue(false);
+
+      let hookResult;
+      let rerender;
+      await act(async () => {
+        const rendered = renderHook(() => useConversationStartersCore());
+        hookResult = rendered.result;
+        rerender = rendered.rerender;
+      });
+
+      expect(hookResult.current.isBackInStockNotify).toBe(true);
+      expect(ctx.setCurrentPage).not.toHaveBeenCalled();
+
+      const setCurrentPage = ctx.setCurrentPage;
+      const setIsChatOpen = ctx.setIsChatOpen;
+      const openChat = () => {
+        ctx = buildUnavailableNotifyContext({
+          isChatOpen: true,
+          setCurrentPage,
+          setIsChatOpen,
+        });
+        useChatContext.mockReturnValue(ctx);
+        rerender();
+      };
+
+      openChat();
+
+      const notifyPage = {
+        view: 'back-in-stock-notify',
+        title: "Get notified when it's back in stock",
+        props: { productName: 'Cool Shoe', skuId: 'SKU-001', seller: '1' },
+      };
+      expect(setCurrentPage).toHaveBeenCalledTimes(1);
+      expect(setCurrentPage).toHaveBeenCalledWith(notifyPage);
+
+      rerender();
+      expect(setCurrentPage).toHaveBeenCalledTimes(1);
+
+      ctx = buildUnavailableNotifyContext({
+        isChatOpen: false,
+        setCurrentPage,
+        setIsChatOpen,
+      });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      openChat();
+      expect(setCurrentPage).toHaveBeenCalledTimes(2);
+      expect(setCurrentPage).toHaveBeenLastCalledWith(notifyPage);
+    });
+
+    it('stays on the conversation when the chat opens without the notify offer', async () => {
+      isSelectedSkuAvailable.mockReturnValue(true);
+
+      let rerender;
+      await act(async () => {
+        const rendered = renderHook(() => useConversationStartersCore());
+        rerender = rendered.rerender;
+      });
+
+      const setCurrentPage = ctx.setCurrentPage;
+      ctx = buildContext({
+        isChatOpen: true,
+        setCurrentPage,
+        setIsChatOpen: ctx.setIsChatOpen,
+      });
+      useChatContext.mockReturnValue(ctx);
+      rerender();
+
+      expect(setCurrentPage).not.toHaveBeenCalled();
+    });
+
     it('opens chat then page when CTA is clicked while chat is closed', async () => {
       isSelectedSkuAvailable.mockReturnValue(false);
 
