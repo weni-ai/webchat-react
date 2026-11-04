@@ -6,22 +6,6 @@ import {
   renderHook,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
-import PropTypes from 'prop-types';
-
-jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
-  updateVTEXIOMinicart: jest.fn(),
-  getReliableOrderFormId: jest.fn(),
-}));
-
-jest.mock('@/utils/faststoreBootstrap', () => ({
-  bootstrapOrderFormId: jest.fn(),
-}));
-
-jest.mock('@/utils/vtex', () => ({
-  getVtexAccount: jest.fn(() => 'mystore'),
-  isFastStoreHost: jest.fn(() => false),
-}));
 
 jest.mock('@/utils/throttleCustomField', () => ({
   createThrottledCustomFieldSetter: jest.fn(() => jest.fn()),
@@ -43,21 +27,13 @@ jest.mock('@/contexts/ChatContext', () => {
   };
 });
 
-import {
-  updateVTEXIOMinicart,
-  getReliableOrderFormId,
-} from '@/utils/VTEXIOMinicartBridge';
-import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
-import { isFastStoreHost } from '@/utils/vtex';
 import ChatContext from '@/contexts/ChatContext';
 import {
   OrderFormProvider,
   useOrderFormId,
   useIsLoadingOrderForm,
   useOrderForm,
-  PENDING_CART_DEBOUNCE_MS,
 } from './OrderFormContext';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -105,13 +81,6 @@ function withProvider(ui) {
 beforeEach(() => {
   delete window.faststore_sdk_stores;
   localStorage.clear();
-  updateVTEXIOMinicart.mockReset();
-  updateVTEXIOMinicart.mockResolvedValue(null);
-  bootstrapOrderFormId.mockReset();
-  getReliableOrderFormId.mockReset();
-  getReliableOrderFormId.mockReturnValue(null);
-  isFastStoreHost.mockReset();
-  isFastStoreHost.mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -181,65 +150,6 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
     expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
   });
 });
-
-// ---------------------------------------------------------------------------
-// requestOrderForm — local ID via VTEX IO bridge (getReliableOrderFormId)
-// ---------------------------------------------------------------------------
-
-describe('requestOrderForm — local ID via VTEX IO bridge', () => {
-  it('sets orderFormId from the bridge without fetching', async () => {
-    getReliableOrderFormId.mockReturnValue('vtex-local-456');
-    globalThis.fetch = jest.fn();
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-request'));
-
-    expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-      'vtex-local-456',
-    );
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
-
-  it('continues to fetch when the bridge throws', async () => {
-    getReliableOrderFormId.mockImplementation(() => {
-      throw new Error('bridge unavailable');
-    });
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
-    });
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-request'));
-
-    await waitFor(() =>
-      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-        'fetched-id',
-      ),
-    );
-  });
-
-  it('continues to fetch when the bridge returns null', async () => {
-    getReliableOrderFormId.mockReturnValue(null);
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
-    });
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-request'));
-
-    await waitFor(() =>
-      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-        'fetched-id',
-      ),
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// requestOrderForm — fetch branch
-// ---------------------------------------------------------------------------
 
 describe('requestOrderForm — fetch branch', () => {
   it('calls fetch with /api/checkout/pub/orderForm', async () => {
@@ -398,111 +308,22 @@ describe('requestOrderForm — idempotent guard', () => {
   });
 
   it('does not start a new fetch when a local ID is already stored', async () => {
-    getReliableOrderFormId.mockReturnValue('local-id');
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id: 'local-id' }) }),
+    };
     globalThis.fetch = jest.fn();
     renderProvider();
 
     await userEvent.click(screen.getByTestId('btn-request'));
     await userEvent.click(screen.getByTestId('btn-request'));
 
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('local-id');
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });
 
 // ---------------------------------------------------------------------------
 // trySyncHostCart — FastStore SDK path
-// ---------------------------------------------------------------------------
-
-describe('trySyncHostCart — FastStore SDK', () => {
-  it('calls cart.set(cart.read()) when FastStore cart is available', async () => {
-    const mockRead = jest.fn().mockReturnValue({ items: [] });
-    const mockSet = jest.fn();
-    window.faststore_sdk_stores = {
-      get: jest.fn().mockReturnValue({ set: mockSet, read: mockRead }),
-    };
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(mockRead).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledWith({ items: [] });
-  });
-
-  it('does not call updateVTEXIOMinicart when FastStore sync succeeds', async () => {
-    window.faststore_sdk_stores = {
-      get: jest.fn().mockReturnValue({
-        set: jest.fn(),
-        read: jest.fn().mockReturnValue({}),
-      }),
-    };
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(updateVTEXIOMinicart).not.toHaveBeenCalled();
-  });
-
-  it('falls through to updateVTEXIOMinicart when FastStore set/read are not functions', async () => {
-    window.faststore_sdk_stores = {
-      get: jest.fn().mockReturnValue({ set: null, read: null }),
-    };
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
-  });
-
-  it('falls through to updateVTEXIOMinicart when faststore_sdk_stores is undefined', async () => {
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
-  });
-
-  it('falls through to updateVTEXIOMinicart when FastStore cart.set throws', async () => {
-    window.faststore_sdk_stores = {
-      get: jest.fn().mockReturnValue({
-        set: () => {
-          throw new Error('write failed');
-        },
-        read: jest.fn().mockReturnValue({}),
-      }),
-    };
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// trySyncHostCart — VTEX IO minicart path
-// ---------------------------------------------------------------------------
-
-describe('trySyncHostCart — VTEX IO minicart', () => {
-  it('calls updateVTEXIOMinicart when FastStore is not available', async () => {
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-sync'));
-
-    expect(updateVTEXIOMinicart).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not throw when updateVTEXIOMinicart rejects', async () => {
-    updateVTEXIOMinicart.mockRejectedValue(new Error('bridge failed'));
-    renderProvider();
-
-    await expect(
-      userEvent.click(screen.getByTestId('btn-sync')),
-    ).resolves.not.toThrow();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// useOrderFormId
 // ---------------------------------------------------------------------------
 
 describe('useOrderFormId', () => {
@@ -512,7 +333,9 @@ describe('useOrderFormId', () => {
   });
 
   it('returns the orderFormId from the provider', async () => {
-    getReliableOrderFormId.mockReturnValue('hook-test-id');
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id: 'hook-test-id' }) }),
+    };
 
     function HookConsumer() {
       const id = useOrderFormId();
@@ -614,20 +437,15 @@ describe('useOrderForm', () => {
     expect(() => result.current.requestOrderForm()).not.toThrow();
   });
 
-  it('returns a no-op trySyncHostCart outside the provider', () => {
+  it('returns a no-op flush outside the provider', async () => {
     const { result } = renderHook(() => useOrderForm());
-    expect(() => result.current.trySyncHostCart()).not.toThrow();
-  });
-
-  it('returns a rejecting bootstrapFastStoreOrderForm outside the provider', async () => {
-    const { result } = renderHook(() => useOrderForm());
-    await expect(result.current.bootstrapFastStoreOrderForm()).rejects.toThrow(
-      'OrderFormProvider missing',
-    );
+    await expect(result.current.flushPendingCart()).resolves.toBeUndefined();
   });
 
   it('returns live values from the provider', async () => {
-    getReliableOrderFormId.mockReturnValue('full-shape-id');
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id: 'full-shape-id' }) }),
+    };
 
     const wrapper = ({ children }) => (
       <OrderFormProvider>{children}</OrderFormProvider>
@@ -640,9 +458,8 @@ describe('useOrderForm', () => {
 
     expect(result.current.orderFormId).toBe('full-shape-id');
     expect(result.current.isLoadingOrderForm).toBe(false);
-    expect(typeof result.current.requestOrderForm).toBe('function');
-    expect(typeof result.current.trySyncHostCart).toBe('function');
-    expect(typeof result.current.bootstrapFastStoreOrderForm).toBe('function');
+    expect(typeof result.current.flushPendingCart).toBe('function');
+    expect(typeof result.current.setPendingCartItem).toBe('function');
   });
 });
 
@@ -650,744 +467,46 @@ describe('useOrderForm', () => {
 // bootstrapFastStoreOrderForm
 // ---------------------------------------------------------------------------
 
-describe('bootstrapFastStoreOrderForm', () => {
-  function renderWithProvider() {
-    const wrapper = ({ children }) => (
-      <OrderFormProvider>{children}</OrderFormProvider>
-    );
-    return renderHook(() => useOrderForm(), { wrapper });
-  }
-
-  it('resolves with the cached orderFormId without calling the SDK bootstrap', async () => {
-    window.faststore_sdk_stores = {
-      get: () => ({ read: () => ({ id: 'cached-from-sdk' }) }),
-    };
-
-    const { result } = renderWithProvider();
-
-    await act(async () => {
-      result.current.requestOrderForm();
-    });
-    expect(result.current.orderFormId).toBe('cached-from-sdk');
-
-    let resolved;
-    await act(async () => {
-      resolved = await result.current.bootstrapFastStoreOrderForm({
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-
-    expect(resolved).toBe('cached-from-sdk');
-    expect(bootstrapOrderFormId).not.toHaveBeenCalled();
-  });
-
-  it('calls the SDK bootstrap and caches the resolved id in context state', async () => {
-    bootstrapOrderFormId.mockResolvedValue('new-boot-id');
-    const { result } = renderWithProvider();
-
-    let resolved;
-    await act(async () => {
-      resolved = await result.current.bootstrapFastStoreOrderForm({
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-
-    expect(bootstrapOrderFormId).toHaveBeenCalledWith({
-      skuId: 'sku1',
-      sellerId: 'seller1',
-    });
-    expect(resolved).toBe('new-boot-id');
-    expect(result.current.orderFormId).toBe('new-boot-id');
-  });
-
-  it('does not mutate context state on bootstrap failure and propagates the error', async () => {
-    bootstrapOrderFormId.mockRejectedValue(new Error('orderFormId timeout'));
-    const { result } = renderWithProvider();
-
-    await act(async () => {
-      await expect(
-        result.current.bootstrapFastStoreOrderForm({
-          skuId: 'sku1',
-          sellerId: 'seller1',
-        }),
-      ).rejects.toThrow('orderFormId timeout');
-    });
-
-    expect(result.current.orderFormId).toBeNull();
-  });
-
-  it('dedupes concurrent calls into a single SDK bootstrap', async () => {
-    let resolveBoot;
-    bootstrapOrderFormId.mockReturnValue(
-      new Promise((resolve) => {
-        resolveBoot = resolve;
-      }),
-    );
-
-    const { result } = renderWithProvider();
-
-    let firstResolved;
-    let secondResolved;
-
-    await act(async () => {
-      const first = result.current.bootstrapFastStoreOrderForm({
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-      const second = result.current.bootstrapFastStoreOrderForm({
-        skuId: 'sku2',
-        sellerId: 'seller2',
-      });
-      resolveBoot('shared-id');
-      [firstResolved, secondResolved] = await Promise.all([first, second]);
-    });
-
-    expect(bootstrapOrderFormId).toHaveBeenCalledTimes(1);
-    expect(firstResolved).toBe('shared-id');
-    expect(secondResolved).toBe('shared-id');
-    expect(result.current.orderFormId).toBe('shared-id');
-  });
-
-  it('allows a fresh bootstrap after a previous failure clears the dedup ref', async () => {
-    bootstrapOrderFormId.mockRejectedValueOnce(
-      new Error('orderFormId timeout'),
-    );
-    const { result } = renderWithProvider();
-
-    await act(async () => {
-      await expect(
-        result.current.bootstrapFastStoreOrderForm({
-          skuId: 'sku1',
-          sellerId: 'seller1',
-        }),
-      ).rejects.toThrow('orderFormId timeout');
-    });
-
-    bootstrapOrderFormId.mockResolvedValueOnce('retry-id');
-
-    let resolved;
-    await act(async () => {
-      resolved = await result.current.bootstrapFastStoreOrderForm({
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-
-    expect(bootstrapOrderFormId).toHaveBeenCalledTimes(2);
-    expect(resolved).toBe('retry-id');
-    expect(result.current.orderFormId).toBe('retry-id');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Pending cart items + sendProductsToCart
-// ---------------------------------------------------------------------------
-
 describe('pending cart items', () => {
-  function buildChatValue(overrides = {}) {
-    return {
-      currentPage: null,
-      pageHistory: [],
-      addProductToCart: jest.fn(() => Promise.resolve()),
-      addConversationStatus: jest.fn(),
-      setCustomField: jest.fn(),
-      sendUtm: jest.fn(),
-      ...overrides,
+  function renderCart() {
+    const service = {
+      setPendingCartItem: jest.fn(),
+      flushPendingCart: jest.fn(() => Promise.resolve()),
+      on: jest.fn(),
+      off: jest.fn(),
     };
-  }
-
-  function renderWithChat(chatValue) {
     const wrapper = ({ children }) => (
-      <ChatContext.Provider value={chatValue}>
+      <ChatContext.Provider
+        value={{ service, currentPage: null, pageHistory: [] }}
+      >
         <OrderFormProvider>{children}</OrderFormProvider>
       </ChatContext.Provider>
     );
-    return renderHook(() => useOrderForm(), { wrapper });
+    return { service, ...renderHook(() => useOrderForm(), { wrapper }) };
   }
 
-  it('stores a pending item with conversation origin when on the default page', () => {
-    const chat = buildChatValue();
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-      });
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1']).toEqual({
-      skuId: 'sku1',
-      sellerId: 'seller1',
-      quantity: 1,
-      productName: 'Shoe',
-      origin: 'conversation',
-    });
-  });
-
-  it('stores a pending item with catalog origin on the catalog page', () => {
-    const chat = buildChatValue({
-      currentPage: { view: 'product-catalog' },
-      pageHistory: [{ view: 'product-catalog' }],
-    });
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-      });
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1'].origin).toBe(
-      'catalog',
-    );
-  });
-
-  it('clamps quantity to >= 0 on update', () => {
-    const chat = buildChatValue();
-    const { result } = renderWithChat(chat);
-
+  it('forwards a quantity change to setPendingCartItem', () => {
+    const { result, service } = renderCart();
     act(() => {
       result.current.setPendingCartItem({
         key: 'sku1#seller1',
         skuId: 'sku1',
         sellerId: 'seller1',
         quantity: 2,
-        productName: 'Shoe',
       });
     });
-
-    act(() => {
-      result.current.updatePendingCartQuantity('sku1#seller1', -3);
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(0);
-  });
-
-  it('sends conversation-origin items after the debounce with quantity', async () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const addConversationStatus = jest.fn();
-    const sendUtm = jest.fn();
-    const chat = buildChatValue({
-      addProductToCart,
-      addConversationStatus,
-      sendUtm,
-    });
-
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 3,
-        productName: 'Shoe',
-      });
-    });
-
-    expect(addProductToCart).not.toHaveBeenCalled();
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(addProductToCart).toHaveBeenCalledWith({
-      VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
-      items: [
-        {
-          id: 'sku1',
-          seller: 'seller1',
-          quantity: 3,
-        },
-      ],
-    });
-    expect(sendUtm).toHaveBeenCalledWith(UTM_SOURCES.CART);
-    expect(addConversationStatus).toHaveBeenCalledWith(
-      expect.stringMatching(/3.*added to cart|items were added/i),
-      'success',
-    );
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
-
-    jest.useRealTimers();
-  });
-
-  it('forwards the product image on the add-to-cart payload', async () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const chat = buildChatValue({ addProductToCart });
-
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-        image: 'https://cdn.example/shoe.webp',
-      });
-    });
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(addProductToCart).toHaveBeenCalledWith({
-      VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
-      items: [
-        {
-          id: 'sku1',
-          seller: 'seller1',
-          quantity: 1,
-          image: 'https://cdn.example/shoe.webp',
-        },
-      ],
-    });
-
-    jest.useRealTimers();
-  });
-
-  it('sends multiple pending items in a single addProductToCart call', async () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const addConversationStatus = jest.fn();
-    const chat = buildChatValue({
-      addProductToCart,
-      addConversationStatus,
-    });
-
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 2,
-        productName: 'Banana',
-      });
-      result.current.setPendingCartItem({
-        key: 'sku2#seller1',
-        skuId: 'sku2',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Apple',
-      });
-    });
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(addProductToCart).toHaveBeenCalledTimes(1);
-    expect(addProductToCart).toHaveBeenCalledWith({
-      VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
-      items: [
-        { id: 'sku1', seller: 'seller1', quantity: 2 },
-        { id: 'sku2', seller: 'seller1', quantity: 1 },
-      ],
-    });
-    expect(addConversationStatus).toHaveBeenCalledWith(
-      expect.stringMatching(/3.*added to cart|items were added/i),
-      'success',
-    );
-
-    jest.useRealTimers();
-  });
-
-  it('discards quantity 0 without calling addProductToCart', async () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const chat = buildChatValue({ addProductToCart });
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-      });
-    });
-
-    act(() => {
-      result.current.updatePendingCartQuantity('sku1#seller1', 0);
-    });
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(addProductToCart).not.toHaveBeenCalled();
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
-
-    jest.useRealTimers();
-  });
-
-  it('does not debounce-send catalog-origin items', async () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const chat = buildChatValue({
-      currentPage: { view: 'product-catalog' },
-      pageHistory: [{ view: 'product-catalog' }],
-      addProductToCart,
-    });
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 2,
-        productName: 'Shoe',
-      });
-    });
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(addProductToCart).not.toHaveBeenCalled();
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeDefined();
-
-    jest.useRealTimers();
-  });
-
-  it('flushes catalog-origin items when returning to conversation', async () => {
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    getReliableOrderFormId.mockReturnValue('order-123');
-
-    function FlushCatalogConsumer({ onGoConversation }) {
-      const orderForm = useOrderForm();
-      return (
-        <>
-          <button
-            type="button"
-            data-testid="request"
-            onClick={() => orderForm.requestOrderForm()}
-          >
-            request
-          </button>
-          <button
-            type="button"
-            data-testid="stage"
-            onClick={() =>
-              orderForm.setPendingCartItem({
-                key: 'sku1#seller1',
-                skuId: 'sku1',
-                sellerId: 'seller1',
-                quantity: 2,
-                productName: 'Shoe',
-              })
-            }
-          >
-            stage
-          </button>
-          <button
-            type="button"
-            data-testid="go-conversation"
-            onClick={onGoConversation}
-          >
-            go conversation
-          </button>
-          <span data-testid="pending">
-            {orderForm.pendingCartItems['sku1#seller1'] ? 'yes' : 'no'}
-          </span>
-        </>
-      );
-    }
-
-    FlushCatalogConsumer.propTypes = {
-      onGoConversation: PropTypes.func.isRequired,
-    };
-
-    function Root() {
-      const [chatValue, setChatValue] = useState(
-        buildChatValue({
-          currentPage: { view: 'product-catalog' },
-          pageHistory: [{ view: 'product-catalog' }],
-          addProductToCart,
-        }),
-      );
-
-      return (
-        <ChatContext.Provider value={chatValue}>
-          <OrderFormProvider>
-            <FlushCatalogConsumer
-              onGoConversation={() =>
-                setChatValue((prev) => ({
-                  ...prev,
-                  currentPage: null,
-                  pageHistory: [],
-                }))
-              }
-            />
-          </OrderFormProvider>
-        </ChatContext.Provider>
-      );
-    }
-
-    render(<Root />);
-
-    await userEvent.click(screen.getByTestId('request'));
-    await userEvent.click(screen.getByTestId('stage'));
-    expect(screen.getByTestId('pending')).toHaveTextContent('yes');
-    expect(addProductToCart).not.toHaveBeenCalled();
-
-    await userEvent.click(screen.getByTestId('go-conversation'));
-
-    await waitFor(() => {
-      expect(addProductToCart).toHaveBeenCalledWith({
-        VTEXAccountName: 'mystore',
-        orderFormId: 'order-123',
-        items: [
-          {
-            id: 'sku1',
-            seller: 'seller1',
-            quantity: 2,
-          },
-        ],
-      });
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId('pending')).toHaveTextContent('no');
-    });
-  });
-
-  it('clears the pending store as soon as sendProductsToCart is called even if add fails', async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    const addProductToCart = jest.fn(() =>
-      Promise.reject(new Error('timeout')),
-    );
-    const chat = buildChatValue({ addProductToCart });
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.requestOrderForm();
-    });
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 2,
-        productName: 'Shoe',
-      });
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeDefined();
-
-    await act(async () => {
-      await result.current.sendProductsToCart(['sku1#seller1']);
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
-    expect(addProductToCart).toHaveBeenCalled();
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('bootstraps FastStore orderFormId when sending without a cached id', async () => {
-    jest.useFakeTimers();
-    isFastStoreHost.mockReturnValue(true);
-    bootstrapOrderFormId.mockResolvedValue('boot-123');
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const chat = buildChatValue({ addProductToCart });
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-      });
-    });
-
-    await act(async () => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-
-    expect(bootstrapOrderFormId).toHaveBeenCalledWith({
-      skuId: 'sku1',
-      sellerId: 'seller1',
-    });
-    expect(addProductToCart).toHaveBeenCalledWith(
-      expect.objectContaining({
-        orderFormId: 'boot-123',
-        items: [
-          expect.objectContaining({
-            id: 'sku1',
-            seller: 'seller1',
-            quantity: 1,
-          }),
-        ],
-      }),
-    );
-
-    jest.useRealTimers();
-  });
-
-  it('keeps catalog origin on product-details when catalog is in history', () => {
-    const chat = buildChatValue({
-      currentPage: { view: 'product-details' },
-      pageHistory: [{ view: 'product-catalog' }],
-    });
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1'].origin).toBe(
-      'catalog',
-    );
-    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(1);
-  });
-
-  it('uses conversation origin on product-details without a catalog history', () => {
-    const chat = buildChatValue({
-      currentPage: { view: 'product-details' },
-      pageHistory: [],
-    });
-    const { result } = renderWithChat(chat);
-
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 'bad',
-      });
-    });
-
-    expect(result.current.pendingCartItems['sku1#seller1'].origin).toBe(
+    expect(service.setPendingCartItem).toHaveBeenCalledWith(
+      'sku1#seller1',
+      2,
       'conversation',
+      'sku1',
+      'seller1',
     );
-    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(0);
+    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(2);
   });
 
-  it('ignores incomplete pending item payloads', () => {
-    const { result } = renderWithChat(buildChatValue());
-    act(() => {
-      result.current.setPendingCartItem({ skuId: 'sku1', sellerId: 'seller1' });
-      result.current.setPendingCartItem({ key: 'k', sellerId: 'seller1' });
-      result.current.setPendingCartItem({ key: 'k', skuId: 'sku1' });
-    });
-    expect(result.current.pendingCartItems).toEqual({});
-  });
-
-  it('does not update quantity for an unknown pending key', () => {
-    const { result } = renderWithChat(buildChatValue());
-    act(() => {
-      result.current.updatePendingCartQuantity('missing', 2);
-    });
-    expect(result.current.pendingCartItems).toEqual({});
-  });
-
-  it('removes a pending item and is a no-op for unknown keys', () => {
-    const { result } = renderWithChat(buildChatValue());
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-    act(() => {
-      result.current.removePendingCartItem('missing');
-      result.current.removePendingCartItem('sku1#seller1');
-    });
-    expect(result.current.pendingCartItems['sku1#seller1']).toBeUndefined();
-  });
-
-  it('clears all pending items', () => {
-    const { result } = renderWithChat(buildChatValue());
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-      });
-    });
-    act(() => {
-      result.current.clearPendingCartItems();
-    });
-    expect(result.current.pendingCartItems).toEqual({});
-  });
-
-  it('returns early from sendProductsToCart without addProductToCart', async () => {
-    const chat = buildChatValue({ addProductToCart: undefined });
-    const { result } = renderWithChat(chat);
-    await act(async () => {
-      await result.current.sendProductsToCart(['sku1#seller1']);
-    });
-    expect(result.current.pendingCartItems).toEqual({});
-  });
-
-  it('returns early when there are no matching pending keys', async () => {
-    const addProductToCart = jest.fn();
-    const { result } = renderWithChat(buildChatValue({ addProductToCart }));
-    await act(async () => {
-      await result.current.sendProductsToCart(['missing']);
-    });
-    expect(addProductToCart).not.toHaveBeenCalled();
-  });
-
-  it('does not add to cart without an orderFormId outside FastStore', async () => {
-    const addProductToCart = jest.fn();
-    const { result } = renderWithChat(buildChatValue({ addProductToCart }));
+  it('restores the previous quantity when cart:failed arrives', () => {
+    const { result, service } = renderCart();
     act(() => {
       result.current.setPendingCartItem({
         key: 'sku1#seller1',
@@ -1396,99 +515,74 @@ describe('pending cart items', () => {
         quantity: 1,
       });
     });
-    await act(async () => {
-      await result.current.sendProductsToCart(['sku1#seller1']);
-    });
-    expect(addProductToCart).not.toHaveBeenCalled();
-  });
-
-  it('uses the single-item success message', async () => {
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const addConversationStatus = jest.fn();
-    getReliableOrderFormId.mockReturnValue('order-123');
-    const { result } = renderWithChat(
-      buildChatValue({ addProductToCart, addConversationStatus }),
-    );
+    const onUpdated = service.on.mock.calls.find(
+      (call) => call[0] === 'cart:updated',
+    )[1];
     act(() => {
-      result.current.requestOrderForm();
-    });
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-        productName: 'Shoe',
-      });
-    });
-    await act(async () => {
-      await result.current.sendProductsToCart(['sku1#seller1']);
-    });
-    expect(addConversationStatus).toHaveBeenCalledWith(
-      expect.stringMatching(/Shoe|added to cart/i),
-      'success',
-    );
-  });
-
-  it('does not reschedule debounce when updating a catalog-origin quantity', () => {
-    jest.useFakeTimers();
-    const addProductToCart = jest.fn(() => Promise.resolve());
-    const { result } = renderWithChat(
-      buildChatValue({
-        currentPage: { view: 'product-catalog' },
-        addProductToCart,
-      }),
-    );
-    act(() => {
-      result.current.setPendingCartItem({
-        key: 'sku1#seller1',
-        skuId: 'sku1',
-        sellerId: 'seller1',
-        quantity: 1,
-      });
+      onUpdated({ key: 'sku1#seller1', quantity: 1 });
     });
     act(() => {
       result.current.updatePendingCartQuantity('sku1#seller1', 4);
     });
-    act(() => {
-      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
-    });
-    expect(addProductToCart).not.toHaveBeenCalled();
     expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(4);
-    jest.useRealTimers();
+    const onFailed = service.on.mock.calls.find(
+      (call) => call[0] === 'cart:failed',
+    )[1];
+    act(() => {
+      onFailed({ key: 'sku1#seller1', operation: 'flush' });
+    });
+    expect(result.current.pendingCartItems['sku1#seller1'].quantity).toBe(1);
   });
 
-  it('does not flush when returning to conversation without catalog items', async () => {
-    const addProductToCart = jest.fn(() => Promise.resolve());
-
-    function Root() {
-      const [chatValue, setChatValue] = useState(
-        buildChatValue({
-          currentPage: { view: 'product-details' },
-          pageHistory: [],
-          addProductToCart,
-        }),
-      );
-
+  it('flushes catalog items when the catalog page closes', () => {
+    const service = {
+      setPendingCartItem: jest.fn(),
+      flushPendingCart: jest.fn(() => Promise.resolve()),
+      on: jest.fn(),
+      off: jest.fn(),
+    };
+    let page = { view: 'product-catalog' };
+    function Harness() {
+      const orderForm = useOrderForm();
       return (
-        <ChatContext.Provider value={chatValue}>
-          <OrderFormProvider>
-            <button
-              type="button"
-              onClick={() =>
-                setChatValue((prev) => ({ ...prev, currentPage: null }))
-              }
-            >
-              go conversation
-            </button>
-          </OrderFormProvider>
-        </ChatContext.Provider>
+        <button
+          type="button"
+          onClick={() =>
+            orderForm.setPendingCartItem({
+              key: 'sku1#seller1',
+              skuId: 'sku1',
+              sellerId: 'seller1',
+              quantity: 1,
+            })
+          }
+        >
+          stage
+        </button>
       );
     }
-
-    render(<Root />);
-    await userEvent.click(screen.getByText('go conversation'));
-    expect(addProductToCart).not.toHaveBeenCalled();
+    const { rerender } = render(
+      <ChatContext.Provider
+        value={{ service, currentPage: page, pageHistory: [] }}
+      >
+        <OrderFormProvider>
+          <Harness />
+        </OrderFormProvider>
+      </ChatContext.Provider>,
+    );
+    act(() => {
+      screen.getByText('stage').click();
+    });
+    page = null;
+    rerender(
+      <ChatContext.Provider
+        value={{ service, currentPage: null, pageHistory: [] }}
+      >
+        <OrderFormProvider>
+          <Harness />
+        </OrderFormProvider>
+      </ChatContext.Provider>,
+    );
+    expect(service.flushPendingCart).toHaveBeenCalled();
   });
 });
 

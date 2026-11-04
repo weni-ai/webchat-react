@@ -108,13 +108,13 @@ describe('loadStoreCountryAlpha3', () => {
     globalThis.fetch = jest.fn();
   });
 
-  it('reads countryCode from /api/segments when the page has no session', async () => {
-    globalThis.fetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ countryCode: 'MEX' }),
-    });
+  it('reads countryCode from the service segment when the page has no session', async () => {
+    const readSegment = jest.fn(async () =>
+      JSON.stringify({ countryCode: 'MEX' }),
+    );
 
-    await expect(loadStoreCountryAlpha3()).resolves.toBe('MEX');
+    await expect(loadStoreCountryAlpha3(readSegment)).resolves.toBe('MEX');
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('does not call /api/segments when the country is already on the page', async () => {

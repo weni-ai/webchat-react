@@ -5,8 +5,6 @@ import {
   isValidPhoneNumber,
 } from 'libphonenumber-js/max';
 
-import { getSegment } from '@/utils/vtexCustomFields';
-
 const E164_MAX_DIGITS = 15;
 const CALLING_CODE_MAX_DIGITS = 3;
 
@@ -51,14 +49,16 @@ export function getStoreCountryAlpha3() {
   return countryFromFastStoreSession() ?? countryFromSegmentToken();
 }
 
-export async function loadStoreCountryAlpha3() {
+export async function loadStoreCountryAlpha3(readSegment) {
   const syncCountry = getStoreCountryAlpha3();
   if (syncCountry) return syncCountry;
+  if (typeof readSegment !== 'function') return null;
 
   try {
-    const segment = await getSegment();
+    const segment = await readSegment();
     if (!segment) return null;
-    return countryAlpha3FromRecord(JSON.parse(segment));
+    const parsed = typeof segment === 'string' ? JSON.parse(segment) : segment;
+    return countryAlpha3FromRecord(parsed);
   } catch {
     return null;
   }

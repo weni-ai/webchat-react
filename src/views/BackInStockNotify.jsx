@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 
 import { FSButton } from '@/components/common/FSButton';
 import { useChatContext } from '@/contexts/ChatContext';
-import { subscribeAvailabilityNotify } from '@/utils/availabilityNotify';
 import {
   callingCodeDigits,
   callingCodeForAlpha2,
@@ -25,8 +24,8 @@ export function BackInStockNotify({
   skuId = '',
   seller = '',
 }) {
-  const { t, i18n } = useTranslation();
-  const { clearPageHistory, sendMessage } = useChatContext();
+  const { t } = useTranslation();
+  const { clearPageHistory, sendMessage, service } = useChatContext();
   const [phoneCountry, setPhoneCountry] = useState(readInitialPhoneCountry);
   const [name, setName] = useState('');
   const [ddi, setDdi] = useState(phoneCountry.ddi);
@@ -42,7 +41,7 @@ export function BackInStockNotify({
 
     let cancelled = false;
 
-    loadStoreCountryAlpha3().then((alpha3) => {
+    loadStoreCountryAlpha3(() => service?.getHostSegment?.()).then((alpha3) => {
       if (cancelled || ddiEditedRef.current || !alpha3) return;
       const nextCountry = phoneCountryFromAlpha3(alpha3);
       if (!nextCountry.ddi) return;
@@ -97,14 +96,15 @@ export function BackInStockNotify({
     setShowPhoneError(false);
     setIsSubmitting(true);
     try {
-      await subscribeAvailabilityNotify({
-        name,
-        phone: internationalDigits(ddi, nationalNumber),
+      await service?.requestAvailabilityNotify?.(
         skuId,
         seller,
-        language: i18n.language,
-      });
+        internationalDigits(ddi, nationalNumber),
+      );
+    } catch {
+      // The form still confirms. The service already reported cart:failed.
     } finally {
+      setIsSubmitting(false);
       setSubmitted(true);
     }
   }

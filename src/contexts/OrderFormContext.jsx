@@ -3,22 +3,12 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import PropTypes from 'prop-types';
-import { useTranslation } from 'react-i18next';
 
 import ChatContext from '@/contexts/ChatContext';
-import {
-  updateVTEXIOMinicart,
-  getReliableOrderFormId,
-} from '@/utils/VTEXIOMinicartBridge';
-import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
-import { getVtexAccount, isFastStoreHost } from '@/utils/vtex';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
-import { createThrottledCustomFieldSetter } from '@/utils/throttleCustomField';
 
 const OrderFormContext = createContext(null);
 
@@ -37,33 +27,27 @@ function resolvePendingOrigin(currentPage, pageHistory = []) {
   return 'conversation';
 }
 
+function quantityOf(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.floor(numeric));
+}
+
 export function OrderFormProvider({ children }) {
   const [isLoadingOrderForm, setIsLoadingOrderForm] = useState(false);
   const [orderFormId, setOrderFormId] = useState(null);
   const [pendingCartItems, setPendingCartItems] = useState({});
   const fetchStartedRef = useRef(false);
-  const bootstrapPromiseRef = useRef(null);
-  const debounceTimersRef = useRef({});
   const pendingCartItemsRef = useRef(pendingCartItems);
-  const orderFormIdRef = useRef(orderFormId);
+  const inflightRef = useRef(new Set());
   const prevPageRef = useRef(undefined);
-  const { t } = useTranslation();
 
   const chat = useContext(ChatContext);
   const currentPage = chat?.currentPage ?? null;
   const pageHistory = chat?.pageHistory ?? [];
+  const service = chat?.service;
 
   pendingCartItemsRef.current = pendingCartItems;
-  orderFormIdRef.current = orderFormId;
-
-  const setOrderFormCustomFieldThrottled = useMemo(
-    () =>
-      createThrottledCustomFieldSetter(
-        chat?.setCustomField ?? (() => {}),
-        10_000,
-      ),
-    [chat?.setCustomField],
-  );
 
   const requestOrderForm = useCallback(() => {
     if (fetchStartedRef.current) return;
@@ -96,248 +80,78 @@ export function OrderFormProvider({ children }) {
       });
   }, []);
 
-  const bootstrapFastStoreOrderForm = useCallback(
-    ({ skuId, sellerId } = {}) => {
-      if (orderFormId) return Promise.resolve(orderFormId);
-      if (bootstrapPromiseRef.current) return bootstrapPromiseRef.current;
-
-      const promise = bootstrapOrderFormId({ skuId, sellerId })
-        .then((id) => {
-          setOrderFormId(id);
-          bootstrapPromiseRef.current = null;
-          return id;
-        })
-        .catch((error) => {
-          bootstrapPromiseRef.current = null;
-          throw error;
-        });
-
-      bootstrapPromiseRef.current = promise;
-      return promise;
-    },
-    [orderFormId],
-  );
-
-  const trySyncHostCart = useCallback(async () => {
-    let syncedWithFaststore = false;
-    try {
-      const cart = window.faststore_sdk_stores?.get?.('fs::cart');
-      if (cart?.set && cart?.read) {
-        cart.set(cart.read());
-        syncedWithFaststore = true;
-      }
-    } catch {
-      // FastStore SDK unavailable or read/set failed — try VTEX IO
-    }
-
-    if (syncedWithFaststore) return;
-
-    try {
-      await updateVTEXIOMinicart();
-    } catch {
-      // VTEX IO minicart bridge unavailable or failed — ignore
-    }
+  const rememberItem = useCallback((key, item) => {
+    setPendingCartItems((prev) => ({ ...prev, [key]: item }));
   }, []);
-
-  const clearDebounceTimer = useCallback((key) => {
-    const timer = debounceTimersRef.current[key];
-    if (timer) {
-      clearTimeout(timer);
-      delete debounceTimersRef.current[key];
-    }
-  }, []);
-
-  const clearAllDebounceTimers = useCallback(() => {
-    Object.keys(debounceTimersRef.current).forEach((key) => {
-      clearTimeout(debounceTimersRef.current[key]);
-    });
-    debounceTimersRef.current = {};
-  }, []);
-
-  const removePendingCartItem = useCallback(
-    (key) => {
-      clearDebounceTimer(key);
-      setPendingCartItems((prev) => {
-        if (!(key in prev)) return prev;
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
-    },
-    [clearDebounceTimer],
-  );
-
-  const clearPendingCartItems = useCallback(() => {
-    clearAllDebounceTimers();
-    setPendingCartItems({});
-  }, [clearAllDebounceTimers]);
-
-  const sendProductsToCart = useCallback(
-    async (keys) => {
-      const addProductToCart = chat?.addProductToCart;
-      if (!addProductToCart) return;
-
-      const items = pendingCartItemsRef.current;
-      const keysToSend = keys ?? Object.keys(items);
-      const toProcess = keysToSend
-        .map((key) => ({ key, item: items[key] }))
-        .filter(({ item }) => item);
-
-      if (!toProcess.length) return;
-
-      toProcess.forEach(({ key }) => clearDebounceTimer(key));
-
-      // Reset UI immediately — clear pending store as if quantities were zeroed
-      setPendingCartItems((prev) => {
-        const next = { ...prev };
-        toProcess.forEach(({ key }) => {
-          delete next[key];
-        });
-        pendingCartItemsRef.current = next;
-        return next;
-      });
-
-      const positives = toProcess.filter(({ item }) => item.quantity > 0);
-      if (!positives.length) return;
-
-      const isFastStore = isFastStoreHost();
-
-      try {
-        let effectiveOrderFormId = orderFormIdRef.current;
-
-        if (!effectiveOrderFormId && isFastStore) {
-          const first = positives[0].item;
-          effectiveOrderFormId = await bootstrapFastStoreOrderForm({
-            skuId: first.skuId,
-            sellerId: first.sellerId,
-          });
-        }
-
-        if (!effectiveOrderFormId) {
-          return;
-        }
-
-        setOrderFormCustomFieldThrottled('orderform', effectiveOrderFormId);
-
-        await addProductToCart({
-          VTEXAccountName: getVtexAccount(),
-          orderFormId: effectiveOrderFormId,
-          items: positives.map(({ item }) => {
-            const payload = {
-              id: item.skuId,
-              seller: item.sellerId,
-              quantity: item.quantity,
-            };
-            if (item.image) payload.image = item.image;
-            return payload;
-          }),
-        });
-
-        void chat?.sendUtm?.(UTM_SOURCES.CART);
-
-        const addedItems = positives.map(({ item }) => item);
-        const totalQuantity = addedItems.reduce(
-          (sum, item) => sum + item.quantity,
-          0,
-        );
-
-        if (totalQuantity === 1 && addedItems.length === 1) {
-          chat?.addConversationStatus?.(
-            t('cart.product_added_to_cart', {
-              productName: addedItems[0].productName ?? '',
-            }),
-            'success',
-          );
-        } else if (totalQuantity > 0) {
-          chat?.addConversationStatus?.(
-            t('messages_list.items_added_to_cart', { count: totalQuantity }),
-            'success',
-          );
-        }
-
-        void trySyncHostCart();
-      } catch (error) {
-        console.error('Failed to add pending product to cart', error);
-      }
-    },
-    [
-      chat,
-      clearDebounceTimer,
-      bootstrapFastStoreOrderForm,
-      setOrderFormCustomFieldThrottled,
-      trySyncHostCart,
-      t,
-    ],
-  );
-
-  const scheduleConversationDebounce = useCallback(
-    (key) => {
-      clearDebounceTimer(key);
-      debounceTimersRef.current[key] = setTimeout(() => {
-        delete debounceTimersRef.current[key];
-
-        const conversationKeys = Object.entries(pendingCartItemsRef.current)
-          .filter(([, item]) => item.origin === 'conversation')
-          .map(([itemKey]) => itemKey);
-
-        if (conversationKeys.length) {
-          void sendProductsToCart(conversationKeys);
-        }
-      }, PENDING_CART_DEBOUNCE_MS);
-    },
-    [clearDebounceTimer, sendProductsToCart],
-  );
 
   const setPendingCartItem = useCallback(
     ({ key, skuId, sellerId, quantity = 1, productName, image }) => {
       if (!key || !skuId || !sellerId) return;
+      if (inflightRef.current.has(key)) return;
 
+      const existing = pendingCartItemsRef.current[key];
       const origin =
-        pendingCartItemsRef.current[key]?.origin ??
-        resolvePendingOrigin(currentPage, pageHistory);
-      const nextQuantity = Math.max(0, Number(quantity) || 0);
+        existing?.origin ?? resolvePendingOrigin(currentPage, pageHistory);
+      const nextQuantity = quantityOf(quantity);
+      const committedQuantity = existing?.committedQuantity ?? 0;
 
-      setPendingCartItems((prev) => ({
-        ...prev,
-        [key]: {
-          skuId,
-          sellerId,
-          quantity: nextQuantity,
-          productName,
-          ...(image ? { image } : {}),
-          origin,
-        },
-      }));
+      rememberItem(key, {
+        skuId,
+        sellerId,
+        quantity: nextQuantity,
+        productName,
+        ...(image ? { image } : {}),
+        origin,
+        committedQuantity,
+      });
 
-      if (origin === 'conversation') {
-        scheduleConversationDebounce(key);
-      }
+      service?.setPendingCartItem?.(key, nextQuantity, origin, skuId, sellerId);
     },
-    [currentPage, pageHistory, scheduleConversationDebounce],
+    [currentPage, pageHistory, rememberItem, service],
   );
 
   const updatePendingCartQuantity = useCallback(
     (key, quantity) => {
-      const nextQuantity = Math.max(0, Number(quantity) || 0);
+      if (inflightRef.current.has(key)) return;
       const existing = pendingCartItemsRef.current[key];
       if (!existing) return;
-
-      setPendingCartItems((prev) => {
-        if (!prev[key]) return prev;
-        return {
-          ...prev,
-          [key]: { ...prev[key], quantity: nextQuantity },
-        };
-      });
-
-      if (existing.origin === 'conversation') {
-        scheduleConversationDebounce(key);
-      }
+      const nextQuantity = quantityOf(quantity);
+      rememberItem(key, { ...existing, quantity: nextQuantity });
+      service?.setPendingCartItem?.(
+        key,
+        nextQuantity,
+        existing.origin,
+        existing.skuId,
+        existing.sellerId,
+      );
     },
-    [scheduleConversationDebounce],
+    [rememberItem, service],
   );
 
-  // Flush catalog-origin pendings when returning to the conversation
+  const flushPendingCart = useCallback(
+    (keys) => {
+      const selected = keys ?? Object.keys(pendingCartItemsRef.current);
+      selected.forEach((key) => inflightRef.current.add(key));
+      return service?.flushPendingCart?.(selected) ?? Promise.resolve();
+    },
+    [service],
+  );
+
+  const removePendingCartItem = useCallback((key) => {
+    inflightRef.current.delete(key);
+    setPendingCartItems((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const clearPendingCartItems = useCallback(() => {
+    inflightRef.current.clear();
+    setPendingCartItems({});
+  }, []);
+
   useEffect(() => {
     const prev = prevPageRef.current;
     prevPageRef.current = currentPage;
@@ -347,29 +161,64 @@ export function OrderFormProvider({ children }) {
         .filter(([, item]) => item.origin === 'catalog')
         .map(([key]) => key);
       if (catalogKeys.length) {
-        void sendProductsToCart(catalogKeys);
+        void flushPendingCart(catalogKeys);
       }
     }
-  }, [currentPage, sendProductsToCart]);
+  }, [currentPage, flushPendingCart]);
 
   useEffect(() => {
-    return () => {
-      clearAllDebounceTimers();
+    if (!service?.on) return undefined;
+
+    const onUpdated = ({ key, quantity } = {}) => {
+      inflightRef.current.delete(key);
+      setPendingCartItems((prev) => {
+        const item = prev[key];
+        if (!item) return prev;
+        return {
+          ...prev,
+          [key]: {
+            ...item,
+            quantity: quantityOf(quantity),
+            committedQuantity: quantityOf(quantity),
+          },
+        };
+      });
     };
-  }, [clearAllDebounceTimers]);
+
+    const onFailed = ({ key } = {}) => {
+      inflightRef.current.delete(key);
+      setPendingCartItems((prev) => {
+        const item = prev[key];
+        if (!item) return prev;
+        const restored = item.committedQuantity ?? 0;
+        if (!restored) {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        }
+        return { ...prev, [key]: { ...item, quantity: restored } };
+      });
+    };
+
+    service.on('cart:updated', onUpdated);
+    service.on('cart:failed', onFailed);
+    return () => {
+      service.off?.('cart:updated', onUpdated);
+      service.off?.('cart:failed', onFailed);
+    };
+  }, [service]);
 
   const value = {
     orderFormId,
     isLoadingOrderForm,
     requestOrderForm,
-    trySyncHostCart,
-    bootstrapFastStoreOrderForm,
     pendingCartItems,
     setPendingCartItem,
     updatePendingCartQuantity,
     removePendingCartItem,
     clearPendingCartItems,
-    sendProductsToCart,
+    flushPendingCart,
+    sendProductsToCart: flushPendingCart,
   };
 
   return (
@@ -399,35 +248,21 @@ export function useOrderForm() {
     orderFormId: context?.orderFormId ?? null,
     isLoadingOrderForm: context?.isLoadingOrderForm ?? false,
     requestOrderForm: context?.requestOrderForm ?? (() => {}),
-    trySyncHostCart: context?.trySyncHostCart ?? (() => {}),
-    bootstrapFastStoreOrderForm:
-      context?.bootstrapFastStoreOrderForm ??
-      (() => Promise.reject(new Error('OrderFormProvider missing'))),
     pendingCartItems: context?.pendingCartItems ?? {},
     setPendingCartItem: context?.setPendingCartItem ?? (() => {}),
     updatePendingCartQuantity: context?.updatePendingCartQuantity ?? (() => {}),
     removePendingCartItem: context?.removePendingCartItem ?? (() => {}),
     clearPendingCartItems: context?.clearPendingCartItems ?? (() => {}),
+    flushPendingCart: context?.flushPendingCart ?? (() => Promise.resolve()),
     sendProductsToCart:
       context?.sendProductsToCart ?? (() => Promise.resolve()),
   };
 }
 
 function getLocalOrderFormId() {
-  const fastStoreOrderFormId = window.faststore_sdk_stores
-    ?.get('fs::cart')
-    .read().id;
-
-  if (fastStoreOrderFormId) {
-    return fastStoreOrderFormId;
-  }
-
   try {
-    const vtexIOOrderFormId = getReliableOrderFormId();
-    if (vtexIOOrderFormId) return vtexIOOrderFormId;
+    return window.faststore_sdk_stores?.get?.('fs::cart')?.read?.()?.id ?? null;
   } catch {
-    // bridge unavailable or threw — fall through
+    return null;
   }
-
-  return null;
 }

@@ -4,7 +4,7 @@ import { InlineProduct } from '@/components/Product/InlineProduct';
 import { useMemo } from 'react';
 import { EmptyCart } from './EmptyCart';
 import { formatPriceWithCurrency } from '@/utils/currency';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
+import { UTM_SOURCES } from '@weni/webchat-service';
 
 import './Cart.scss';
 import { t } from 'i18next';

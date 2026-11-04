@@ -39,7 +39,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 import { useChatContext } from '@/contexts/ChatContext';
-import { UTM_SOURCES } from '@/utils/sendVtexUtm';
+import { UTM_SOURCES } from '@weni/webchat-service';
 
 function setupMockContext(cartItems = {}) {
   mockSetCart.mockReset();

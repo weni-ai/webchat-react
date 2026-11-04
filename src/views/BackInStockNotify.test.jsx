@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BackInStockNotify } from './BackInStockNotify';
 import { useChatContext } from '@/contexts/ChatContext';
-import { AVAILABILITY_NOTIFY_SUBSCRIBE_PATH } from '@/utils/availabilityNotify';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
@@ -50,10 +49,15 @@ function fillValidPhone() {
 describe('BackInStockNotify', () => {
   const clearPageHistory = jest.fn();
   const sendMessage = jest.fn();
+  const requestAvailabilityNotify = jest.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useChatContext.mockReturnValue({ clearPageHistory, sendMessage });
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      service: { requestAvailabilityNotify, getHostSegment: jest.fn() },
+    });
     delete window.__RUNTIME__;
     delete window.faststore_sdk_stores;
     document.documentElement.lang = 'pt-BR';
@@ -102,10 +106,16 @@ describe('BackInStockNotify', () => {
     expect(screen.getByLabelText('DDI')).toHaveValue('+1');
   });
 
-  it('prefills DDI from /api/segments when the page has no session', async () => {
-    globalThis.fetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ countryCode: 'ARG' }),
+  it('prefills DDI from the service segment when the page has no session', async () => {
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      service: {
+        requestAvailabilityNotify,
+        getHostSegment: jest.fn(async () =>
+          JSON.stringify({ countryCode: 'ARG' }),
+        ),
+      },
     });
 
     render(<BackInStockNotify productName="Cool Shoe" />);
@@ -153,10 +163,7 @@ describe('BackInStockNotify', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
-    expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      expect.anything(),
-    );
+    expect(requestAvailabilityNotify).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Enter a valid phone number',
     );
@@ -174,10 +181,7 @@ describe('BackInStockNotify', () => {
     fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
-    expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      expect.anything(),
-    );
+    expect(requestAvailabilityNotify).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
     expect(screen.queryByText("You're all set!")).not.toBeInTheDocument();
   });
@@ -194,10 +198,7 @@ describe('BackInStockNotify', () => {
     fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
-    expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      expect.anything(),
-    );
+    expect(requestAvailabilityNotify).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
   });
 
@@ -217,20 +218,10 @@ describe('BackInStockNotify', () => {
     await waitFor(() => {
       expect(screen.getByText("You're all set!")).toBeInTheDocument();
     });
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sku_id: '27',
-          phone: '5511999999999',
-          name: 'Ana',
-          seller: '1',
-          sales_channel: '1',
-          locale: 'pt-BR',
-        }),
-      },
+    expect(requestAvailabilityNotify).toHaveBeenCalledWith(
+      '27',
+      '1',
+      '5511999999999',
     );
     expect(
       screen.getByText(
@@ -252,10 +243,7 @@ describe('BackInStockNotify', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
 
     expect(clearPageHistory).toHaveBeenCalledTimes(1);
-    expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      expect.anything(),
-    );
+    expect(requestAvailabilityNotify).not.toHaveBeenCalled();
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
@@ -279,7 +267,7 @@ describe('BackInStockNotify', () => {
   });
 
   it('still shows success when subscribe returns HTTP error', async () => {
-    globalThis.fetch.mockResolvedValue({ ok: false, status: 500 });
+    requestAvailabilityNotify.mockRejectedValueOnce(new Error('http'));
 
     render(
       <BackInStockNotify
@@ -297,7 +285,7 @@ describe('BackInStockNotify', () => {
   });
 
   it('still shows success when subscribe rejects', async () => {
-    globalThis.fetch.mockRejectedValue(new Error('network'));
+    requestAvailabilityNotify.mockRejectedValueOnce(new Error('network'));
 
     render(
       <BackInStockNotify
