@@ -5,7 +5,6 @@ import Button from '@/components/common/Button';
 import { FSButton } from '../common/FSButton';
 import { PendingQuantityControls } from './PendingQuantityControls';
 import { useOrderForm } from '@/contexts/OrderFormContext';
-import { isFastStoreHost } from '@/utils/vtex';
 import { useChatContext } from '@/contexts/ChatContext';
 import { useTranslation } from 'react-i18next';
 
@@ -41,8 +40,8 @@ export function CounterControls({
     pendingCartItems,
     setPendingCartItem,
   } = useOrderForm();
-  const isFastStore = useMemo(() => isFastStoreHost(), []);
-  const { config, isInsideVTEXStore } = useChatContext();
+  const { config, isInsideVTEXStore, storefrontSnapshot } = useChatContext();
+  const isFastStore = !!storefrontSnapshot?.isFastStore;
   const { t } = useTranslation();
 
   useEffect(() => {

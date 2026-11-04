@@ -1,21 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useChatContext } from '@/contexts/ChatContext';
-import {
-  isVtexPdpPage,
-  extractSlugFromUrl,
-  extractProductPathFromUrl,
-  getVtexAccount,
-  resolveProductData,
-  normalizeForContext,
-  buildProductContextString,
-  getSelectedSkuId,
-  getSkuIdFromRawProduct,
-  isSelectedSkuAvailable,
-  getSellerIdForSku,
-} from '@/utils/vtex';
-import { createNavigationMonitor } from '@/utils/navigationMonitor';
-import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
+import { sendStorefrontUtm, useChatContext } from '@/contexts/ChatContext';
+import { UTM_SOURCES } from '@weni/webchat-service';
 import {
   recordConversationStarterEvent,
   setConversationStartersLogConfig,
@@ -23,8 +9,6 @@ import {
 
 const MOBILE_BREAKPOINT = '(max-width: 768px)';
 const MOBILE_AUTO_HIDE_MS = 5000;
-const NAVIGATION_DEBOUNCE_MS = 300;
-const NAVIGATION_URL_SETTLE_MS = 200;
 
 function parseCouponPercent(value) {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
@@ -43,7 +27,6 @@ export function useConversationStartersCore() {
     config,
     setIsChatOpen,
     setCurrentPage,
-    isInsideVTEXStore,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -72,14 +55,7 @@ export function useConversationStartersCore() {
   const productNameRef = useRef(productName);
   const couponPercentRef = useRef(couponPercent);
   const mobileTimerRef = useRef(null);
-  const deferredProductDataRef = useRef(null);
-  const navigationDebounceRef = useRef(null);
-  const navigationRetryRef = useRef(null);
-  const lastHandledPathnameRef = useRef(null);
-  const fetchGenerationRef = useRef(0);
-  const isConnectedRef = useRef(isConnected);
   const prevIsChatOpenRef = useRef(isChatOpen);
-  const wasInsideVTEXStoreRef = useRef(isInsideVTEXStore);
   const isPdpEnabledRef = useRef(config?.conversationStarters?.pdp === true);
   const isUnavailableNotifyEnabledRef = useRef(
     config?.unavailableProductNotify === true,
@@ -92,7 +68,6 @@ export function useConversationStartersCore() {
   isBackInStockNotifyRef.current = isBackInStockNotify;
   productNameRef.current = productName;
   couponPercentRef.current = couponPercent;
-  isConnectedRef.current = isConnected;
   isPdpEnabledRef.current = config?.conversationStarters?.pdp === true;
   isUnavailableNotifyEnabledRef.current =
     config?.unavailableProductNotify === true;
@@ -136,7 +111,6 @@ export function useConversationStartersCore() {
     setCouponPercent(null);
     clearMobileTimer();
     currentFingerprintRef.current = null;
-    deferredProductDataRef.current = null;
     pendingBackInStockRef.current = false;
     pendingWhatsappOffersRef.current = false;
     notifySkuIdRef.current = '';
@@ -167,7 +141,7 @@ export function useConversationStartersCore() {
         title: t('back_in_stock.form_title'),
         props: {
           productName: name || productNameRef.current || '',
-          skuId: notifySkuIdRef.current || getSelectedSkuId() || '',
+          skuId: notifySkuIdRef.current || '',
           seller: notifySellerRef.current || '',
         },
       });
@@ -210,196 +184,50 @@ export function useConversationStartersCore() {
     [getWhatsappOffersFormTitle, setCurrentPage],
   );
 
-  const requestStarters = useCallback(
-    (productData) => {
-      if (!service) {
-        recordConversationStarterEvent('ws_request', 'warn', {
-          reason: 'no_service',
+  const applyStorefrontSnapshot = useCallback(
+    (snapshot) => {
+      if (!isPdpEnabledRef.current) return;
+      const isProduct = !!(
+        snapshot?.isProductPage &&
+        snapshot?.account &&
+        snapshot?.productPath
+      );
+      if (!isProduct) {
+        if (sourceRef.current !== 'manual') {
+          setQuestions([]);
+          setFingerprint(null);
+          setIsLoading(false);
+          setIsCompactVisible(false);
+          setIsBackInStockNotify(false);
+          currentFingerprintRef.current = null;
+        }
+        return;
+      }
+
+      const nextFingerprint = `${snapshot.account}:${snapshot.productPath}`;
+      if (nextFingerprint === currentFingerprintRef.current) return;
+      currentFingerprintRef.current = nextFingerprint;
+      setFingerprint(nextFingerprint);
+      setSource('pdp');
+      setHasShownCompactStarters(false);
+      notifySkuIdRef.current = snapshot.skuId || '';
+      notifySellerRef.current = snapshot.sellerId || '';
+
+      if (
+        isUnavailableNotifyEnabledRef.current &&
+        snapshot.available === false
+      ) {
+        showBackInStockNotify('', {
+          skuId: snapshot.skuId || '',
+          seller: snapshot.sellerId || '',
         });
         return;
       }
 
-      try {
-        if (isConnectedRef.current) {
-          recordConversationStarterEvent('ws_request', 'info', {
-            account: productData?.account,
-            linkText: productData?.linkText,
-            productPath: productData?.productPath,
-            productName: productData?.productName,
-          });
-          service.getStarters(productData);
-        } else {
-          recordConversationStarterEvent('ws_deferred', 'info', {
-            account: productData?.account,
-            linkText: productData?.linkText,
-            productPath: productData?.productPath,
-            connectOn: config?.connectOn,
-          });
-          deferredProductDataRef.current = productData;
-          if (config?.connectOn === 'demand') {
-            service.connect();
-          }
-        }
-      } catch (error) {
-        recordConversationStarterEvent('ws_request_error', 'error', {
-          message: error?.message || 'getStarters_failed',
-        });
-        setIsLoading(false);
-      }
+      setIsLoading(true);
     },
-    [service, config?.connectOn],
+    [showBackInStockNotify],
   );
-
-  const detectAndFetchPdp = useCallback(async () => {
-    if (!isPdpEnabledRef.current) {
-      recordConversationStarterEvent('skip', 'info', {
-        reason: 'pdp_disabled',
-      });
-      return;
-    }
-    if (!isVtexPdpPage()) {
-      recordConversationStarterEvent('skip', 'info', {
-        reason: 'not_pdp',
-        pathname: window.location.pathname,
-      });
-      return;
-    }
-
-    const slug = extractSlugFromUrl();
-    if (!slug) {
-      recordConversationStarterEvent('skip', 'info', { reason: 'no_slug' });
-      return;
-    }
-
-    const account = getVtexAccount();
-    if (!account) {
-      recordConversationStarterEvent('skip', 'info', { reason: 'no_account' });
-      return;
-    }
-
-    const productPath = extractProductPathFromUrl();
-    const newFingerprint = `${account}:${productPath || slug}`;
-    const generation = ++fetchGenerationRef.current;
-
-    recordConversationStarterEvent('attempt', 'info', {
-      fingerprint: newFingerprint,
-      slug,
-      account,
-      productPath,
-      generation,
-    });
-
-    currentFingerprintRef.current = newFingerprint;
-    setFingerprint(newFingerprint);
-    setIsLoading(true);
-    setSource('pdp');
-
-    const result = await resolveProductData(slug, account);
-    if (generation !== fetchGenerationRef.current) {
-      recordConversationStarterEvent('ws_discarded', 'warn', {
-        reason: 'stale_generation',
-        generation,
-        currentGeneration: fetchGenerationRef.current,
-      });
-      return;
-    }
-
-    if (!result) {
-      recordConversationStarterEvent('product_resolve_failed', 'warn', {
-        slug,
-        account,
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    recordConversationStarterEvent('product_resolved', 'info', {
-      source: result.source,
-      account: result.productData?.account,
-      linkText: result.productData?.linkText,
-      productPath: result.productData?.productPath,
-      productName: result.productData?.productName,
-    });
-
-    if (currentFingerprintRef.current !== newFingerprint) {
-      recordConversationStarterEvent('ws_discarded', 'warn', {
-        reason: 'fingerprint_changed',
-        fingerprint: newFingerprint,
-      });
-      return;
-    }
-
-    const selectedSkuId =
-      getSelectedSkuId() ||
-      getSkuIdFromRawProduct(result.rawProduct, result.source);
-    const normalized = normalizeForContext(result.rawProduct, result.source);
-    const contextString = buildProductContextString(normalized, selectedSkuId);
-    if (contextString && service) {
-      recordConversationStarterEvent('context_set', 'info', {
-        length: contextString.length,
-        skuId: selectedSkuId || '',
-      });
-      service.setContext(contextString);
-    }
-
-    const resolvedProductName =
-      normalized?.productName || result.productData?.productName || '';
-
-    if (
-      isUnavailableNotifyEnabledRef.current &&
-      !isSelectedSkuAvailable(normalized, selectedSkuId)
-    ) {
-      recordConversationStarterEvent('divert_back_in_stock', 'info', {
-        skuId: selectedSkuId || '',
-        productName: resolvedProductName,
-      });
-      showBackInStockNotify(resolvedProductName, {
-        skuId: selectedSkuId || '',
-        seller: getSellerIdForSku(normalized, selectedSkuId),
-      });
-      return;
-    }
-
-    requestStarters(result.productData);
-  }, [requestStarters, service, showBackInStockNotify]);
-
-  const applyNavigationChange = useCallback(() => {
-    const pathname = window.location.pathname;
-    if (pathname === lastHandledPathnameRef.current) {
-      return false;
-    }
-
-    lastHandledPathnameRef.current = pathname;
-    fetchGenerationRef.current += 1;
-    setHasShownCompactStarters(false);
-
-    recordConversationStarterEvent('nav_clear', 'info', { pathname });
-
-    if (!service) return true;
-
-    service.clearStarters();
-    service.setContext('');
-    resetStartersState();
-
-    if (isPdpEnabledRef.current) {
-      detectAndFetchPdp();
-    }
-
-    return true;
-  }, [detectAndFetchPdp, resetStartersState, service]);
-
-  const scheduleNavigationHandling = useCallback(() => {
-    clearTimeout(navigationDebounceRef.current);
-    clearTimeout(navigationRetryRef.current);
-
-    navigationDebounceRef.current = setTimeout(() => {
-      applyNavigationChange();
-
-      navigationRetryRef.current = setTimeout(() => {
-        applyNavigationChange();
-      }, NAVIGATION_URL_SETTLE_MS);
-    }, NAVIGATION_DEBOUNCE_MS);
-  }, [applyNavigationChange]);
 
   const removeQuestionFromList = useCallback((question) => {
     setQuestions((prev) => {
@@ -456,7 +284,7 @@ export function useConversationStartersCore() {
         from: 'full',
         questionLength: question?.length,
       });
-      void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
+      void sendStorefrontUtm(service, UTM_SOURCES.CONV_STARTER);
       if (isChatOpen) {
         sendMessage(question, {
           skipUtm: true,
@@ -543,7 +371,7 @@ export function useConversationStartersCore() {
     if (!pendingStarterRef.current) return;
 
     if (isConnected) {
-      void sendVtexUtm(service, UTM_SOURCES.CONV_STARTER, { silent: true });
+      void sendStorefrontUtm(service, UTM_SOURCES.CONV_STARTER);
       sendMessage(pendingStarterRef.current, {
         skipUtm: true,
         fromConversationStarter: true,
@@ -635,26 +463,6 @@ export function useConversationStartersCore() {
       });
     };
 
-    const handleConnected = () => {
-      if (deferredProductDataRef.current) {
-        const productData = deferredProductDataRef.current;
-        deferredProductDataRef.current = null;
-        recordConversationStarterEvent('ws_request_flushed', 'info', {
-          account: productData?.account,
-          linkText: productData?.linkText,
-          productPath: productData?.productPath,
-        });
-        try {
-          service.getStarters(productData);
-        } catch (error) {
-          recordConversationStarterEvent('ws_request_error', 'error', {
-            message: error?.message || 'getStarters_failed',
-          });
-          setIsLoading(false);
-        }
-      }
-    };
-
     const handleManualStarters = (manualQuestions) => {
       setIsBackInStockNotify(false);
       setProductName('');
@@ -720,7 +528,6 @@ export function useConversationStartersCore() {
     service.on('starters:received', handleStartersReceived);
     service.on('starters:error', handleStartersError);
     service.on('starters:discarded', handleStartersDiscarded);
-    service.on('connected', handleConnected);
     service.on('starters:set-manual', handleManualStarters);
     service.on('starters:simulate-unavailable', handleSimulateUnavailable);
     service.on(
@@ -733,15 +540,10 @@ export function useConversationStartersCore() {
     );
     service.on('starters:clear', handleStartersClear);
 
-    if (isConnected) {
-      handleConnected();
-    }
-
     return () => {
       service.off('starters:received', handleStartersReceived);
       service.off('starters:error', handleStartersError);
       service.off('starters:discarded', handleStartersDiscarded);
-      service.off('connected', handleConnected);
       service.off('starters:set-manual', handleManualStarters);
       service.off('starters:simulate-unavailable', handleSimulateUnavailable);
       service.off(
@@ -756,7 +558,6 @@ export function useConversationStartersCore() {
     };
   }, [
     service,
-    isConnected,
     startMobileAutoHide,
     showBackInStockNotify,
     showWhatsappOffersOptIn,
@@ -765,44 +566,18 @@ export function useConversationStartersCore() {
   ]);
 
   useEffect(() => {
-    if (!service) return;
+    if (!service?.on) return undefined;
 
-    lastHandledPathnameRef.current = window.location.pathname;
-    recordConversationStarterEvent('init', 'info', {
-      pdpEnabled: isPdpEnabledRef.current,
-      pathname: window.location.pathname,
-      account: getVtexAccount(),
-      isConnected: isConnectedRef.current,
-      connectOn: config?.connectOn,
-    });
-    detectAndFetchPdp();
+    const handleStorefrontChanged = (snapshot) => {
+      applyStorefrontSnapshot(snapshot);
+    };
 
-    const monitor = createNavigationMonitor(scheduleNavigationHandling);
-
-    monitor.start();
-
+    service.on('storefront:changed', handleStorefrontChanged);
     return () => {
-      monitor.stop();
-      clearTimeout(navigationDebounceRef.current);
-      clearTimeout(navigationRetryRef.current);
+      service.off('storefront:changed', handleStorefrontChanged);
       clearMobileTimer();
     };
-  }, [
-    service,
-    detectAndFetchPdp,
-    scheduleNavigationHandling,
-    clearMobileTimer,
-  ]);
-
-  useEffect(() => {
-    const accountArrivedAfterMount =
-      isInsideVTEXStore && !wasInsideVTEXStoreRef.current;
-    wasInsideVTEXStoreRef.current = isInsideVTEXStore;
-
-    if (accountArrivedAfterMount && service) {
-      detectAndFetchPdp();
-    }
-  }, [isInsideVTEXStore, service, detectAndFetchPdp]);
+  }, [service, applyStorefrontSnapshot, clearMobileTimer]);
 
   return {
     questions,

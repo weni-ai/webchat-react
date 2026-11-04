@@ -158,7 +158,65 @@ class WeniWebchatService {
   getFileConfig() {
     return {};
   }
+
+  watchStorefront() {
+    this._watchingStorefront = true;
+  }
+
+  unwatchStorefront() {
+    this._watchingStorefront = false;
+  }
+
+  getStorefrontSnapshot() {
+    return this._storefrontSnapshot ?? null;
+  }
+
+  setPendingCartItem(key, quantity, origin) {
+    this._pendingCart = this._pendingCart || [];
+    this._pendingCart.push({ key, quantity, origin });
+  }
+
+  flushPendingCart(keys) {
+    this._flushedCartKeys = keys;
+    return Promise.resolve();
+  }
+
+  requestAvailabilityNotify(skuId, sellerId, contact) {
+    this._availabilityNotify = { skuId, sellerId, contact };
+    return Promise.resolve();
+  }
+
+  getHostSegment() {
+    return Promise.resolve(null);
+  }
+
+  enterVoiceSession() {
+    this.emit('voice:state', { state: 'listening' });
+    return Promise.resolve();
+  }
+
+  exitVoiceSession() {
+    this.emit('voice:state', { state: 'idle' });
+  }
+
+  speakIncomingText(text, messageId) {
+    this._spoken = { text, messageId };
+    return Promise.resolve();
+  }
+
+  sendUtm(data) {
+    this._utm = data;
+    return Promise.resolve(data);
+  }
 }
+
+const UTM_SOURCES = {
+  CONV_STARTER: 'cx_shopping_assistant_conv_starter',
+  ASSISTANT: 'cx_shopping_assistant',
+  CART: 'cx_shopping_assistant_cart',
+};
+
+WeniWebchatService.UTM_SOURCES = UTM_SOURCES;
 
 // Mirrors the real package, which exposes the constants both as static
 // properties on the class and as named module exports.
@@ -197,3 +255,4 @@ WeniWebchatService.MESSAGE_STATUS = {
 };
 
 module.exports = WeniWebchatService;
+module.exports.UTM_SOURCES = WeniWebchatService.UTM_SOURCES;

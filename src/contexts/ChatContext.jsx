@@ -1,4 +1,4 @@
-import WeniWebchatService from '@weni/webchat-service';
+import WeniWebchatService, { UTM_SOURCES } from '@weni/webchat-service';
 import PropTypes from 'prop-types';
 import {
   createContext,
@@ -9,14 +9,32 @@ import {
   useRef,
   useState,
 } from 'react';
-import { VoiceService } from '@/services/voice';
-import { AudioCapture } from '@/services/voice/AudioCapture';
 import i18n from '@/i18n';
 import { navigateIfSameDomain } from '@/experimental/navigateIfSameDomain';
-import { getVtexAccount, isCheckoutPage, watchVtexAccount } from '@/utils/vtex';
-import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
-import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
-import { createNavigationMonitor } from '@/utils/navigationMonitor';
+
+function browserSupportsVoice() {
+  return (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.mediaDevices?.getUserMedia === 'function' &&
+    typeof window !== 'undefined' &&
+    'speechSynthesis' in window
+  );
+}
+
+export async function sendStorefrontUtm(service, utmSource) {
+  if (!service?.sendUtm || !utmSource) return;
+  const account = service.getStorefrontSnapshot?.()?.account;
+  if (!account) return;
+  try {
+    await service.sendUtm({
+      vtex_account: account,
+      order_form_id: 'pending',
+      utm_source: utmSource,
+    });
+  } catch {
+    // Attribution is best-effort and must not block the conversation.
+  }
+}
 
 let serviceInstance = {
   fns: [],
@@ -148,9 +166,8 @@ export function ChatProvider({ children, config }) {
   const expectingWelcomeTooltipRef = useRef(false);
   const [pageHistory, setPageHistory] = useState([]);
   const [cart, setCart] = useState({});
-  const [isInsideVTEXStore, setIsInsideVTEXStore] = useState(
-    () => !!getVtexAccount(),
-  );
+  const [isInsideVTEXStore, setIsInsideVTEXStore] = useState(false);
+  const [storefrontSnapshot, setStorefrontSnapshot] = useState(null);
 
   const [inputDraft, setInputDraft] = useState('');
 
@@ -162,11 +179,10 @@ export function ChatProvider({ children, config }) {
   const [voiceModeState, setVoiceModeState] = useState(null);
   const [voicePartialTranscript, setVoicePartialTranscript] = useState('');
   const [voiceError, setVoiceError] = useState(null);
-  const [voiceLanguage, setVoiceLanguage] = useState('en');
-  const isVoiceModeSupported = useMemo(() => VoiceService.isSupported(), []);
+  const isVoiceModeSupported = useMemo(() => browserSupportsVoice(), []);
   const [isVoiceModePageActive, setIsVoiceModePageActive] = useState(false);
   const [voiceIntentBanner, setVoiceIntentBanner] = useState(null);
-  const voiceServiceRef = useRef(null);
+  const isVoiceModeActiveRef = useRef(false);
   const processedTextRef = useRef('');
   const lastProcessedVoiceMsgIdRef = useRef(null);
   const voiceStartMessageCountRef = useRef(0);
@@ -212,6 +228,10 @@ export function ChatProvider({ children, config }) {
     isChatOpenRef.current = isChatOpen;
   }, [isChatOpen]);
 
+  useEffect(() => {
+    isVoiceModeActiveRef.current = isVoiceModeActive;
+  }, [isVoiceModeActive]);
+
   let initialTooltipMessageTimeout = null;
 
   function displaysTooltipAsAReceivedMessage(message) {
@@ -242,6 +262,7 @@ export function ChatProvider({ children, config }) {
     service
       .init()
       .then(({ shouldRender }) => {
+        service.watchStorefront?.();
         if (typeof shouldRender === 'boolean') {
           setShouldRender(shouldRender);
 
@@ -256,10 +277,7 @@ export function ChatProvider({ children, config }) {
           }
         }
 
-        if (isCheckoutPage()) {
-          service.setIsChatOpen(false);
-          setIsChatOpen(false);
-        } else if (mergedConfig.startFullScreen) {
+        if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
         } else {
           setIsChatOpen(service.getSession()?.isChatOpen || false);
@@ -270,7 +288,7 @@ export function ChatProvider({ children, config }) {
       });
 
     const forwardIncomingMessageToVoiceMode = (newState) => {
-      if (!voiceServiceRef.current) return;
+      if (!isVoiceModeActiveRef.current) return;
 
       const messages = newState.messages || [];
       const lastMsgIndex = messages.length - 1;
@@ -290,7 +308,7 @@ export function ChatProvider({ children, config }) {
       const newText = currentText.substring(processedTextRef.current.length);
 
       if (newText) {
-        voiceServiceRef.current.processTextChunk(newText, !isStreaming);
+        service.speakIncomingText?.(newText, lastMsg.id);
         processedTextRef.current = isStreaming ? currentText : '';
       }
     };
@@ -317,17 +335,8 @@ export function ChatProvider({ children, config }) {
 
     service.on('context:changed', (context) => setContext(context));
 
-    const syncVoiceModeLanguage = (language) => {
-      const isoLang = language ? language.split('-')[0].toLowerCase() : 'en';
-      setVoiceLanguage(isoLang);
-      if (voiceServiceRef.current) {
-        voiceServiceRef.current.setLanguage(isoLang);
-      }
-    };
-
     service.on('language:changed', (language) => {
       i18n.changeLanguage(language);
-      syncVoiceModeLanguage(language);
     });
 
     if (isVoiceEnabledByClient) {
@@ -338,62 +347,53 @@ export function ChatProvider({ children, config }) {
       setIsChatOpen(isOpen);
     });
 
+    service.on('storefront:changed', (snapshot) => {
+      setStorefrontSnapshot(snapshot || null);
+      setIsInsideVTEXStore(!!snapshot?.account);
+    });
+
+    service.on('storefront:entered-checkout', () => {
+      service.setIsChatOpen(false);
+      setIsChatOpen(false);
+    });
+
+    service.on('voice:state', ({ state } = {}) => {
+      setVoiceModeState(state || null);
+      const active = state === 'listening' || state === 'speaking';
+      setIsVoiceModeActive(active);
+      if (active || state === 'idle') setIsEnteringVoiceMode(false);
+      if (state === 'idle') setVoicePartialTranscript('');
+    });
+
+    service.on('voice:error', (error) => {
+      setIsEnteringVoiceMode(false);
+      setVoiceError(error || null);
+      if (error?.operation === 'permission') {
+        setVoiceIntentBanner(
+          i18n.t('voice_mode.microphone_disabled_in_browser'),
+        );
+      }
+    });
+
+    service.on('voice:transcript', ({ text } = {}) => {
+      if (!text) return;
+      setVoicePartialTranscript('');
+      service.sendMessage(text);
+    });
+
     service.clearPageHistory = clearPageHistory;
     service.clearCart = clearCart;
 
     return () => {
       clearTimeout(initialTooltipMessageTimeout);
-      if (voiceServiceRef.current) {
-        voiceServiceRef.current.destroy();
-        voiceServiceRef.current = null;
-      }
+      service.exitVoiceSession?.();
+      service.unwatchStorefront?.();
       delete service.clearPageHistory;
       delete service.clearCart;
       service.removeAllListeners();
       service.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    if (isInsideVTEXStore) return undefined;
-
-    return watchVtexAccount({
-      onAccount: () => setIsInsideVTEXStore(true),
-    });
-  }, [isInsideVTEXStore]);
-
-  useEffect(() => {
-    if (!isInsideVTEXStore) return undefined;
-
-    let cancelled = false;
-    const stop = startVtexCustomFieldsSync(
-      (field, value) => service.setCustomField(field, value),
-      { isCancelled: () => cancelled },
-    );
-
-    return () => {
-      cancelled = true;
-      stop();
-    };
-  }, [isInsideVTEXStore, service]);
-
-  useEffect(() => {
-    let wasOnCheckout = false;
-    const closeChatOnEnteringCheckout = () => {
-      const nowOnCheckout = isCheckoutPage();
-      if (nowOnCheckout && !wasOnCheckout) {
-        service.setIsChatOpen(false);
-      }
-      wasOnCheckout = nowOnCheckout;
-    };
-
-    closeChatOnEnteringCheckout();
-
-    const monitor = createNavigationMonitor(closeChatOnEnteringCheckout);
-    monitor.start();
-
-    return () => monitor.stop();
-  }, [service]);
 
   useEffect(() => {
     if (isChatOpen && mergedConfig.connectOn === 'demand') {
@@ -446,81 +446,33 @@ export function ChatProvider({ children, config }) {
       return;
     }
 
-    if (voiceServiceRef.current) {
-      voiceServiceRef.current.removeAllListeners();
-      voiceServiceRef.current.destroy();
-      voiceServiceRef.current = null;
-    }
-
     voiceStartMessageCountRef.current = (state.messages || []).length;
     lastProcessedVoiceMsgIdRef.current = null;
     processedTextRef.current = '';
-
+    setVoiceError(null);
     setIsEnteringVoiceMode(true);
 
-    const getTokens = () => service.requestVoiceTokens();
-
-    const vs = new VoiceService();
-    await vs.init({
-      ...mergedConfig.voiceMode,
-      languageCode: voiceLanguage,
-      getTokens,
-    });
-    vs.on('state:changed', ({ state }) => setVoiceModeState(state));
-    vs.on('transcript:partial', ({ text }) => setVoicePartialTranscript(text));
-    vs.on('transcript:committed', () => {
-      setVoicePartialTranscript('');
-    });
-    vs.on('session:started', () => {
-      setIsEnteringVoiceMode(false);
-      setIsVoiceModeActive(true);
-    });
-    vs.on('session:ended', ({ reason } = {}) => {
-      setIsEnteringVoiceMode(false);
-      setIsVoiceModeActive(false);
-      setVoiceModeState(null);
-      setVoicePartialTranscript('');
-      processedTextRef.current = '';
-      lastProcessedVoiceMsgIdRef.current = null;
-
-      if (reason === 'user') {
-        setVoiceError(null);
-      }
-
-      if (voiceServiceRef.current === vs) {
-        vs.removeAllListeners();
-        vs.destroy();
-        voiceServiceRef.current = null;
-      }
-    });
-    vs.on('error', (error) => {
+    try {
+      await service.enterVoiceSession?.();
+    } catch (error) {
       setIsEnteringVoiceMode(false);
       setVoiceError(error);
-    });
-    vs.setMessageCallback((text) => service.sendMessage(text));
-    voiceServiceRef.current = vs;
-
-    try {
-      await vs.startSession();
-    } catch {
-      // Errors are surfaced via the 'error' event listener above.
-      // This catch prevents an unhandled promise rejection when the user
-      // cancels during initialization or when startSession fails.
     }
   }, [
-    mergedConfig,
-    voiceLanguage,
     isVoiceEnabledByClient,
     isVoiceModeSupported,
     isVoiceEnabledByServer,
     service,
+    state.messages,
   ]);
 
   const exitVoiceMode = useCallback(() => {
-    if (voiceServiceRef.current) {
-      voiceServiceRef.current.endSession();
-    }
-  }, []);
+    service.exitVoiceSession?.();
+    setIsEnteringVoiceMode(false);
+    setIsVoiceModeActive(false);
+    setVoiceModeState(null);
+    setVoicePartialTranscript('');
+  }, [service]);
 
   const retryVoiceMode = useCallback(async () => {
     exitVoiceMode();
@@ -547,31 +499,8 @@ export function ChatProvider({ children, config }) {
 
   const runVoiceModeEntryFlow = useCallback(async () => {
     setIsVoiceModePageActive(true);
-
-    const permissionState = await AudioCapture.checkPermission();
-
-    if (permissionState === 'denied') {
-      setVoiceIntentBanner(i18n.t('voice_mode.microphone_disabled_in_browser'));
-      return;
-    }
-
-    if (permissionState === 'granted') {
-      setVoiceIntentBanner(i18n.t('voice_mode.connecting'));
-      enterVoiceMode();
-      return;
-    }
-
-    setVoiceIntentBanner(
-      i18n.t('voice_mode.check_microphone_browser_settings'),
-    );
-    const micGranted = await AudioCapture.requestPermission();
-    if (!micGranted) {
-      setVoiceIntentBanner(i18n.t('voice_mode.microphone_disabled_in_browser'));
-      return;
-    }
-
     setVoiceIntentBanner(i18n.t('voice_mode.connecting'));
-    enterVoiceMode();
+    await enterVoiceMode();
   }, [enterVoiceMode]);
 
   const handleVoiceModeIntent = useCallback(async () => {
@@ -644,6 +573,7 @@ export function ChatProvider({ children, config }) {
     setCart,
     clearCart,
     isInsideVTEXStore,
+    storefrontSnapshot,
     mode,
     isModeVisible: showMode,
 
@@ -670,14 +600,13 @@ export function ChatProvider({ children, config }) {
     sendMessage: (text, options) => {
       service.sendMessage(text, options);
       if (isInsideVTEXStore && !options?.skipUtm) {
-        void sendVtexUtm(service, UTM_SOURCES.ASSISTANT, { silent: true });
+        void sendStorefrontUtm(service, UTM_SOURCES.ASSISTANT);
       }
     },
     simulateMessageReceived: (message) =>
       service.simulateMessageReceived(message),
     addProductToCart: (props) => service.addProductToCart(props),
-    sendUtm: (utm_source, options) =>
-      sendVtexUtm(service, utm_source, { silent: true, ...options }),
+    sendUtm: (utm_source) => sendStorefrontUtm(service, utm_source),
     setCustomField: (field, value) => service.setCustomField(field, value),
     addConversationStatus: (text, status) =>
       service.addConversationStatus(text, status),

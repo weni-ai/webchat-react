@@ -13,18 +13,7 @@ jest.mock('react-dom/client', () => ({
   })),
 }));
 
-jest.mock('@/utils/sendVtexUtm', () => ({
-  sendVtexUtm: jest.fn(),
-  UTM_SOURCES: {
-    CONV_STARTER: 'cx_shopping_assistant_conv_starter',
-    ASSISTANT: 'cx_shopping_assistant',
-    CART: 'cx_shopping_assistant_cart',
-  },
-}));
-
 jest.mock('@/components/Widget/Widget', () => jest.fn(() => null));
-
-import { sendVtexUtm } from '@/utils/sendVtexUtm';
 
 jest.mock('@/i18n', () => ({
   __esModule: true,
@@ -60,7 +49,10 @@ beforeEach(() => {
   service.getIsChatOpen = jest.fn().mockResolvedValue(false);
   service.sendMessage = jest.fn();
   service.addProductToCart = jest.fn();
-  service.sendUtm = jest.fn();
+  service.sendUtm = jest.fn().mockResolvedValue({});
+  service.getStorefrontSnapshot = jest.fn().mockReturnValue({
+    account: 'mystore',
+  });
   service.clearMessages = jest.fn();
   service.setSessionId = jest.fn();
   service.setContext = jest.fn();
@@ -295,14 +287,14 @@ describe('WebChat service helpers', () => {
     expect(service.addProductToCart).toHaveBeenCalledWith(props);
   });
 
-  it('sendUtm forwards utm_source to sendVtexUtm', async () => {
+  it('sendUtm forwards utm_source to the service', async () => {
     await WebChat.sendUtm('cx_shopping_assistant', { once: false });
 
-    expect(sendVtexUtm).toHaveBeenCalledWith(
-      service,
-      'cx_shopping_assistant',
-      { once: false },
-    );
+    expect(service.sendUtm).toHaveBeenCalledWith({
+      vtex_account: 'mystore',
+      order_form_id: 'pending',
+      utm_source: 'cx_shopping_assistant',
+    });
   });
 
   it('clear clears messages, page history, and cart', async () => {

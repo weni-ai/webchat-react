@@ -9,7 +9,7 @@ import ReactDOM from 'react-dom/client';
 
 import Widget from './components/Widget/Widget';
 import { service } from './contexts/ChatContext';
-import { sendVtexUtm } from '@/utils/sendVtexUtm';
+import { sendStorefrontUtm } from './contexts/ChatContext';
 import {
   getConversationStartersLog,
   recordConversationStarterEvent,
@@ -301,9 +301,9 @@ async function addProductToCart(props) {
  * @param {{ silent?: boolean, once?: boolean }} [options]
  * @returns {Promise<void>}
  */
-async function sendUtm(utm_source, options = {}) {
+async function sendUtm(utm_source, _options = {}) {
   const svc = await serviceWhenReady();
-  return sendVtexUtm(svc, utm_source, options);
+  return sendStorefrontUtm(svc, utm_source);
 }
 
 /**

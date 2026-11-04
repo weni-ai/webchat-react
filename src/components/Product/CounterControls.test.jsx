@@ -14,11 +14,6 @@ jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
 }));
 
-jest.mock('@/utils/vtex', () => ({
-  getVtexAccount: jest.fn(() => 'mystore'),
-  isFastStoreHost: jest.fn(() => false),
-}));
-
 jest.mock('@/utils/throttleCustomField', () => ({
   createThrottledCustomFieldSetter: jest.fn(() => jest.fn()),
 }));
@@ -83,7 +78,6 @@ jest.mock('../common/FSButton', () => ({
 
 import { useOrderForm } from '@/contexts/OrderFormContext';
 import { useChatContext } from '@/contexts/ChatContext';
-import { isFastStoreHost } from '@/utils/vtex';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -135,7 +129,6 @@ beforeEach(() => {
   jest.useFakeTimers();
   useOrderForm.mockReturnValue(buildOrderForm());
   useChatContext.mockReturnValue(buildChatContext());
-  isFastStoreHost.mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -612,7 +605,6 @@ describe('CounterControls — FastStore add-to-cart', () => {
   let setPendingCartItem;
 
   beforeEach(() => {
-    isFastStoreHost.mockReturnValue(true);
     setPendingCartItem = jest.fn();
 
     useOrderForm.mockReturnValue(
@@ -625,6 +617,7 @@ describe('CounterControls — FastStore add-to-cart', () => {
       buildChatContext({
         config: { addToCart: true },
         isInsideVTEXStore: true,
+        storefrontSnapshot: { isFastStore: true },
       }),
     );
   });
@@ -635,7 +628,13 @@ describe('CounterControls — FastStore add-to-cart', () => {
   });
 
   it('still falls back to counter when not on FastStore and orderFormId is absent', () => {
-    isFastStoreHost.mockReturnValue(false);
+    useChatContext.mockReturnValue(
+      buildChatContext({
+        config: { addToCart: true },
+        isInsideVTEXStore: true,
+        storefrontSnapshot: { isFastStore: false },
+      }),
+    );
     renderCounter({ uuid: 'sku1#seller1' });
     expect(
       screen.queryByTestId('fs-button-shopping_cart'),
