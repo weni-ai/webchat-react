@@ -3,6 +3,16 @@ import WeniReactConfig from '@weni/eslint-config/react16.js';
 import globals from 'globals';
 
 export default defineConfig([
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'dist-standalone/**',
+      'build/**',
+      'coverage/**',
+      '**/*.min.js',
+    ],
+  },
   ...WeniReactConfig,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -34,6 +44,15 @@ export default defineConfig([
     settings: {
       react: {
         version: 'detect',
+      },
+    },
+  },
+  {
+    files: ['**/*.test.js', '**/*.test.jsx'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node,
       },
     },
   },

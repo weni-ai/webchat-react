@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable react/prop-types */
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
