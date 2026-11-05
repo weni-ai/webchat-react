@@ -1,9 +1,5 @@
 import { whereAlpha3 } from 'iso-3166-1';
-import {
-  AsYouType,
-  getCountryCallingCode,
-  isValidPhoneNumber,
-} from 'libphonenumber-js/max';
+import { AsYouType, getCountryCallingCode } from 'libphonenumber-js/max';
 
 import { getSegment } from '@/utils/vtexCustomFields';
 
@@ -95,13 +91,6 @@ export function formatNationalNumber(value, alpha2) {
   } catch {
     return digits;
   }
-}
-
-export function isValidInternationalNumber(ddi, national) {
-  const ddiDigits = digitsOnly(ddi);
-  const nationalDigitsValue = digitsOnly(national);
-  if (!ddiDigits || !nationalDigitsValue) return false;
-  return isValidPhoneNumber(`+${ddiDigits}${nationalDigitsValue}`);
 }
 
 export function internationalDigits(ddi, national) {

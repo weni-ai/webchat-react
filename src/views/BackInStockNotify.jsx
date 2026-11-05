@@ -4,14 +4,17 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import { FSButton } from '@/components/common/FSButton';
+import { getSelectedSkuId } from '@/utils/vtex';
 import { useChatContext } from '@/contexts/ChatContext';
-import { subscribeAvailabilityNotify } from '@/utils/availabilityNotify';
+import {
+  getSalesChannel,
+  getStoreLocaleCandidates,
+} from '@/utils/availabilityNotify';
 import {
   callingCodeDigits,
   callingCodeForAlpha2,
   formatNationalNumber,
   internationalDigits,
-  isValidInternationalNumber,
   loadStoreCountryAlpha3,
   nationalDigits,
   phoneCountryFromAlpha3,
@@ -26,7 +29,7 @@ export function BackInStockNotify({
   seller = '',
 }) {
   const { t, i18n } = useTranslation();
-  const { clearPageHistory, sendMessage } = useChatContext();
+  const { clearPageHistory, sendMessage, service } = useChatContext();
   const [phoneCountry, setPhoneCountry] = useState(readInitialPhoneCountry);
   const [name, setName] = useState('');
   const [ddi, setDdi] = useState(phoneCountry.ddi);
@@ -87,8 +90,13 @@ export function BackInStockNotify({
     event.preventDefault();
     if (isSubmitting) return;
 
-    const nameMissing = name.trim() === '';
-    const phoneInvalid = !isValidInternationalNumber(ddi, nationalNumber);
+    const phone = internationalDigits(ddi, nationalNumber);
+    const verdict = service?.validateBackInStockContact?.({ name, phone }) ?? {
+      isValid: false,
+      errors: { name: 'required', phone: 'invalid' },
+    };
+    const nameMissing = verdict.errors?.name === 'required';
+    const phoneInvalid = verdict.errors?.phone === 'invalid';
     setShowNameError(nameMissing);
     setShowPhoneError(phoneInvalid);
     if (nameMissing || phoneInvalid) return;
@@ -97,13 +105,19 @@ export function BackInStockNotify({
     setShowPhoneError(false);
     setIsSubmitting(true);
     try {
-      await subscribeAvailabilityNotify({
-        name,
-        phone: internationalDigits(ddi, nationalNumber),
-        skuId,
-        seller,
-        language: i18n.language,
-      });
+      if (service?.subscribeBackInStock) {
+        await service.subscribeBackInStock({
+          name,
+          phone,
+          skuId: skuId || getSelectedSkuId() || '',
+          seller,
+          salesChannel: getSalesChannel(),
+          storeLocales: getStoreLocaleCandidates(),
+          language: i18n.language,
+        });
+      }
+    } catch {
+      // The service already emits backInStock:error. Success stays visible.
     } finally {
       setSubmitted(true);
     }

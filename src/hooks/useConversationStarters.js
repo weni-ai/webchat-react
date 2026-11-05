@@ -11,8 +11,6 @@ import {
   buildProductContextString,
   getSelectedSkuId,
   getSkuIdFromRawProduct,
-  isSelectedSkuAvailable,
-  getSellerIdForSku,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -347,17 +345,29 @@ export function useConversationStartersCore() {
 
     if (
       isUnavailableNotifyEnabledRef.current &&
-      !isSelectedSkuAvailable(normalized, selectedSkuId)
+      service?.evaluateBackInStockOffer
     ) {
-      recordConversationStarterEvent('divert_back_in_stock', 'info', {
-        skuId: selectedSkuId || '',
-        productName: resolvedProductName,
-      });
-      showBackInStockNotify(resolvedProductName, {
-        skuId: selectedSkuId || '',
-        seller: getSellerIdForSku(normalized, selectedSkuId),
-      });
-      return;
+      try {
+        const offer = service.evaluateBackInStockOffer({
+          product: normalized,
+          selectedSkuId,
+        });
+        if (offer?.isUnavailable) {
+          recordConversationStarterEvent('divert_back_in_stock', 'info', {
+            skuId: selectedSkuId || '',
+            productName: resolvedProductName,
+          });
+          showBackInStockNotify(resolvedProductName, {
+            skuId: offer.skuId || '',
+            seller: offer.seller || '',
+          });
+          return;
+        }
+      } catch {
+        recordConversationStarterEvent('back_in_stock_evaluate_error', 'warn', {
+          skuId: selectedSkuId || '',
+        });
+      }
     }
 
     requestStarters(result.productData);
