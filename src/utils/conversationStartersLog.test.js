@@ -25,6 +25,7 @@ describe('conversationStartersLog', () => {
     expect(dump.config).toEqual({
       conversationStarters: { pdp: true },
       connectOn: 'demand',
+      shoppingAssistantDisabled: false,
     });
     expect(dump.pathname).toBeDefined();
     expect(dump.entries).toHaveLength(2);
@@ -32,6 +33,20 @@ describe('conversationStartersLog', () => {
     expect(dump.entries[0].detail.slug).toBe('ipad');
     expect(dump.entries[1].phase).toBe('ws_error');
     expect(dump.entries[1].detail.code).toBe('STARTERS_LAMBDA');
+  });
+
+  it('records shoppingAssistantDisabled beside connectOn', () => {
+    setConversationStartersLogConfig({
+      shoppingAssistantDisabled: true,
+      connectOn: 'manual',
+    });
+
+    expect(getConversationStartersLog().config).toEqual(
+      expect.objectContaining({
+        shoppingAssistantDisabled: true,
+        connectOn: 'manual',
+      }),
+    );
   });
 
   it('keeps only the last 200 entries', () => {

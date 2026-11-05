@@ -79,6 +79,24 @@ describe('Header', () => {
     expect(helpers.goBack).toHaveBeenCalledTimes(1);
   });
 
+  it('closes the chat instead of going back when the assistant is disabled', () => {
+    const setIsChatOpen = jest.fn();
+    const clearPageHistory = jest.fn();
+    const helpers = setup({
+      weniChat: {
+        currentPage: { view: 'back-in-stock-notify' },
+        setIsChatOpen,
+        clearPageHistory,
+      },
+      chatContext: { isShoppingAssistantDisabled: true },
+    });
+    render(<Header />);
+    fireEvent.click(screen.getByLabelText('Back'));
+    expect(setIsChatOpen).toHaveBeenCalledWith(false);
+    expect(clearPageHistory).toHaveBeenCalledTimes(1);
+    expect(helpers.goBack).not.toHaveBeenCalled();
+  });
+
   it('renders the mode tag when showMode is enabled', () => {
     setup({
       chatContext: { config: { showMode: true, mode: 'preview' } },

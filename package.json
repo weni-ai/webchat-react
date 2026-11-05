@@ -23,7 +23,8 @@
     "build": "vite build",
     "build:standalone": "vite build --config vite.config.standalone.js",
     "build:all": "npm run build && npm run build:standalone",
-    "lint": "eslint src --ext .js,.jsx",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "postversion": "git push --follow-tags",
     "prepare": "git config core.hooksPath .githooks || true"
@@ -66,6 +67,8 @@
     "micromatch": "^4.0.5",
     "postcss-prefix-selector": "^2.1.1",
     "prettier": "^3.6.2",
+    "typescript": "^5.6.3",
+    "@babel/preset-typescript": "^7.26.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sass": "^1.93.2",

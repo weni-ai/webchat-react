@@ -57,8 +57,14 @@ function ChatContent() {
  * TODO: Add mobile responsiveness
  */
 export function Chat() {
-  const { isChatOpen, isConnectionClosed, currentPage, config, mode } =
-    useWeniChat();
+  const {
+    isChatOpen,
+    isConnectionClosed,
+    currentPage,
+    config,
+    mode,
+    isShoppingAssistantDisabled,
+  } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const chatRootRef = useRef(null);
@@ -91,12 +97,14 @@ export function Chat() {
       className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''} ${currentPage?.view === 'back-in-stock-notify' ? 'weni-chat--compact' : ''}`}
     >
       <Header />
-      <ConnectionStatusBanner />
+      {!isShoppingAssistantDisabled && <ConnectionStatusBanner />}
       <OrderFormProvider>
         <ChatContent />
       </OrderFormProvider>
       <footer className="weni-chat__footer">
-        {!isConnectionClosed && !currentPage && <InputBox />}
+        {!isShoppingAssistantDisabled &&
+          !isConnectionClosed &&
+          !currentPage && <InputBox />}
         <PoweredBy />
       </footer>
     </section>

@@ -17,6 +17,7 @@ import { getVtexAccount, isCheckoutPage, watchVtexAccount } from '@/utils/vtex';
 import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
+import { applyShoppingAssistantMode } from '@/utils/shoppingAssistantMode';
 
 let serviceInstance = {
   fns: [],
@@ -77,6 +78,7 @@ const defaultConfig = {
   unavailableProductNotify: false,
   whatsappOffersNotify: false,
   showChatAvatar: true,
+  shoppingAssistantDisabled: false,
 };
 
 /**
@@ -100,9 +102,14 @@ const defaultConfig = {
  * - Visual preferences
  */
 export function ChatProvider({ children, config }) {
-  const mergedConfig = { ...defaultConfig, ...config };
+  const mergedConfig = applyShoppingAssistantMode({
+    ...defaultConfig,
+    ...config,
+  });
+  const isShoppingAssistantDisabled =
+    mergedConfig.shoppingAssistantDisabled === true;
 
-  if (mergedConfig.embedded) {
+  if (mergedConfig.embedded && !isShoppingAssistantDisabled) {
     mergedConfig.startFullScreen = true;
     mergedConfig.showFullScreenButton = false;
     mergedConfig.showCloseButton = false;
@@ -132,9 +139,11 @@ export function ChatProvider({ children, config }) {
   const [cameraDevices, setCameraDevices] = useState([]);
 
   // UI-specific state
-  const [isChatOpen, setIsChatOpen] = useState(!!mergedConfig.startFullScreen);
+  const [isChatOpen, setIsChatOpen] = useState(
+    isShoppingAssistantDisabled ? false : !!mergedConfig.startFullScreen,
+  );
   const [isChatFullscreen, setIsChatFullscreen] = useState(
-    mergedConfig.startFullScreen,
+    isShoppingAssistantDisabled ? false : mergedConfig.startFullScreen,
   );
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
@@ -229,7 +238,7 @@ export function ChatProvider({ children, config }) {
   }
 
   useEffect(() => {
-    if (mergedConfig.tooltipMessage) {
+    if (mergedConfig.tooltipMessage && !isShoppingAssistantDisabled) {
       initialTooltipMessageTimeout = setTimeout(() => {
         if (service.getMessages().length !== 0) {
           return;
@@ -245,7 +254,11 @@ export function ChatProvider({ children, config }) {
         if (typeof shouldRender === 'boolean') {
           setShouldRender(shouldRender);
 
-          if (shouldRender && mergedConfig.initPayload) {
+          if (
+            shouldRender &&
+            mergedConfig.initPayload &&
+            !isShoppingAssistantDisabled
+          ) {
             const relevantMessages = service
               .getMessages()
               .filter((message) => !message.persisted);
@@ -258,6 +271,8 @@ export function ChatProvider({ children, config }) {
 
         if (isCheckoutPage()) {
           service.setIsChatOpen(false);
+          setIsChatOpen(false);
+        } else if (isShoppingAssistantDisabled) {
           setIsChatOpen(false);
         } else if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
@@ -646,6 +661,7 @@ export function ChatProvider({ children, config }) {
     isInsideVTEXStore,
     mode,
     isModeVisible: showMode,
+    isShoppingAssistantDisabled,
 
     // Voice mode state
     isVoiceEnabledByClient,
@@ -704,8 +720,8 @@ ChatProvider.propTypes = {
   children: PropTypes.node.isRequired,
   config: PropTypes.shape({
     // Required properties
-    socketUrl: PropTypes.string.isRequired,
-    channelUuid: PropTypes.string.isRequired,
+    socketUrl: PropTypes.string,
+    channelUuid: PropTypes.string,
     host: PropTypes.string.isRequired,
 
     // Connection settings
@@ -768,6 +784,7 @@ ChatProvider.propTypes = {
     showMode: PropTypes.bool,
     unavailableProductNotify: PropTypes.bool,
     whatsappOffersNotify: PropTypes.bool,
+    shoppingAssistantDisabled: PropTypes.bool,
 
     // Callbacks and custom functions
     onSocketEvent: PropTypes.objectOf(PropTypes.func),

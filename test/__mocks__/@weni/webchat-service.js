@@ -1,6 +1,8 @@
 class WeniWebchatService {
   constructor(config) {
     this.config = config;
+    WeniWebchatService.latest = this;
+    globalThis.__webchatServiceLatest = this;
     this.listeners = {};
     this.state = {
       messages: [],
@@ -41,6 +43,8 @@ class WeniWebchatService {
     return { shouldRender: true };
   }
   connect() {
+    WeniWebchatService.connectCalls =
+      (WeniWebchatService.connectCalls || 0) + 1;
     if (this._connected || this._connecting) return;
     this._connecting = true;
     this._connected = true;
@@ -87,6 +91,7 @@ class WeniWebchatService {
 
   // Messaging
   sendMessage(text, options = {}) {
+    WeniWebchatService.sendCalls = (WeniWebchatService.sendCalls || 0) + 1;
     this.state.messages.push({
       direction: 'outgoing',
       text,
@@ -104,6 +109,8 @@ class WeniWebchatService {
    * not a bare string.
    */
   simulateMessageReceived(payload) {
+    WeniWebchatService.simulatedCalls =
+      (WeniWebchatService.simulatedCalls || 0) + 1;
     const text = payload?.message?.text ?? payload?.text ?? '';
     const message = {
       id: payload?.id || payload?.message?.messageId || `sim_${Date.now()}`,

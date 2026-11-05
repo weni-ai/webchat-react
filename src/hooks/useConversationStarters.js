@@ -42,6 +42,8 @@ export function useConversationStartersCore() {
     setIsChatOpen,
     setCurrentPage,
     isInsideVTEXStore,
+    currentPage,
+    clearPageHistory,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -85,6 +87,12 @@ export function useConversationStartersCore() {
   const isWhatsappOffersNotifyEnabledRef = useRef(
     config?.whatsappOffersNotify === true,
   );
+  const isShoppingAssistantDisabledRef = useRef(
+    config?.shoppingAssistantDisabled === true,
+  );
+  const isChatOpenRef = useRef(isChatOpen);
+  const setIsChatOpenRef = useRef(setIsChatOpen);
+  const clearPageHistoryRef = useRef(clearPageHistory);
 
   sourceRef.current = source;
   isBackInStockNotifyRef.current = isBackInStockNotify;
@@ -96,6 +104,11 @@ export function useConversationStartersCore() {
     config?.unavailableProductNotify === true;
   isWhatsappOffersNotifyEnabledRef.current =
     config?.whatsappOffersNotify === true;
+  isShoppingAssistantDisabledRef.current =
+    config?.shoppingAssistantDisabled === true;
+  isChatOpenRef.current = isChatOpen;
+  setIsChatOpenRef.current = setIsChatOpen;
+  clearPageHistoryRef.current = clearPageHistory;
   setConversationStartersLogConfig(config || {});
 
   const clearMobileTimer = useCallback(() => {
@@ -370,6 +383,11 @@ export function useConversationStartersCore() {
       }
     }
 
+    if (isShoppingAssistantDisabledRef.current) {
+      setIsLoading(false);
+      return;
+    }
+
     requestStarters(result.productData);
   }, [requestStarters, service, showBackInStockNotify]);
 
@@ -386,6 +404,11 @@ export function useConversationStartersCore() {
     recordConversationStarterEvent('nav_clear', 'info', { pathname });
 
     if (!service) return true;
+
+    if (isShoppingAssistantDisabledRef.current && isChatOpenRef.current) {
+      setIsChatOpenRef.current(false);
+      clearPageHistoryRef.current?.();
+    }
 
     service.clearStarters();
     service.setContext('');
@@ -543,6 +566,16 @@ export function useConversationStartersCore() {
       return;
     }
 
+    if (
+      isShoppingAssistantDisabledRef.current &&
+      !isBackInStockNotifyRef.current &&
+      !pendingBackInStockRef.current &&
+      currentPage?.view !== 'back-in-stock-notify'
+    ) {
+      setIsChatOpen(false);
+      return;
+    }
+
     if (pendingWhatsappOffersRef.current) {
       pendingWhatsappOffersRef.current = false;
       openWhatsappOffersPage(couponPercentRef.current);
@@ -567,6 +600,8 @@ export function useConversationStartersCore() {
     service,
     openBackInStockPage,
     openWhatsappOffersPage,
+    currentPage,
+    setIsChatOpen,
   ]);
 
   useEffect(() => {
@@ -646,6 +681,7 @@ export function useConversationStartersCore() {
     };
 
     const handleConnected = () => {
+      if (isShoppingAssistantDisabledRef.current) return;
       if (deferredProductDataRef.current) {
         const productData = deferredProductDataRef.current;
         deferredProductDataRef.current = null;
@@ -784,6 +820,7 @@ export function useConversationStartersCore() {
       account: getVtexAccount(),
       isConnected: isConnectedRef.current,
       connectOn: config?.connectOn,
+      shoppingAssistantDisabled: config?.shoppingAssistantDisabled === true,
     });
     detectAndFetchPdp();
 

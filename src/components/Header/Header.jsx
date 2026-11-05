@@ -33,6 +33,8 @@ export function Header() {
     setCurrentPage,
     goBack,
     cart,
+    setIsChatOpen,
+    clearPageHistory,
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
@@ -42,7 +44,8 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config, isInsideVTEXStore } = useChatContext();
+  const { config, isInsideVTEXStore, isShoppingAssistantDisabled } =
+    useChatContext();
 
   const showCartButton =
     cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
@@ -56,7 +59,14 @@ export function Header() {
         {currentPage && goBack && (
           <section className="weni-chat-header__info">
             <Button
-              onClick={goBack}
+              onClick={() => {
+                if (isShoppingAssistantDisabled) {
+                  setIsChatOpen(false);
+                  clearPageHistory();
+                  return;
+                }
+                goBack();
+              }}
               aria-label="Back"
               variant="tertiary"
               icon="arrow_back"

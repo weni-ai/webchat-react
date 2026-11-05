@@ -44,6 +44,8 @@ function WidgetContent() {
     config,
     shouldRender,
     isWelcomeTooltip,
+    isShoppingAssistantDisabled,
+    currentPage,
   } = useChatContext();
 
   const {
@@ -58,10 +60,18 @@ function WidgetContent() {
     couponPercent,
     handleWhatsappOffersClick,
     dismissWhatsappOffersBalloon,
+    isBackInStockNotify,
   } = useConversationStarters();
 
   const isChatFullscreenAndOpen = isChatFullscreen && isChatOpen;
-  const shouldShowOptInBalloon = isOptInBalloonVisible && !isChatOpen;
+  const isChatOpenOnNotifyPage =
+    isChatOpen && currentPage?.view === 'back-in-stock-notify';
+  const shouldRenderWidgetContent =
+    !isShoppingAssistantDisabled ||
+    isBackInStockNotify ||
+    isChatOpenOnNotifyPage;
+  const shouldShowOptInBalloon =
+    isOptInBalloonVisible && !isChatOpen && !isShoppingAssistantDisabled;
   const isCompactStartersVisible =
     !shouldShowOptInBalloon &&
     questions.length > 0 &&
@@ -77,7 +87,7 @@ function WidgetContent() {
     }
   }, [isChatOpen]);
 
-  if (shouldRender === false) {
+  if (shouldRender === false || !shouldRenderWidgetContent) {
     return null;
   }
 
@@ -163,9 +173,10 @@ export function Widget({ config, theme = null }) {
 
 Widget.propTypes = {
   config: PropTypes.shape({
-    socketUrl: PropTypes.string.isRequired,
-    channelUuid: PropTypes.string.isRequired,
+    socketUrl: PropTypes.string,
+    channelUuid: PropTypes.string,
     host: PropTypes.string.isRequired,
+    shoppingAssistantDisabled: PropTypes.bool,
     // TODO: Add all config properties
   }).isRequired,
   theme: PropTypes.object,

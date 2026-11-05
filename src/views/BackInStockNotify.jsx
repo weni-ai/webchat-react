@@ -29,7 +29,13 @@ export function BackInStockNotify({
   seller = '',
 }) {
   const { t, i18n } = useTranslation();
-  const { clearPageHistory, sendMessage, service } = useChatContext();
+  const {
+    clearPageHistory,
+    sendMessage,
+    service,
+    isShoppingAssistantDisabled,
+    setIsChatOpen,
+  } = useChatContext();
   const [phoneCountry, setPhoneCountry] = useState(readInitialPhoneCountry);
   const [name, setName] = useState('');
   const [ddi, setDdi] = useState(phoneCountry.ddi);
@@ -124,6 +130,9 @@ export function BackInStockNotify({
   }
 
   function handleNotNow() {
+    if (isShoppingAssistantDisabled) {
+      setIsChatOpen(false);
+    }
     clearPageHistory();
   }
 
@@ -144,16 +153,20 @@ export function BackInStockNotify({
             <p className="weni-view-back-in-stock__description">
               {t('back_in_stock.success_description', { productName })}
             </p>
-            <p className="weni-view-back-in-stock__description">
-              {t('back_in_stock.wait_prompt')}
-            </p>
+            {!isShoppingAssistantDisabled && (
+              <p className="weni-view-back-in-stock__description">
+                {t('back_in_stock.wait_prompt')}
+              </p>
+            )}
           </header>
 
-          <footer className="weni-view-back-in-stock__footer">
-            <FSButton onClick={handleShowSimilarProducts}>
-              {t('back_in_stock.show_similar_products')}
-            </FSButton>
-          </footer>
+          {!isShoppingAssistantDisabled && (
+            <footer className="weni-view-back-in-stock__footer">
+              <FSButton onClick={handleShowSimilarProducts}>
+                {t('back_in_stock.show_similar_products')}
+              </FSButton>
+            </footer>
+          )}
         </section>
       </section>
     );

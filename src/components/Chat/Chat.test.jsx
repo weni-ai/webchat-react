@@ -96,6 +96,34 @@ jest.mock('@/views/WhatsappOffersOptIn', () => {
 
 import { useWeniChat } from '@/hooks/useWeniChat';
 
+describe('Chat — shopping assistant disabled', () => {
+  function openChat(isShoppingAssistantDisabled) {
+    useWeniChat.mockReturnValue({
+      isChatOpen: true,
+      isConnectionClosed: false,
+      connectionStatus: 'disconnected',
+      currentPage: null,
+      config: { embedded: false },
+      mode: 'live',
+      isShoppingAssistantDisabled,
+      reconnectNow: jest.fn(),
+    });
+    render(<Chat />);
+  }
+
+  it('shows the input and the connection banner while the assistant is on', () => {
+    openChat(false);
+    expect(screen.getByTestId('input-box')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('hides the input and the connection banner when the assistant is disabled', () => {
+    openChat(true);
+    expect(screen.queryByTestId('input-box')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
 describe('Chat — back-in-stock-notify view', () => {
   it('renders BackInStockNotify when currentPage.view matches', () => {
     useWeniChat.mockReturnValue({

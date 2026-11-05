@@ -5,6 +5,7 @@ const entries = [];
 let logConfig = {
   conversationStarters: {},
   connectOn: undefined,
+  shoppingAssistantDisabled: false,
 };
 
 export function recordConversationStarterEvent(
@@ -28,6 +29,7 @@ export function setConversationStartersLogConfig(config = {}) {
   logConfig = {
     conversationStarters: config.conversationStarters || {},
     connectOn: config.connectOn,
+    shoppingAssistantDisabled: config.shoppingAssistantDisabled === true,
   };
 }
 
@@ -54,6 +56,7 @@ export function getConversationStartersLog() {
         pdp: logConfig.conversationStarters?.pdp === true,
       },
       connectOn: logConfig.connectOn,
+      shoppingAssistantDisabled: logConfig.shoppingAssistantDisabled === true,
     },
     entries: entries.map((entry) => ({
       ...entry,
