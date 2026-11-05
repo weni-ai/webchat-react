@@ -81,7 +81,23 @@ describe('WebChat.init shopping assistant', () => {
     });
 
     expect(console.warn).toHaveBeenCalledWith(
+      'WebChat: shoppingAssistantDisabled needs unavailableProductNotify',
+    );
+    expect(console.warn).not.toHaveBeenCalledWith(
       'WebChat: shoppingAssistantDisabled needs unavailableProductNotify and conversationStarters.pdp',
     );
+  });
+
+  it('does not warn when notify is on and pdp is off', async () => {
+    await act(async () => {
+      WebChat.init({
+        selector: '#webchat',
+        host: 'https://example.test',
+        shoppingAssistantDisabled: true,
+        unavailableProductNotify: true,
+      });
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

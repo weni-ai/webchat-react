@@ -99,6 +99,16 @@ function buildUnavailableNotifyContext(overrides = {}) {
   });
 }
 
+function buildNotifyOnlyContext(overrides = {}) {
+  return buildContext({
+    config: {
+      conversationStarters: { pdp: false },
+      unavailableProductNotify: true,
+    },
+    ...overrides,
+  });
+}
+
 function getEventHandler(eventName) {
   const call = mockService.on.mock.calls.find(([name]) => name === eventName);
   return call ? call[1] : undefined;
@@ -1227,6 +1237,167 @@ describe('useConversationStartersCore', () => {
       expect(hookResult.current.isLoading).toBe(false);
     });
 
+    it('shows the notify offer when pdp starters are off', async () => {
+      ctx = buildNotifyOnlyContext({ isChatOpen: true });
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'init',
+        )?.detail,
+      ).toEqual(
+        expect.objectContaining({
+          pdpEnabled: false,
+          unavailableProductNotify: true,
+        }),
+      );
+      expect(hookResult.current.isBackInStockNotify).toBe(true);
+      expect(hookResult.current.questions).toEqual([
+        'Notify me when back in stock',
+      ]);
+      expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
+
+      act(() => {
+        hookResult.current.handleFullStarterClick(
+          'Notify me when back in stock',
+        );
+      });
+
+      expect(ctx.setCurrentPage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          view: 'back-in-stock-notify',
+          props: expect.objectContaining({
+            productName: 'Cool Shoe',
+            skuId: 'SKU-001',
+          }),
+        }),
+      );
+    });
+
+    it('shows the notify offer when conversationStarters is omitted', async () => {
+      ctx = buildContext({
+        config: { unavailableProductNotify: true },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(hookResult.current.isBackInStockNotify).toBe(true);
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+
+    it('does not request starters when pdp is off and the SKU is available', async () => {
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
+      ctx = buildNotifyOnlyContext();
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'skip',
+        )?.detail,
+      ).toEqual({
+        reason: 'starters_disabled',
+        fingerprint: 'mystore:/en/cool-shoe/p',
+      });
+    });
+
+    it('does not flush starters on connect when pdp is off', async () => {
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
+      ctx = buildNotifyOnlyContext({ isConnected: false });
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      const connected = getEventHandler('connected');
+      act(() => {
+        connected();
+      });
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+
+    it('does not request starters when the evaluator throws and pdp is off', async () => {
+      mockService.evaluateBackInStockOffer.mockImplementation(() => {
+        throw new Error('bad product');
+      });
+      ctx = buildNotifyOnlyContext();
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'back_in_stock_evaluate_error',
+        ),
+      ).toBeTruthy();
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.detail?.reason === 'starters_disabled',
+        ),
+      ).toBeTruthy();
+    });
+
+    it('re-evaluates the offer on navigation when pdp is off', async () => {
+      jest.useFakeTimers();
+      let pathname = '/cool-shoe/p';
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          get pathname() {
+            return pathname;
+          },
+        },
+      });
+      ctx = buildNotifyOnlyContext({ isChatOpen: true });
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      pathname = '/other-shoe/p';
+      extractSlugFromUrl.mockReturnValue('other-shoe');
+      mockService.evaluateBackInStockOffer.mockClear();
+      const onNavigate = createNavigationMonitor.mock.calls.at(-1)[0];
+
+      await act(async () => {
+        onNavigate();
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(mockService.evaluateBackInStockOffer).toHaveBeenCalled();
+      jest.useRealTimers();
+    });
+
     it('requests starters when feature is disabled even if SKU is unavailable', async () => {
       ctx = buildContext({
         config: {
@@ -1641,7 +1812,12 @@ describe('useConversationStartersCore', () => {
 
   describe('conversation starters debug log', () => {
     it('records skip when PDP is disabled', () => {
-      ctx = buildContext({ config: { conversationStarters: { pdp: false } } });
+      ctx = buildContext({
+        config: {
+          conversationStarters: { pdp: false },
+          unavailableProductNotify: false,
+        },
+      });
       useChatContext.mockReturnValue(ctx);
 
       renderHook(() => useConversationStartersCore());
@@ -1653,6 +1829,7 @@ describe('useConversationStartersCore', () => {
         getConversationStartersLog().entries.find((e) => e.phase === 'skip')
           .detail.reason,
       ).toBe('pdp_disabled');
+      expect(resolveProductData).not.toHaveBeenCalled();
     });
 
     it('records skip when the page is not a PDP', () => {
