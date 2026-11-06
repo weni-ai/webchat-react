@@ -62,6 +62,7 @@ function fillValidPhone() {
 describe('BackInStockNotify', () => {
   const clearPageHistory = jest.fn();
   const sendMessage = jest.fn();
+  const setIsChatOpen = jest.fn();
   const validateBackInStockContact = jest.fn(contactVerdict);
   const subscribeBackInStock = jest.fn().mockResolvedValue({ accepted: true });
 
@@ -72,6 +73,8 @@ describe('BackInStockNotify', () => {
     useChatContext.mockReturnValue({
       clearPageHistory,
       sendMessage,
+      setIsChatOpen,
+      isShoppingAssistantDisabled: false,
       service: { validateBackInStockContact, subscribeBackInStock },
     });
     delete window.__RUNTIME__;
@@ -279,6 +282,36 @@ describe('BackInStockNotify', () => {
       '/_v/private/availability-notify/subscribe',
       expect.anything(),
     );
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('closes the chat and keeps the form from starting a conversation', async () => {
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      setIsChatOpen,
+      isShoppingAssistantDisabled: true,
+      service: { validateBackInStockContact, subscribeBackInStock },
+    });
+    render(<BackInStockNotify productName="Cool Shoe" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
+    expect(setIsChatOpen).toHaveBeenCalledWith(false);
+    expect(clearPageHistory).toHaveBeenCalled();
+    expect(sendMessage).not.toHaveBeenCalled();
+
+    fillName();
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    await waitFor(() => {
+      expect(screen.getByText("You're all set!")).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText('While you wait, want to see similar products?'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Show me similar products' }),
+    ).not.toBeInTheDocument();
     expect(sendMessage).not.toHaveBeenCalled();
   });
 

@@ -20,6 +20,7 @@ import './i18n';
 import i18n from './i18n';
 
 let widgetInstance = null;
+let shoppingAssistantDisabled = false;
 
 async function serviceWhenReady() {
   if (typeof service.onReady === 'function') {
@@ -131,6 +132,7 @@ function mapConfig(params) {
     renderPercentage: params.renderPercentage ?? 100,
     mode: params.mode || 'live',
     showMode: params.showMode || false,
+    shoppingAssistantDisabled: params.shoppingAssistantDisabled || false,
     unavailableProductNotify: params.unavailableProductNotify || false,
     whatsappOffersNotify: params.whatsappOffersNotify || false,
     showCameraButton: params.showCameraButton !== false,
@@ -189,6 +191,19 @@ function mapConfig(params) {
  * @param {Object} params - Configuration parameters
  */
 function init(params) {
+  shoppingAssistantDisabled = params.shoppingAssistantDisabled || false;
+  if (
+    shoppingAssistantDisabled &&
+    !(
+      params.unavailableProductNotify &&
+      params.conversationStarters?.pdp === true
+    )
+  ) {
+    console.warn(
+      'WebChat: shoppingAssistantDisabled needs unavailableProductNotify and conversationStarters.pdp',
+    );
+  }
+
   if (!params.selector) {
     console.error('WebChat: selector is required');
     return;
@@ -275,6 +290,10 @@ async function toggle() {
  * @returns {Promise<void>}
  */
 async function send(message, options = {}) {
+  if (shoppingAssistantDisabled) {
+    console.warn('WebChat.send: shopping assistant is disabled');
+    return;
+  }
   const service = await serviceWhenReady();
   await service.sendMessage(message, options);
 }
@@ -499,6 +518,12 @@ function validateStartersInput(questions) {
 }
 
 async function setConversationStarters(questions) {
+  if (shoppingAssistantDisabled) {
+    console.warn(
+      'WebChat.setConversationStarters: shopping assistant is disabled',
+    );
+    return;
+  }
   if (!validateStartersInput(questions)) {
     recordConversationStarterEvent('manual_invalid', 'warn', {
       reason: 'invalid_input',

@@ -1283,6 +1283,176 @@ describe('useConversationStartersCore', () => {
       expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
     });
 
+    it('does not request starters when the shopping assistant is disabled', async () => {
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
+      ctx = buildUnavailableNotifyContext({
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: true,
+          shoppingAssistantDisabled: true,
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      let hookResult;
+      await act(async () => {
+        const { result } = renderHook(() => useConversationStartersCore());
+        hookResult = result;
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(hookResult.current.isBackInStockNotify).toBe(false);
+
+      const connected = getEventHandler('connected');
+      act(() => {
+        connected();
+      });
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+
+    it('does not request starters when the evaluator throws and the assistant is disabled', async () => {
+      mockService.evaluateBackInStockOffer.mockImplementation(() => {
+        throw new Error('bad product');
+      });
+      ctx = buildUnavailableNotifyContext({
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: true,
+          shoppingAssistantDisabled: true,
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'back_in_stock_evaluate_error',
+        )?.detail,
+      ).toEqual({ skuId: 'SKU-001' });
+    });
+
+    it('closes the chat when it opens with no offer', async () => {
+      const setIsChatOpen = jest.fn();
+      ctx = buildContext({
+        isChatOpen: true,
+        currentPage: null,
+        setIsChatOpen,
+        config: {
+          conversationStarters: { pdp: false },
+          shoppingAssistantDisabled: true,
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+      isVtexPdpPage.mockReturnValue(false);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(setIsChatOpen).toHaveBeenCalledWith(false);
+    });
+
+    it('lands on the notify page when the chat opens with the offer', async () => {
+      const setIsChatOpen = jest.fn();
+      const setCurrentPage = jest.fn();
+      ctx = buildUnavailableNotifyContext({
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: true,
+          shoppingAssistantDisabled: true,
+        },
+        setIsChatOpen,
+        setCurrentPage,
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      let view;
+      await act(async () => {
+        view = renderHook(() => useConversationStartersCore());
+      });
+
+      expect(view.result.current.isBackInStockNotify).toBe(true);
+
+      ctx = {
+        ...ctx,
+        isChatOpen: true,
+      };
+      useChatContext.mockReturnValue(ctx);
+      act(() => {
+        view.rerender();
+      });
+
+      expect(setCurrentPage).toHaveBeenCalledWith(
+        expect.objectContaining({ view: 'back-in-stock-notify' }),
+      );
+      expect(setIsChatOpen).not.toHaveBeenCalledWith(false);
+    });
+
+    it('closes an open chat when the pathname changes', async () => {
+      jest.useFakeTimers();
+      const setIsChatOpen = jest.fn();
+      const clearPageHistory = jest.fn();
+      let pathname = '/cool-shoe/p';
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...window.location,
+          get pathname() {
+            return pathname;
+          },
+        },
+      });
+      ctx = buildUnavailableNotifyContext({
+        isChatOpen: true,
+        setIsChatOpen,
+        clearPageHistory,
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: true,
+          shoppingAssistantDisabled: true,
+          connectOn: 'manual',
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'init',
+        )?.detail.shoppingAssistantDisabled,
+      ).toBe(true);
+
+      pathname = '/other-shoe/p';
+      extractSlugFromUrl.mockReturnValue('other-shoe');
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: true,
+        skuId: 'SKU-002',
+        seller: '1',
+      });
+      const onNavigate = createNavigationMonitor.mock.calls.at(-1)[0];
+
+      await act(async () => {
+        onNavigate();
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(setIsChatOpen).toHaveBeenCalledWith(false);
+      expect(clearPageHistory).toHaveBeenCalled();
+      expect(mockService.evaluateBackInStockOffer).toHaveBeenCalled();
+      jest.useRealTimers();
+    });
+
     it('opens back-in-stock page on CTA click when chat is open', async () => {
       ctx = buildUnavailableNotifyContext({ isChatOpen: true });
       useChatContext.mockReturnValue(ctx);

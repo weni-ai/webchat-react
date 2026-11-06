@@ -1,14 +1,24 @@
-import { defineConfig } from 'eslint/config';
-import WeniReactConfig from '@weni/eslint-config/react16.js';
-import globals from 'globals';
+import { defineConfig } from "eslint/config";
+import WeniReactConfig from "@weni/eslint-config/react16.js";
+import globals from "globals";
 
 export default defineConfig([
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "dist-standalone/**",
+      "build/**",
+      "coverage/**",
+      "**/*.min.js",
+    ],
+  },
   ...WeniReactConfig,
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       ecmaVersion: 12,
-      sourceType: 'module',
+      sourceType: "module",
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
@@ -20,29 +30,29 @@ export default defineConfig([
     },
 
     rules: {
-      'react/react-in-jsx-scope': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
+      "react/react-in-jsx-scope": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
         {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
     },
 
     settings: {
       react: {
-        version: 'detect',
+        version: "detect",
       },
     },
   },
   {
-    files: ['src/standalone.jsx'],
+    files: ["src/standalone.jsx"],
     languageOptions: {
       globals: {
         ...globals.browser,
-        process: 'readonly',
+        process: "readonly",
       },
     },
   },

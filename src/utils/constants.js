@@ -19,6 +19,12 @@ import {
   DEFAULTS,
 } from '@weni/webchat-service';
 
+export const SHOPPING_ASSISTANT_DISABLED_SOCKET_URL =
+  'wss://shopping-assistant-disabled.invalid';
+
+export const SHOPPING_ASSISTANT_DISABLED_CHANNEL_UUID =
+  'shopping-assistant-disabled';
+
 export {
   ALLOWED_FILE_TYPES,
   ALLOWED_IMAGE_TYPES,
