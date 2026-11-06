@@ -6,6 +6,7 @@ let logConfig = {
   conversationStarters: {},
   connectOn: undefined,
   shoppingAssistantDisabled: false,
+  unavailableProductNotify: false,
 };
 
 export function recordConversationStarterEvent(
@@ -30,6 +31,7 @@ export function setConversationStartersLogConfig(config = {}) {
     conversationStarters: config.conversationStarters || {},
     connectOn: config.connectOn,
     shoppingAssistantDisabled: config.shoppingAssistantDisabled === true,
+    unavailableProductNotify: config.unavailableProductNotify === true,
   };
 }
 
@@ -57,6 +59,7 @@ export function getConversationStartersLog() {
       },
       connectOn: logConfig.connectOn,
       shoppingAssistantDisabled: logConfig.shoppingAssistantDisabled === true,
+      unavailableProductNotify: logConfig.unavailableProductNotify === true,
     },
     entries: entries.map((entry) => ({
       ...entry,

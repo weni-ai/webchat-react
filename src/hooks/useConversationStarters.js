@@ -262,7 +262,11 @@ export function useConversationStartersCore() {
   );
 
   const detectAndFetchPdp = useCallback(async () => {
-    if (!isPdpEnabledRef.current) {
+    // Product detection also feeds the back-in-stock offer, so it runs when
+    // starters are off. Starters themselves still require conversationStarters.pdp.
+    const shouldResolveProduct =
+      isPdpEnabledRef.current || isUnavailableNotifyEnabledRef.current;
+    if (!shouldResolveProduct) {
       recordConversationStarterEvent('skip', 'info', {
         reason: 'pdp_disabled',
       });
@@ -383,6 +387,15 @@ export function useConversationStartersCore() {
       }
     }
 
+    if (!isPdpEnabledRef.current) {
+      recordConversationStarterEvent('skip', 'info', {
+        reason: 'starters_disabled',
+        fingerprint: currentFingerprintRef.current,
+      });
+      setIsLoading(false);
+      return;
+    }
+
     if (isShoppingAssistantDisabledRef.current) {
       setIsLoading(false);
       return;
@@ -414,7 +427,7 @@ export function useConversationStartersCore() {
     service.setContext('');
     resetStartersState();
 
-    if (isPdpEnabledRef.current) {
+    if (isPdpEnabledRef.current || isUnavailableNotifyEnabledRef.current) {
       detectAndFetchPdp();
     }
 
@@ -816,6 +829,7 @@ export function useConversationStartersCore() {
     lastHandledPathnameRef.current = window.location.pathname;
     recordConversationStarterEvent('init', 'info', {
       pdpEnabled: isPdpEnabledRef.current,
+      unavailableProductNotify: isUnavailableNotifyEnabledRef.current,
       pathname: window.location.pathname,
       account: getVtexAccount(),
       isConnected: isConnectedRef.current,

@@ -112,6 +112,8 @@ The standalone initializer accepts:
 | `showFileUploaderButton` | boolean | true | Show file upload button in the input bar. |
 | `navigateIfSameDomain` | boolean | false | Experimental flag: auto-navigate when an incoming message contains a link to the same domain. |
 | `addToCart` | boolean | false | When true, shows the VTEX add-to-cart control in product quantity controls when order form and SKU context are available. |
+| `unavailableProductNotify` | boolean | false | Shows the back-in-stock offer on an unavailable SKU. |
+| `conversationStarters.pdp` | boolean | false | Controls PDP conversation starters only. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |
 | `handleNewUserMessage` | function | — | Custom handler for new user messages. |

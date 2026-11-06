@@ -26,6 +26,7 @@ describe('conversationStartersLog', () => {
       conversationStarters: { pdp: true },
       connectOn: 'demand',
       shoppingAssistantDisabled: false,
+      unavailableProductNotify: false,
     });
     expect(dump.pathname).toBeDefined();
     expect(dump.entries).toHaveLength(2);
@@ -33,6 +34,25 @@ describe('conversationStartersLog', () => {
     expect(dump.entries[0].detail.slug).toBe('ipad');
     expect(dump.entries[1].phase).toBe('ws_error');
     expect(dump.entries[1].detail.code).toBe('STARTERS_LAMBDA');
+  });
+
+  it('records unavailableProductNotify on the dump', () => {
+    setConversationStartersLogConfig({
+      unavailableProductNotify: true,
+      conversationStarters: { pdp: false },
+    });
+
+    expect(getConversationStartersLog().config).toEqual(
+      expect.objectContaining({
+        unavailableProductNotify: true,
+        conversationStarters: { pdp: false },
+      }),
+    );
+
+    setConversationStartersLogConfig({});
+    expect(getConversationStartersLog().config.unavailableProductNotify).toBe(
+      false,
+    );
   });
 
   it('records shoppingAssistantDisabled beside connectOn', () => {

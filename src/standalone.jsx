@@ -192,15 +192,9 @@ function mapConfig(params) {
  */
 function init(params) {
   shoppingAssistantDisabled = params.shoppingAssistantDisabled || false;
-  if (
-    shoppingAssistantDisabled &&
-    !(
-      params.unavailableProductNotify &&
-      params.conversationStarters?.pdp === true
-    )
-  ) {
+  if (shoppingAssistantDisabled && !params.unavailableProductNotify) {
     console.warn(
-      'WebChat: shoppingAssistantDisabled needs unavailableProductNotify and conversationStarters.pdp',
+      'WebChat: shoppingAssistantDisabled needs unavailableProductNotify',
     );
   }
 
