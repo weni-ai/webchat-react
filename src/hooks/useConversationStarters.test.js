@@ -11,8 +11,6 @@ import {
   buildProductContextString,
   getSelectedSkuId,
   getSkuIdFromRawProduct,
-  isSelectedSkuAvailable,
-  getSellerIdForSku,
 } from '@/utils/vtex';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
@@ -35,8 +33,6 @@ jest.mock('@/utils/vtex', () => ({
   buildProductContextString: jest.fn(),
   getSelectedSkuId: jest.fn(),
   getSkuIdFromRawProduct: jest.fn(),
-  isSelectedSkuAvailable: jest.fn(),
-  getSellerIdForSku: jest.fn(),
 }));
 
 jest.mock('@/utils/navigationMonitor', () => ({
@@ -63,6 +59,11 @@ const mockService = {
   getStarters: jest.fn(),
   clearStarters: jest.fn(),
   setContext: jest.fn(),
+  evaluateBackInStockOffer: jest.fn(() => ({
+    isUnavailable: false,
+    skuId: '',
+    seller: '1',
+  })),
 };
 
 function buildContext(overrides = {}) {
@@ -110,9 +111,12 @@ describe('useConversationStartersCore', () => {
     jest.clearAllMocks();
     clearConversationStartersLog();
     isVtexPdpPage.mockReturnValue(false);
-    isSelectedSkuAvailable.mockReturnValue(true);
     getSkuIdFromRawProduct.mockReturnValue(null);
-    getSellerIdForSku.mockReturnValue('1');
+    mockService.evaluateBackInStockOffer.mockReturnValue({
+      isUnavailable: false,
+      skuId: '',
+      seller: '1',
+    });
     createNavigationMonitor.mockReturnValue(mockMonitor);
     window.matchMedia = jest.fn().mockReturnValue({ matches: false });
     ctx = buildContext();
@@ -1192,20 +1196,26 @@ describe('useConversationStartersCore', () => {
       normalizeForContext.mockReturnValue(unavailableNormalized);
       buildProductContextString.mockReturnValue('Product: Cool Shoe');
       getSelectedSkuId.mockReturnValue('SKU-001');
-      getSellerIdForSku.mockReturnValue('1');
+      mockService.evaluateBackInStockOffer.mockImplementation((input) => ({
+        isUnavailable: true,
+        skuId: input?.selectedSkuId || '',
+        seller: '1',
+      }));
       ctx = buildUnavailableNotifyContext();
       useChatContext.mockReturnValue(ctx);
     });
 
     it('skips getStarters and shows notify CTA when SKU is unavailable', async () => {
-      isSelectedSkuAvailable.mockReturnValue(false);
-
       let hookResult;
       await act(async () => {
         const { result } = renderHook(() => useConversationStartersCore());
         hookResult = result;
       });
 
+      expect(mockService.evaluateBackInStockOffer).toHaveBeenCalledWith({
+        product: unavailableNormalized,
+        selectedSkuId: 'SKU-001',
+      });
       expect(mockService.getStarters).not.toHaveBeenCalled();
       expect(mockService.setContext).toHaveBeenCalledWith('Product: Cool Shoe');
       expect(hookResult.current.isBackInStockNotify).toBe(true);
@@ -1218,7 +1228,6 @@ describe('useConversationStartersCore', () => {
     });
 
     it('requests starters when feature is disabled even if SKU is unavailable', async () => {
-      isSelectedSkuAvailable.mockReturnValue(false);
       ctx = buildContext({
         config: {
           conversationStarters: { pdp: true },
@@ -1233,12 +1242,39 @@ describe('useConversationStartersCore', () => {
         hookResult = result;
       });
 
+      expect(mockService.evaluateBackInStockOffer).not.toHaveBeenCalled();
       expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
       expect(hookResult.current.isBackInStockNotify).toBe(false);
     });
 
+    it('requests starters when the offer evaluator throws', async () => {
+      mockService.evaluateBackInStockOffer.mockImplementation(() => {
+        throw new Error('bad product');
+      });
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).toHaveBeenCalledWith(fakeProductData);
+      expect(
+        getConversationStartersLog().entries.find(
+          (entry) => entry.phase === 'back_in_stock_evaluate_error',
+        ),
+      ).toEqual(
+        expect.objectContaining({
+          level: 'warn',
+          detail: { skuId: 'SKU-001' },
+        }),
+      );
+    });
+
     it('still requests starters when SKU is available', async () => {
-      isSelectedSkuAvailable.mockReturnValue(true);
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
 
       await act(async () => {
         renderHook(() => useConversationStartersCore());
@@ -1248,7 +1284,6 @@ describe('useConversationStartersCore', () => {
     });
 
     it('opens back-in-stock page on CTA click when chat is open', async () => {
-      isSelectedSkuAvailable.mockReturnValue(false);
       ctx = buildUnavailableNotifyContext({ isChatOpen: true });
       useChatContext.mockReturnValue(ctx);
 
@@ -1274,8 +1309,6 @@ describe('useConversationStartersCore', () => {
     });
 
     it('opens the back-in-stock page when the chat opens while the offer is active', async () => {
-      isSelectedSkuAvailable.mockReturnValue(false);
-
       let hookResult;
       let rerender;
       await act(async () => {
@@ -1326,7 +1359,11 @@ describe('useConversationStartersCore', () => {
     });
 
     it('stays on the conversation when the chat opens without the notify offer', async () => {
-      isSelectedSkuAvailable.mockReturnValue(true);
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
 
       let rerender;
       await act(async () => {
@@ -1347,8 +1384,6 @@ describe('useConversationStartersCore', () => {
     });
 
     it('opens chat then page when CTA is clicked while chat is closed', async () => {
-      isSelectedSkuAvailable.mockReturnValue(false);
-
       let hookResult;
       let rerender;
       await act(async () => {

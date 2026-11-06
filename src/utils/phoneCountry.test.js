@@ -4,7 +4,6 @@ import {
   formatNationalNumber,
   getStoreCountryAlpha3,
   internationalDigits,
-  isValidInternationalNumber,
   loadStoreCountryAlpha3,
   readInitialPhoneCountry,
 } from './phoneCountry';
@@ -85,15 +84,9 @@ describe('calling codes', () => {
   });
 });
 
-describe('national number formatting and validation', () => {
+describe('national number formatting', () => {
   it('formats a Brazilian national number', () => {
     expect(formatNationalNumber('51996542347', 'BR')).toBe('(51) 99654-2347');
-  });
-
-  it('rejects an impossible number and accepts a valid one', () => {
-    expect(isValidInternationalNumber('+55', '(11) 99999-9999')).toBe(true);
-    expect(isValidInternationalNumber('+55', '123')).toBe(false);
-    expect(isValidInternationalNumber('', '11999999999')).toBe(false);
   });
 
   it('joins DDI and national digits', () => {

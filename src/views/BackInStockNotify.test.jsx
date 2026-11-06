@@ -1,11 +1,23 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BackInStockNotify } from './BackInStockNotify';
 import { useChatContext } from '@/contexts/ChatContext';
-import { AVAILABILITY_NOTIFY_SUBSCRIBE_PATH } from '@/utils/availabilityNotify';
+import { getSelectedSkuId } from '@/utils/vtex';
 
 jest.mock('@/contexts/ChatContext', () => ({
   useChatContext: jest.fn(),
 }));
+
+jest.mock('@/utils/vtex', () => ({
+  getSelectedSkuId: jest.fn(() => 'from-page'),
+}));
+
+function contactVerdict({ name, phone }) {
+  const errors = {};
+  if (String(name ?? '').trim() === '') errors.name = 'required';
+  if (String(phone ?? '').replace(/\D/g, '').length < 12)
+    errors.phone = 'invalid';
+  return { isValid: Object.keys(errors).length === 0, errors };
+}
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -50,10 +62,18 @@ function fillValidPhone() {
 describe('BackInStockNotify', () => {
   const clearPageHistory = jest.fn();
   const sendMessage = jest.fn();
+  const validateBackInStockContact = jest.fn(contactVerdict);
+  const subscribeBackInStock = jest.fn().mockResolvedValue({ accepted: true });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useChatContext.mockReturnValue({ clearPageHistory, sendMessage });
+    subscribeBackInStock.mockResolvedValue({ accepted: true });
+    validateBackInStockContact.mockImplementation(contactVerdict);
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      service: { validateBackInStockContact, subscribeBackInStock },
+    });
     delete window.__RUNTIME__;
     delete window.faststore_sdk_stores;
     document.documentElement.lang = 'pt-BR';
@@ -153,8 +173,9 @@ describe('BackInStockNotify', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
+    expect(subscribeBackInStock).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      '/_v/private/availability-notify/subscribe',
       expect.anything(),
     );
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -174,8 +195,9 @@ describe('BackInStockNotify', () => {
     fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
+    expect(subscribeBackInStock).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      '/_v/private/availability-notify/subscribe',
       expect.anything(),
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
@@ -194,8 +216,9 @@ describe('BackInStockNotify', () => {
     fillValidPhone();
     fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
 
+    expect(subscribeBackInStock).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      '/_v/private/availability-notify/subscribe',
       expect.anything(),
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Complete this field');
@@ -217,21 +240,20 @@ describe('BackInStockNotify', () => {
     await waitFor(() => {
       expect(screen.getByText("You're all set!")).toBeInTheDocument();
     });
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sku_id: '27',
-          phone: '5511999999999',
-          name: 'Ana',
-          seller: '1',
-          sales_channel: '1',
-          locale: 'pt-BR',
-        }),
-      },
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      '/_v/private/availability-notify/subscribe',
+      expect.anything(),
     );
+    expect(subscribeBackInStock).toHaveBeenCalledTimes(1);
+    expect(subscribeBackInStock).toHaveBeenCalledWith({
+      name: 'Ana',
+      phone: '5511999999999',
+      skuId: '27',
+      seller: '1',
+      salesChannel: null,
+      storeLocales: ['pt-BR'],
+      language: 'pt',
+    });
     expect(
       screen.getByText(
         /I'll message you on WhatsApp when Cool Shoe is back in stock/,
@@ -252,8 +274,9 @@ describe('BackInStockNotify', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
 
     expect(clearPageHistory).toHaveBeenCalledTimes(1);
+    expect(subscribeBackInStock).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      AVAILABILITY_NOTIFY_SUBSCRIBE_PATH,
+      '/_v/private/availability-notify/subscribe',
       expect.anything(),
     );
     expect(sendMessage).not.toHaveBeenCalled();
@@ -278,8 +301,53 @@ describe('BackInStockNotify', () => {
     expect(sendMessage).toHaveBeenCalledWith('Show me similar products');
   });
 
+  it('uses the page SKU when the prop is missing', async () => {
+    render(
+      <BackInStockNotify
+        productName="Cool Shoe"
+        seller="1"
+      />,
+    );
+    fillName();
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    await waitFor(() => {
+      expect(subscribeBackInStock).toHaveBeenCalledWith(
+        expect.objectContaining({ skuId: 'from-page' }),
+      );
+    });
+    expect(getSelectedSkuId).toHaveBeenCalled();
+  });
+
+  it('keeps the button loading and ignores a second submit', async () => {
+    let finish;
+    subscribeBackInStock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(
+      <BackInStockNotify
+        productName="Cool Shoe"
+        skuId="27"
+        seller="1"
+      />,
+    );
+    fillName();
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    expect(subscribeBackInStock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Notify me' })).toBeDisabled();
+    finish({ accepted: true });
+    await waitFor(() => {
+      expect(screen.getByText("You're all set!")).toBeInTheDocument();
+    });
+  });
+
   it('still shows success when subscribe returns HTTP error', async () => {
-    globalThis.fetch.mockResolvedValue({ ok: false, status: 500 });
+    subscribeBackInStock.mockResolvedValue({ accepted: false });
 
     render(
       <BackInStockNotify
@@ -297,7 +365,7 @@ describe('BackInStockNotify', () => {
   });
 
   it('still shows success when subscribe rejects', async () => {
-    globalThis.fetch.mockRejectedValue(new Error('network'));
+    subscribeBackInStock.mockRejectedValue(new Error('network'));
 
     render(
       <BackInStockNotify

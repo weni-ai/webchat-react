@@ -938,36 +938,6 @@ function findSelectedSkuItem(product, selectedSkuId) {
   );
 }
 
-/**
- * Whether the selected SKU is available for sale.
- * Returns true when AvailableQuantity > 0, false when === 0,
- * and true (treat as available) when quantity is unknown/unmatched
- * to avoid false-positive "notify me" prompts.
- */
-export function isSelectedSkuAvailable(product, selectedSkuId) {
-  const matched = findSelectedSkuItem(product, selectedSkuId);
-  if (!matched) return true;
-
-  const availableQuantity =
-    matched.sellers?.[0]?.commertialOffer?.AvailableQuantity;
-  if (availableQuantity == null) return true;
-
-  return availableQuantity > 0;
-}
-
-export function getSellerIdForSku(product, selectedSkuId) {
-  const matched = findSelectedSkuItem(product, selectedSkuId);
-  const sellers = matched?.sellers;
-  if (!Array.isArray(sellers) || sellers.length === 0) return '1';
-
-  const preferred =
-    sellers.find((seller) => seller.sellerDefault) || sellers[0];
-  const sellerId = preferred?.sellerId;
-  if (sellerId == null || sellerId === '') return '1';
-
-  return String(sellerId);
-}
-
 export function buildProductContextString(product, selectedSkuId) {
   if (!product) return null;
 

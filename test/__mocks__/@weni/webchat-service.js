@@ -158,6 +158,16 @@ class WeniWebchatService {
   getFileConfig() {
     return {};
   }
+
+  evaluateBackInStockOffer = jest.fn(() => ({
+    isUnavailable: false,
+    skuId: '',
+    seller: '1',
+  }));
+
+  validateBackInStockContact = jest.fn(() => ({ isValid: true, errors: {} }));
+
+  subscribeBackInStock = jest.fn(() => Promise.resolve({ accepted: true }));
 }
 
 // Mirrors the real package, which exposes the constants both as static
