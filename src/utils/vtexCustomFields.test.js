@@ -1,12 +1,7 @@
-jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
-  getReliableOrderFormId: jest.fn(),
-}));
-
 jest.mock('@/utils/vtex', () => ({
   getVtexAccount: jest.fn(),
 }));
 
-import { getReliableOrderFormId } from '@/utils/VTEXIOMinicartBridge';
 import { getVtexAccount } from '@/utils/vtex';
 import {
   getSegment,
@@ -20,14 +15,14 @@ import {
 const VALID_ORDER_FORM_ID = 'a1b2c3d4e5f6789012345678abcdef01';
 
 async function flushMicrotasks() {
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let i = 0; i < 10; i += 1) {
+    await Promise.resolve();
+  }
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  getReliableOrderFormId.mockReset();
-  getReliableOrderFormId.mockReturnValue(null);
+  localStorage.clear();
   getVtexAccount.mockReset();
   getVtexAccount.mockReturnValue(undefined);
   jest.useRealTimers();
@@ -99,17 +94,29 @@ describe('getValidOrderFormId', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('returns id from getReliableOrderFormId when FastStore cart is absent', async () => {
-    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
+  const STALE_ORDER_FORM_ID = 'fedcba9876543210fedcba9876543210';
+
+  it('ignores a stale localStorage orderform and uses the checkout GET', async () => {
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ id: STALE_ORDER_FORM_ID }),
+    );
+    const getItem = jest.spyOn(Storage.prototype, 'getItem');
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
+    });
 
     const result = await getValidOrderFormId();
 
     expect(result).toBe(VALID_ORDER_FORM_ID);
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(getItem).not.toHaveBeenCalledWith('orderform');
+    getItem.mockRestore();
   });
 
-  it('fetches /api/checkout/pub/orderForm when local sources are absent', async () => {
+  it('fetches /api/checkout/pub/orderForm when FastStore cart is absent', async () => {
     globalThis.fetch.mockResolvedValue({
+      ok: true,
       json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
     });
 
@@ -122,13 +129,51 @@ describe('getValidOrderFormId', () => {
   });
 
   it('returns null when resolved id is not a valid 32-hex string', async () => {
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ id: VALID_ORDER_FORM_ID }),
+    );
     globalThis.fetch.mockResolvedValue({
+      ok: true,
       json: () => Promise.resolve({ orderFormId: 'invalid-id' }),
     });
 
     const result = await getValidOrderFormId();
 
     expect(result).toBeNull();
+  });
+
+  it('uses localStorage when the checkout GET fails', async () => {
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ id: VALID_ORDER_FORM_ID }),
+    );
+    globalThis.fetch.mockRejectedValue(new Error('network error'));
+    await expect(getValidOrderFormId()).resolves.toBe(VALID_ORDER_FORM_ID);
+
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ orderFormId: STALE_ORDER_FORM_ID }),
+    );
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    await expect(getValidOrderFormId()).resolves.toBe(STALE_ORDER_FORM_ID);
+
+    globalThis.fetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(new Error('not json')),
+    });
+    await expect(getValidOrderFormId()).resolves.toBe(STALE_ORDER_FORM_ID);
+  });
+
+  it('returns null when the checkout GET fails and localStorage has no valid id', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    await expect(getValidOrderFormId()).resolves.toBeNull();
+
+    localStorage.setItem('orderform', JSON.stringify({ id: 'not-hex' }));
+    await expect(getValidOrderFormId()).resolves.toBeNull();
+
+    localStorage.setItem('orderform', 'not-valid-json{{{');
+    await expect(getValidOrderFormId()).resolves.toBeNull();
   });
 });
 
@@ -349,6 +394,7 @@ function mockFetchByUrl({ segment, sessionToken, orderFormId } = {}) {
 
     if (url === '/api/checkout/pub/orderForm') {
       return Promise.resolve({
+        ok: true,
         json: () => Promise.resolve({ orderFormId }),
       });
     }
@@ -369,12 +415,12 @@ describe('startVtexCustomFieldsSync', () => {
 
   it('sends each field independently as soon as it becomes available', async () => {
     getVtexAccount.mockReturnValue('mystore');
-    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
     mockFetchByUrl({
       segment: { channel: '1' },
       sessionToken: 'session-token-1',
+      orderFormId: VALID_ORDER_FORM_ID,
     });
 
     const stop = startVtexCustomFieldsSync(setCustomField);
@@ -397,10 +443,9 @@ describe('startVtexCustomFieldsSync', () => {
 
   it('does not block one field while others are still unavailable', async () => {
     getVtexAccount.mockReturnValue(undefined);
-    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
     const setCustomField = jest.fn();
 
-    mockFetchByUrl();
+    mockFetchByUrl({ orderFormId: VALID_ORDER_FORM_ID });
 
     const stop = startVtexCustomFieldsSync(setCustomField);
 
@@ -433,8 +478,8 @@ describe('startVtexCustomFieldsSync', () => {
     mockFetchByUrl({
       segment: { channel: '1' },
       sessionToken: 'session-token-1',
+      orderFormId: VALID_ORDER_FORM_ID,
     });
-    getReliableOrderFormId.mockReturnValue(VALID_ORDER_FORM_ID);
 
     const stop = startVtexCustomFieldsSync(setCustomField);
 
@@ -459,7 +504,6 @@ describe('startVtexCustomFieldsSync', () => {
 
   it('re-sends session when the token changes on later polls', async () => {
     getVtexAccount.mockReturnValue(undefined);
-    getReliableOrderFormId.mockReturnValue(null);
     const setCustomField = jest.fn();
 
     globalThis.fetch.mockImplementation((url) => {
@@ -481,6 +525,7 @@ describe('startVtexCustomFieldsSync', () => {
 
       if (url === '/api/checkout/pub/orderForm') {
         return Promise.resolve({
+          ok: true,
           json: () => Promise.resolve({ orderFormId: null }),
         });
       }

@@ -11,12 +11,10 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import ChatContext from '@/contexts/ChatContext';
-import {
-  updateVTEXIOMinicart,
-  getReliableOrderFormId,
-} from '@/utils/VTEXIOMinicartBridge';
+import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
 import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 import { getVtexAccount, isFastStoreHost } from '@/utils/vtex';
+import { getValidOrderFormId } from '@/utils/vtexCustomFields';
 import { UTM_SOURCES } from '@/utils/sendVtexUtm';
 import { createThrottledCustomFieldSetter } from '@/utils/throttleCustomField';
 
@@ -68,28 +66,27 @@ export function OrderFormProvider({ children }) {
   const requestOrderForm = useCallback(() => {
     if (fetchStartedRef.current) return;
     fetchStartedRef.current = true;
-
-    const localOrderFormId = getLocalOrderFormId();
-
-    if (localOrderFormId) {
-      setOrderFormId(localOrderFormId);
-      return;
-    }
-
     setIsLoadingOrderForm(true);
 
-    fetch('/api/checkout/pub/orderForm')
-      .then((res) => {
-        if (!res.ok) throw new Error('Order form fetch failed');
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.orderFormId != null) {
-          setOrderFormId(data.orderFormId);
+    getValidOrderFormId()
+      .then((id) => {
+        if (id) {
+          setOrderFormId(id);
+          return;
         }
+
+        // Neither the checkout GET nor localStorage yielded an id. A failure
+        // must not disable add-to-cart for the rest of the session.
+        fetchStartedRef.current = false;
+        console.warn('[OrderForm] Could not resolve orderFormId', {
+          account: getVtexAccount(),
+        });
       })
       .catch(() => {
-        // On failure: do not save, do not retry
+        fetchStartedRef.current = false;
+        console.warn('[OrderForm] Could not resolve orderFormId', {
+          account: getVtexAccount(),
+        });
       })
       .finally(() => {
         setIsLoadingOrderForm(false);
@@ -411,23 +408,4 @@ export function useOrderForm() {
     sendProductsToCart:
       context?.sendProductsToCart ?? (() => Promise.resolve()),
   };
-}
-
-function getLocalOrderFormId() {
-  const fastStoreOrderFormId = window.faststore_sdk_stores
-    ?.get('fs::cart')
-    .read().id;
-
-  if (fastStoreOrderFormId) {
-    return fastStoreOrderFormId;
-  }
-
-  try {
-    const vtexIOOrderFormId = getReliableOrderFormId();
-    if (vtexIOOrderFormId) return vtexIOOrderFormId;
-  } catch {
-    // bridge unavailable or threw — fall through
-  }
-
-  return null;
 }
