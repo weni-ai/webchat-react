@@ -1,4 +1,3 @@
-import { getReliableOrderFormId } from '@/utils/VTEXIOMinicartBridge';
 import { getVtexAccount } from '@/utils/vtex';
 
 const ORDER_FORM_ID_REGEX = /^[a-f0-9]{32}$/;
@@ -41,6 +40,11 @@ export async function getSegment() {
   return null;
 }
 
+/**
+ * FastStore keeps its own cart id. Everywhere else the checkout GET is the
+ * only source: on VTEX IO, localStorage `orderform` and the host's in-memory
+ * copies can hold an id that is not the one bound to the checkout cookie.
+ */
 async function getOrderFormId() {
   const fastStoreOrderFormId = window.faststore_sdk_stores
     ?.get('fs::cart')
@@ -51,14 +55,8 @@ async function getOrderFormId() {
   }
 
   try {
-    const vtexIoOrderFormId = getReliableOrderFormId();
-    if (vtexIoOrderFormId) return vtexIoOrderFormId;
-  } catch {
-    // bridge unavailable — fall through to fetch
-  }
-
-  try {
     const response = await fetch('/api/checkout/pub/orderForm');
+    if (!response.ok) return null;
     const data = await response.json();
     return data.orderFormId ?? null;
   } catch {

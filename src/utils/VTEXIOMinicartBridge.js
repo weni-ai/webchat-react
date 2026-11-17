@@ -1,8 +1,9 @@
 /**
  * VTEX IO storefront bridge:
- * - Resolves the current `orderFormId` from multiple sources (Apollo cache,
- *   React Context, localStorage), preferring the most authoritative one and
- *   validating the value against the canonical 32-hex format.
+ * - Resolves the current `orderFormId` from the host page (Apollo cache,
+ *   React Context), preferring the most authoritative one and validating
+ *   the value against the canonical 32-hex format. `localStorage` is not a
+ *   source: on VTEX IO it can hold an id that is not the current order form.
  * - Refreshes the host checkout `orderForm` Context via React Fiber lookup,
  *   preserving previously-rendered item images to avoid minicart flicker.
  */
@@ -149,23 +150,8 @@ export function getOrderFormIdFromContext() {
   }
 }
 
-export function getOrderFormIdFromStorage() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('orderform') || '{}');
-    const id = stored.orderFormId ?? stored.id;
-    return isValidOrderFormId(id) ? id : null;
-  } catch {
-    return null;
-  }
-}
-
 export function getReliableOrderFormId() {
-  return (
-    getOrderFormIdFromApollo() ||
-    getOrderFormIdFromContext() ||
-    getOrderFormIdFromStorage() ||
-    null
-  );
+  return getOrderFormIdFromApollo() || getOrderFormIdFromContext() || null;
 }
 
 export async function getStableOrderFormId({
@@ -193,9 +179,6 @@ export async function getStableOrderFormId({
   }
 
   if (lastId) return lastId;
-
-  const fallback = getOrderFormIdFromStorage();
-  if (fallback) return fallback;
 
   throw new Error('[Minicart] Could not resolve a stable orderFormId');
 }

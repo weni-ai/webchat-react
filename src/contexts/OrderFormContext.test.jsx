@@ -11,7 +11,6 @@ import PropTypes from 'prop-types';
 
 jest.mock('@/utils/VTEXIOMinicartBridge', () => ({
   updateVTEXIOMinicart: jest.fn(),
-  getReliableOrderFormId: jest.fn(),
 }));
 
 jest.mock('@/utils/faststoreBootstrap', () => ({
@@ -43,10 +42,7 @@ jest.mock('@/contexts/ChatContext', () => {
   };
 });
 
-import {
-  updateVTEXIOMinicart,
-  getReliableOrderFormId,
-} from '@/utils/VTEXIOMinicartBridge';
+import { updateVTEXIOMinicart } from '@/utils/VTEXIOMinicartBridge';
 import { bootstrapOrderFormId } from '@/utils/faststoreBootstrap';
 import { isFastStoreHost } from '@/utils/vtex';
 import ChatContext from '@/contexts/ChatContext';
@@ -58,6 +54,16 @@ import {
   PENDING_CART_DEBOUNCE_MS,
 } from './OrderFormContext';
 import { UTM_SOURCES } from '@/utils/sendVtexUtm';
+
+const VALID_ORDER_FORM_ID = 'a1b2c3d4e5f6789012345678abcdef01';
+const OTHER_ORDER_FORM_ID = 'fedcba9876543210fedcba9876543210';
+
+function mockOrderFormFetch(orderFormId = VALID_ORDER_FORM_ID) {
+  globalThis.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ orderFormId }),
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -108,8 +114,6 @@ beforeEach(() => {
   updateVTEXIOMinicart.mockReset();
   updateVTEXIOMinicart.mockResolvedValue(null);
   bootstrapOrderFormId.mockReset();
-  getReliableOrderFormId.mockReset();
-  getReliableOrderFormId.mockReturnValue(null);
   isFastStoreHost.mockReset();
   isFastStoreHost.mockReturnValue(false);
 });
@@ -152,18 +156,18 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
   }
 
   it('sets orderFormId from FastStore without fetching', async () => {
-    setupFastStore('fs-cart-123');
+    setupFastStore(VALID_ORDER_FORM_ID);
     renderProvider();
 
     await userEvent.click(screen.getByTestId('btn-request'));
 
     expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-      'fs-cart-123',
+      VALID_ORDER_FORM_ID,
     );
   });
 
   it('does not call fetch when FastStore has a local ID', async () => {
-    setupFastStore('fs-cart-123');
+    setupFastStore(VALID_ORDER_FORM_ID);
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -173,7 +177,7 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
   });
 
   it('does not set isLoadingOrderForm when local ID is found', async () => {
-    setupFastStore('fs-cart-123');
+    setupFastStore(VALID_ORDER_FORM_ID);
     renderProvider();
 
     await userEvent.click(screen.getByTestId('btn-request'));
@@ -183,57 +187,57 @@ describe('requestOrderForm — local ID via FastStore SDK', () => {
 });
 
 // ---------------------------------------------------------------------------
-// requestOrderForm — local ID via VTEX IO bridge (getReliableOrderFormId)
+// requestOrderForm — checkout GET on non-FastStore hosts
 // ---------------------------------------------------------------------------
 
-describe('requestOrderForm — local ID via VTEX IO bridge', () => {
-  it('sets orderFormId from the bridge without fetching', async () => {
-    getReliableOrderFormId.mockReturnValue('vtex-local-456');
-    globalThis.fetch = jest.fn();
-    renderProvider();
-
-    await userEvent.click(screen.getByTestId('btn-request'));
-
-    expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-      'vtex-local-456',
+describe('requestOrderForm — checkout GET on non-FastStore hosts', () => {
+  it('uses the checkout id when localStorage holds a different one', async () => {
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ id: OTHER_ORDER_FORM_ID }),
     );
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
-
-  it('continues to fetch when the bridge throws', async () => {
-    getReliableOrderFormId.mockImplementation(() => {
-      throw new Error('bridge unavailable');
-    });
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
-    });
+    mockOrderFormFetch(VALID_ORDER_FORM_ID);
     renderProvider();
 
     await userEvent.click(screen.getByTestId('btn-request'));
 
     await waitFor(() =>
       expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-        'fetched-id',
+        VALID_ORDER_FORM_ID,
       ),
     );
   });
 
-  it('continues to fetch when the bridge returns null', async () => {
-    getReliableOrderFormId.mockReturnValue(null);
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ orderFormId: 'fetched-id' }),
-    });
+  it('retries the GET after a failure', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    globalThis.fetch = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Network failure'))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
+      });
     renderProvider();
 
     await userEvent.click(screen.getByTestId('btn-request'));
 
     await waitFor(() =>
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false'),
+    );
+    expect(screen.getByTestId('order-form-id')).toHaveTextContent('null');
+    expect(warn).toHaveBeenCalledWith(
+      '[OrderForm] Could not resolve orderFormId',
+      { account: 'mystore' },
+    );
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
       expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-        'fetched-id',
+        VALID_ORDER_FORM_ID,
       ),
     );
+    warn.mockRestore();
   });
 });
 
@@ -245,7 +249,7 @@ describe('requestOrderForm — fetch branch', () => {
   it('calls fetch with /api/checkout/pub/orderForm', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ orderFormId: 'api-id' }),
+      json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
     });
     renderProvider();
 
@@ -259,7 +263,7 @@ describe('requestOrderForm — fetch branch', () => {
   it('sets orderFormId from the API response', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ orderFormId: 'api-cart-789' }),
+      json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
     });
     renderProvider();
 
@@ -267,7 +271,7 @@ describe('requestOrderForm — fetch branch', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('order-form-id')).toHaveTextContent(
-        'api-cart-789',
+        VALID_ORDER_FORM_ID,
       ),
     );
   });
@@ -383,7 +387,7 @@ describe('requestOrderForm — idempotent guard', () => {
   it('calls fetch only once when requestOrderForm is invoked multiple times', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ orderFormId: 'once' }),
+      json: () => Promise.resolve({ orderFormId: VALID_ORDER_FORM_ID }),
     });
     renderProvider();
 
@@ -392,13 +396,17 @@ describe('requestOrderForm — idempotent guard', () => {
     await userEvent.click(screen.getByTestId('btn-request'));
 
     await waitFor(() =>
-      expect(screen.getByTestId('order-form-id')).toHaveTextContent('once'),
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+        VALID_ORDER_FORM_ID,
+      ),
     );
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('does not start a new fetch when a local ID is already stored', async () => {
-    getReliableOrderFormId.mockReturnValue('local-id');
+  it('does not fetch when FastStore already has an id', async () => {
+    window.faststore_sdk_stores = {
+      get: () => ({ read: () => ({ id: VALID_ORDER_FORM_ID }) }),
+    };
     globalThis.fetch = jest.fn();
     renderProvider();
 
@@ -512,7 +520,7 @@ describe('useOrderFormId', () => {
   });
 
   it('returns the orderFormId from the provider', async () => {
-    getReliableOrderFormId.mockReturnValue('hook-test-id');
+    mockOrderFormFetch();
 
     function HookConsumer() {
       const id = useOrderFormId();
@@ -533,7 +541,9 @@ describe('useOrderFormId', () => {
 
     await userEvent.click(screen.getByText('req'));
 
-    expect(screen.getByTestId('id')).toHaveTextContent('hook-test-id');
+    await waitFor(() =>
+      expect(screen.getByTestId('id')).toHaveTextContent(VALID_ORDER_FORM_ID),
+    );
   });
 });
 
@@ -627,7 +637,7 @@ describe('useOrderForm', () => {
   });
 
   it('returns live values from the provider', async () => {
-    getReliableOrderFormId.mockReturnValue('full-shape-id');
+    mockOrderFormFetch();
 
     const wrapper = ({ children }) => (
       <OrderFormProvider>{children}</OrderFormProvider>
@@ -638,7 +648,9 @@ describe('useOrderForm', () => {
       result.current.requestOrderForm();
     });
 
-    expect(result.current.orderFormId).toBe('full-shape-id');
+    await waitFor(() =>
+      expect(result.current.orderFormId).toBe(VALID_ORDER_FORM_ID),
+    );
     expect(result.current.isLoadingOrderForm).toBe(false);
     expect(typeof result.current.requestOrderForm).toBe('function');
     expect(typeof result.current.trySyncHostCart).toBe('function');
@@ -660,7 +672,7 @@ describe('bootstrapFastStoreOrderForm', () => {
 
   it('resolves with the cached orderFormId without calling the SDK bootstrap', async () => {
     window.faststore_sdk_stores = {
-      get: () => ({ read: () => ({ id: 'cached-from-sdk' }) }),
+      get: () => ({ read: () => ({ id: VALID_ORDER_FORM_ID }) }),
     };
 
     const { result } = renderWithProvider();
@@ -668,7 +680,9 @@ describe('bootstrapFastStoreOrderForm', () => {
     await act(async () => {
       result.current.requestOrderForm();
     });
-    expect(result.current.orderFormId).toBe('cached-from-sdk');
+    await waitFor(() =>
+      expect(result.current.orderFormId).toBe(VALID_ORDER_FORM_ID),
+    );
 
     let resolved;
     await act(async () => {
@@ -678,7 +692,7 @@ describe('bootstrapFastStoreOrderForm', () => {
       });
     });
 
-    expect(resolved).toBe('cached-from-sdk');
+    expect(resolved).toBe(VALID_ORDER_FORM_ID);
     expect(bootstrapOrderFormId).not.toHaveBeenCalled();
   });
 
@@ -884,10 +898,10 @@ describe('pending cart items', () => {
       sendUtm,
     });
 
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -909,7 +923,7 @@ describe('pending cart items', () => {
 
     expect(addProductToCart).toHaveBeenCalledWith({
       VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
+      orderFormId: VALID_ORDER_FORM_ID,
       items: [
         {
           id: 'sku1',
@@ -928,15 +942,50 @@ describe('pending cart items', () => {
     jest.useRealTimers();
   });
 
+  it('adds to the cart with the checkout id, not the localStorage id', async () => {
+    jest.useFakeTimers();
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ id: OTHER_ORDER_FORM_ID }),
+    );
+    const addProductToCart = jest.fn(() => Promise.resolve());
+    mockOrderFormFetch(VALID_ORDER_FORM_ID);
+    const { result } = renderWithChat(buildChatValue({ addProductToCart }));
+
+    await act(async () => {
+      result.current.requestOrderForm();
+    });
+
+    act(() => {
+      result.current.setPendingCartItem({
+        key: 'sku1#seller1',
+        skuId: 'sku1',
+        sellerId: 'seller1',
+        quantity: 1,
+        productName: 'Shoe',
+      });
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(PENDING_CART_DEBOUNCE_MS);
+    });
+
+    expect(addProductToCart).toHaveBeenCalledWith(
+      expect.objectContaining({ orderFormId: VALID_ORDER_FORM_ID }),
+    );
+
+    jest.useRealTimers();
+  });
+
   it('forwards the product image on the add-to-cart payload', async () => {
     jest.useFakeTimers();
     const addProductToCart = jest.fn(() => Promise.resolve());
     const chat = buildChatValue({ addProductToCart });
 
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -957,7 +1006,7 @@ describe('pending cart items', () => {
 
     expect(addProductToCart).toHaveBeenCalledWith({
       VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
+      orderFormId: VALID_ORDER_FORM_ID,
       items: [
         {
           id: 'sku1',
@@ -980,10 +1029,10 @@ describe('pending cart items', () => {
       addConversationStatus,
     });
 
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -1011,7 +1060,7 @@ describe('pending cart items', () => {
     expect(addProductToCart).toHaveBeenCalledTimes(1);
     expect(addProductToCart).toHaveBeenCalledWith({
       VTEXAccountName: 'mystore',
-      orderFormId: 'order-123',
+      orderFormId: VALID_ORDER_FORM_ID,
       items: [
         { id: 'sku1', seller: 'seller1', quantity: 2 },
         { id: 'sku2', seller: 'seller1', quantity: 1 },
@@ -1029,10 +1078,10 @@ describe('pending cart items', () => {
     jest.useFakeTimers();
     const addProductToCart = jest.fn(() => Promise.resolve());
     const chat = buildChatValue({ addProductToCart });
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -1068,10 +1117,10 @@ describe('pending cart items', () => {
       pageHistory: [{ view: 'product-catalog' }],
       addProductToCart,
     });
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -1097,7 +1146,7 @@ describe('pending cart items', () => {
 
   it('flushes catalog-origin items when returning to conversation', async () => {
     const addProductToCart = jest.fn(() => Promise.resolve());
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
 
     function FlushCatalogConsumer({ onGoConversation }) {
       const orderForm = useOrderForm();
@@ -1181,7 +1230,7 @@ describe('pending cart items', () => {
     await waitFor(() => {
       expect(addProductToCart).toHaveBeenCalledWith({
         VTEXAccountName: 'mystore',
-        orderFormId: 'order-123',
+        orderFormId: VALID_ORDER_FORM_ID,
         items: [
           {
             id: 'sku1',
@@ -1205,10 +1254,10 @@ describe('pending cart items', () => {
       Promise.reject(new Error('timeout')),
     );
     const chat = buildChatValue({ addProductToCart });
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(chat);
 
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
 
@@ -1405,11 +1454,11 @@ describe('pending cart items', () => {
   it('uses the single-item success message', async () => {
     const addProductToCart = jest.fn(() => Promise.resolve());
     const addConversationStatus = jest.fn();
-    getReliableOrderFormId.mockReturnValue('order-123');
+    mockOrderFormFetch();
     const { result } = renderWithChat(
       buildChatValue({ addProductToCart, addConversationStatus }),
     );
-    act(() => {
+    await act(async () => {
       result.current.requestOrderForm();
     });
     act(() => {

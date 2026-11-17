@@ -4,7 +4,6 @@ import {
   getStableOrderFormId,
   getOrderFormIdFromApollo,
   getOrderFormIdFromContext,
-  getOrderFormIdFromStorage,
   findNativeOrderFormContext,
 } from './VTEXIOMinicartBridge';
 
@@ -726,43 +725,6 @@ describe('getOrderFormIdFromContext', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getOrderFormIdFromStorage
-// ---------------------------------------------------------------------------
-
-describe('getOrderFormIdFromStorage', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  it('reads a valid hex orderFormId from localStorage', () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_A }));
-    expect(getOrderFormIdFromStorage()).toBe(VALID_ID_A);
-  });
-
-  it('reads from the orderFormId field when present', () => {
-    localStorage.setItem(
-      'orderform',
-      JSON.stringify({ orderFormId: VALID_ID_B }),
-    );
-    expect(getOrderFormIdFromStorage()).toBe(VALID_ID_B);
-  });
-
-  it('rejects an invalid (non-hex) value', () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: 'vtex-local-456' }));
-    expect(getOrderFormIdFromStorage()).toBeNull();
-  });
-
-  it('returns null when localStorage JSON is malformed', () => {
-    localStorage.setItem('orderform', 'not-valid-json{{{');
-    expect(getOrderFormIdFromStorage()).toBeNull();
-  });
-
-  it('returns null when there is no orderform entry', () => {
-    expect(getOrderFormIdFromStorage()).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
 // getReliableOrderFormId
 // ---------------------------------------------------------------------------
 
@@ -786,9 +748,9 @@ describe('getReliableOrderFormId', () => {
     expect(getReliableOrderFormId()).toBe(VALID_ID_B);
   });
 
-  it('falls back to Storage when neither Apollo nor Context have an id', () => {
+  it('ignores localStorage when neither Apollo nor Context have an id', () => {
     localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
-    expect(getReliableOrderFormId()).toBe(VALID_ID_C);
+    expect(getReliableOrderFormId()).toBeNull();
   });
 
   it('returns null when every source is empty or invalid', () => {
@@ -815,14 +777,15 @@ describe('getStableOrderFormId', () => {
     expect(result).toBe(VALID_ID_A);
   });
 
-  it('falls back to localStorage when neither Apollo nor Context have an id and the timeout expires', async () => {
+  it('rejects when only localStorage has an id and the timeout expires', async () => {
     localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
-    const result = await getStableOrderFormId({
-      timeoutMs: 150,
-      stabilityWindowMs: 50,
-      pollIntervalMs: 20,
-    });
-    expect(result).toBe(VALID_ID_C);
+    await expect(
+      getStableOrderFormId({
+        timeoutMs: 50,
+        stabilityWindowMs: 20,
+        pollIntervalMs: 10,
+      }),
+    ).rejects.toThrow('stable orderFormId');
   });
 
   it('rejects when no source ever yields an id', async () => {
