@@ -208,6 +208,26 @@ describe('requestOrderForm — checkout GET on non-FastStore hosts', () => {
     );
   });
 
+  it('uses localStorage when the checkout GET fails', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ orderFormId: VALID_ORDER_FORM_ID }),
+    );
+    globalThis.fetch = jest.fn().mockResolvedValue({ ok: false });
+    renderProvider();
+
+    await userEvent.click(screen.getByTestId('btn-request'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('order-form-id')).toHaveTextContent(
+        VALID_ORDER_FORM_ID,
+      ),
+    );
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('retries the GET after a failure', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     globalThis.fetch = jest

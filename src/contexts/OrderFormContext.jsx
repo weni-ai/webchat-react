@@ -75,8 +75,8 @@ export function OrderFormProvider({ children }) {
           return;
         }
 
-        // The GET is the only source on VTEX IO, so a failure must not
-        // disable add-to-cart for the rest of the session.
+        // Neither the checkout GET nor localStorage yielded an id. A failure
+        // must not disable add-to-cart for the rest of the session.
         fetchStartedRef.current = false;
         console.warn('[OrderForm] Could not resolve orderFormId', {
           account: getVtexAccount(),

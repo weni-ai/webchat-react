@@ -41,10 +41,20 @@ export async function getSegment() {
 }
 
 /**
- * FastStore keeps its own cart id. Everywhere else the checkout GET is the
- * only source: on VTEX IO, localStorage `orderform` and the host's in-memory
- * copies can hold an id that is not the one bound to the checkout cookie.
+ * FastStore keeps its own cart id. Everywhere else the checkout GET is tried
+ * first, because on VTEX IO `localStorage.orderform` can hold an id that is
+ * not the one bound to the checkout cookie. localStorage is only used when
+ * that request fails, for stores that do not expose the route.
  */
+function getOrderFormIdFromStorage() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('orderform') || '{}');
+    return stored.orderFormId ?? stored.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function getOrderFormId() {
   const fastStoreOrderFormId = window.faststore_sdk_stores
     ?.get('fs::cart')
@@ -56,11 +66,11 @@ async function getOrderFormId() {
 
   try {
     const response = await fetch('/api/checkout/pub/orderForm');
-    if (!response.ok) return null;
+    if (!response.ok) return getOrderFormIdFromStorage();
     const data = await response.json();
     return data.orderFormId ?? null;
   } catch {
-    return null;
+    return getOrderFormIdFromStorage();
   }
 }
 

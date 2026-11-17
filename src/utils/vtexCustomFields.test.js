@@ -143,22 +143,36 @@ describe('getValidOrderFormId', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when the checkout GET fails', async () => {
+  it('uses localStorage when the checkout GET fails', async () => {
     localStorage.setItem(
       'orderform',
       JSON.stringify({ id: VALID_ORDER_FORM_ID }),
     );
     globalThis.fetch.mockRejectedValue(new Error('network error'));
+    await expect(getValidOrderFormId()).resolves.toBe(VALID_ORDER_FORM_ID);
 
-    await expect(getValidOrderFormId()).resolves.toBeNull();
-
+    localStorage.setItem(
+      'orderform',
+      JSON.stringify({ orderFormId: STALE_ORDER_FORM_ID }),
+    );
     globalThis.fetch.mockResolvedValue({ ok: false });
-    await expect(getValidOrderFormId()).resolves.toBeNull();
+    await expect(getValidOrderFormId()).resolves.toBe(STALE_ORDER_FORM_ID);
 
     globalThis.fetch.mockResolvedValue({
       ok: true,
       json: () => Promise.reject(new Error('not json')),
     });
+    await expect(getValidOrderFormId()).resolves.toBe(STALE_ORDER_FORM_ID);
+  });
+
+  it('returns null when the checkout GET fails and localStorage has no valid id', async () => {
+    globalThis.fetch.mockResolvedValue({ ok: false });
+    await expect(getValidOrderFormId()).resolves.toBeNull();
+
+    localStorage.setItem('orderform', JSON.stringify({ id: 'not-hex' }));
+    await expect(getValidOrderFormId()).resolves.toBeNull();
+
+    localStorage.setItem('orderform', 'not-valid-json{{{');
     await expect(getValidOrderFormId()).resolves.toBeNull();
   });
 });
