@@ -150,10 +150,6 @@ export function getOrderFormIdFromContext() {
   }
 }
 
-export function getReliableOrderFormId() {
-  return getOrderFormIdFromApollo() || getOrderFormIdFromContext() || null;
-}
-
 export async function getStableOrderFormId({
   timeoutMs = 8000,
   stabilityWindowMs = 600,
@@ -242,7 +238,6 @@ function setupMinicartBridge() {
   if (typeof window === 'undefined') return;
   window.updateMinicart = updateVTEXIOMinicart;
   window.findNativeOrderFormContext = findNativeOrderFormContext;
-  window.getReliableOrderFormId = getReliableOrderFormId;
   window.getStableOrderFormId = getStableOrderFormId;
   window.getOrderFormIdFromApollo = getOrderFormIdFromApollo;
 }

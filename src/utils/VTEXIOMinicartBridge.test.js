@@ -1,6 +1,5 @@
 import {
   updateVTEXIOMinicart,
-  getReliableOrderFormId,
   getStableOrderFormId,
   getOrderFormIdFromApollo,
   getOrderFormIdFromContext,
@@ -725,40 +724,6 @@ describe('getOrderFormIdFromContext', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getReliableOrderFormId
-// ---------------------------------------------------------------------------
-
-describe('getReliableOrderFormId', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  it('prefers Apollo over Context and Storage', () => {
-    mountElementWithFiber(fiberWithApolloOrderFormId(VALID_ID_A));
-    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
-    expect(getReliableOrderFormId()).toBe(VALID_ID_A);
-  });
-
-  it('falls back to Context when Apollo is unavailable', () => {
-    const context = buildContext({
-      orderForm: { items: [], orderFormId: VALID_ID_B },
-    });
-    mountElementWithFiber(memoizedPropsValueFiber(context));
-    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
-    expect(getReliableOrderFormId()).toBe(VALID_ID_B);
-  });
-
-  it('ignores localStorage when neither Apollo nor Context have an id', () => {
-    localStorage.setItem('orderform', JSON.stringify({ id: VALID_ID_C }));
-    expect(getReliableOrderFormId()).toBeNull();
-  });
-
-  it('returns null when every source is empty or invalid', () => {
-    expect(getReliableOrderFormId()).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
 // getStableOrderFormId
 // ---------------------------------------------------------------------------
 
@@ -806,10 +771,6 @@ describe('getStableOrderFormId', () => {
 describe('setupMinicartBridge — exposes orderForm helpers on window', () => {
   it('exposes findNativeOrderFormContext on window', () => {
     expect(window.findNativeOrderFormContext).toBe(findNativeOrderFormContext);
-  });
-
-  it('exposes getReliableOrderFormId on window', () => {
-    expect(window.getReliableOrderFormId).toBe(getReliableOrderFormId);
   });
 
   it('exposes getStableOrderFormId on window', () => {
