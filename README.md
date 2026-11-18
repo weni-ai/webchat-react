@@ -107,12 +107,13 @@ The standalone initializer accepts:
 | `tooltipMessage` | string | — | First message displayed as a tooltip in a new session. |
 | `tooltipDelay` | number (ms) | 500 | Delay before showing the tooltip message. |
 | `disableTooltips` | boolean | false | Disable automatic tooltips on new messages. |
+| `renderPercentage` | number (0–100) | 100 | Percentage of sessions that render the shopping assistant. At `0` or `100` the decision is deterministic. With `unavailableProductNotify: true`, sampled-out sessions still show the back-in-stock offer on an unavailable SKU (notify-only mode; no WebSocket). |
 | `showVoiceRecordingButton` | boolean | true | Show audio recorder button in the input bar. |
 | `showCameraButton` | boolean | true | Show camera recorder button in the input bar. |
 | `showFileUploaderButton` | boolean | true | Show file upload button in the input bar. |
 | `navigateIfSameDomain` | boolean | false | Experimental flag: auto-navigate when an incoming message contains a link to the same domain. |
 | `addToCart` | boolean | false | When true, shows the VTEX add-to-cart control in product quantity controls when order form and SKU context are available. |
-| `unavailableProductNotify` | boolean | false | Shows the back-in-stock offer on an unavailable SKU. |
+| `unavailableProductNotify` | boolean | false | Shows the back-in-stock offer on an unavailable SKU. Works without `conversationStarters.pdp` and is shown even when `renderPercentage` excludes the session from the assistant sample. |
 | `conversationStarters.pdp` | boolean | false | Controls PDP conversation starters only. |
 | `onSocketEvent` | { [event]: function } | — | Handlers for low-level socket/service events. |
 | `onWidgetEvent` | { onChatOpen, onChatClose, onChatHidden } | — | UI lifecycle callbacks. |

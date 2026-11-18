@@ -14,6 +14,7 @@ class WeniWebchatService {
     this.isAudioRecordingSupported = true;
     this._connected = false;
     this._connecting = false;
+    this._renderEnabled = true;
   }
 
   // Event helpers
@@ -37,10 +38,19 @@ class WeniWebchatService {
 
   // Lifecycle
   async init() {
+    const shouldRender = this.config._shouldRender !== false;
+    this._renderEnabled = shouldRender;
+    if (!shouldRender) {
+      return { shouldRender: false };
+    }
     if (this.config.connectOn === 'mount') {
       this.connect();
     }
     return { shouldRender: true };
+  }
+
+  isRenderEnabled() {
+    return this._renderEnabled !== false;
   }
   connect() {
     WeniWebchatService.connectCalls =

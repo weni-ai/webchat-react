@@ -44,8 +44,7 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config, isInsideVTEXStore, isShoppingAssistantDisabled } =
-    useChatContext();
+  const { config, isInsideVTEXStore, isBackInStockOnlyMode } = useChatContext();
 
   const showCartButton =
     cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
@@ -60,7 +59,7 @@ export function Header() {
           <section className="weni-chat-header__info">
             <Button
               onClick={() => {
-                if (isShoppingAssistantDisabled) {
+                if (isBackInStockOnlyMode) {
                   setIsChatOpen(false);
                   clearPageHistory();
                   return;

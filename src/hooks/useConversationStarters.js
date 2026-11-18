@@ -44,6 +44,7 @@ export function useConversationStartersCore() {
     isInsideVTEXStore,
     currentPage,
     clearPageHistory,
+    isBackInStockOnlyMode,
   } = useChatContext();
 
   const [questions, setQuestions] = useState([]);
@@ -87,9 +88,7 @@ export function useConversationStartersCore() {
   const isWhatsappOffersNotifyEnabledRef = useRef(
     config?.whatsappOffersNotify === true,
   );
-  const isShoppingAssistantDisabledRef = useRef(
-    config?.shoppingAssistantDisabled === true,
-  );
+  const isBackInStockOnlyModeRef = useRef(false);
   const isChatOpenRef = useRef(isChatOpen);
   const setIsChatOpenRef = useRef(setIsChatOpen);
   const clearPageHistoryRef = useRef(clearPageHistory);
@@ -104,8 +103,11 @@ export function useConversationStartersCore() {
     config?.unavailableProductNotify === true;
   isWhatsappOffersNotifyEnabledRef.current =
     config?.whatsappOffersNotify === true;
-  isShoppingAssistantDisabledRef.current =
-    config?.shoppingAssistantDisabled === true;
+  isBackInStockOnlyModeRef.current =
+    isBackInStockOnlyMode ||
+    (config?.unavailableProductNotify === true &&
+      !config?.embedded &&
+      service?.isRenderEnabled?.() === false);
   isChatOpenRef.current = isChatOpen;
   setIsChatOpenRef.current = setIsChatOpen;
   clearPageHistoryRef.current = clearPageHistory;
@@ -396,7 +398,7 @@ export function useConversationStartersCore() {
       return;
     }
 
-    if (isShoppingAssistantDisabledRef.current) {
+    if (isBackInStockOnlyModeRef.current) {
       setIsLoading(false);
       return;
     }
@@ -418,7 +420,7 @@ export function useConversationStartersCore() {
 
     if (!service) return true;
 
-    if (isShoppingAssistantDisabledRef.current && isChatOpenRef.current) {
+    if (isBackInStockOnlyModeRef.current && isChatOpenRef.current) {
       setIsChatOpenRef.current(false);
       clearPageHistoryRef.current?.();
     }
@@ -580,7 +582,7 @@ export function useConversationStartersCore() {
     }
 
     if (
-      isShoppingAssistantDisabledRef.current &&
+      isBackInStockOnlyModeRef.current &&
       !isBackInStockNotifyRef.current &&
       !pendingBackInStockRef.current &&
       currentPage?.view !== 'back-in-stock-notify'
@@ -694,7 +696,7 @@ export function useConversationStartersCore() {
     };
 
     const handleConnected = () => {
-      if (isShoppingAssistantDisabledRef.current) return;
+      if (isBackInStockOnlyModeRef.current) return;
       if (deferredProductDataRef.current) {
         const productData = deferredProductDataRef.current;
         deferredProductDataRef.current = null;

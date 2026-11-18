@@ -102,6 +102,82 @@ describe('Widget', () => {
     jest.useRealTimers();
   });
 
+  it('shows the back-in-stock bubble when sampled out of render and notify is on', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = true;
+    mockStarters.questions = ['Notify me when back in stock'];
+    mockStarters.isCompactVisible = true;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: true,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(
+      screen.getByText('Notify me when back in stock'),
+    ).toBeInTheDocument();
+    expect(document.querySelector('.weni-launcher')).toBeInTheDocument();
+  });
+
+  it('stays hidden when sampled out and notify is off even with an offer flag', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = true;
+    mockStarters.questions = ['Notify me when back in stock'];
+    mockStarters.isCompactVisible = true;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: false,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('stays hidden when sampled out with notify on but no offer', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = false;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: true,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
   it('shows the back-in-stock bubble without the opt-in balloon', () => {
     mockStarters.isBackInStockNotify = true;
     mockStarters.isOptInBalloonVisible = true;
