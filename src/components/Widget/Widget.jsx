@@ -67,9 +67,7 @@ function WidgetContent() {
   const isChatOpenOnNotifyPage =
     isChatOpen && currentPage?.view === 'back-in-stock-notify';
   const shouldRenderWidgetContent =
-    !isBackInStockOnlyMode ||
-    isBackInStockNotify ||
-    isChatOpenOnNotifyPage;
+    !isBackInStockOnlyMode || isBackInStockNotify || isChatOpenOnNotifyPage;
   const isHiddenByRenderSample =
     shouldRender === false && !isBackInStockOnlyMode;
   const shouldShowOptInBalloon =

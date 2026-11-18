@@ -102,9 +102,9 @@ export function Chat() {
         <ChatContent />
       </OrderFormProvider>
       <footer className="weni-chat__footer">
-        {!isBackInStockOnlyMode &&
-          !isConnectionClosed &&
-          !currentPage && <InputBox />}
+        {!isBackInStockOnlyMode && !isConnectionClosed && !currentPage && (
+          <InputBox />
+        )}
         <PoweredBy />
       </footer>
     </section>

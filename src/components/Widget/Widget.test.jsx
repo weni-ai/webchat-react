@@ -44,6 +44,10 @@ describe('Widget', () => {
     globalThis.__webchatServiceLatest = undefined;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('renders the widget container', () => {
     render(<Widget config={baseConfig} />);
     const widget = screen.getByRole('complementary', { hidden: true });
@@ -103,7 +107,6 @@ describe('Widget', () => {
   });
 
   it('shows the back-in-stock bubble when sampled out of render and notify is on', async () => {
-    const WeniWebchatService = require('@weni/webchat-service');
     jest
       .spyOn(WeniWebchatService.prototype, 'init')
       .mockResolvedValue({ shouldRender: false });
@@ -131,7 +134,6 @@ describe('Widget', () => {
   });
 
   it('stays hidden when sampled out and notify is off even with an offer flag', async () => {
-    const WeniWebchatService = require('@weni/webchat-service');
     jest
       .spyOn(WeniWebchatService.prototype, 'init')
       .mockResolvedValue({ shouldRender: false });
@@ -156,7 +158,6 @@ describe('Widget', () => {
   });
 
   it('stays hidden when sampled out with notify on but no offer', async () => {
-    const WeniWebchatService = require('@weni/webchat-service');
     jest
       .spyOn(WeniWebchatService.prototype, 'init')
       .mockResolvedValue({ shouldRender: false });
