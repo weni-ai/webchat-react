@@ -74,7 +74,7 @@ describe('BackInStockNotify', () => {
       clearPageHistory,
       sendMessage,
       setIsChatOpen,
-      isShoppingAssistantDisabled: false,
+      isBackInStockOnlyMode: false,
       service: { validateBackInStockContact, subscribeBackInStock },
     });
     delete window.__RUNTIME__;
@@ -290,7 +290,7 @@ describe('BackInStockNotify', () => {
       clearPageHistory,
       sendMessage,
       setIsChatOpen,
-      isShoppingAssistantDisabled: true,
+      isBackInStockOnlyMode: true,
       service: { validateBackInStockContact, subscribeBackInStock },
     });
     render(<BackInStockNotify productName="Cool Shoe" />);

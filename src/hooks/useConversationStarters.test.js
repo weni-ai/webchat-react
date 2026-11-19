@@ -55,6 +55,7 @@ const mockService = {
   off: jest.fn(),
   emit: jest.fn(),
   isConnected: jest.fn(() => true),
+  isRenderEnabled: jest.fn(() => true),
   connect: jest.fn(),
   getStarters: jest.fn(),
   clearStarters: jest.fn(),
@@ -67,15 +68,21 @@ const mockService = {
 };
 
 function buildContext(overrides = {}) {
+  const { config: configOverride, ...rest } = overrides;
+  const config =
+    configOverride !== undefined
+      ? configOverride
+      : { conversationStarters: { pdp: true } };
   return {
     service: mockService,
     isChatOpen: false,
     isConnected: true,
     sendMessage: jest.fn(),
-    config: { conversationStarters: { pdp: true } },
+    config,
     setIsChatOpen: jest.fn(),
     setCurrentPage: jest.fn(),
-    ...overrides,
+    isBackInStockOnlyMode: config.shoppingAssistantDisabled === true,
+    ...rest,
   };
 }
 
@@ -1483,6 +1490,31 @@ describe('useConversationStartersCore', () => {
         connected();
       });
       expect(mockService.getStarters).not.toHaveBeenCalled();
+    });
+
+    it('does not connect or request starters when render is disabled and notify is on', async () => {
+      mockService.isRenderEnabled.mockReturnValue(false);
+      mockService.evaluateBackInStockOffer.mockReturnValue({
+        isUnavailable: false,
+        skuId: 'SKU-001',
+        seller: '1',
+      });
+      ctx = buildUnavailableNotifyContext({
+        isBackInStockOnlyMode: false,
+        config: {
+          conversationStarters: { pdp: true },
+          unavailableProductNotify: true,
+          connectOn: 'demand',
+        },
+      });
+      useChatContext.mockReturnValue(ctx);
+
+      await act(async () => {
+        renderHook(() => useConversationStartersCore());
+      });
+
+      expect(mockService.getStarters).not.toHaveBeenCalled();
+      expect(mockService.connect).not.toHaveBeenCalled();
     });
 
     it('does not request starters when the evaluator throws and the assistant is disabled', async () => {

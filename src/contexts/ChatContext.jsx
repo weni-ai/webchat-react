@@ -18,6 +18,7 @@ import { startVtexCustomFieldsSync } from '@/utils/vtexCustomFields';
 import { sendVtexUtm, UTM_SOURCES } from '@/utils/sendVtexUtm';
 import { createNavigationMonitor } from '@/utils/navigationMonitor';
 import { applyShoppingAssistantMode } from '@/utils/shoppingAssistantMode';
+import { recordConversationStarterEvent } from '@/utils/conversationStartersLog';
 
 let serviceInstance = {
   fns: [],
@@ -148,6 +149,23 @@ export function ChatProvider({ children, config }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
   const [shouldRender, setShouldRender] = useState(true);
+  const isBackInStockOnlyMode = useMemo(() => {
+    if (isShoppingAssistantDisabled) {
+      return true;
+    }
+    const isUnavailableNotifyEnabled =
+      mergedConfig.unavailableProductNotify === true;
+    return (
+      shouldRender === false &&
+      isUnavailableNotifyEnabled &&
+      !mergedConfig.embedded
+    );
+  }, [
+    isShoppingAssistantDisabled,
+    shouldRender,
+    mergedConfig.unavailableProductNotify,
+    mergedConfig.embedded,
+  ]);
   const [mode, _setMode] = useState(mergedConfig.mode);
   const [showMode, _setShowMode] = useState(mergedConfig.showMode);
 
@@ -244,18 +262,36 @@ export function ChatProvider({ children, config }) {
           return;
         }
 
+        if (
+          typeof service.isRenderEnabled === 'function' &&
+          !service.isRenderEnabled()
+        ) {
+          return;
+        }
+
         displaysTooltipAsAReceivedMessage(mergedConfig.tooltipMessage);
       }, mergedConfig.tooltipDelay);
     }
 
     service
       .init()
-      .then(({ shouldRender }) => {
-        if (typeof shouldRender === 'boolean') {
-          setShouldRender(shouldRender);
+      .then(({ shouldRender: initShouldRender }) => {
+        if (typeof initShouldRender === 'boolean') {
+          setShouldRender(initShouldRender);
+
+          if (initShouldRender === false) {
+            const backInStockOnly =
+              mergedConfig.unavailableProductNotify === true &&
+              !mergedConfig.embedded &&
+              !isShoppingAssistantDisabled;
+            recordConversationStarterEvent('render_sampled_out', 'info', {
+              renderPercentage: mergedConfig.renderPercentage,
+              backInStockOnly,
+            });
+          }
 
           if (
-            shouldRender &&
+            initShouldRender &&
             mergedConfig.initPayload &&
             !isShoppingAssistantDisabled
           ) {
@@ -269,10 +305,16 @@ export function ChatProvider({ children, config }) {
           }
         }
 
+        const sampledOutBackInStockOnly =
+          initShouldRender === false &&
+          mergedConfig.unavailableProductNotify === true &&
+          !mergedConfig.embedded &&
+          !isShoppingAssistantDisabled;
+
         if (isCheckoutPage()) {
           service.setIsChatOpen(false);
           setIsChatOpen(false);
-        } else if (isShoppingAssistantDisabled) {
+        } else if (isShoppingAssistantDisabled || sampledOutBackInStockOnly) {
           setIsChatOpen(false);
         } else if (mergedConfig.startFullScreen) {
           service.setIsChatOpen(true);
@@ -411,7 +453,11 @@ export function ChatProvider({ children, config }) {
   }, [service]);
 
   useEffect(() => {
-    if (isChatOpen && mergedConfig.connectOn === 'demand') {
+    if (
+      isChatOpen &&
+      mergedConfig.connectOn === 'demand' &&
+      !isBackInStockOnlyMode
+    ) {
       service.connect();
     }
 
@@ -445,7 +491,7 @@ export function ChatProvider({ children, config }) {
       service.off('message:received', handleMessageReceived);
       service.off('message:updated', handleMessageUpdated);
     };
-  }, [isChatOpen]);
+  }, [isChatOpen, isBackInStockOnlyMode, mergedConfig.connectOn, service]);
 
   const stopAndSendAudio = async () => {
     // Stop recording method also sends the audio to the server
@@ -662,6 +708,7 @@ export function ChatProvider({ children, config }) {
     mode,
     isModeVisible: showMode,
     isShoppingAssistantDisabled,
+    isBackInStockOnlyMode,
 
     // Voice mode state
     isVoiceEnabledByClient,

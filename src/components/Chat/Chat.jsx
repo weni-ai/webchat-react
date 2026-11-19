@@ -63,7 +63,7 @@ export function Chat() {
     currentPage,
     config,
     mode,
-    isShoppingAssistantDisabled,
+    isBackInStockOnlyMode,
   } = useWeniChat();
   const [shouldRender, setShouldRender] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -97,14 +97,14 @@ export function Chat() {
       className={`weni-chat weni-chat--mode-${mode} ${isClosing ? 'weni-chat--closing' : ''} ${config.embedded ? 'weni-chat--disabled-animation' : ''} ${currentPage?.view === 'back-in-stock-notify' ? 'weni-chat--compact' : ''}`}
     >
       <Header />
-      {!isShoppingAssistantDisabled && <ConnectionStatusBanner />}
+      {!isBackInStockOnlyMode && <ConnectionStatusBanner />}
       <OrderFormProvider>
         <ChatContent />
       </OrderFormProvider>
       <footer className="weni-chat__footer">
-        {!isShoppingAssistantDisabled &&
-          !isConnectionClosed &&
-          !currentPage && <InputBox />}
+        {!isBackInStockOnlyMode && !isConnectionClosed && !currentPage && (
+          <InputBox />
+        )}
         <PoweredBy />
       </footer>
     </section>

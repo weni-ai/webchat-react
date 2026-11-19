@@ -33,7 +33,7 @@ export function BackInStockNotify({
     clearPageHistory,
     sendMessage,
     service,
-    isShoppingAssistantDisabled,
+    isBackInStockOnlyMode,
     setIsChatOpen,
   } = useChatContext();
   const [phoneCountry, setPhoneCountry] = useState(readInitialPhoneCountry);
@@ -130,7 +130,7 @@ export function BackInStockNotify({
   }
 
   function handleNotNow() {
-    if (isShoppingAssistantDisabled) {
+    if (isBackInStockOnlyMode) {
       setIsChatOpen(false);
     }
     clearPageHistory();
@@ -153,14 +153,14 @@ export function BackInStockNotify({
             <p className="weni-view-back-in-stock__description">
               {t('back_in_stock.success_description', { productName })}
             </p>
-            {!isShoppingAssistantDisabled && (
+            {!isBackInStockOnlyMode && (
               <p className="weni-view-back-in-stock__description">
                 {t('back_in_stock.wait_prompt')}
               </p>
             )}
           </header>
 
-          {!isShoppingAssistantDisabled && (
+          {!isBackInStockOnlyMode && (
             <footer className="weni-view-back-in-stock__footer">
               <FSButton onClick={handleShowSimilarProducts}>
                 {t('back_in_stock.show_similar_products')}

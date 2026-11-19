@@ -97,7 +97,7 @@ jest.mock('@/views/WhatsappOffersOptIn', () => {
 import { useWeniChat } from '@/hooks/useWeniChat';
 
 describe('Chat — shopping assistant disabled', () => {
-  function openChat(isShoppingAssistantDisabled) {
+  function openChat(isBackInStockOnlyMode) {
     useWeniChat.mockReturnValue({
       isChatOpen: true,
       isConnectionClosed: false,
@@ -105,7 +105,7 @@ describe('Chat — shopping assistant disabled', () => {
       currentPage: null,
       config: { embedded: false },
       mode: 'live',
-      isShoppingAssistantDisabled,
+      isBackInStockOnlyMode,
       reconnectNow: jest.fn(),
     });
     render(<Chat />);

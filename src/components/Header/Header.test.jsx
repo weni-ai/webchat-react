@@ -88,7 +88,7 @@ describe('Header', () => {
         setIsChatOpen,
         clearPageHistory,
       },
-      chatContext: { isShoppingAssistantDisabled: true },
+      chatContext: { isBackInStockOnlyMode: true },
     });
     render(<Header />);
     fireEvent.click(screen.getByLabelText('Back'));

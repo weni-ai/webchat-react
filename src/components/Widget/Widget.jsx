@@ -44,7 +44,7 @@ function WidgetContent() {
     config,
     shouldRender,
     isWelcomeTooltip,
-    isShoppingAssistantDisabled,
+    isBackInStockOnlyMode,
     currentPage,
   } = useChatContext();
 
@@ -67,11 +67,11 @@ function WidgetContent() {
   const isChatOpenOnNotifyPage =
     isChatOpen && currentPage?.view === 'back-in-stock-notify';
   const shouldRenderWidgetContent =
-    !isShoppingAssistantDisabled ||
-    isBackInStockNotify ||
-    isChatOpenOnNotifyPage;
+    !isBackInStockOnlyMode || isBackInStockNotify || isChatOpenOnNotifyPage;
+  const isHiddenByRenderSample =
+    shouldRender === false && !isBackInStockOnlyMode;
   const shouldShowOptInBalloon =
-    isOptInBalloonVisible && !isChatOpen && !isShoppingAssistantDisabled;
+    isOptInBalloonVisible && !isChatOpen && !isBackInStockOnlyMode;
   const isCompactStartersVisible =
     !shouldShowOptInBalloon &&
     questions.length > 0 &&
@@ -87,7 +87,7 @@ function WidgetContent() {
     }
   }, [isChatOpen]);
 
-  if (shouldRender === false || !shouldRenderWidgetContent) {
+  if (isHiddenByRenderSample || !shouldRenderWidgetContent) {
     return null;
   }
 

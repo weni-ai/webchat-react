@@ -516,6 +516,58 @@ describe('ChatContext — init behavior', () => {
     expect(ctx.shouldRender).toBe(false);
   });
 
+  it('enables back-in-stock-only mode when sampled out with notify on', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+    jest
+      .spyOn(WeniWebchatService.prototype, 'isRenderEnabled')
+      .mockReturnValue(false);
+
+    await renderWithContext({
+      unavailableProductNotify: true,
+      renderPercentage: 0,
+      startFullScreen: true,
+    });
+    expect(ctx.isBackInStockOnlyMode).toBe(true);
+    expect(ctx.isChatOpen).toBe(false);
+  });
+
+  it('keeps back-in-stock-only mode off when sampled out without notify', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    await renderWithContext({ renderPercentage: 0 });
+    expect(ctx.isBackInStockOnlyMode).toBe(false);
+  });
+
+  it('does not connect on demand when back-in-stock-only', async () => {
+    const WeniWebchatService = require('@weni/webchat-service');
+    const connectSpy = jest.spyOn(WeniWebchatService.prototype, 'connect');
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+    jest
+      .spyOn(WeniWebchatService.prototype, 'isRenderEnabled')
+      .mockReturnValue(false);
+
+    await renderWithContext({
+      connectOn: 'demand',
+      unavailableProductNotify: true,
+      renderPercentage: 0,
+    });
+
+    await act(async () => {
+      ctx.setIsChatOpen(true);
+    });
+
+    expect(connectSpy).not.toHaveBeenCalled();
+    connectSpy.mockRestore();
+  });
+
   it('logs an error when init fails', async () => {
     const WeniWebchatService = require('@weni/webchat-service');
     const initError = new Error('init failed');

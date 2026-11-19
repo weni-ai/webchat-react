@@ -44,6 +44,10 @@ describe('Widget', () => {
     globalThis.__webchatServiceLatest = undefined;
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('renders the widget container', () => {
     render(<Widget config={baseConfig} />);
     const widget = screen.getByRole('complementary', { hidden: true });
@@ -100,6 +104,79 @@ describe('Widget', () => {
     expect(service.constructor.sendCalls || 0).toBe(0);
     expect(service.constructor.simulatedCalls || 0).toBe(0);
     jest.useRealTimers();
+  });
+
+  it('shows the back-in-stock bubble when sampled out of render and notify is on', async () => {
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = true;
+    mockStarters.questions = ['Notify me when back in stock'];
+    mockStarters.isCompactVisible = true;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: true,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(
+      screen.getByText('Notify me when back in stock'),
+    ).toBeInTheDocument();
+    expect(document.querySelector('.weni-launcher')).toBeInTheDocument();
+  });
+
+  it('stays hidden when sampled out and notify is off even with an offer flag', async () => {
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = true;
+    mockStarters.questions = ['Notify me when back in stock'];
+    mockStarters.isCompactVisible = true;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: false,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('stays hidden when sampled out with notify on but no offer', async () => {
+    jest
+      .spyOn(WeniWebchatService.prototype, 'init')
+      .mockResolvedValue({ shouldRender: false });
+
+    mockStarters.isBackInStockNotify = false;
+
+    render(
+      <Widget
+        config={{
+          ...baseConfig,
+          unavailableProductNotify: true,
+          renderPercentage: 0,
+        }}
+      />,
+    );
+
+    await act(async () => {});
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
   it('shows the back-in-stock bubble without the opt-in balloon', () => {
