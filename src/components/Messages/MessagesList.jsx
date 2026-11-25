@@ -8,6 +8,8 @@ import MessageImage from './MessageImage';
 import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
+import StreamedMessageItem from './StreamedMessageItem';
+import ComponentAnnouncementRegion from './ComponentAnnouncementRegion';
 import TypingIndicator from './TypingIndicator';
 import Icon from '@/components/common/Icon';
 import PropTypes from 'prop-types';
@@ -29,6 +31,14 @@ import ThinkingIndicator from './ThinkingIndicator';
 
 const BOTTOM_SCROLL_THRESHOLD_PX = 100;
 const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
+const NON_STREAMED_MESSAGE_TYPES = new Set([
+  'image',
+  'video',
+  'audio',
+  'document',
+  'file',
+  'order',
+]);
 
 export function Message({ message, componentsEnabled }) {
   switch (message.type) {
@@ -80,12 +90,29 @@ export function MessagesList() {
   const listRef = useRef(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [showGoToBottom, setShowGoToBottom] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+  const announcementSeqRef = useRef(0);
   const showConversationStartersFull =
     questions.length > 0 &&
     !isInChatStartersDismissed &&
     messageGroups.length === 0;
 
   const isNearBottomRef = useRef(true);
+  const lastOutgoingIdRef = useRef(null);
+
+  const lastMessage = messageGroups.at(-1)?.messages.at(-1);
+
+  const handleAnnounce = useCallback((messageId, texts) => {
+    if (!Array.isArray(texts) || texts.length === 0) return;
+    const nextItems = texts.map((text) => {
+      announcementSeqRef.current += 1;
+      return {
+        id: `${messageId}-${announcementSeqRef.current}`,
+        text,
+      };
+    });
+    setAnnouncements((prev) => [...prev, ...nextItems]);
+  }, []);
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -141,7 +168,17 @@ export function MessagesList() {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    const isNewOutgoingMessage =
+      lastMessage?.direction === 'outgoing' &&
+      lastMessage?.id !== lastOutgoingIdRef.current;
+
+    if (isNewOutgoingMessage) {
+      lastOutgoingIdRef.current = lastMessage.id;
+      scrollToBottom();
+    } else if (isNearBottomRef.current) {
+      scrollToBottom();
+    }
+
     const id = requestAnimationFrame(() => syncScrollState());
     return () => cancelAnimationFrame(id);
   }, [
@@ -150,6 +187,8 @@ export function MessagesList() {
     voicePartialTranscript,
     isTyping,
     syncScrollState,
+    lastMessage?.id,
+    lastMessage?.direction,
   ]);
 
   useEffect(() => {
@@ -160,12 +199,9 @@ export function MessagesList() {
     return () => clearTimeout(t);
   }, [isChatOpen, syncScrollState]);
 
-  const enableComponents = (message) => {
-    const inLastGroup = messageGroups
-      .at(-1)
-      ?.messages.some((m) => m.id === message.id);
-    return message.direction === 'incoming' && inLastGroup;
-  };
+  // Only the very last incoming message may have active components (FR-022, BD-003).
+  const enableComponents = (message) =>
+    message.direction === 'incoming' && lastMessage?.id === message.id;
 
   return (
     <MessagesScrollProvider onWordRevealed={scrollToBottomOnReveal}>
@@ -189,7 +225,12 @@ export function MessagesList() {
               `grp-${group.messages[0].timestamp}-${groupIndex}`
             }
           >
-            {renderGroupMessagesWithCollapsedStatus(group, enableComponents, t)}
+            {renderGroupMessagesWithCollapsedStatus(
+              group,
+              enableComponents,
+              t,
+              handleAnnounce,
+            )}
           </section>
         ))}
 
@@ -242,6 +283,8 @@ export function MessagesList() {
         {showGoToBottom && (
           <GoToBottomButton onScrollToBottom={() => scrollToBottom()} />
         )}
+
+        <ComponentAnnouncementRegion announcements={announcements} />
 
         <div ref={messagesEndRef} />
       </section>
@@ -322,7 +365,12 @@ function renderCollapsedConversationStatusRun(run, startIndex, t) {
  * Renders one direction-group: consecutive `conversation_status` messages (2+)
  * become a single summary badge; other types are unchanged.
  */
-function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
+function renderGroupMessagesWithCollapsedStatus(
+  group,
+  enableComponents,
+  t,
+  onAnnounce,
+) {
   const { messages } = group;
   const nodes = [];
 
@@ -330,7 +378,9 @@ function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
     const message = messages[index];
 
     if (message.type !== MESSAGE_TYPE_CONVERSATION_STATUS) {
-      nodes.push(renderMessage(group, message, index, enableComponents));
+      nodes.push(
+        renderMessage(group, message, index, enableComponents, onAnnounce),
+      );
       index += 1;
       continue;
     }
@@ -344,7 +394,13 @@ function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
       nodes.push(renderCollapsedConversationStatusRun(statusRun, index, t));
     } else {
       nodes.push(
-        renderMessage(group, messages[index], index, enableComponents),
+        renderMessage(
+          group,
+          messages[index],
+          index,
+          enableComponents,
+          onAnnounce,
+        ),
       );
     }
 
@@ -354,20 +410,37 @@ function renderGroupMessagesWithCollapsedStatus(group, enableComponents, t) {
   return nodes;
 }
 
-function renderMessage(group, message, messageIndex, enableComponents) {
+function renderMessage(
+  group,
+  message,
+  messageIndex,
+  enableComponents,
+  onAnnounce,
+) {
   const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
 
-  switch (message.type) {
-    case MESSAGE_TYPE_CONVERSATION_STATUS:
-      return renderConversationStatusBadge(
-        rowKey,
-        'conversation-status',
-        message.statusType,
-        message.text,
-      );
-    default:
-      return (
-        <Fragment key={`${rowKey}-body`}>
+  if (message.type === MESSAGE_TYPE_CONVERSATION_STATUS) {
+    return renderConversationStatusBadge(
+      rowKey,
+      'conversation-status',
+      message.statusType,
+      message.text,
+    );
+  }
+
+  const isTextLikeMessage = !NON_STREAMED_MESSAGE_TYPES.has(message.type);
+
+  return (
+    <Fragment key={`${rowKey}-body`}>
+      {isTextLikeMessage ? (
+        <StreamedMessageItem
+          message={message}
+          direction={group.direction}
+          isLastMessage={enableComponents(message)}
+          onAnnounce={onAnnounce}
+        />
+      ) : (
+        <>
           <MessageContainer
             className={`weni-messages-list__message weni-messages-list__message--${group.direction}${message.status === 'pending' ? ' weni-messages-list__message--pending' : ''}`}
             direction={group.direction}
@@ -400,34 +473,35 @@ function renderMessage(group, message, messageIndex, enableComponents) {
                 />
               </MessageContainer>
             )}
+        </>
+      )}
 
-          {message.product_list && (
-            <MessageContainer
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
-              direction={group.direction}
-              type={message.type}
-            >
-              <ShowItems
-                buttonText={message.product_list.buttonText}
-                header={message.header}
-                productList={message.product_list}
-              />
-            </MessageContainer>
-          )}
+      {message.product_list && (
+        <MessageContainer
+          className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-list`}
+          direction={group.direction}
+          type={message.type}
+        >
+          <ShowItems
+            buttonText={message.product_list.buttonText}
+            header={message.header}
+            productList={message.product_list}
+          />
+        </MessageContainer>
+      )}
 
-          {message.product_carousel?.product_items?.length > 0 && (
-            <MessageContainer
-              className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-carousel`}
-              direction={group.direction}
-              type={message.type}
-            >
-              <ProductCarousel
-                productItems={message.product_carousel.product_items}
-                disabled={!enableComponents(message)}
-              />
-            </MessageContainer>
-          )}
-        </Fragment>
-      );
-  }
+      {message.product_carousel?.product_items?.length > 0 && (
+        <MessageContainer
+          className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-carousel`}
+          direction={group.direction}
+          type={message.type}
+        >
+          <ProductCarousel
+            productItems={message.product_carousel.product_items}
+            disabled={!enableComponents(message)}
+          />
+        </MessageContainer>
+      )}
+    </Fragment>
+  );
 }

@@ -54,15 +54,27 @@ export function useStreamingBuffer({ text, isStreaming }) {
     isStreamingRef.current = isStreaming;
   }, [isStreaming]);
 
-  // Activate buffering the first time streaming is detected
+  // Activate buffering the first time streaming is detected, or settle immediately
+  // when a textless stream ends so no empty caret lingers (FR-028).
   useEffect(() => {
     if (isStreaming && !bufferingStartedRef.current) {
       bufferingStartedRef.current = true;
       revealedWordCountRef.current = 0;
       setDisplayedText('');
       setIsBuffering(true);
+      return;
     }
-  }, [isStreaming]);
+
+    if (
+      !isStreaming &&
+      isBuffering &&
+      countWords(targetTextRef.current) === 0
+    ) {
+      setDisplayedText(targetTextRef.current);
+      setIsBuffering(false);
+      bufferingStartedRef.current = false;
+    }
+  }, [isStreaming, isBuffering]);
 
   // Word-reveal loop — runs until all buffered words are shown AND streaming ended
   useEffect(() => {

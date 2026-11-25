@@ -1,0 +1,69 @@
+@use '@/styles/animations.scss' as *;
+
+.weni-component-skeleton {
+  &__item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: var(--weni-skeleton-bg-color, $fs-color-main-0);
+    border: $fs-border-width solid $fs-border-color;
+    pointer-events: none;
+    user-select: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba($white, 0.85),
+        transparent
+      );
+      transform: translateX(-100%);
+      animation: weni-skeleton-shimmer
+        var(--weni-skeleton-shimmer-duration, 1.2s) linear infinite;
+    }
+
+    &--quick-reply {
+      border-radius: $fs-border-radius-pill;
+      padding: calc($fs-spacing-1 - $fs-border-width)
+        calc($fs-spacing-3 - $fs-border-width);
+      font: $fs-text-weight-semibold #{$fs-text-size-1}/#{$fs-text-size-2}
+        $font-family;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    &--list,
+    &--cta {
+      border-radius: $border-radius-2;
+      padding: calc($spacing-2 - $fs-border-width)
+        calc($spacing-3 - $fs-border-width);
+      font: $font-action;
+      width: 100%;
+    }
+
+    &--fallback {
+      max-width: 100%;
+    }
+  }
+
+  &__sizer {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-2;
+    visibility: hidden;
+    text-align: left;
+    word-break: break-word;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__item::after {
+      animation: none;
+      display: none;
+    }
+  }
+}

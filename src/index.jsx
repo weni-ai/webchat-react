@@ -7,6 +7,11 @@ import './i18n';
 
 // Import WebChat API and expose to window for testing
 import WebChat from './standalone.jsx';
+import { service } from './contexts/ChatContext';
+import {
+  COMPONENT_STREAM_SCENARIOS,
+  runComponentStreamScenario,
+} from './dev/simulateComponentStreams';
 window.WebChat = WebChat;
 
 // Local stubs so CounterControls add-to-cart / pending quantity UI is eligible in dev
@@ -310,6 +315,22 @@ function App() {
           >
             Simulate WhatsApp coupon opt-in
           </button>
+          {COMPONENT_STREAM_SCENARIOS.map((scenario) => (
+            <button
+              key={scenario.id}
+              id={scenario.buttonId}
+              style={buttonStyle}
+              onClick={async () => {
+                await runComponentStreamScenario(
+                  scenario.id,
+                  window.WebChat,
+                  () => service,
+                );
+              }}
+            >
+              {scenario.label}
+            </button>
+          ))}
           <button
             id="simulate-product-catalog"
             style={buttonStyle}

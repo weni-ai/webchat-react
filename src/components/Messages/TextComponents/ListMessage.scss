@@ -1,5 +1,26 @@
+@use '@/styles/animations.scss' as *;
+
 .weni-list-message {
   margin-top: $spacing-2;
-  
   display: grid;
+
+  &__button {
+    transition:
+      color var(--weni-component-state-transition, 150ms) ease,
+      background-color var(--weni-component-state-transition, 150ms) ease;
+
+    &.weni-component-enter--pop {
+      animation: weni-component-pop-in
+        var(--weni-enter-duration, 180ms)
+        var(--weni-component-enter-easing, cubic-bezier(0.2, 0.8, 0.2, 1))
+        var(--weni-enter-delay, 0ms)
+        both;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__button.weni-component-enter--pop {
+      animation: none;
+    }
+  }
 }

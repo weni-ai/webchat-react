@@ -1,3 +1,5 @@
+@use '@/styles/animations.scss' as *;
+
 .weni-view-list-message {
   padding: $spacing-2;
   display: flex;
@@ -13,6 +15,14 @@
     @include scrollable-content;
   }
 
+  &__option.weni-component-enter--pop {
+    animation: weni-component-pop-in
+      var(--weni-enter-duration, 180ms)
+      var(--weni-component-enter-easing, cubic-bezier(0.2, 0.8, 0.2, 1))
+      var(--weni-enter-delay, 0ms)
+      both;
+  }
+
   &__instruction {
     text-align: center;
     font: $font-caption-2;
@@ -24,5 +34,11 @@
     display: grid;
     gap: $spacing-2;
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__option.weni-component-enter--pop {
+      animation: none;
+    }
   }
 }

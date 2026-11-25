@@ -196,6 +196,12 @@
       "input_placeholder": "Preview only"
     }
   },
+  "streaming_components": {
+    "cta_available": "{{label}} link available",
+    "list_available": "List of options available",
+    "list_available_with_count": "List with {{count}} options available",
+    "quick_replies_available": "{{count}} options available"
+  },
   "whatsapp_offers_opt_in": {
     "agent_confirmation": "You're all set! We'll send offers and news to your WhatsApp.",
     "agent_follow_up": "What are you looking for today?",

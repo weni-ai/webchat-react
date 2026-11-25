@@ -184,4 +184,36 @@ describe('MessageText', () => {
     expect(screen.queryByTestId('list-message')).not.toBeInTheDocument();
     expect(screen.queryByTestId('cta')).not.toBeInTheDocument();
   });
+
+  it('uses external displayedText/isBuffering and custom list/CTA slots when provided', () => {
+    const { container } = render(
+      <MessageText
+        message={baseMessage({ text: 'Ignored internal text' })}
+        displayedText="Buffered externally"
+        isBuffering={false}
+        renderListSlot={<div data-testid="custom-list-slot" />}
+        renderCtaSlot={<div data-testid="custom-cta-slot" />}
+      />,
+    );
+
+    expect(container.querySelector('.weni-message-text')).toHaveTextContent(
+      'Buffered externally',
+    );
+    expect(screen.getByTestId('custom-list-slot')).toBeInTheDocument();
+    expect(screen.getByTestId('custom-cta-slot')).toBeInTheDocument();
+  });
+
+  it('omits empty text section on component-only messages (FR-028)', () => {
+    const { container } = render(
+      <MessageText
+        message={baseMessage({ text: '' })}
+        displayedText=""
+        isBuffering={false}
+        renderCtaSlot={<div data-testid="custom-cta-slot" />}
+      />,
+    );
+
+    expect(container.querySelector('.weni-message-text')).toBeNull();
+    expect(screen.getByTestId('custom-cta-slot')).toBeInTheDocument();
+  });
 });
