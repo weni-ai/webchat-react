@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('@/hooks/useWeniChat', () => ({
@@ -217,7 +218,10 @@ describe('Header', () => {
 
   it('hides close chat when the host turned the button off', () => {
     setup({
-      chatContext: { closeOnlyHeader: true, config: { showCloseButton: false } },
+      chatContext: {
+        closeOnlyHeader: true,
+        config: { showCloseButton: false },
+      },
     });
     render(<Header />);
     expect(screen.queryByLabelText('Close chat')).not.toBeInTheDocument();
