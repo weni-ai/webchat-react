@@ -62,11 +62,28 @@ export function renderMessageMarkdown(text) {
  * TODO: Add timestamp display
  * TODO: Show message status (sent, delivered, read)
  */
-export function MessageText({ message, componentsEnabled }) {
-  const { displayedText, isBuffering } = useStreamingBuffer({
-    text: message.text,
-    isStreaming: message.status === 'streaming',
+export function MessageText({
+  message,
+  componentsEnabled,
+  displayedText: externalDisplayedText,
+  isBuffering: externalIsBuffering,
+  renderListSlot,
+  renderCtaSlot,
+}) {
+  const hasExternalBuffer =
+    externalDisplayedText !== undefined || externalIsBuffering !== undefined;
+
+  const internalBuffer = useStreamingBuffer({
+    text: hasExternalBuffer ? '' : message.text,
+    isStreaming: hasExternalBuffer ? false : message.status === 'streaming',
   });
+
+  const displayedText = hasExternalBuffer
+    ? (externalDisplayedText ?? '')
+    : internalBuffer.displayedText;
+  const isBuffering = hasExternalBuffer
+    ? Boolean(externalIsBuffering)
+    : internalBuffer.isBuffering;
 
   const html = useMemo(() => {
     if (!displayedText && !isBuffering) return '';
@@ -76,28 +93,43 @@ export function MessageText({ message, componentsEnabled }) {
     return isBuffering ? appendStreamingCaret(purifiedHtml) : purifiedHtml;
   }, [displayedText, isBuffering]);
 
+  const listNode =
+    renderListSlot !== undefined
+      ? renderListSlot
+      : message.list_message && (
+          <ListMessage
+            buttonText={message.list_message.button_text}
+            items={message.list_message.list_items}
+            disabled={!componentsEnabled}
+          />
+        );
+
+  const ctaNode =
+    renderCtaSlot !== undefined
+      ? renderCtaSlot
+      : message.cta_message && (
+          <CallToAction
+            buttonText={message.cta_message.display_text}
+            url={message.cta_message.url}
+            disabled={!componentsEnabled}
+          />
+        );
+
+  const hasComponentSlot = Boolean(listNode || ctaNode);
+  const shouldRenderTextSection = Boolean(html) || !hasComponentSlot;
+
   return (
     <>
-      <section
-        className={`weni-message-text weni-message-text--${message.direction}`}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-
-      {message.list_message && (
-        <ListMessage
-          buttonText={message.list_message.button_text}
-          items={message.list_message.list_items}
-          disabled={!componentsEnabled}
+      {shouldRenderTextSection && (
+        <section
+          className={`weni-message-text weni-message-text--${message.direction}`}
+          dangerouslySetInnerHTML={{ __html: html }}
         />
       )}
 
-      {message.cta_message && (
-        <CallToAction
-          buttonText={message.cta_message.display_text}
-          url={message.cta_message.url}
-          disabled={!componentsEnabled}
-        />
-      )}
+      {listNode}
+
+      {ctaNode}
     </>
   );
 }
@@ -110,11 +142,29 @@ MessageText.propTypes = {
     timestamp: PropTypes.number.isRequired,
     direction: PropTypes.oneOf(['outgoing', 'incoming']).isRequired,
     status: PropTypes.string,
+    streamPhase: PropTypes.oneOf([
+      'streaming_text',
+      'awaiting_components',
+      'completed',
+    ]),
+    componentHints: PropTypes.arrayOf(
+      PropTypes.shape({
+        componentType: PropTypes.oneOf([
+          'list_message',
+          'cta_message',
+          'quick_replies',
+        ]).isRequired,
+        labels: PropTypes.arrayOf(PropTypes.string),
+        count: PropTypes.number,
+        itemCount: PropTypes.number,
+      }),
+    ),
     metadata: PropTypes.object,
     header: PropTypes.string,
     list_message: PropTypes.shape({
       button_text: PropTypes.string.isRequired,
       list_items: PropTypes.array.isRequired,
+      item_count: PropTypes.number,
     }),
     cta_message: PropTypes.shape({
       url: PropTypes.string.isRequired,
@@ -160,6 +210,10 @@ MessageText.propTypes = {
     }),
   }).isRequired,
   componentsEnabled: PropTypes.bool,
+  displayedText: PropTypes.string,
+  isBuffering: PropTypes.bool,
+  renderListSlot: PropTypes.node,
+  renderCtaSlot: PropTypes.node,
 };
 
 export default MessageText;

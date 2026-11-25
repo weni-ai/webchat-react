@@ -6,7 +6,7 @@ class WeniWebchatService {
     this.listeners = {};
     this.state = {
       messages: [],
-      connection: { status: 'connected' },
+      connection: { status: "connected" },
       isThinking: false,
       thinkingText: null,
     };
@@ -43,7 +43,7 @@ class WeniWebchatService {
     if (!shouldRender) {
       return { shouldRender: false };
     }
-    if (this.config.connectOn === 'mount') {
+    if (this.config.connectOn === "mount") {
       this.connect();
     }
     return { shouldRender: true };
@@ -78,7 +78,7 @@ class WeniWebchatService {
       next.thinkingText = null;
     }
     this.state = next;
-    this.emit('state:changed', this.getState());
+    this.emit("state:changed", this.getState());
   }
 
   setThinking(isThinking) {
@@ -96,19 +96,19 @@ class WeniWebchatService {
   }
   setIsChatOpen(isOpen) {
     this.session = { ...(this.session || {}), isChatOpen: isOpen };
-    this.emit('chat:open:changed', isOpen);
+    this.emit("chat:open:changed", isOpen);
   }
 
   // Messaging
   sendMessage(text, options = {}) {
     WeniWebchatService.sendCalls = (WeniWebchatService.sendCalls || 0) + 1;
     this.state.messages.push({
-      direction: 'outgoing',
+      direction: "outgoing",
       text,
       timestamp: Date.now(),
       ...options,
     });
-    this.emit('state:changed', this.getState());
+    this.emit("state:changed", this.getState());
   }
 
   sendAttachment(_file) {}
@@ -121,30 +121,82 @@ class WeniWebchatService {
   simulateMessageReceived(payload) {
     WeniWebchatService.simulatedCalls =
       (WeniWebchatService.simulatedCalls || 0) + 1;
-    const text = payload?.message?.text ?? payload?.text ?? '';
+    const text = payload?.message?.text ?? payload?.text ?? "";
     const message = {
       id: payload?.id || payload?.message?.messageId || `sim_${Date.now()}`,
-      type: 'text',
+      type: "text",
       text,
       timestamp: Date.now(),
-      direction: 'incoming',
-      status: 'delivered',
+      direction: "incoming",
+      status: "delivered",
       persisted: true,
     };
     this.state.messages.push(message);
-    this.emit('message:received', message);
-    this.emit('state:changed', this.getState());
+    this.emit("message:received", message);
+    this.emit("state:changed", this.getState());
+  }
+
+  emitStreamMessage(message) {
+    const normalized = {
+      id: message.id || `stream_${Date.now()}`,
+      type: "text",
+      text: "",
+      timestamp: Date.now(),
+      direction: "incoming",
+      status: "streaming",
+      streamPhase: "streaming_text",
+      ...message,
+    };
+    const nextMessages = [...this.state.messages, normalized];
+    this._applyState({ messages: nextMessages, isThinking: false });
+    this.emit("message:received", normalized);
+    return normalized;
+  }
+
+  updateStreamMessage(messageId, updates) {
+    let updatedMessage = null;
+    const nextMessages = this.state.messages.map((msg) => {
+      if (msg.id !== messageId) return msg;
+      updatedMessage = { ...msg, ...updates };
+      return updatedMessage;
+    });
+    this._applyState({ messages: nextMessages });
+    if (updatedMessage) {
+      this.emit("message:updated", messageId, updates);
+    }
+    return updatedMessage;
+  }
+
+  simulateStreamDisconnect() {
+    const nextMessages = this.state.messages.map((msg) => {
+      if (msg.status !== "streaming") return msg;
+      const { componentHints: _hints, ...rest } = msg;
+      return {
+        ...rest,
+        status: "delivered",
+        streamPhase: "completed",
+      };
+    });
+    this._applyState({
+      messages: nextMessages,
+      connection: { status: "disconnected" },
+    });
+  }
+
+  loadHistoryMessages(messages) {
+    this._applyState({ messages: [...messages] });
+    this.emit("history:loaded", messages);
   }
 
   // Audio
   async startRecording() {
-    this.emit('recording:started');
+    this.emit("recording:started");
   }
   async stopRecording() {
-    this.emit('recording:stopped');
+    this.emit("recording:stopped");
   }
   cancelRecording() {
-    this.emit('recording:cancelled');
+    this.emit("recording:cancelled");
   }
   hasAudioPermission() {
     return true;
@@ -157,11 +209,11 @@ class WeniWebchatService {
   isCameraRecording = false;
   startCameraRecording() {
     this.isCameraRecording = true;
-    this.emit('camera:recording:started');
+    this.emit("camera:recording:started");
   }
   stopCameraRecording() {
     this.isCameraRecording = false;
-    this.emit('camera:recording:stopped');
+    this.emit("camera:recording:stopped");
   }
   switchToNextCameraDevice() {}
   hasCameraPermission() {
@@ -178,8 +230,8 @@ class WeniWebchatService {
 
   evaluateBackInStockOffer = jest.fn(() => ({
     isUnavailable: false,
-    skuId: '',
-    seller: '1',
+    skuId: "",
+    seller: "1",
   }));
 
   validateBackInStockContact = jest.fn(() => ({ isValid: true, errors: {} }));
@@ -190,37 +242,37 @@ class WeniWebchatService {
 // Mirrors the real package, which exposes the constants both as static
 // properties on the class and as named module exports.
 WeniWebchatService.CONNECTION_STATUS = {
-  CONNECTING: 'connecting',
-  CONNECTED: 'connected',
-  DISCONNECTED: 'disconnected',
-  RECONNECTING: 'reconnecting',
-  ERROR: 'error',
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  DISCONNECTED: "disconnected",
+  RECONNECTING: "reconnecting",
+  ERROR: "error",
 };
 
 WeniWebchatService.MESSAGE_TYPES = {
-  TEXT: 'text',
-  IMAGE: 'image',
-  VIDEO: 'video',
-  AUDIO: 'audio',
-  FILE: 'file',
-  LOCATION: 'location',
-  INTERACTIVE: 'interactive',
-  CONVERSATION_STATUS: 'conversation_status',
-  TYPING: 'typing',
+  TEXT: "text",
+  IMAGE: "image",
+  VIDEO: "video",
+  AUDIO: "audio",
+  FILE: "file",
+  LOCATION: "location",
+  INTERACTIVE: "interactive",
+  CONVERSATION_STATUS: "conversation_status",
+  TYPING: "typing",
 };
 
 WeniWebchatService.MESSAGE_DIRECTIONS = {
-  INCOMING: 'incoming',
-  OUTGOING: 'outgoing',
+  INCOMING: "incoming",
+  OUTGOING: "outgoing",
 };
 
 WeniWebchatService.MESSAGE_STATUS = {
-  PENDING: 'pending',
-  SENT: 'sent',
-  DELIVERED: 'delivered',
-  READ: 'read',
-  STREAMING: 'streaming',
-  ERROR: 'error',
+  PENDING: "pending",
+  SENT: "sent",
+  DELIVERED: "delivered",
+  READ: "read",
+  STREAMING: "streaming",
+  ERROR: "error",
 };
 
 module.exports = WeniWebchatService;

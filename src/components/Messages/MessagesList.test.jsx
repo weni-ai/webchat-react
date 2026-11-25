@@ -108,8 +108,11 @@ jest.mock('@/components/ConversationStarters/ConversationStarters', () => ({
   ),
 }));
 jest.mock('./TextComponents/QuickReplies', () => ({
-  QuickReplies: ({ quickReplies }) => (
-    <div data-testid="quick-replies">
+  QuickReplies: ({ quickReplies, disabled }) => (
+    <div
+      data-testid="quick-replies"
+      data-disabled={String(Boolean(disabled))}
+    >
       {quickReplies.map((qr) => (
         <span key={qr.payload ?? qr}>{qr.title ?? qr}</span>
       ))}
@@ -129,6 +132,7 @@ jest.mock('./TextComponents/ProductCarousel', () => ({
 }));
 jest.mock('@/contexts/MessagesScrollContext', () => ({
   MessagesScrollProvider: jest.fn(({ children }) => children),
+  useMessagesScroll: jest.fn(() => null),
 }));
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -957,5 +961,79 @@ describe('GoToBottomButton click', () => {
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
       behavior: 'smooth',
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Streaming components — strict last message, scroll preservation & live region
+// ---------------------------------------------------------------------------
+
+describe('MessagesList — streaming components invariants', () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+  });
+
+  it('enables components strictly on the very last incoming message even within the same group (FR-022)', () => {
+    const earlier = buildMessage({
+      id: 'qr-earlier',
+      direction: 'incoming',
+      quick_replies: ['Old option'],
+    });
+    const latest = buildMessage({
+      id: 'qr-latest',
+      direction: 'incoming',
+      quick_replies: ['New option'],
+    });
+    setupMocks({
+      messageGroups: [buildGroup([earlier, latest], 'incoming')],
+    });
+
+    render(<MessagesList />);
+    const qrBlocks = screen.getAllByTestId('quick-replies');
+    expect(qrBlocks).toHaveLength(2);
+    expect(qrBlocks[0]).toHaveAttribute('data-disabled', 'true');
+    expect(qrBlocks[1]).toHaveAttribute('data-disabled', 'false');
+  });
+
+  it('does not auto-scroll on incoming messageGroups updates when shopper scrolled up (FR-036)', () => {
+    const msg1 = buildMessage({ id: 'm1', text: 'First' });
+    setupMocks({
+      messageGroups: [buildGroup([msg1], 'incoming')],
+    });
+    const { container, rerender } = render(<MessagesList />);
+
+    const list = container.querySelector('.weni-messages-list');
+    Object.defineProperty(list, 'scrollHeight', {
+      value: 1200,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'clientHeight', {
+      value: 500,
+      configurable: true,
+    });
+    Object.defineProperty(list, 'scrollTop', { value: 0, configurable: true });
+    fireEvent.scroll(list);
+
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    const updated = buildMessage({
+      id: 'm1',
+      text: 'First chunk second chunk',
+      status: 'streaming',
+    });
+    setupMocks({
+      messageGroups: [buildGroup([updated], 'incoming')],
+    });
+    rerender(<MessagesList />);
+
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('renders a polite aria-live announcement region for component activation', () => {
+    setupMocks();
+    const { container } = render(<MessagesList />);
+    const liveRegion = container.querySelector('[aria-live="polite"]');
+    expect(liveRegion).toBeInTheDocument();
+    expect(liveRegion).toHaveAttribute('role', 'status');
   });
 });

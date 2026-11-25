@@ -1,3 +1,5 @@
+@use '@/styles/animations.scss' as *;
+
 .weni-quick-replies {
   display: flex;
   gap: $fs-spacing-1;
@@ -6,5 +8,22 @@
   .weni-quick-replies__button {
     padding: calc($fs-spacing-1 - $fs-border-width) calc($fs-spacing-3 - $fs-border-width);
     border: $fs-border-width solid $fs-border-color;
+    transition:
+      color var(--weni-component-state-transition, 150ms) ease,
+      background-color var(--weni-component-state-transition, 150ms) ease;
+
+    &.weni-component-enter--pop {
+      animation: weni-component-pop-in
+        var(--weni-enter-duration, 180ms)
+        var(--weni-component-enter-easing, cubic-bezier(0.2, 0.8, 0.2, 1))
+        var(--weni-enter-delay, 0ms)
+        both;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .weni-quick-replies__button.weni-component-enter--pop {
+      animation: none;
+    }
   }
 }
