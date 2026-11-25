@@ -426,4 +426,101 @@ describe('useComponentStreamLifecycle', () => {
     expect(serialized).toContain('invalid_cta_url');
     expect(serialized).not.toContain('secret');
   });
+
+  it('retains delivered component skeletons while word buffering finishes after fast stream_end clears componentHints', () => {
+    const initial = makeParams({
+      message: makeMessage({
+        text: '',
+        componentHints: [
+          { componentType: 'cta_message', labels: ['Acessar'], count: 1 },
+          { componentType: 'quick_replies', labels: ['Sim', 'Não'], count: 2 },
+        ],
+      }),
+      isTextStreaming: true,
+      isBuffering: true,
+    });
+
+    const { result, rerender } = renderHook(
+      (props: UseComponentStreamLifecycleParams) =>
+        useComponentStreamLifecycle(props),
+      { initialProps: initial },
+    );
+
+    expect(result.current.visibleSkeletonHints).toHaveLength(2);
+
+    // Fast stream_end clears componentHints while useStreamingBuffer is still revealing words,
+    // delivering only cta_message (quick_replies undelivered must unmount immediately).
+    rerender(
+      makeParams({
+        message: makeMessage({
+          text: 'Claro! Aqui está o CTA:',
+          status: 'delivered',
+          streamPhase: 'completed',
+          componentHints: undefined,
+          cta_message: { display_text: 'Acessar', url: 'https://weni.ai' },
+        }),
+        isTextStreaming: false,
+        isBuffering: true,
+      }),
+    );
+
+    expect(result.current.phase).toBe('skeleton');
+    expect(result.current.visibleSkeletonHints).toEqual([
+      { componentType: 'cta_message', labels: ['Acessar'], count: 1 },
+    ]);
+
+    // Once word buffering finishes, transition directly into entering without skeleton flicker
+    rerender(
+      makeParams({
+        message: makeMessage({
+          text: 'Claro! Aqui está o CTA:',
+          status: 'delivered',
+          streamPhase: 'completed',
+          componentHints: undefined,
+          cta_message: { display_text: 'Acessar', url: 'https://weni.ai' },
+        }),
+        isTextStreaming: false,
+        isBuffering: false,
+      }),
+    );
+
+    expect(result.current.phase).toBe('entering');
+    expect(result.current.visibleSkeletonHints).toEqual([]);
+  });
+
+  it('drops skeletons immediately when stream_end clears componentHints with no delivered components even while still buffering', () => {
+    const initial = makeParams({
+      message: makeMessage({
+        text: 'Texto parcial',
+        componentHints: [
+          { componentType: 'quick_replies', labels: ['Sim', 'Não'], count: 2 },
+        ],
+      }),
+      isTextStreaming: true,
+      isBuffering: true,
+    });
+
+    const { result, rerender } = renderHook(
+      (props: UseComponentStreamLifecycleParams) =>
+        useComponentStreamLifecycle(props),
+      { initialProps: initial },
+    );
+
+    expect(result.current.visibleSkeletonHints).toHaveLength(1);
+
+    rerender(
+      makeParams({
+        message: makeMessage({
+          text: 'Texto parcial',
+          status: 'delivered',
+          streamPhase: 'completed',
+          componentHints: undefined,
+        }),
+        isTextStreaming: false,
+        isBuffering: true,
+      }),
+    );
+
+    expect(result.current.visibleSkeletonHints).toEqual([]);
+  });
 });

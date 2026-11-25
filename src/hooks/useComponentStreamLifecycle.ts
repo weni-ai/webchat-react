@@ -103,18 +103,49 @@ export function useComponentStreamLifecycle({
     }
   }, [message.cta_message, channelUuid, sessionId, messageId]);
 
-  const activeHints = useMemo(
-    () =>
-      sanitizedHints.filter(
-        (hint) => !timedOutTypes.includes(hint.componentType),
-      ),
-    [sanitizedHints, timedOutTypes],
+  const isStreamCompleted =
+    message.status !== 'streaming' || message.streamPhase === 'completed';
+
+  const [retainedHints, setRetainedHints] = useState<ComponentHint[]>(
+    () => sanitizedHints,
   );
+
+  useEffect(() => {
+    if (sanitizedHints.length > 0) {
+      setRetainedHints(sanitizedHints);
+    }
+  }, [sanitizedHints]);
 
   const deliveredTypes = useMemo(
     () => getDeliveredComponentTypes(message),
     [message],
   );
+
+  const activeHints = useMemo(() => {
+    // When stream_end arrives before useStreamingBuffer finishes revealing words,
+    // @weni/webchat-service clears message.componentHints immediately. Retain skeletons
+    // for already-delivered components until text reveal completes so the layout never
+    // collapses mid-sentence, while still unmounting undelivered hints immediately (FR-012).
+    const sourceHints =
+      sanitizedHints.length > 0
+        ? sanitizedHints
+        : isStreamCompleted && isBuffering && deliveredTypes.length > 0
+          ? retainedHints.filter((hint) =>
+              deliveredTypes.includes(hint.componentType),
+            )
+          : [];
+
+    return sourceHints.filter(
+      (hint) => !timedOutTypes.includes(hint.componentType),
+    );
+  }, [
+    sanitizedHints,
+    isStreamCompleted,
+    isBuffering,
+    deliveredTypes,
+    retainedHints,
+    timedOutTypes,
+  ]);
 
   const pendingHintedTypes = useMemo(
     () =>
@@ -131,8 +162,6 @@ export function useComponentStreamLifecycle({
 
   const hasPendingHinted = pendingHintedTypes.length > 0;
   const isTextComplete = !isBuffering && !isTextStreaming;
-  const isStreamCompleted =
-    message.status !== 'streaming' || message.streamPhase === 'completed';
   const hasAnyText = (message.text || '').trim().length > 0;
 
   // Bounded 10-second wait timer (FR-011, FR-026, FR-028):
