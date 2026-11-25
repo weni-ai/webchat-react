@@ -34,6 +34,8 @@ export function BackInStockNotify({
     sendMessage,
     service,
     isBackInStockOnlyMode,
+    isShoppingAssistantDisabled,
+    setCloseOnlyHeader,
     setIsChatOpen,
   } = useChatContext();
   const [phoneCountry, setPhoneCountry] = useState(readInitialPhoneCountry);
@@ -45,6 +47,12 @@ export function BackInStockNotify({
   const [showPhoneError, setShowPhoneError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!submitted || !isShoppingAssistantDisabled) return undefined;
+    setCloseOnlyHeader(true);
+    return () => setCloseOnlyHeader(false);
+  }, [submitted, isShoppingAssistantDisabled, setCloseOnlyHeader]);
 
   useEffect(() => {
     if (phoneCountry.alpha2) return undefined;

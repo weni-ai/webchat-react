@@ -63,6 +63,7 @@ describe('BackInStockNotify', () => {
   const clearPageHistory = jest.fn();
   const sendMessage = jest.fn();
   const setIsChatOpen = jest.fn();
+  const setCloseOnlyHeader = jest.fn();
   const validateBackInStockContact = jest.fn(contactVerdict);
   const subscribeBackInStock = jest.fn().mockResolvedValue({ accepted: true });
 
@@ -74,7 +75,9 @@ describe('BackInStockNotify', () => {
       clearPageHistory,
       sendMessage,
       setIsChatOpen,
+      setCloseOnlyHeader,
       isBackInStockOnlyMode: false,
+      isShoppingAssistantDisabled: false,
       service: { validateBackInStockContact, subscribeBackInStock },
     });
     delete window.__RUNTIME__;
@@ -290,7 +293,9 @@ describe('BackInStockNotify', () => {
       clearPageHistory,
       sendMessage,
       setIsChatOpen,
+      setCloseOnlyHeader,
       isBackInStockOnlyMode: true,
+      isShoppingAssistantDisabled: true,
       service: { validateBackInStockContact, subscribeBackInStock },
     });
     render(<BackInStockNotify productName="Cool Shoe" />);
@@ -313,6 +318,44 @@ describe('BackInStockNotify', () => {
       screen.queryByRole('button', { name: 'Show me similar products' }),
     ).not.toBeInTheDocument();
     expect(sendMessage).not.toHaveBeenCalled();
+    expect(setCloseOnlyHeader).toHaveBeenCalledWith(true);
+  });
+
+  it('does not request a close-only header before submit', () => {
+    render(<BackInStockNotify productName="Cool Shoe" />);
+    expect(setCloseOnlyHeader).not.toHaveBeenCalled();
+  });
+
+  it('clears the close-only header when the confirmation unmounts', async () => {
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      setIsChatOpen,
+      setCloseOnlyHeader,
+      isBackInStockOnlyMode: true,
+      isShoppingAssistantDisabled: true,
+      service: { validateBackInStockContact, subscribeBackInStock },
+    });
+    const { unmount } = render(<BackInStockNotify productName="Cool Shoe" />);
+    fillName();
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    await waitFor(() => {
+      expect(setCloseOnlyHeader).toHaveBeenCalledWith(true);
+    });
+    unmount();
+    expect(setCloseOnlyHeader).toHaveBeenCalledWith(false);
+  });
+
+  it('keeps the normal header when the assistant is enabled', async () => {
+    render(<BackInStockNotify productName="Cool Shoe" />);
+    fillName();
+    fillValidPhone();
+    fireEvent.click(screen.getByRole('button', { name: 'Notify me' }));
+    await waitFor(() => {
+      expect(screen.getByText("You're all set!")).toBeInTheDocument();
+    });
+    expect(setCloseOnlyHeader).not.toHaveBeenCalled();
   });
 
   it('sends similar products message and clears page history', async () => {
@@ -399,6 +442,15 @@ describe('BackInStockNotify', () => {
 
   it('still shows success when subscribe rejects', async () => {
     subscribeBackInStock.mockRejectedValue(new Error('network'));
+    useChatContext.mockReturnValue({
+      clearPageHistory,
+      sendMessage,
+      setIsChatOpen,
+      setCloseOnlyHeader,
+      isBackInStockOnlyMode: true,
+      isShoppingAssistantDisabled: true,
+      service: { validateBackInStockContact, subscribeBackInStock },
+    });
 
     render(
       <BackInStockNotify
@@ -413,5 +465,6 @@ describe('BackInStockNotify', () => {
     await waitFor(() => {
       expect(screen.getByText("You're all set!")).toBeInTheDocument();
     });
+    expect(setCloseOnlyHeader).toHaveBeenCalledWith(true);
   });
 });
