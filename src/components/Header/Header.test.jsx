@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('@/hooks/useWeniChat', () => ({
@@ -10,6 +11,10 @@ jest.mock('@/contexts/ChatContext', () => ({
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key }),
+}));
+
+jest.mock('@/components/common/Icon', () => ({
+  Icon: ({ name }) => <span data-testid={`icon-${name}`} />,
 }));
 
 import { useWeniChat } from '@/hooks/useWeniChat';
@@ -169,6 +174,57 @@ describe('Header', () => {
     });
     render(<Header />);
     expect(screen.getByLabelText('Fullscreen chat')).toBeInTheDocument();
+  });
+
+  it('uses a close-only header on the back-in-stock confirmation', () => {
+    const helpers = setup({
+      weniChat: {
+        currentPage: { view: 'back-in-stock-notify' },
+        cart: { a: { quantity: 2 } },
+      },
+      chatContext: {
+        closeOnlyHeader: true,
+        config: {
+          showFullScreenButton: true,
+          showCloseButton: true,
+          showMode: true,
+          mode: 'live',
+        },
+      },
+    });
+    render(<Header />);
+    expect(screen.queryByLabelText('Back')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Fullscreen chat')).not.toBeInTheDocument();
+    expect(screen.getByTestId('icon-keyboard_arrow_down')).toBeInTheDocument();
+    expect(screen.getByLabelText('Cart')).toBeInTheDocument();
+    expect(screen.getByText('mode.live.title')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Close chat'));
+    expect(helpers.toggleChat).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps back, fullscreen, and the chevron without the close-only signal', () => {
+    setup({
+      weniChat: { currentPage: { view: 'back-in-stock-notify' } },
+      chatContext: {
+        closeOnlyHeader: false,
+        config: { showFullScreenButton: true, showCloseButton: true },
+      },
+    });
+    render(<Header />);
+    expect(screen.getByLabelText('Back')).toBeInTheDocument();
+    expect(screen.getByLabelText('Fullscreen chat')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-keyboard_arrow_down')).toBeInTheDocument();
+  });
+
+  it('hides close chat when the host turned the button off', () => {
+    setup({
+      chatContext: {
+        closeOnlyHeader: true,
+        config: { showCloseButton: false },
+      },
+    });
+    render(<Header />);
+    expect(screen.queryByLabelText('Close chat')).not.toBeInTheDocument();
   });
 
   it('closes the chat when the close button is clicked', () => {

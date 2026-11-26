@@ -44,7 +44,8 @@ export function Header() {
     );
   }, [cart]);
 
-  const { config, isInsideVTEXStore, isBackInStockOnlyMode } = useChatContext();
+  const { config, isInsideVTEXStore, isBackInStockOnlyMode, closeOnlyHeader } =
+    useChatContext();
 
   const showCartButton =
     cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
@@ -55,7 +56,7 @@ export function Header() {
   return (
     <header className="weni-chat-header">
       <hgroup className="weni-chat-header__group">
-        {currentPage && goBack && (
+        {currentPage && goBack && !closeOnlyHeader && (
           <section className="weni-chat-header__info">
             <Button
               onClick={() => {
@@ -91,7 +92,7 @@ export function Header() {
           </Button>
         )}
 
-        {config.showFullScreenButton && (
+        {config.showFullScreenButton && !closeOnlyHeader && (
           <Button
             onClick={toggleChatFullscreen}
             aria-label="Fullscreen chat"

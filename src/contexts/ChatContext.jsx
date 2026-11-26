@@ -149,6 +149,7 @@ export function ChatProvider({ children, config }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [configState] = useState(mergedConfig);
   const [shouldRender, setShouldRender] = useState(true);
+  const [closeOnlyHeader, setCloseOnlyHeader] = useState(false);
   const isBackInStockOnlyMode = useMemo(() => {
     if (isShoppingAssistantDisabled) {
       return true;
@@ -709,6 +710,8 @@ export function ChatProvider({ children, config }) {
     isModeVisible: showMode,
     isShoppingAssistantDisabled,
     isBackInStockOnlyMode,
+    closeOnlyHeader,
+    setCloseOnlyHeader,
 
     // Voice mode state
     isVoiceEnabledByClient,
