@@ -69,6 +69,18 @@
     "restored": "Connection restored",
     "try_again": "Try again"
   },
+  "human_support": {
+    "header_tag": "Human support",
+    "milestone_ended": "Human support ended · {{time}}",
+    "milestone_started": "Forwarded to human agent · {{time}}",
+    "status_delivered": "Delivered · sent at {{time}}",
+    "status_error": "Failed to send",
+    "status_read": "Read · sent at {{time}}",
+    "status_sending": "Sending",
+    "status_sent": "Sent at {{time}}",
+    "typing_anonymous": "Agent is typing",
+    "typing_with_name": "{{name}} is typing"
+  },
   "input": {
     "attach_tooltip": "Attach",
     "media_audio": "Audio",

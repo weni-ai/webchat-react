@@ -77,6 +77,10 @@ import ProgressActivityFilled from '@material-symbols/svg-400/rounded/progress_a
 import RoundedX from '@/assets/icons/rounded-x.svg?react';
 import CheckSmall from '@material-symbols/svg-400/rounded/check_small.svg?react';
 import CheckSmallFilled from '@material-symbols/svg-400/rounded/check_small-fill.svg?react';
+import Check from '@material-symbols/svg-400/rounded/check.svg?react';
+import CheckFilled from '@material-symbols/svg-400/rounded/check-fill.svg?react';
+import DoneAll from '@material-symbols/svg-400/rounded/done_all.svg?react';
+import DoneAllFilled from '@material-symbols/svg-400/rounded/done_all-fill.svg?react';
 
 export const icons = {
   send: {
@@ -238,5 +242,13 @@ export const icons = {
   check_small: {
     default: CheckSmall,
     filled: CheckSmallFilled,
+  },
+  check: {
+    default: Check,
+    filled: CheckFilled,
+  },
+  done_all: {
+    default: DoneAll,
+    filled: DoneAllFilled,
   },
 };

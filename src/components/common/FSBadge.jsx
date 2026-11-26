@@ -15,6 +15,6 @@ export function FSBadge({ children, type, className = '', ...props }) {
 
 FSBadge.propTypes = {
   children: PropTypes.node.isRequired,
-  type: PropTypes.oneOf(['success']).isRequired,
+  type: PropTypes.oneOf(['success', 'neutral']).isRequired,
   className: PropTypes.string,
 };

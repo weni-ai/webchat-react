@@ -58,4 +58,15 @@
   &--order {
     padding: $spacing-2;
   }
+
+  &__author-name {
+    display: block;
+    max-width: 100%;
+    margin-bottom: $spacing-1;
+    font: $fs-text-weight-semibold #{$fs-text-size-0}/16px $font-family;
+    color: $fs-color-neutral-6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

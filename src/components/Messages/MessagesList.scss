@@ -59,6 +59,10 @@
     flex-direction: column;
     gap: $spacing-2;
 
+    &--grouped {
+      gap: $spacing-1;
+    }
+
     &--incoming {
       align-items: flex-start;
     }

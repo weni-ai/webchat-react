@@ -9,6 +9,10 @@ class WeniWebchatService {
       connection: { status: "connected" },
       isThinking: false,
       thinkingText: null,
+      isTyping: false,
+      features: { humanSupportStatus: false },
+      humanSupport: { active: false },
+      typingAuthor: null,
     };
     this.session = { isChatOpen: false };
     this.isAudioRecordingSupported = true;
@@ -188,6 +192,53 @@ class WeniWebchatService {
     this.emit("history:loaded", messages);
   }
 
+  setHumanSupportFeature(enabled) {
+    this._applyState({
+      features: {
+        ...(this.state.features || {}),
+        humanSupportStatus: !!enabled,
+      },
+    });
+  }
+
+  setHumanSupportActive(active) {
+    const humanSupport = { active: !!active };
+    this._applyState({ humanSupport });
+    this.emit("human_support:changed", humanSupport);
+  }
+
+  setTypingAuthor(typingAuthor, isTyping = Boolean(typingAuthor)) {
+    this._applyState({ typingAuthor: typingAuthor ?? null, isTyping });
+  }
+
+  emitHumanSupportEvent({ eventId, event, occurredAt, orderKey }) {
+    const milestone = {
+      id: `hs_${eventId}`,
+      type: "human_support_event",
+      timestamp: occurredAt,
+      orderKey: orderKey ?? occurredAt,
+      direction: "incoming",
+      humanSupportEvent: { eventId, event, occurredAt },
+    };
+    const nextMessages = [...this.state.messages, milestone];
+    const humanSupport = { active: event === "started" };
+    this._applyState({ messages: nextMessages, humanSupport });
+    this.emit("message:received", milestone);
+    this.emit("human_support:changed", humanSupport);
+    return milestone;
+  }
+
+  updateMessageStatus(ids, status) {
+    const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+    const nextMessages = this.state.messages.map((msg) =>
+      idSet.has(msg.id) ? { ...msg, status } : msg,
+    );
+    this._applyState({ messages: nextMessages });
+    idSet.forEach((id) => {
+      this.emit("message:updated", id, { status });
+    });
+  }
+
   // Audio
   async startRecording() {
     this.emit("recording:started");
@@ -258,6 +309,7 @@ WeniWebchatService.MESSAGE_TYPES = {
   LOCATION: "location",
   INTERACTIVE: "interactive",
   CONVERSATION_STATUS: "conversation_status",
+  HUMAN_SUPPORT_EVENT: "human_support_event",
   TYPING: "typing",
 };
 

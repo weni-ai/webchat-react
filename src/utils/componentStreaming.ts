@@ -1,3 +1,5 @@
+import type { MessageAuthor } from '@/utils/humanSupportStatus';
+
 export type ComponentType = 'list_message' | 'cta_message' | 'quick_replies';
 
 export type StreamPhase =
@@ -51,6 +53,8 @@ export interface StreamedMessage {
   timestamp: number;
   direction: 'incoming' | 'outgoing';
   status?: 'pending' | 'sent' | 'delivered' | 'read' | 'streaming' | 'error';
+  author?: MessageAuthor;
+  orderKey?: number;
   streamPhase?: StreamPhase;
   componentHints?: ComponentHint[];
   list_message?: ListMessagePayload;
