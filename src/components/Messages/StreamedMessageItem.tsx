@@ -2,6 +2,7 @@ import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageContainer from '@/components/Messages/MessageContainer';
+import MessageMeta from '@/components/Messages/MessageMeta';
 import MessageText from '@/components/Messages/MessageText';
 import Icon from '@/components/common/Icon';
 import { QuickReplies } from '@/components/Messages/TextComponents/QuickReplies';
@@ -19,12 +20,16 @@ import {
   isValidListMessage,
   normalizeQuickReplies,
 } from '@/utils/componentStreaming';
+import type { MessageDisplayMetadata } from '@/utils/humanSupportStatus';
 
 export interface StreamedMessageItemProps {
   message: StreamedMessage;
   direction: 'incoming' | 'outgoing';
   isLastMessage: boolean;
   onAnnounce?: (messageId: string, messages: string[]) => void;
+  displayMeta?: MessageDisplayMetadata;
+  isHumanSupportFeatureEnabled?: boolean;
+  hasTrailingCard?: boolean;
 }
 
 export function StreamedMessageItem({
@@ -32,6 +37,9 @@ export function StreamedMessageItem({
   direction,
   isLastMessage,
   onAnnounce,
+  displayMeta,
+  isHumanSupportFeatureEnabled = false,
+  hasTrailingCard = false,
 }: StreamedMessageItemProps) {
   const { t } = useTranslation();
   const { service } = useWeniChat();
@@ -159,6 +167,25 @@ export function StreamedMessageItem({
   const pendingModifier =
     message.status === 'pending' ? ' weni-messages-list__message--pending' : '';
 
+  const isPostLaunchMessage = Boolean(
+    isHumanSupportFeatureEnabled && message.author,
+  );
+  const showInlineLegacyError =
+    message.status === 'error' && !isPostLaunchMessage;
+  const authorName =
+    isHumanSupportFeatureEnabled && displayMeta?.showAuthorName
+      ? displayMeta.authorName
+      : undefined;
+
+  // Defer below-bubble timestamp until AI streaming and word buffering finish (FR-015).
+  const shouldShowMeta = Boolean(
+    isHumanSupportFeatureEnabled &&
+      !hasTrailingCard &&
+      !isTextStreaming &&
+      !isBuffering &&
+      (displayMeta?.showTimestamp || displayMeta?.visibleStatus === 'error'),
+  );
+
   return (
     <Fragment>
       {shouldRenderBubble && (
@@ -166,6 +193,7 @@ export function StreamedMessageItem({
           className={`weni-messages-list__message weni-messages-list__message--${direction}${pendingModifier}`}
           direction={direction}
           type={message.type}
+          authorName={authorName}
         >
           <MessageText
             message={message}
@@ -176,7 +204,7 @@ export function StreamedMessageItem({
             renderCtaSlot={ctaSlot}
           />
 
-          {message.status === 'error' && (
+          {showInlineLegacyError && (
             <Icon
               name="error"
               size="small"
@@ -191,9 +219,19 @@ export function StreamedMessageItem({
           className={`weni-messages-list__message weni-messages-list__message--${direction} weni-messages-list__message--quick-replies`}
           direction={direction}
           type={message.type}
+          authorName={!shouldRenderBubble ? authorName : undefined}
         >
           {quickRepliesNode}
         </MessageContainer>
+      )}
+
+      {shouldShowMeta && (
+        <MessageMeta
+          timestamp={message.timestamp}
+          direction={direction}
+          status={displayMeta?.visibleStatus ?? null}
+          showStatus={direction === 'outgoing'}
+        />
       )}
     </Fragment>
   );

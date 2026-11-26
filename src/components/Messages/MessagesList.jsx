@@ -5,9 +5,11 @@ import MessageContainer from './MessageContainer';
 import MessageAudio from './MessageAudio';
 import MessageDocument from './MessageDocument';
 import MessageImage from './MessageImage';
+import MessageMeta from './MessageMeta';
 import MessageOrder from './MessageOrder';
 import MessageText from './MessageText';
 import MessageVideo from './MessageVideo';
+import HumanSupportMilestone from './HumanSupportMilestone';
 import StreamedMessageItem from './StreamedMessageItem';
 import ComponentAnnouncementRegion from './ComponentAnnouncementRegion';
 import TypingIndicator from './TypingIndicator';
@@ -25,12 +27,18 @@ import { ShowItems } from './TextComponents/ShowItems';
 import { ProductCarousel } from './TextComponents/ProductCarousel';
 import { QuickReplies } from './TextComponents/QuickReplies';
 import { FSBadge } from '../common/FSBadge';
+import {
+  formatMessageTimestamp,
+  MESSAGE_TYPE_CONVERSATION_STATUS,
+  MESSAGE_TYPE_HUMAN_SUPPORT_EVENT,
+  MILESTONE_CONFIG_MAP,
+  validateHumanSupportEvent,
+} from '@/utils/humanSupportStatus';
 
 import './MessagesList.scss';
 import ThinkingIndicator from './ThinkingIndicator';
 
 const BOTTOM_SCROLL_THRESHOLD_PX = 100;
-const MESSAGE_TYPE_CONVERSATION_STATUS = 'conversation_status';
 const NON_STREAMED_MESSAGE_TYPES = new Set([
   'image',
   'video',
@@ -79,10 +87,32 @@ Message.propTypes = {
   componentsEnabled: PropTypes.bool,
 };
 
+function collectMilestoneIdsFromGroups(groups) {
+  const ids = new Set();
+  for (const group of groups) {
+    for (const msg of group.messages || []) {
+      const eventId = msg?.humanSupportEvent?.eventId;
+      if (msg?.type === MESSAGE_TYPE_HUMAN_SUPPORT_EVENT && eventId) {
+        ids.add(eventId);
+      }
+    }
+  }
+  return ids;
+}
+
 export function MessagesList() {
-  const { t } = useTranslation();
-  const { isTyping, isThinking, thinkingText, messageGroups, isChatOpen } =
-    useWeniChat();
+  const { t, i18n } = useTranslation();
+  const {
+    isTyping,
+    isThinking,
+    thinkingText,
+    messageGroups,
+    isChatOpen,
+    isHumanSupportFeatureEnabled,
+    isHumanSupportActive,
+    typingAuthor,
+    service,
+  } = useWeniChat();
   const { isVoiceModeActive, voicePartialTranscript } = useChatContext();
   const { questions, isInChatStartersDismissed, handleFullStarterClick } =
     useConversationStarters();
@@ -92,15 +122,44 @@ export function MessagesList() {
   const [showGoToBottom, setShowGoToBottom] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const announcementSeqRef = useRef(0);
+  const seenMilestoneIdsRef = useRef(null);
+  const lastAnnouncedTypingLabelRef = useRef(null);
+
+  if (seenMilestoneIdsRef.current === null) {
+    seenMilestoneIdsRef.current = collectMilestoneIdsFromGroups(messageGroups);
+  }
+
   const showConversationStartersFull =
     questions.length > 0 &&
     !isInChatStartersDismissed &&
     messageGroups.length === 0;
 
+  // Suppress AI thinking indicators while a human support session is open (FR-033).
+  const effectiveIsThinking =
+    isHumanSupportFeatureEnabled && isHumanSupportActive ? false : isThinking;
+
+  const trimmedTypingName =
+    typeof typingAuthor?.name === 'string' ? typingAuthor.name.trim() : '';
+  const humanTypingLabel =
+    isHumanSupportFeatureEnabled &&
+    isTyping &&
+    typingAuthor?.type === 'human_agent'
+      ? trimmedTypingName
+        ? t('human_support.typing_with_name', { name: trimmedTypingName })
+        : t('human_support.typing_anonymous')
+      : undefined;
+
   const isNearBottomRef = useRef(true);
   const lastOutgoingIdRef = useRef(null);
 
   const lastMessage = messageGroups.at(-1)?.messages.at(-1);
+  const totalMessageCount = messageGroups.reduce(
+    (sum, group) => sum + group.messages.length,
+    0,
+  );
+  const lastItemKey = lastMessage?.id ?? lastMessage?.timestamp ?? null;
+  const lastMessageTextLength =
+    typeof lastMessage?.text === 'string' ? lastMessage.text.length : 0;
 
   const handleAnnounce = useCallback((messageId, texts) => {
     if (!Array.isArray(texts) || texts.length === 0) return;
@@ -113,6 +172,70 @@ export function MessagesList() {
     });
     setAnnouncements((prev) => [...prev, ...nextItems]);
   }, []);
+
+  // Seed seen milestone IDs when history loads so historical milestones are never re-announced (FR-034, NFR-004).
+  useEffect(() => {
+    if (!service || typeof service.on !== 'function') return undefined;
+
+    const handleHistoryLoaded = (loadedMessages) => {
+      if (!Array.isArray(loadedMessages)) return;
+      for (const msg of loadedMessages) {
+        const eventId = msg?.humanSupportEvent?.eventId;
+        if (msg?.type === MESSAGE_TYPE_HUMAN_SUPPORT_EVENT && eventId) {
+          seenMilestoneIdsRef.current.add(eventId);
+        }
+      }
+    };
+
+    service.on('history:loaded', handleHistoryLoaded);
+    return () => {
+      if (typeof service.off === 'function') {
+        service.off('history:loaded', handleHistoryLoaded);
+      }
+    };
+  }, [service]);
+
+  // Announce newly arriving live milestones politely without moving focus (NFR-004).
+  useEffect(() => {
+    if (!isHumanSupportFeatureEnabled) return;
+
+    const newMilestoneTexts = [];
+    for (const group of messageGroups) {
+      if (group.kind !== 'milestone') continue;
+      for (const msg of group.messages) {
+        const event = validateHumanSupportEvent(msg.humanSupportEvent);
+        if (!event || seenMilestoneIdsRef.current.has(event.eventId)) continue;
+        seenMilestoneIdsRef.current.add(event.eventId);
+        const time = formatMessageTimestamp(event.occurredAt, i18n?.language);
+        if (!time) continue;
+        const config = MILESTONE_CONFIG_MAP[event.event];
+        newMilestoneTexts.push(t(config.labelKey, { time }));
+      }
+    }
+
+    if (newMilestoneTexts.length > 0) {
+      handleAnnounce('human-support-milestone', newMilestoneTexts);
+    }
+  }, [
+    messageGroups,
+    isHumanSupportFeatureEnabled,
+    t,
+    i18n?.language,
+    handleAnnounce,
+  ]);
+
+  // Announce human agent typing once on transition/name change; ignore repeated heartbeats (NFR-004, AD-004).
+  useEffect(() => {
+    if (!humanTypingLabel) {
+      lastAnnouncedTypingLabelRef.current = null;
+      return;
+    }
+
+    if (humanTypingLabel !== lastAnnouncedTypingLabelRef.current) {
+      lastAnnouncedTypingLabelRef.current = humanTypingLabel;
+      handleAnnounce('human-support-typing', [humanTypingLabel]);
+    }
+  }, [humanTypingLabel, handleAnnounce]);
 
   function scrollToBottom(behavior = 'smooth') {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -167,6 +290,9 @@ export function MessagesList() {
     };
   }, []);
 
+  // Keyed on structural list changes (count, last item, text growth, typing/thinking)
+  // rather than raw `messageGroups` identity so in-place status mutations (sent ->
+  // delivered -> read) never alter scroll position (FR-039).
   useEffect(() => {
     const isNewOutgoingMessage =
       lastMessage?.direction === 'outgoing' &&
@@ -182,13 +308,14 @@ export function MessagesList() {
     const id = requestAnimationFrame(() => syncScrollState());
     return () => cancelAnimationFrame(id);
   }, [
-    messageGroups,
-    isThinking,
+    totalMessageCount,
+    lastItemKey,
+    lastMessage?.direction,
+    lastMessageTextLength,
+    effectiveIsThinking,
     voicePartialTranscript,
     isTyping,
     syncScrollState,
-    lastMessage?.id,
-    lastMessage?.direction,
   ]);
 
   useEffect(() => {
@@ -203,6 +330,11 @@ export function MessagesList() {
   const enableComponents = (message) =>
     message.direction === 'incoming' && lastMessage?.id === message.id;
 
+  const baseLogContext = {
+    channelUuid: service?.config?.channelUuid,
+    sessionId: service?.getSession?.()?.sessionId,
+  };
+
   return (
     <MessagesScrollProvider onWordRevealed={scrollToBottomOnReveal}>
       <section
@@ -214,25 +346,51 @@ export function MessagesList() {
 
         <ChatPresentation />
 
-        {messageGroups.map((group, groupIndex) => (
-          <section
-            className={`
-            weni-messages-list__direction-group
-            weni-messages-list__direction-group--${group.direction}
-          `}
-            key={
-              group.messages[0].id ??
-              `grp-${group.messages[0].timestamp}-${groupIndex}`
+        {messageGroups.map((group, groupIndex) => {
+          const groupKey =
+            group.messages[0].id ??
+            `grp-${group.messages[0].timestamp}-${groupIndex}`;
+
+          if (group.kind === 'milestone') {
+            if (!isHumanSupportFeatureEnabled) {
+              return null;
             }
-          >
-            {renderGroupMessagesWithCollapsedStatus(
-              group,
-              enableComponents,
-              t,
-              handleAnnounce,
-            )}
-          </section>
-        ))}
+            const milestoneMsg = group.messages[0];
+            return (
+              <HumanSupportMilestone
+                key={groupKey}
+                event={milestoneMsg.humanSupportEvent}
+                logContext={{
+                  ...baseLogContext,
+                  messageId: milestoneMsg.id,
+                }}
+              />
+            );
+          }
+
+          const groupedModifier =
+            isHumanSupportFeatureEnabled && group.kind === 'messages'
+              ? ' weni-messages-list__direction-group--grouped'
+              : '';
+
+          return (
+            <section
+              className={`
+            weni-messages-list__direction-group
+            weni-messages-list__direction-group--${group.direction}${groupedModifier}
+          `}
+              key={groupKey}
+            >
+              {renderGroupMessagesWithCollapsedStatus(
+                group,
+                enableComponents,
+                t,
+                handleAnnounce,
+                isHumanSupportFeatureEnabled,
+              )}
+            </section>
+          );
+        })}
 
         {isVoiceModeActive && voicePartialTranscript && (
           <section className="weni-messages-list__direction-group weni-messages-list__direction-group--outgoing">
@@ -248,7 +406,7 @@ export function MessagesList() {
           </section>
         )}
 
-        {(isTyping || isThinking) && (
+        {(isTyping || effectiveIsThinking) && (
           <section
             className={`
             weni-messages-list__direction-group
@@ -261,13 +419,13 @@ export function MessagesList() {
               direction="incoming"
               type="typing"
             >
-              {isThinking ? (
+              {effectiveIsThinking ? (
                 <ThinkingIndicator
                   className="weni-message__thinking-indicator"
                   text={thinkingText}
                 />
               ) : (
-                <TypingIndicator />
+                <TypingIndicator label={humanTypingLabel} />
               )}
             </MessageContainer>
           </section>
@@ -370,6 +528,7 @@ function renderGroupMessagesWithCollapsedStatus(
   enableComponents,
   t,
   onAnnounce,
+  isHumanSupportFeatureEnabled,
 ) {
   const { messages } = group;
   const nodes = [];
@@ -379,7 +538,14 @@ function renderGroupMessagesWithCollapsedStatus(
 
     if (message.type !== MESSAGE_TYPE_CONVERSATION_STATUS) {
       nodes.push(
-        renderMessage(group, message, index, enableComponents, onAnnounce),
+        renderMessage(
+          group,
+          message,
+          index,
+          enableComponents,
+          onAnnounce,
+          isHumanSupportFeatureEnabled,
+        ),
       );
       index += 1;
       continue;
@@ -400,6 +566,7 @@ function renderGroupMessagesWithCollapsedStatus(
           index,
           enableComponents,
           onAnnounce,
+          isHumanSupportFeatureEnabled,
         ),
       );
     }
@@ -416,6 +583,7 @@ function renderMessage(
   messageIndex,
   enableComponents,
   onAnnounce,
+  isHumanSupportFeatureEnabled,
 ) {
   const rowKey = message.id ?? `msg-${message.timestamp}-${messageIndex}`;
 
@@ -428,7 +596,25 @@ function renderMessage(
     );
   }
 
+  const displayMeta = group.displayMeta?.[messageIndex];
   const isTextLikeMessage = !NON_STREAMED_MESSAGE_TYPES.has(message.type);
+  const hasProductCarousel = Boolean(
+    message.product_carousel?.product_items?.length > 0,
+  );
+  const hasTrailingCard = Boolean(message.product_list || hasProductCarousel);
+  const isPostLaunchMessage = Boolean(
+    isHumanSupportFeatureEnabled && message.author,
+  );
+  const showInlineLegacyError =
+    message.status === 'error' && !isPostLaunchMessage;
+  const authorName =
+    isHumanSupportFeatureEnabled && displayMeta?.showAuthorName
+      ? displayMeta.authorName
+      : undefined;
+  const shouldShowFooterMeta = Boolean(
+    isHumanSupportFeatureEnabled &&
+      (displayMeta?.showTimestamp || displayMeta?.visibleStatus === 'error'),
+  );
 
   return (
     <Fragment key={`${rowKey}-body`}>
@@ -438,6 +624,9 @@ function renderMessage(
           direction={group.direction}
           isLastMessage={enableComponents(message)}
           onAnnounce={onAnnounce}
+          displayMeta={displayMeta}
+          isHumanSupportFeatureEnabled={isHumanSupportFeatureEnabled}
+          hasTrailingCard={hasTrailingCard}
         />
       ) : (
         <>
@@ -445,13 +634,14 @@ function renderMessage(
             className={`weni-messages-list__message weni-messages-list__message--${group.direction}${message.status === 'pending' ? ' weni-messages-list__message--pending' : ''}`}
             direction={group.direction}
             type={message.type}
+            authorName={authorName}
           >
             <Message
               message={message}
               componentsEnabled={enableComponents(message)}
             />
 
-            {message.status === 'error' && (
+            {showInlineLegacyError && (
               <Icon
                 name="error"
                 size="small"
@@ -473,6 +663,15 @@ function renderMessage(
                 />
               </MessageContainer>
             )}
+
+          {!hasTrailingCard && shouldShowFooterMeta && (
+            <MessageMeta
+              timestamp={message.timestamp}
+              direction={group.direction}
+              status={displayMeta?.visibleStatus ?? null}
+              showStatus={group.direction === 'outgoing'}
+            />
+          )}
         </>
       )}
 
@@ -490,7 +689,7 @@ function renderMessage(
         </MessageContainer>
       )}
 
-      {message.product_carousel?.product_items?.length > 0 && (
+      {hasProductCarousel && (
         <MessageContainer
           className={`weni-messages-list__message weni-messages-list__message--${group.direction} weni-messages-list__message--product-carousel`}
           direction={group.direction}
@@ -501,6 +700,15 @@ function renderMessage(
             disabled={!enableComponents(message)}
           />
         </MessageContainer>
+      )}
+
+      {hasTrailingCard && shouldShowFooterMeta && (
+        <MessageMeta
+          timestamp={message.timestamp}
+          direction={group.direction}
+          status={displayMeta?.visibleStatus ?? null}
+          showStatus={group.direction === 'outgoing'}
+        />
       )}
     </Fragment>
   );

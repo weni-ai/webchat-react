@@ -25,6 +25,7 @@ HeaderTitle.propTypes = {
  * Header - Chat header component
  */
 export function Header() {
+  const { t } = useTranslation();
   const {
     toggleChat,
     isChatFullscreen,
@@ -35,6 +36,9 @@ export function Header() {
     cart,
     setIsChatOpen,
     clearPageHistory,
+    isHumanSupportFeatureEnabled,
+    isHumanSupportActive,
+    isConnectionClosed,
   } = useWeniChat();
 
   const cartTotalItems = useMemo(() => {
@@ -49,6 +53,13 @@ export function Header() {
 
   const showCartButton =
     cartTotalItems > 0 && !(isInsideVTEXStore && config.addToCart);
+
+  const showHumanSupportTag =
+    Boolean(isHumanSupportFeatureEnabled) &&
+    Boolean(isHumanSupportActive) &&
+    !config.showMode &&
+    !isBackInStockOnlyMode &&
+    !isConnectionClosed;
 
   // TODO: Implement header layout
   // TODO: Add connection status indicator
@@ -78,6 +89,12 @@ export function Header() {
           isModeVisible={config.showMode}
           mode={config.mode}
         />
+
+        {showHumanSupportTag && (
+          <span className="weni-chat-header__tag weni-chat-header__tag--human-support">
+            {t('human_support.header_tag')}
+          </span>
+        )}
       </hgroup>
 
       <section className="weni-chat-header__actions">

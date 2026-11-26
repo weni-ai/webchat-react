@@ -12,8 +12,33 @@
   align-items: center;
   gap: $spacing-1;
 
-
   $dot-size: 5px;
+
+  &--with-label {
+    height: auto;
+    gap: $spacing-2;
+  }
+
+  &__bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-1;
+    height: $spacing-8;
+    padding: 0 $spacing-4;
+    background-color: $fs-color-neutral-0;
+    border: $fs-border-width solid $fs-border-color;
+    border-radius: $fs-border-radius $fs-border-radius-medium
+      $fs-border-radius-medium $fs-border-radius-medium;
+  }
+
+  &__label {
+    font: $fs-text-weight-regular #{$fs-text-size-0}/16px $font-family;
+    color: $fg-base-soft;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   &__dot {
     width: $dot-size;
@@ -21,15 +46,15 @@
     border-radius: $border-radius-full;
     background-color: var(--weni-main-color);
     animation: typing-bounce 1.3s infinite ease-in-out both;
-    
+
     &:nth-child(1) {
       animation-delay: -0.32s;
     }
-    
+
     &:nth-child(2) {
       animation-delay: -0.16s;
     }
-    
+
     &:nth-child(3) {
       animation-delay: 0s;
     }
@@ -37,7 +62,9 @@
 }
 
 @keyframes typing-bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
     opacity: 0.1;
   }

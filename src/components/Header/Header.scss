@@ -46,7 +46,8 @@
       background-color: $sl-color-orange-3;
     }
 
-    &--live {
+    &--live,
+    &--human-support {
       background-color: $sl-color-green-3;
     }
   }

@@ -602,3 +602,179 @@ describe('StreamedMessageItem — end-to-end streaming flows (US1–US7)', () =>
     document.body.removeChild(input);
   });
 });
+
+describe('StreamedMessageItem — human support status metadata', () => {
+  const ts = new Date(2026, 10, 3, 14, 35, 0).getTime();
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 10, 3, 15, 0, 0));
+    mockUsePrefersReducedMotion.mockReturnValue(false);
+    act(() => {
+      i18n.changeLanguage('en');
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('renders outgoing MessageMeta across pending, sent, delivered, read, and error without legacy inline error icon', () => {
+    const statuses = [
+      ['pending', 'Sending'],
+      ['sent', 'Sent at 2:35 PM'],
+      ['delivered', 'Delivered · sent at 2:35 PM'],
+      ['read', 'Read · sent at 2:35 PM'],
+      ['error', 'Failed to send'],
+    ] as const;
+
+    statuses.forEach(([status, expectedLabel]) => {
+      const { container, unmount } = render(
+        <StreamedMessageItem
+          message={makeMessage({
+            id: `out-${status}`,
+            direction: 'outgoing',
+            text: 'Shopper message',
+            timestamp: ts,
+            status,
+            streamPhase: undefined,
+            author: { type: 'contact' },
+          })}
+          direction="outgoing"
+          isLastMessage
+          isHumanSupportFeatureEnabled
+          displayMeta={{
+            showAuthorName: false,
+            showTimestamp: true,
+            visibleStatus: status,
+          }}
+        />,
+      );
+
+      expect(screen.getByText('2:35 PM')).toBeInTheDocument();
+      expect(
+        screen.getByRole('img', { name: expectedLabel }),
+      ).toBeInTheDocument();
+      // Only one status icon (inside MessageMeta), never a duplicate inline icon
+      expect(container.querySelectorAll('[data-testid^="icon-"]')).toHaveLength(
+        1,
+      );
+      unmount();
+    });
+  });
+
+  it('forwards agent first name to MessageContainer on first message and omits on follow-up or feature OFF', () => {
+    const { rerender } = render(
+      <StreamedMessageItem
+        message={makeMessage({
+          id: 'ag-1',
+          direction: 'incoming',
+          text: 'Hello from Julia',
+          timestamp: ts,
+          status: 'delivered',
+          streamPhase: undefined,
+          author: {
+            type: 'human_agent',
+            id: 'ha_5f0c3a9e1b7d4c2a8e6f0b1d3c5a7e9f',
+            name: 'Julia',
+          },
+        })}
+        direction="incoming"
+        isLastMessage
+        isHumanSupportFeatureEnabled
+        displayMeta={{
+          showAuthorName: true,
+          authorName: 'Julia',
+          showTimestamp: true,
+          visibleStatus: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Julia')).toHaveClass('weni-message__author-name');
+    expect(screen.getByText('2:35 PM')).toBeInTheDocument();
+
+    rerender(
+      <StreamedMessageItem
+        message={makeMessage({
+          id: 'ag-2',
+          direction: 'incoming',
+          text: 'Follow up',
+          timestamp: ts,
+          status: 'delivered',
+          streamPhase: undefined,
+          author: {
+            type: 'human_agent',
+            id: 'ha_5f0c3a9e1b7d4c2a8e6f0b1d3c5a7e9f',
+            name: 'Julia',
+          },
+        })}
+        direction="incoming"
+        isLastMessage
+        isHumanSupportFeatureEnabled
+        displayMeta={{
+          showAuthorName: false,
+          showTimestamp: false,
+          visibleStatus: null,
+        }}
+      />,
+    );
+
+    expect(screen.queryByText('Julia')).not.toBeInTheDocument();
+    expect(screen.queryByText('2:35 PM')).not.toBeInTheDocument();
+  });
+
+  it('defers incoming AI timestamp while streaming/buffering and reveals it once complete (FR-015)', () => {
+    const { rerender } = render(
+      <StreamedMessageItem
+        message={makeMessage({
+          id: 'ai-stream-ts',
+          direction: 'incoming',
+          text: 'Working on it',
+          timestamp: ts,
+          status: 'streaming',
+          streamPhase: 'streaming_text',
+          author: { type: 'ai_agent' },
+        })}
+        direction="incoming"
+        isLastMessage
+        isHumanSupportFeatureEnabled
+        displayMeta={{
+          showAuthorName: false,
+          showTimestamp: true,
+          visibleStatus: null,
+        }}
+      />,
+    );
+
+    expect(screen.queryByText('2:35 PM')).not.toBeInTheDocument();
+
+    rerender(
+      <StreamedMessageItem
+        message={makeMessage({
+          id: 'ai-stream-ts',
+          direction: 'incoming',
+          text: 'Working on it',
+          timestamp: ts,
+          status: 'delivered',
+          streamPhase: 'completed',
+          author: { type: 'ai_agent' },
+        })}
+        direction="incoming"
+        isLastMessage
+        isHumanSupportFeatureEnabled
+        displayMeta={{
+          showAuthorName: false,
+          showTimestamp: true,
+          visibleStatus: null,
+        }}
+      />,
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(WORD_TICK * 6);
+    });
+
+    expect(screen.getByText('2:35 PM')).toBeInTheDocument();
+  });
+});

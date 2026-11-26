@@ -235,6 +235,83 @@ describe('Header', () => {
     fireEvent.click(screen.getByLabelText('Close chat'));
     expect(helpers.toggleChat).toHaveBeenCalledTimes(1);
   });
+
+  it('renders the green Human support tag when feature is enabled and active', () => {
+    setup({
+      weniChat: {
+        isHumanSupportFeatureEnabled: true,
+        isHumanSupportActive: true,
+        isConnectionClosed: false,
+      },
+    });
+    render(<Header />);
+    const tag = screen.getByText('human_support.header_tag');
+    expect(tag).toHaveClass(
+      'weni-chat-header__tag',
+      'weni-chat-header__tag--human-support',
+    );
+  });
+
+  it('keeps the Human support tag visible on sub-views alongside the back button', () => {
+    setup({
+      weniChat: {
+        currentPage: { view: 'cart' },
+        isHumanSupportFeatureEnabled: true,
+        isHumanSupportActive: true,
+        isConnectionClosed: false,
+      },
+    });
+    render(<Header />);
+    expect(screen.getByLabelText('Back')).toBeInTheDocument();
+    expect(screen.getByText('human_support.header_tag')).toBeInTheDocument();
+  });
+
+  it('hides the Human support tag when inactive, feature OFF, showMode ON, or connection closed', () => {
+    const cases = [
+      {
+        weniChat: {
+          isHumanSupportFeatureEnabled: false,
+          isHumanSupportActive: true,
+        },
+      },
+      {
+        weniChat: {
+          isHumanSupportFeatureEnabled: true,
+          isHumanSupportActive: false,
+        },
+      },
+      {
+        weniChat: {
+          isHumanSupportFeatureEnabled: true,
+          isHumanSupportActive: true,
+        },
+        chatContext: { config: { showMode: true, mode: 'live' } },
+      },
+      {
+        weniChat: {
+          isHumanSupportFeatureEnabled: true,
+          isHumanSupportActive: true,
+        },
+        chatContext: { config: { showMode: true, mode: 'preview' } },
+      },
+      {
+        weniChat: {
+          isHumanSupportFeatureEnabled: true,
+          isHumanSupportActive: true,
+          isConnectionClosed: true,
+        },
+      },
+    ];
+
+    cases.forEach((opts) => {
+      setup(opts);
+      const { unmount } = render(<Header />);
+      expect(
+        screen.queryByText('human_support.header_tag'),
+      ).not.toBeInTheDocument();
+      unmount();
+    });
+  });
 });
 
 describe('HeaderTitle', () => {

@@ -7,6 +7,8 @@ beforeAll(() => {
   window.HTMLElement.prototype.scrollIntoView = jest.fn();
 });
 
+let mockI18nLanguage = 'en';
+
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key, options) => {
@@ -16,7 +18,35 @@ jest.mock('react-i18next', () => ({
       ) {
         return `${options.count} items added`;
       }
+      if (key === 'human_support.milestone_started' && options?.time) {
+        return `Forwarded to human agent · ${options.time}`;
+      }
+      if (key === 'human_support.milestone_ended' && options?.time) {
+        return `Human support ended · ${options.time}`;
+      }
+      if (key === 'human_support.typing_with_name' && options?.name) {
+        return `${options.name} is typing`;
+      }
+      if (key === 'human_support.typing_anonymous') {
+        return 'Agent is typing';
+      }
+      if (key === 'human_support.status_sending') return 'Sending';
+      if (key === 'human_support.status_sent' && options?.time) {
+        return `Sent at ${options.time}`;
+      }
+      if (key === 'human_support.status_delivered' && options?.time) {
+        return `Delivered · sent at ${options.time}`;
+      }
+      if (key === 'human_support.status_read' && options?.time) {
+        return `Read · sent at ${options.time}`;
+      }
+      if (key === 'human_support.status_error') return 'Failed to send';
       return key;
+    },
+    i18n: {
+      get language() {
+        return mockI18nLanguage;
+      },
     },
   }),
 }));
@@ -29,11 +59,15 @@ jest.mock('@/contexts/ConversationStartersContext', () => ({
 
 jest.mock('./MessageContainer', () => ({
   __esModule: true,
-  default: ({ children, className }) => (
+  default: ({ children, className, authorName }) => (
     <div
       data-testid="message-container"
+      data-author-name={authorName ?? ''}
       className={className}
     >
+      {authorName && (
+        <span className="weni-message__author-name">{authorName}</span>
+      )}
       {children}
     </div>
   ),
@@ -66,7 +100,14 @@ jest.mock('./MessageOrder', () => ({
 }));
 jest.mock('./TypingIndicator', () => ({
   __esModule: true,
-  default: () => <div data-testid="typing-indicator" />,
+  default: ({ label }) => (
+    <div
+      data-testid="typing-indicator"
+      data-label={label ?? ''}
+    >
+      {label ?? ''}
+    </div>
+  ),
 }));
 jest.mock('./ThinkingIndicator', () => ({
   __esModule: true,
@@ -91,7 +132,14 @@ jest.mock('@/components/common/FSButton', () => ({
   ),
 }));
 jest.mock('../common/FSBadge', () => ({
-  FSBadge: ({ children }) => <div data-testid="fs-badge">{children}</div>,
+  FSBadge: ({ children, type }) => (
+    <div
+      data-testid="fs-badge"
+      data-type={type ?? 'success'}
+    >
+      {children}
+    </div>
+  ),
 }));
 jest.mock('@/components/ConversationStarters/ConversationStarters', () => ({
   ConversationStartersFull: ({ questions, onStarterClick }) => (
@@ -1035,5 +1083,408 @@ describe('MessagesList — streaming components invariants', () => {
     const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeInTheDocument();
     expect(liveRegion).toHaveAttribute('role', 'status');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Human Support Status — US1..US5 flows (SC-001, SC-002)
+// ---------------------------------------------------------------------------
+
+describe('MessagesList — human support status (US1–US5)', () => {
+  const START_UUID = '6f1d2c3b-4a59-5e6f-8a7b-9c0d1e2f3a4b';
+  const END_UUID = 'a2b3c4d5-e6f7-5a8b-9c0d-1e2f3a4b5c6d';
+  const AGENT_JULIA_ID = 'ha_5f0c3a9e1b7d4c2a8e6f0b1d3c5a7e9f';
+  const AGENT_JULIA_2_ID = 'ha_0a1b2c3d4e5f60718293a4b5c6d7e8f9';
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 10, 3, 15, 0, 0));
+    mockI18nLanguage = 'en';
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  function milestoneGroup(eventId, event, occurredAt) {
+    return {
+      kind: 'milestone',
+      direction: 'incoming',
+      authorKey: null,
+      messages: [
+        {
+          id: `hs_${eventId}`,
+          type: 'human_support_event',
+          direction: 'incoming',
+          timestamp: occurredAt,
+          humanSupportEvent: { eventId, event, occurredAt },
+        },
+      ],
+    };
+  }
+
+  it('renders start/end milestones without collapsing cart notices and announces live milestones politely (US1)', () => {
+    const startTs = new Date(2026, 10, 3, 14, 34, 0).getTime();
+    const endTs = new Date(2026, 10, 3, 14, 41, 0).getTime();
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: false,
+      messageGroups: [],
+    });
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+
+    const { container, rerender } = render(<MessagesList />);
+
+    const cartGroup = {
+      kind: 'conversation_status',
+      direction: 'incoming',
+      authorKey: null,
+      messages: [
+        buildMessage({
+          id: 'c1',
+          type: 'conversation_status',
+          text: 'Sneakers added to cart',
+        }),
+      ],
+    };
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+      messageGroups: [
+        cartGroup,
+        milestoneGroup(START_UUID, 'started', startTs),
+        milestoneGroup(END_UUID, 'ended', endTs),
+      ],
+    });
+    rerender(<MessagesList />);
+
+    const badges = screen.getAllByTestId('fs-badge');
+    expect(badges).toHaveLength(3);
+    expect(badges[0]).toHaveTextContent('Sneakers added to cart');
+    expect(badges[1]).toHaveTextContent('Forwarded to human agent · 2:34 PM');
+    expect(badges[1]).toHaveAttribute('data-type', 'success');
+    expect(badges[2]).toHaveTextContent('Human support ended · 2:41 PM');
+    expect(badges[2]).toHaveAttribute('data-type', 'neutral');
+
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+
+    const liveRegion = container.querySelector('[aria-live="polite"]');
+    expect(liveRegion.textContent).toBeTruthy();
+    // Focus stays untouched on input (FR-038, NFR-004)
+    expect(document.activeElement).toBe(input);
+
+    document.body.removeChild(input);
+  });
+
+  it('updates 200 shopper messages to read in place without calling scrollIntoView (US2, SC-002, FR-039)', () => {
+    const baseTs = new Date(2026, 10, 3, 14, 35, 0).getTime();
+    const makeBatch = (status) => {
+      const msgs = Array.from({ length: 200 }, (_, i) =>
+        buildMessage({
+          id: `u-${i}`,
+          direction: 'outgoing',
+          text: `Msg ${i}`,
+          timestamp: baseTs,
+          status,
+          author: { type: 'contact' },
+        }),
+      );
+      const displayMeta = msgs.map((_, i) => ({
+        showAuthorName: false,
+        showTimestamp: i === msgs.length - 1,
+        visibleStatus: status,
+      }));
+      return [
+        {
+          kind: 'messages',
+          direction: 'outgoing',
+          authorKey: 'contact',
+          messages: msgs,
+          displayMeta,
+        },
+      ];
+    };
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+      messageGroups: makeBatch('delivered'),
+    });
+    const { rerender } = render(<MessagesList />);
+
+    expect(
+      screen.getByRole('img', { name: 'Delivered · sent at 2:35 PM' }),
+    ).toBeInTheDocument();
+
+    window.HTMLElement.prototype.scrollIntoView.mockClear();
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+      messageGroups: makeBatch('read'),
+    });
+    rerender(<MessagesList />);
+
+    expect(
+      screen.getByRole('img', { name: 'Read · sent at 2:35 PM' }),
+    ).toBeInTheDocument();
+    expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('suppresses ThinkingIndicator during human support, shows labeled human typing with heartbeat dedup, and displays agent name per sequence (US3)', () => {
+    const ts = new Date(2026, 10, 3, 14, 36, 0).getTime();
+    const groups = [
+      {
+        kind: 'messages',
+        direction: 'incoming',
+        authorKey: `human_agent:${AGENT_JULIA_ID}`,
+        messages: [
+          buildMessage({
+            id: 'ag-1',
+            text: 'Hi!',
+            timestamp: ts,
+            author: { type: 'human_agent', id: AGENT_JULIA_ID, name: 'Julia' },
+          }),
+          buildMessage({
+            id: 'ag-2',
+            text: 'How can I help?',
+            timestamp: ts,
+            author: { type: 'human_agent', id: AGENT_JULIA_ID, name: 'Julia' },
+          }),
+        ],
+        displayMeta: [
+          {
+            showAuthorName: true,
+            authorName: 'Julia',
+            showTimestamp: false,
+            visibleStatus: null,
+          },
+          {
+            showAuthorName: false,
+            showTimestamp: true,
+            visibleStatus: null,
+          },
+        ],
+      },
+      {
+        kind: 'messages',
+        direction: 'incoming',
+        authorKey: `human_agent:${AGENT_JULIA_2_ID}`,
+        messages: [
+          buildMessage({
+            id: 'ag-3',
+            text: 'Taking over now.',
+            timestamp: ts,
+            author: {
+              type: 'human_agent',
+              id: AGENT_JULIA_2_ID,
+              name: 'Julia',
+            },
+          }),
+        ],
+        displayMeta: [
+          {
+            showAuthorName: true,
+            authorName: 'Julia',
+            showTimestamp: true,
+            visibleStatus: null,
+          },
+        ],
+      },
+    ];
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+      isThinking: true,
+      isTyping: true,
+      typingAuthor: { type: 'human_agent', name: 'Julia' },
+      messageGroups: groups,
+    });
+
+    const { container, rerender } = render(<MessagesList />);
+
+    // ThinkingIndicator suppressed during active human support (FR-033)
+    expect(screen.queryByTestId('thinking-indicator')).not.toBeInTheDocument();
+    expect(screen.getByTestId('typing-indicator')).toHaveAttribute(
+      'data-label',
+      'Julia is typing',
+    );
+    // Two distinct Julia groups show name once each (2 total, not 3), and opaque id never appears in DOM
+    expect(screen.getAllByText('Julia')).toHaveLength(2);
+    expect(container.innerHTML).not.toContain(AGENT_JULIA_ID);
+    expect(container.innerHTML).not.toContain(AGENT_JULIA_2_ID);
+
+    // Unnamed agent falls back to "Agent is typing"
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+      isThinking: false,
+      isTyping: true,
+      typingAuthor: { type: 'human_agent' },
+      messageGroups: groups,
+    });
+    rerender(<MessagesList />);
+
+    expect(screen.getByTestId('typing-indicator')).toHaveAttribute(
+      'data-label',
+      'Agent is typing',
+    );
+  });
+
+  it('renders timestamps on media, order, and product_list messages and omits on pre-launch messages (US4)', () => {
+    const yesterday = new Date(2026, 10, 2, 16, 15, 0).getTime();
+    mockI18nLanguage = 'pt';
+
+    setupMocks({
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: false,
+      messageGroups: [
+        {
+          kind: 'messages',
+          direction: 'incoming',
+          authorKey: 'ai_agent',
+          messages: [
+            buildMessage({
+              id: 'img-1',
+              type: 'image',
+              media: 'https://example.com/a.jpg',
+              timestamp: yesterday,
+              author: { type: 'ai_agent' },
+            }),
+            buildMessage({
+              id: 'prod-1',
+              type: 'text',
+              text: 'Check this out',
+              timestamp: yesterday + 60000,
+              author: { type: 'ai_agent' },
+              product_list: { buttonText: 'View', sections: [] },
+            }),
+          ],
+          displayMeta: [
+            {
+              showAuthorName: false,
+              showTimestamp: true,
+              visibleStatus: null,
+            },
+            {
+              showAuthorName: false,
+              showTimestamp: true,
+              visibleStatus: null,
+            },
+          ],
+        },
+        {
+          kind: 'messages',
+          direction: 'incoming',
+          authorKey: 'legacy:incoming',
+          messages: [
+            buildMessage({
+              id: 'pre-launch',
+              type: 'text',
+              text: 'Old message',
+              timestamp: yesterday,
+            }),
+          ],
+          displayMeta: [
+            {
+              showAuthorName: false,
+              showTimestamp: false,
+              visibleStatus: null,
+            },
+          ],
+        },
+      ],
+    });
+
+    const { container } = render(<MessagesList />);
+    expect(screen.getByText('02/11 · 16:15')).toBeInTheDocument();
+    expect(screen.getByText('02/11 · 16:16')).toBeInTheDocument();
+    expect(container.querySelectorAll('.weni-message-meta')).toHaveLength(2);
+    expect(
+      container.querySelector('.weni-messages-list__direction-group--grouped'),
+    ).toBeInTheDocument();
+  });
+
+  it('does not re-announce historical milestones seeded on mount or via history:loaded (US5, FR-034)', () => {
+    const listeners = {};
+    const mockService = {
+      config: { channelUuid: 'ch-1' },
+      getSession: () => ({ sessionId: 'sess-1' }),
+      on: (ev, cb) => {
+        listeners[ev] = cb;
+      },
+      off: (ev) => {
+        delete listeners[ev];
+      },
+    };
+    const startTs = new Date(2026, 10, 3, 14, 34, 0).getTime();
+    const endTs = new Date(2026, 10, 3, 14, 41, 0).getTime();
+
+    setupMocks({
+      service: mockService,
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: false,
+      messageGroups: [milestoneGroup(START_UUID, 'started', startTs)],
+    });
+
+    const { container, rerender } = render(<MessagesList />);
+
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+    const liveRegion = container.querySelector('[aria-live="polite"]');
+    expect(liveRegion.textContent).toBe('');
+
+    // Simulate history:loaded delivering an already-ended historical milestone
+    act(() => {
+      listeners['history:loaded']?.([
+        {
+          id: `hs_${END_UUID}`,
+          type: 'human_support_event',
+          humanSupportEvent: {
+            eventId: END_UUID,
+            event: 'ended',
+            occurredAt: endTs,
+          },
+        },
+      ]);
+    });
+
+    setupMocks({
+      service: mockService,
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: false,
+      messageGroups: [
+        milestoneGroup(START_UUID, 'started', startTs),
+        milestoneGroup(END_UUID, 'ended', endTs),
+      ],
+    });
+    rerender(<MessagesList />);
+
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+    expect(liveRegion.textContent).toBe('');
+  });
+
+  it('renders zero milestones when feature flag is OFF', () => {
+    const startTs = new Date(2026, 10, 3, 14, 34, 0).getTime();
+    setupMocks({
+      isHumanSupportFeatureEnabled: false,
+      isHumanSupportActive: true,
+      messageGroups: [milestoneGroup(START_UUID, 'started', startTs)],
+    });
+
+    render(<MessagesList />);
+    expect(screen.queryByTestId('fs-badge')).not.toBeInTheDocument();
   });
 });

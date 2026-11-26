@@ -463,6 +463,12 @@ export function ChatProvider({ children, config }) {
     }
 
     const handleMessageReceived = (message) => {
+      // Human support milestones are structural timeline markers, not chat
+      // previews or unread messages when the widget is closed (FR-036, BD-008).
+      if (message?.type === 'human_support_event') {
+        return;
+      }
+
       if (!isChatOpen) {
         setUnreadCount((prev) => prev + 1);
 
@@ -668,6 +674,9 @@ export function ChatProvider({ children, config }) {
     isTyping: state.isTyping || false,
     isThinking: state.isThinking || false,
     thinkingText: state.thinkingText ?? null,
+    isHumanSupportFeatureEnabled: Boolean(state.features?.humanSupportStatus),
+    isHumanSupportActive: Boolean(state.humanSupport?.active),
+    typingAuthor: state.typingAuthor ?? null,
     context,
     error: state.error || null,
 

@@ -186,3 +186,33 @@ describe('Chat — whatsapp-offers-opt-in view', () => {
     expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
   });
 });
+
+describe('Chat — human support sub-view stability (FR-002, FR-003, FR-037)', () => {
+  it('keeps open sub-views mounted while human support activates and closes', () => {
+    const base = {
+      isChatOpen: true,
+      isConnectionClosed: false,
+      currentPage: { view: 'cart', props: {} },
+      config: { embedded: false },
+      mode: 'live',
+      isHumanSupportFeatureEnabled: true,
+      isHumanSupportActive: true,
+    };
+    useWeniChat.mockReturnValue(base);
+
+    const { rerender } = render(<Chat />);
+    expect(screen.getByTestId('header')).toBeInTheDocument();
+    expect(screen.getByTestId('cart')).toBeInTheDocument();
+
+    // Human support ends while shopper stays on Cart sub-view
+    useWeniChat.mockReturnValue({
+      ...base,
+      isHumanSupportActive: false,
+    });
+    rerender(<Chat />);
+
+    expect(screen.getByTestId('header')).toBeInTheDocument();
+    expect(screen.getByTestId('cart')).toBeInTheDocument();
+    expect(screen.queryByTestId('messages-list')).not.toBeInTheDocument();
+  });
+});

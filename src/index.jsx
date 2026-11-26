@@ -12,6 +12,10 @@ import {
   COMPONENT_STREAM_SCENARIOS,
   runComponentStreamScenario,
 } from './dev/simulateComponentStreams';
+import {
+  HUMAN_SUPPORT_SCENARIOS,
+  runHumanSupportScenario,
+} from './dev/simulateHumanSupport';
 window.WebChat = WebChat;
 
 // Local stubs so CounterControls add-to-cart / pending quantity UI is eligible in dev
@@ -322,6 +326,22 @@ function App() {
               style={buttonStyle}
               onClick={async () => {
                 await runComponentStreamScenario(
+                  scenario.id,
+                  window.WebChat,
+                  () => service,
+                );
+              }}
+            >
+              {scenario.label}
+            </button>
+          ))}
+          {HUMAN_SUPPORT_SCENARIOS.map((scenario) => (
+            <button
+              key={scenario.id}
+              id={scenario.buttonId}
+              style={buttonStyle}
+              onClick={async () => {
+                await runHumanSupportScenario(
                   scenario.id,
                   window.WebChat,
                   () => service,

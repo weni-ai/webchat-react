@@ -1,0 +1,31 @@
+.weni-message-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  margin-top: $spacing-1;
+  font: $fs-text-weight-regular #{$fs-text-size-0}/16px $font-family;
+  color: $fg-base-soft;
+
+  &--incoming {
+    justify-content: flex-start;
+    padding-left: $spacing-1;
+  }
+
+  &--outgoing {
+    justify-content: flex-end;
+    padding-right: $spacing-1;
+  }
+
+  &__time {
+    white-space: nowrap;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $icon-size-4;
+    height: $icon-size-4;
+    flex-shrink: 0;
+  }
+}

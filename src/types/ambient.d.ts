@@ -59,10 +59,16 @@ declare module 'react' {
       children?: ReactNode;
     }
 
+    export interface TimeHTMLAttributes extends HTMLAttributes {
+      dateTime?: string;
+    }
+
     export interface IntrinsicElements {
       div: HTMLAttributes;
       span: HTMLAttributes;
       section: HTMLAttributes;
+      footer: HTMLAttributes;
+      time: TimeHTMLAttributes;
     }
   }
 }
@@ -99,9 +105,20 @@ declare module '@/components/common/Icon' {
     color?: string;
     filled?: boolean;
     className?: string;
+    'aria-hidden'?: boolean | 'true' | 'false';
   }
   export function Icon(props: IconProps): ReactElement;
   export default Icon;
+}
+
+declare module '@/components/common/FSBadge' {
+  import type { ReactElement, ReactNode } from 'react';
+  export interface FSBadgeProps {
+    children: ReactNode;
+    type: 'success' | 'neutral';
+    className?: string;
+  }
+  export function FSBadge(props: FSBadgeProps): ReactElement;
 }
 
 declare module '@/hooks/useStreamingBuffer' {
@@ -121,6 +138,10 @@ declare module '@/hooks/useWeniChat' {
     getState?: () => {
       messages?: unknown[];
       isThinking?: boolean;
+      isTyping?: boolean;
+      features?: { humanSupportStatus?: boolean };
+      humanSupport?: { active: boolean };
+      typingAuthor?: { type: 'human_agent'; name?: string } | null;
       connection?: Record<string, unknown>;
     };
     emit?: (event: string, ...args: unknown[]) => void;
@@ -130,6 +151,9 @@ declare module '@/hooks/useWeniChat' {
   export function useWeniChat(): {
     service?: WeniServiceRef;
     sendMessage: (text: string, options?: Record<string, unknown>) => void;
+    isHumanSupportFeatureEnabled?: boolean;
+    isHumanSupportActive?: boolean;
+    typingAuthor?: { type: 'human_agent'; name?: string } | null;
   };
 }
 
@@ -139,10 +163,20 @@ declare module '@/components/Messages/MessageContainer' {
     direction: 'incoming' | 'outgoing';
     type: string;
     className?: string;
+    authorName?: string;
     children: ReactNode;
   }
   export function MessageContainer(props: MessageContainerProps): ReactElement;
   export default MessageContainer;
+}
+
+declare module '@/components/Messages/TypingIndicator' {
+  import type { ReactElement } from 'react';
+  export interface TypingIndicatorProps {
+    label?: string;
+  }
+  export function TypingIndicator(props: TypingIndicatorProps): ReactElement;
+  export default TypingIndicator;
 }
 
 declare module '@/components/Messages/MessageText' {
